@@ -263,6 +263,13 @@ class CHAR(_StringType, sqltypes.CHAR):
 class ENUM(mysql_dialect.ENUM):
     """Drizzle ENUM type."""
 
+    __kwargs_signature__ = (
+        ('strict', False),
+        ('collation', None),
+        ('binary', False),
+        ('quoting', 'unquoted'),
+    )
+
     def __init__(self, *enums, **kw):
         """Construct an ENUM.
 

@@ -878,7 +878,7 @@ class Variant(TypeDecorator):
 
     """
 
-    def __init__(self, base, mapping):
+    def __init__(self, base, mapping, active_dialect=None):
         """Construct a new :class:`.Variant`.
 
         :param base: the base 'fallback' type
@@ -888,6 +888,15 @@ class Variant(TypeDecorator):
         """
         self.impl = base
         self.mapping = mapping
+        if not active_dialect:
+            if len(self.mapping) > 1:
+                raise exc.ArgumentError(
+                    'If a mapping has multiple dialects, an active_dialect '
+                    'must be specified.')
+            else:
+                self.active_dialect = self.mapping.keys()[0]
+        else:
+            self.active_dialect = active_dialect
 
     def load_dialect_impl(self, dialect):
         if dialect.name in self.mapping:
@@ -914,7 +923,15 @@ class Variant(TypeDecorator):
                 "the mapping for this Variant" % dialect_name)
         mapping = self.mapping.copy()
         mapping[dialect_name] = type_
-        return Variant(self.impl, mapping)
+        active_dialect = dialect_name if len(mapping.keys()) > 1 else None
+        return Variant(self.impl, mapping, active_dialect)
+
+    def __repr__(self):
+        dialect = __import__('sqlalchemy.dialects.%s' %
+                                (self.active_dialect, ),
+                            fromlist=['base']).dialect
+        obj = self.load_dialect_impl(dialect)
+        return util.generic_repr(obj, to_inspect=super(obj.__class__, obj))
 
 
 def to_instance(typeobj, *arg, **kw):
@@ -1243,6 +1260,13 @@ class Unicode(String):
     """
 
     __visit_name__ = 'unicode'
+    __kwargs_signature__ = (
+        ('length', None),
+        ('collation', None),
+        ('convert_unicode', True),
+        ('unicode_error', None),
+        ('_warn_on_bytestring', True),
+    )
 
     def __init__(self, length=None, **kwargs):
         """
@@ -1271,6 +1295,13 @@ class UnicodeText(Text):
     """
 
     __visit_name__ = 'unicode_text'
+    __kwargs_signature__ = (
+        ('length', None),
+        ('collation', None),
+        ('convert_unicode', True),
+        ('unicode_error', None),
+        ('_warn_on_bytestring', True),
+    )
 
     def __init__(self, length=None, **kwargs):
         """
@@ -1916,6 +1947,15 @@ class Enum(String, SchemaType):
     """
 
     __visit_name__ = 'enum'
+    __kwargs_signature__ = (
+        ('convert_unicode', None),
+        ('metadata', None),
+        ('name', None),
+        ('native_enum', True),
+        ('schema', None),
+        ('quote', None),
+        ('inherit_schema', None),
+    )
 
     def __init__(self, *enums, **kw):
         """Construct an enum.
@@ -1998,10 +2038,7 @@ class Enum(String, SchemaType):
         SchemaType.__init__(self, **kw)
 
     def __repr__(self):
-        return util.generic_repr(self, [
-                        ("native_enum", True),
-                        ("name", None)
-                    ])
+        return util.generic_repr(self)
 
     def _should_create_constraint(self, compiler):
         return not self.native_enum or \
