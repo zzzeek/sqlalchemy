@@ -655,6 +655,35 @@ class VariantTest(fixtures.TestBase, AssertsCompiledSQL):
             'fooUTWO'
         )
 
+    def test_repr(self):
+        test_objects = (
+            (types.String().with_variant(
+                dialects.mysql.VARCHAR(32, collation='foo', ascii=True), 
+                'mysql'),
+            "VARCHAR(collation='foo', ascii=True)"),
+            (types.Enum('red', 'green', 'blue').with_variant(
+                dialects.postgresql.ENUM(
+                    'red', 'green', 'blue', name="rgb_enum", create_type=False),
+                'postgresql'),
+            "ENUM('red', 'green', 'blue', create_type=False, convert_unicode="
+            "False, name='rgb_enum', inherit_schema=False)"),
+            (types.Enum('red', 'green', 'blue').with_variant(
+                dialects.drizzle.ENUM('red', 'green', 'blue', unicode=True), 
+                'drizzle'),
+            "ENUM('red', 'green', 'blue', unicode=True)"),
+            (types.Integer().with_variant(
+                dialects.mssql.TINYINT(), 
+                'mssql'),
+            "TINYINT()"),
+            (types.Numeric().with_variant(
+                dialects.oracle.NUMBER(precision='10', scale='4'), 
+                'oracle'),
+            "NUMBER(precision='10', scale='4')")
+        )
+        for obj, result in test_objects:
+            eq_(repr(obj), result)
+
+
 class UnicodeTest(fixtures.TestBase):
     """Exercise the Unicode and related types.
 

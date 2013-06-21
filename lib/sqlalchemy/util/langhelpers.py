@@ -342,15 +342,21 @@ def unbound_method_to_callable(func_or_cls):
         return func_or_cls
 
 
-def generic_repr(obj, additional_kw=(), to_inspect=None):
+def generic_repr(obj, to_inspect=None):
     """Produce a __repr__() based on direct association of the __init__()
     specification vs. same-named attributes present.
 
     """
-    if to_inspect is None:
-        to_inspect = obj
-
     missing = object()
+
+    # if a type uses **kwargs, it should give tuples of its expected  
+    # argument names and default values in __kwargs_signature__
+    additional_kw = getattr(obj, "__kwargs_signature__", ())
+    if to_inspect:
+        if hasattr(to_inspect, "__kwargs_signature__"):
+            additional_kw += getattr(to_inspect, "__kwargs_signature__")
+    else:
+        to_inspect = obj
 
     def genargs():
         try:
@@ -364,8 +370,6 @@ def generic_repr(obj, additional_kw=(), to_inspect=None):
         if not default_len:
             for arg in args[1:]:
                 yield repr(getattr(obj, arg, None))
-            if vargs is not None and hasattr(obj, vargs):
-                yield ', '.join(repr(val) for val in getattr(obj, vargs))
         else:
             for arg in args[1:-default_len]:
                 yield repr(getattr(obj, arg, None))
@@ -376,7 +380,10 @@ def generic_repr(obj, additional_kw=(), to_inspect=None):
                         yield '%s=%r' % (arg, val)
                 except:
                     pass
-        if additional_kw:
+        if vargs is not None:
+            if hasattr(obj, vargs):
+                yield ', '.join(repr(val) for val in getattr(obj, vargs))
+        if len(additional_kw):
             for arg, defval in additional_kw:
                 try:
                     val = getattr(obj, arg, missing)
@@ -384,7 +391,7 @@ def generic_repr(obj, additional_kw=(), to_inspect=None):
                         yield '%s=%r' % (arg, val)
                 except:
                     pass
-
+                    
     return "%s(%s)" % (obj.__class__.__name__, ", ".join(genargs()))
 
 

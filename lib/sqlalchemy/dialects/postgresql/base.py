@@ -763,6 +763,10 @@ class ENUM(sqltypes.Enum):
 
     """
 
+    __kwargs_signature__ = (
+        ('create_type', True),
+    )
+
     def __init__(self, *enums, **kw):
         """Construct an :class:`~.postgresql.ENUM`.
 

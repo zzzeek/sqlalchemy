@@ -977,6 +977,15 @@ class ENUM(sqltypes.Enum, _StringType):
     """MySQL ENUM type."""
 
     __visit_name__ = 'ENUM'
+    __kwargs_signature__ = (
+        ('strict', False),
+        ('charset', None),
+        ('collation', None),
+        ('ascii', False),
+        ('unicode', False),
+        ('binary', False),
+        ('quoting', 'unquoted'),
+    )
 
     def __init__(self, *enums, **kw):
         """Construct an ENUM.
