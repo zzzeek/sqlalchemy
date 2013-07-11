@@ -115,6 +115,7 @@ OPERATORS = {
     operators.asc_op: ' ASC',
     operators.nullsfirst_op: ' NULLS FIRST',
     operators.nullslast_op: ' NULLS LAST',
+    operators.getitem: ''
 }
 
 FUNCTIONS = {
