@@ -1400,6 +1400,50 @@ unit of work searches only through the current identity
 map for objects that may be referencing the one with a
 mutating primary key, not throughout the database.
 
+
+Specifying Joins Across Multiple Tables
+---------------------------------------
+
+Joins across multiple tables is done by specifying the 
+``primaryjoin``, ``secondaryjoin``, and ``secondary`` 
+parameters of the :func:`.relationship`.
+
+A typical example may look like::
+
+    class A(Base):
+        __tablename__ = 'a'
+
+        id = Column(Integer, primary_key=True)
+        b_id = Column(Integer, ForeignKey('b.id'))
+
+        c_via_secondary = relationship(
+            'C', 
+            # NOTE: secondary is the **table name** of B
+            secondary='b', 
+            primaryjoin='A.b_id == B.id', 
+            secondaryjoin='C.id == B.c_id'
+        )
+
+    class B(Base):
+        __tablename__ = 'b'
+
+        id = Column(Integer, primary_key=True)
+        c_id = Column(Integer, ForeignKey('c.id'))
+
+    class C(Base):
+        __tablename__ = 'c'
+        id = Column(Integer, primary_key=True)
+
+
+The relationship can be accessed the same as any other relationship::
+
+    a1 = sess.query(A).first()
+
+    print(a1.c_via_secondary)
+
+
+
+
 Relationships API
 -----------------
 
