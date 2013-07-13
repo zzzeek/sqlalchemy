@@ -37,7 +37,7 @@ class MySQLDialect_cymysql(MySQLDialect_mysqldb):
     driver = 'cymysql'
 
     description_encoding = None
-    supports_sane_rowcount = False
+    supports_sane_rowcount = True
 
     colspecs = util.update_copy(
         MySQLDialect.colspecs,
