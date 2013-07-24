@@ -530,13 +530,19 @@ class MSTypeCompiler(compiler.GenericTypeCompiler):
         return self.visit_NTEXT(type_)
 
     def visit_NTEXT(self, type_):
+        type_.length = None
         return self._extend("NTEXT", type_)
 
     def visit_TEXT(self, type_):
+        type_.length = None
         return self._extend("TEXT", type_)
 
+
     def visit_VARCHAR(self, type_):
-        return self._extend("VARCHAR", type_, length=type_.length or 'max')
+        length = type_.length
+        if not length or length > 8000 :
+            length = 'max'
+        return self._extend("VARCHAR", type_, length = length)
 
     def visit_CHAR(self, type_):
         return self._extend("CHAR", type_)
@@ -545,7 +551,10 @@ class MSTypeCompiler(compiler.GenericTypeCompiler):
         return self._extend("NCHAR", type_)
 
     def visit_NVARCHAR(self, type_):
-        return self._extend("NVARCHAR", type_, length=type_.length or 'max')
+        length = type_.length
+        if not length or length > 4000 :
+            length = 'max'
+        return self._extend("NVARCHAR", type_, length = length)
 
     def visit_date(self, type_):
         if self.dialect.server_version_info < MS_2008_VERSION:
