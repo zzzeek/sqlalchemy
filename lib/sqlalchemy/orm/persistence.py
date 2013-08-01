@@ -525,7 +525,7 @@ def _emit_insert_statements(base_mapper, uowtransaction,
     """Emit INSERT statements corresponding to value lists collected
     by _collect_insert_commands()."""
 
-    statement = base_mapper._memo(('insert', table), table.insert)
+    statement = base_mapper._memo(('insert', table, table.name), table.insert)
 
     for (connection, pkeys, hasvalue, has_all_pks), \
         records in groupby(insert,
