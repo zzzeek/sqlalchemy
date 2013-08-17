@@ -8,10 +8,14 @@
 
 """
 from .. import event, exc, util
-orm = util.importlater("sqlalchemy", "orm")
+from .base import _mapper_or_none
 import inspect
 import weakref
-
+from . import interfaces
+from . import mapperlib, instrumentation
+from .session import Session, sessionmaker
+from .scoping import scoped_session
+from .attributes import QueryableAttribute
 
 class InstrumentationEvents(event.Events):
     """Events related to class instrumentation events.
@@ -43,17 +47,20 @@ class InstrumentationEvents(event.Events):
     """
 
     _target_class_doc = "SomeBaseClass"
+    _dispatch_target = instrumentation.InstrumentationFactory
+
 
     @classmethod
     def _accept_with(cls, target):
-        # TODO: there's no coverage for this
         if isinstance(target, type):
             return _InstrumentationEventsHold(target)
         else:
             return None
 
     @classmethod
-    def _listen(cls, target, identifier, fn, propagate=True):
+    def _listen(cls, event_key, propagate=True):
+        target, identifier, fn = \
+            event_key.dispatch_target, event_key.identifier, event_key.fn
 
         def listen(target_cls, *arg):
             listen_cls = target()
@@ -63,22 +70,21 @@ class InstrumentationEvents(event.Events):
                 return fn(target_cls, *arg)
 
         def remove(ref):
-            event.Events._remove(orm.instrumentation._instrumentation_factory,
-                                            identifier, listen)
+            key = event.registry._EventKey(None, identifier, listen,
+                        instrumentation._instrumentation_factory)
+            getattr(instrumentation._instrumentation_factory.dispatch,
+                        identifier).remove(key)
 
         target = weakref.ref(target.class_, remove)
-        event.Events._listen(orm.instrumentation._instrumentation_factory,
-                        identifier, listen)
 
-    @classmethod
-    def _remove(cls, identifier, target, fn):
-        raise NotImplementedError("Removal of instrumentation events "
-                                    "not yet implemented")
+        event_key.\
+            with_dispatch_target(instrumentation._instrumentation_factory).\
+            with_wrapper(listen).base_listen()
 
     @classmethod
     def _clear(cls):
         super(InstrumentationEvents, cls)._clear()
-        orm.instrumentation._instrumentation_factory.dispatch._clear()
+        instrumentation._instrumentation_factory.dispatch._clear()
 
     def class_instrument(self, cls):
         """Called after the given class is instrumented.
@@ -100,6 +106,7 @@ class InstrumentationEvents(event.Events):
         """Called when an attribute is instrumented."""
 
 
+
 class _InstrumentationEventsHold(object):
     """temporary marker object used to transfer from _accept_with() to
     _listen() on the InstrumentationEvents class.
@@ -109,7 +116,6 @@ class _InstrumentationEventsHold(object):
         self.class_ = class_
 
     dispatch = event.dispatcher(InstrumentationEvents)
-
 
 class InstanceEvents(event.Events):
     """Define events specific to object lifecycle.
@@ -121,21 +127,19 @@ class InstanceEvents(event.Events):
         def my_load_listener(target, context):
             print "on load!"
 
-        event.listen(SomeMappedClass, 'load', my_load_listener)
+        event.listen(SomeClass, 'load', my_load_listener)
 
-    Available targets include mapped classes, instances of
-    :class:`.Mapper` (i.e. returned by :func:`.mapper`,
-    :func:`.class_mapper` and similar), as well as the
-    :class:`.Mapper` class and :func:`.mapper` function itself
-    for global event reception::
+    Available targets include:
 
-        from sqlalchemy.orm import mapper
+    * mapped classes
+    * unmapped superclasses of mapped or to-be-mapped classes
+      (using the ``propagate=True`` flag)
+    * :class:`.Mapper` objects
+    * the :class:`.Mapper` class itself and the :func:`.mapper`
+      function indicate listening for all mappers.
 
-        def some_listener(target, context):
-            log.debug("Instance %s being loaded" % target)
-
-        # attach to all mappers
-        event.listen(mapper, 'load', some_listener)
+    .. versionchanged:: 0.8.0 instance events can be associated with
+       unmapped superclasses of mapped classes.
 
     Instance events are closely related to mapper events, but
     are more specific to the instance and its instrumentation,
@@ -154,21 +158,28 @@ class InstanceEvents(event.Events):
 
     """
 
-    _target_class_doc = "SomeMappedClass"
+    _target_class_doc = "SomeClass"
+
+    _dispatch_target = instrumentation.ClassManager
 
     @classmethod
-    def _accept_with(cls, target):
-        if isinstance(target, orm.instrumentation.ClassManager):
+    def _new_classmanager_instance(cls, class_, classmanager):
+        _InstanceEventsHold.populate(class_, classmanager)
+
+    @classmethod
+    @util.dependencies("sqlalchemy.orm")
+    def _accept_with(cls, orm, target):
+        if isinstance(target, instrumentation.ClassManager):
             return target
-        elif isinstance(target, orm.Mapper):
+        elif isinstance(target, mapperlib.Mapper):
             return target.class_manager
         elif target is orm.mapper:
-            return orm.instrumentation.ClassManager
+            return instrumentation.ClassManager
         elif isinstance(target, type):
-            if issubclass(target, orm.Mapper):
-                return orm.instrumentation.ClassManager
+            if issubclass(target, mapperlib.Mapper):
+                return instrumentation.ClassManager
             else:
-                manager = orm.instrumentation.manager_of_class(target)
+                manager = instrumentation.manager_of_class(target)
                 if manager:
                     return manager
                 else:
@@ -176,23 +187,23 @@ class InstanceEvents(event.Events):
         return None
 
     @classmethod
-    def _listen(cls, target, identifier, fn, raw=False, propagate=False):
+    def _listen(cls, event_key, raw=False, propagate=False):
+        target, identifier, fn = \
+            event_key.dispatch_target, event_key.identifier, event_key.fn
+
         if not raw:
             orig_fn = fn
 
             def wrap(state, *arg, **kw):
                 return orig_fn(state.obj(), *arg, **kw)
             fn = wrap
+            event_key = event_key.with_wrapper(fn)
 
-        event.Events._listen(target, identifier, fn, propagate=propagate)
+        event_key.base_listen(propagate=propagate)
+
         if propagate:
             for mgr in target.subclass_managers(True):
-                event.Events._listen(mgr, identifier, fn, True)
-
-    @classmethod
-    def _remove(cls, identifier, target, fn):
-        msg = "Removal of instance events not yet implemented"
-        raise NotImplementedError(msg)
+                event_key.with_dispatch_target(mgr).base_listen(propagate=True)
 
     @classmethod
     def _clear(cls):
@@ -321,8 +332,7 @@ class InstanceEvents(event.Events):
 
         """
 
-
-class _EventsHold(object):
+class _EventsHold(event.RefCollection):
     """Hold onto listeners against unmapped, uninstrumented classes.
 
     Establish _listen() for that class' mapper/instrumentation when
@@ -337,14 +347,20 @@ class _EventsHold(object):
         cls.all_holds.clear()
 
     class HoldEvents(object):
+        _dispatch_target = None
+
         @classmethod
-        def _listen(cls, target, identifier, fn, raw=False, propagate=False):
+        def _listen(cls, event_key, raw=False, propagate=False):
+            target, identifier, fn = \
+                event_key.dispatch_target, event_key.identifier, event_key.fn
+
             if target.class_ in target.all_holds:
                 collection = target.all_holds[target.class_]
             else:
-                collection = target.all_holds[target.class_] = []
+                collection = target.all_holds[target.class_] = {}
 
-            collection.append((identifier, fn, raw, propagate))
+            event.registry._stored_in_collection(event_key, target)
+            collection[event_key._key] = (event_key, raw, propagate)
 
             if propagate:
                 stack = list(target.class_.__subclasses__())
@@ -353,28 +369,37 @@ class _EventsHold(object):
                     stack.extend(subclass.__subclasses__())
                     subject = target.resolve(subclass)
                     if subject is not None:
-                        subject.dispatch._listen(subject, identifier, fn,
-                                        raw=raw, propagate=propagate)
+                        event_key.with_dispatch_target(subject).\
+                                listen(raw=raw, propagate=propagate)
+
+    def remove(self, event_key):
+        target, identifier, fn = \
+            event_key.dispatch_target, event_key.identifier, event_key.fn
+
+        collection = target.all_holds[target.class_]
+        del collection[event_key._key]
 
     @classmethod
     def populate(cls, class_, subject):
         for subclass in class_.__mro__:
             if subclass in cls.all_holds:
-                if subclass is class_:
-                    collection = cls.all_holds.pop(subclass)
-                else:
-                    collection = cls.all_holds[subclass]
-                for ident, fn, raw, propagate in collection:
+                collection = cls.all_holds[subclass]
+                for event_key, raw, propagate in collection.values():
                     if propagate or subclass is class_:
-                        subject.dispatch._listen(subject, ident,
-                                                        fn, raw, propagate)
+                        # since we can't be sure in what order different classes
+                        # in a hierarchy are triggered with populate(),
+                        # we rely upon _EventsHold for all event
+                        # assignment, instead of using the generic propagate
+                        # flag.
+                        event_key.with_dispatch_target(subject).\
+                            listen(raw=raw, propagate=False)
 
 
 class _InstanceEventsHold(_EventsHold):
     all_holds = weakref.WeakKeyDictionary()
 
     def resolve(self, class_):
-        return orm.instrumentation.manager_of_class(class_)
+        return instrumentation.manager_of_class(class_)
 
     class HoldInstanceEvents(_EventsHold.HoldEvents, InstanceEvents):
         pass
@@ -396,24 +421,22 @@ class MapperEvents(event.Events):
                                         "select my_special_function(%d)"
                                         % target.special_number)
 
-        # associate the listener function with SomeMappedClass,
+        # associate the listener function with SomeClass,
         # to execute during the "before_insert" hook
         event.listen(
-            SomeMappedClass, 'before_insert', my_before_insert_listener)
+            SomeClass, 'before_insert', my_before_insert_listener)
 
-    Available targets include mapped classes, instances of
-    :class:`.Mapper` (i.e. returned by :func:`.mapper`,
-    :func:`.class_mapper` and similar), as well as the
-    :class:`.Mapper` class and :func:`.mapper` function itself
-    for global event reception::
+    Available targets include:
 
-        from sqlalchemy.orm import mapper
+    * mapped classes
+    * unmapped superclasses of mapped or to-be-mapped classes
+      (using the ``propagate=True`` flag)
+    * :class:`.Mapper` objects
+    * the :class:`.Mapper` class itself and the :func:`.mapper`
+      function indicate listening for all mappers.
 
-        def some_listener(mapper, connection, target):
-            log.debug("Instance %s being inserted" % target)
-
-        # attach to all mappers
-        event.listen(mapper, 'before_insert', some_listener)
+    .. versionchanged:: 0.8.0 mapper events can be associated with
+       unmapped superclasses of mapped classes.
 
     Mapper events provide hooks into critical sections of the
     mapper, including those related to object instrumentation,
@@ -455,17 +478,23 @@ class MapperEvents(event.Events):
 
     """
 
-    _target_class_doc = "SomeMappedClass"
+    _target_class_doc = "SomeClass"
+    _dispatch_target = mapperlib.Mapper
 
     @classmethod
-    def _accept_with(cls, target):
+    def _new_mapper_instance(cls, class_, mapper):
+        _MapperEventsHold.populate(class_, mapper)
+
+    @classmethod
+    @util.dependencies("sqlalchemy.orm")
+    def _accept_with(cls, orm, target):
         if target is orm.mapper:
-            return orm.Mapper
+            return mapperlib.Mapper
         elif isinstance(target, type):
-            if issubclass(target, orm.Mapper):
+            if issubclass(target, mapperlib.Mapper):
                 return target
             else:
-                mapper = orm.util._mapper_or_none(target)
+                mapper = _mapper_or_none(target)
                 if mapper is not None:
                     return mapper
                 else:
@@ -474,8 +503,10 @@ class MapperEvents(event.Events):
             return target
 
     @classmethod
-    def _listen(cls, target, identifier, fn,
+    def _listen(cls, event_key,
                             raw=False, retval=False, propagate=False):
+        target, identifier, fn = \
+            event_key.dispatch_target, event_key.identifier, event_key.fn
 
         if not raw or not retval:
             if not raw:
@@ -494,16 +525,17 @@ class MapperEvents(event.Events):
                     arg[target_index] = arg[target_index].obj()
                 if not retval:
                     wrapped_fn(*arg, **kw)
-                    return orm.interfaces.EXT_CONTINUE
+                    return interfaces.EXT_CONTINUE
                 else:
                     return wrapped_fn(*arg, **kw)
             fn = wrap
+            event_key = event_key.with_wrapper(wrap)
 
         if propagate:
             for mapper in target.self_and_descendants:
-                event.Events._listen(mapper, identifier, fn, propagate=True)
+                event_key.with_dispatch_target(mapper).base_listen(propagate=True)
         else:
-            event.Events._listen(target, identifier, fn)
+            event_key.base_listen()
 
     @classmethod
     def _clear(cls):
@@ -517,8 +549,15 @@ class MapperEvents(event.Events):
         This event is the earliest phase of mapper construction.
         Most attributes of the mapper are not yet initialized.
 
-        This listener can generally only be applied to the :class:`.Mapper`
-        class overall.
+        This listener can either be applied to the :class:`.Mapper`
+        class overall, or to any un-mapped class which serves as a base
+        for classes that will be mapped (using the ``propagate=True`` flag)::
+
+            Base = declarative_base()
+
+            @event.listens_for(Base, "instrument_class", propagate=True)
+            def on_new_class(mapper, cls_):
+                " ... "
 
         :param mapper: the :class:`.Mapper` which is the target
          of this event.
@@ -1048,17 +1087,11 @@ class MapperEvents(event.Events):
 
         """
 
-    @classmethod
-    def _remove(cls, identifier, target, fn):
-        "Removal of mapper events not yet implemented"
-        raise NotImplementedError(msg)
-
-
 class _MapperEventsHold(_EventsHold):
     all_holds = weakref.WeakKeyDictionary()
 
     def resolve(self, class_):
-        return orm.util._mapper_or_none(class_)
+        return _mapper_or_none(class_)
 
     class HoldMapperEvents(_EventsHold.HoldEvents, MapperEvents):
         pass
@@ -1093,37 +1126,34 @@ class SessionEvents(event.Events):
 
     _target_class_doc = "SomeSessionOrFactory"
 
+    _dispatch_target = Session
+
     @classmethod
     def _accept_with(cls, target):
-        if isinstance(target, orm.scoped_session):
+        if isinstance(target, scoped_session):
 
             target = target.session_factory
-            if not isinstance(target, orm.sessionmaker) and \
+            if not isinstance(target, sessionmaker) and \
                 (
                     not isinstance(target, type) or
-                    not issubclass(target, orm.Session)
+                    not issubclass(target, Session)
                 ):
                 raise exc.ArgumentError(
                             "Session event listen on a scoped_session "
                             "requires that its creation callable "
                             "is associated with the Session class.")
 
-        if isinstance(target, orm.sessionmaker):
+        if isinstance(target, sessionmaker):
             return target.class_
         elif isinstance(target, type):
-            if issubclass(target, orm.scoped_session):
-                return orm.Session
-            elif issubclass(target, orm.Session):
+            if issubclass(target, scoped_session):
+                return Session
+            elif issubclass(target, Session):
                 return target
-        elif isinstance(target, orm.Session):
+        elif isinstance(target, Session):
             return target
         else:
             return None
-
-    @classmethod
-    def _remove(cls, identifier, target, fn):
-        msg = "Removal of session events not yet implemented"
-        raise NotImplementedError(msg)
 
     def after_transaction_create(self, session, transaction):
         """Execute when a new :class:`.SessionTransaction` is created.
@@ -1503,24 +1533,31 @@ class AttributeEvents(event.Events):
     """
 
     _target_class_doc = "SomeClass.some_attribute"
+    _dispatch_target = QueryableAttribute
+
+    @staticmethod
+    def _set_dispatch(cls, dispatch_cls):
+        event.Events._set_dispatch(cls, dispatch_cls)
+        dispatch_cls._active_history = False
 
     @classmethod
     def _accept_with(cls, target):
         # TODO: coverage
-        if isinstance(target, orm.interfaces.MapperProperty):
+        if isinstance(target, interfaces.MapperProperty):
             return getattr(target.parent.class_, target.key)
         else:
             return target
 
     @classmethod
-    def _listen(cls, target, identifier, fn, active_history=False,
+    def _listen(cls, event_key, active_history=False,
                                         raw=False, retval=False,
                                         propagate=False):
+
+        target, identifier, fn = \
+            event_key.dispatch_target, event_key.identifier, event_key.fn
+
         if active_history:
             target.dispatch._active_history = True
-
-        # TODO: for removal, need to package the identity
-        # of the wrapper with the original function.
 
         if not raw or not retval:
             orig_fn = fn
@@ -1534,19 +1571,15 @@ class AttributeEvents(event.Events):
                 else:
                     return orig_fn(target, value, *arg)
             fn = wrap
+            event_key = event_key.with_wrapper(wrap)
 
-        event.Events._listen(target, identifier, fn, propagate)
+        event_key.base_listen(propagate=propagate)
 
         if propagate:
-            manager = orm.instrumentation.manager_of_class(target.class_)
+            manager = instrumentation.manager_of_class(target.class_)
 
             for mgr in manager.subclass_managers(True):
-                event.Events._listen(mgr[target.key], identifier, fn, True)
-
-    @classmethod
-    def _remove(cls, identifier, target, fn):
-        msg = "Removal of attribute events not yet implemented"
-        raise NotImplementedError(msg)
+                event_key.with_dispatch_target(mgr[target.key]).base_listen(propagate=True)
 
     def append(self, target, value, initiator):
         """Receive a collection append event.
@@ -1558,8 +1591,15 @@ class AttributeEvents(event.Events):
           is registered with ``retval=True``, the listener
           function must return this value, or a new value which
           replaces it.
-        :param initiator: the attribute implementation object
-          which initiated this event.
+        :param initiator: An instance of :class:`.attributes.Event`
+          representing the initiation of the event.  May be modified
+          from it's original value by backref handlers in order to control
+          chained event propagation.
+
+          .. versionchanged:: 0.9.0 the ``initiator`` argument is now
+             passed as a :class:`.attributes.Event` object, and may be modified
+             by backref handlers within a chain of backref-linked events.
+
         :return: if the event was registered with ``retval=True``,
          the given value, or a new effective value, should be returned.
 
@@ -1572,8 +1612,15 @@ class AttributeEvents(event.Events):
           If the listener is registered with ``raw=True``, this will
           be the :class:`.InstanceState` object.
         :param value: the value being removed.
-        :param initiator: the attribute implementation object
-          which initiated this event.
+        :param initiator: An instance of :class:`.attributes.Event`
+          representing the initiation of the event.  May be modified
+          from it's original value by backref handlers in order to control
+          chained event propagation.
+
+          .. versionchanged:: 0.9.0 the ``initiator`` argument is now
+             passed as a :class:`.attributes.Event` object, and may be modified
+             by backref handlers within a chain of backref-linked events.
+
         :return: No return value is defined for this event.
         """
 
@@ -1593,9 +1640,17 @@ class AttributeEvents(event.Events):
           the previous value of the attribute will be loaded from
           the database if the existing value is currently unloaded
           or expired.
-        :param initiator: the attribute implementation object
-          which initiated this event.
+        :param initiator: An instance of :class:`.attributes.Event`
+          representing the initiation of the event.  May be modified
+          from it's original value by backref handlers in order to control
+          chained event propagation.
+
+          .. versionchanged:: 0.9.0 the ``initiator`` argument is now
+             passed as a :class:`.attributes.Event` object, and may be modified
+             by backref handlers within a chain of backref-linked events.
+
         :return: if the event was registered with ``retval=True``,
          the given value, or a new effective value, should be returned.
 
         """
+

@@ -11,10 +11,17 @@ from sqlalchemy.util import jython
 from sqlalchemy import event
 from sqlalchemy import testing
 from sqlalchemy.testing.mock import Mock, call
+from sqlalchemy.orm.state import InstanceState
 
 # global for pickling tests
 MyTest = None
 MyTest2 = None
+
+
+
+def _set_callable(state, dict_, key, callable_):
+    fn = InstanceState._row_processor(state.manager, callable_, key)
+    fn(state, dict_, None)
 
 
 class AttributeImplAPITest(fixtures.MappedTest):
@@ -287,6 +294,7 @@ class AttributesTest(fixtures.ORMTest):
         assert state.obj() is None
         assert state.dict == {}
 
+    @testing.requires.predictable_gc
     def test_object_dereferenced_error(self):
         class Foo(object):
             pass
@@ -310,7 +318,8 @@ class AttributesTest(fixtures.ORMTest):
         )
 
     def test_deferred(self):
-        class Foo(object):pass
+        class Foo(object):
+            pass
 
         data = {'a':'this is a', 'b':12}
         def loader(state, keys):
@@ -602,8 +611,10 @@ class AttributesTest(fixtures.ORMTest):
 
         """
 
-        class Post(object):pass
-        class Blog(object):pass
+        class Post(object):
+            pass
+        class Blog(object):
+            pass
         instrumentation.register_class(Post)
         instrumentation.register_class(Blog)
 
@@ -618,10 +629,10 @@ class AttributesTest(fixtures.ORMTest):
         # create objects as if they'd been freshly loaded from the database (without history)
         b = Blog()
         p1 = Post()
-        attributes.instance_state(b)._set_callable(attributes.instance_dict(b),
-                                                    'posts', lambda passive:[p1])
-        attributes.instance_state(p1)._set_callable(attributes.instance_dict(p1),
-                                                    'blog', lambda passive:b)
+        _set_callable(attributes.instance_state(b), attributes.instance_dict(b),
+                                                    'posts', lambda state, passive:[p1])
+        _set_callable(attributes.instance_state(p1), attributes.instance_dict(p1),
+                                                    'blog', lambda state, passive:b)
         p1, attributes.instance_state(b)._commit_all(attributes.instance_dict(b))
 
         # no orphans (called before the lazy loaders fire off)
@@ -1153,12 +1164,8 @@ class BackrefTest(fixtures.ORMTest):
         p2.children.append(c1)
         assert c1.parent is p2
 
-        # note its still in p1.children -
-        # the event model currently allows only
-        # one level deep.  without the parent_token,
-        # it keeps going until a ValueError is raised
-        # and this condition changes.
-        assert c1 in p1.children
+        # event propagates to remove as of [ticket:2789]
+        assert c1 not in p1.children
 
 class CyclicBackrefAssertionTest(fixtures.TestBase):
     """test that infinite recursion due to incorrect backref assignments
@@ -2628,7 +2635,7 @@ class TestUnlink(fixtures.TestBase):
         coll = a1.bs
         a1.bs.append(B())
         state = attributes.instance_state(a1)
-        state._set_callable(state.dict, "bs", lambda: B())
+        _set_callable(state, state.dict, "bs", lambda: B())
         assert_raises(
             Warning,
             coll.append, B()

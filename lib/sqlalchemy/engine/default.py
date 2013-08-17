@@ -16,7 +16,8 @@ import re
 import random
 from . import reflection, interfaces, result
 from ..sql import compiler, expression
-from .. import exc, types as sqltypes, util, pool, processors
+from .. import types as sqltypes
+from .. import exc, util, pool, processors
 import codecs
 import weakref
 from .. import event
@@ -191,6 +192,10 @@ class DefaultDialect(interfaces.Dialect):
 
         self.returns_unicode_strings = self._check_unicode_returns(connection)
 
+        if self.description_encoding is not None and \
+            self._check_unicode_description(connection):
+            self._description_decoder = self.description_encoding = None
+
         self.do_rollback(connection.connection)
 
     def on_connect(self):
@@ -247,6 +252,29 @@ class DefaultDialect(interfaces.Dialect):
             return "conditional"
         else:
             return unicode_for_varchar
+
+    def _check_unicode_description(self, connection):
+        # all DBAPIs on Py2K return cursor.description as encoded,
+        # until pypy2.1beta2 with sqlite, so let's just check it -
+        # it's likely others will start doing this too in Py2k.
+
+        if util.py2k and not self.supports_unicode_statements:
+            cast_to = util.binary_type
+        else:
+            cast_to = util.text_type
+
+        cursor = connection.connection.cursor()
+        try:
+            cursor.execute(
+                cast_to(
+                    expression.select([
+                        expression.literal_column("'x'").label("some_label")
+                    ]).compile(dialect=self)
+                )
+            )
+            return isinstance(cursor.description[0][0], util.text_type)
+        finally:
+            cursor.close()
 
     def type_descriptor(self, typeobj):
         """Provide a database-specific :class:`.TypeEngine` object, given

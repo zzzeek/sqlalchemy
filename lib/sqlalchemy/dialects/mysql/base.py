@@ -318,10 +318,20 @@ RESERVED_WORDS = set(
      'union', 'unique', 'unlock', 'unsigned', 'update', 'usage', 'use',
      'using', 'utc_date', 'utc_time', 'utc_timestamp', 'values', 'varbinary',
      'varchar', 'varcharacter', 'varying', 'when', 'where', 'while', 'with',
+
      'write', 'x509', 'xor', 'year_month', 'zerofill',  # 5.0
+
      'columns', 'fields', 'privileges', 'soname', 'tables',  # 4.1
+
      'accessible', 'linear', 'master_ssl_verify_server_cert', 'range',
      'read_only', 'read_write',  # 5.1
+
+     'general', 'ignore_server_ids', 'master_heartbeat_period', 'maxvalue',
+     'resignal', 'signal', 'slow', # 5.5
+
+      'get', 'io_after_gtids', 'io_before_gtids', 'master_bind', 'one_shot',
+        'partition', 'sql_after_gtids', 'sql_before_gtids',  # 5.6
+
      ])
 
 AUTOCOMMIT_RE = re.compile(
@@ -1871,6 +1881,7 @@ class MySQLIdentifierPreparer(compiler.IdentifierPreparer):
         return tuple([self.quote_identifier(i) for i in ids if i is not None])
 
 
+@log.class_logger
 class MySQLDialect(default.DefaultDialect):
     """Details of the MySQL dialect.  Not used directly in application code."""
 
@@ -2394,6 +2405,7 @@ class ReflectedState(object):
         self.constraints = []
 
 
+@log.class_logger
 class MySQLTableDefinitionParser(object):
     """Parses the results of a SHOW CREATE TABLE statement."""
 
@@ -2796,8 +2808,6 @@ class MySQLTableDefinitionParser(object):
 _options_of_type_string = ('COMMENT', 'DATA DIRECTORY', 'INDEX DIRECTORY',
                            'PASSWORD', 'CONNECTION')
 
-log.class_logger(MySQLTableDefinitionParser)
-log.class_logger(MySQLDialect)
 
 
 class _DecodingRowProxy(object):

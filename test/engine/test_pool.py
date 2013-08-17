@@ -887,26 +887,27 @@ class QueuePoolTest(PoolTestBase):
                 p = pool.QueuePool(creator=creator,
                                    pool_size=2, timeout=timeout,
                                    max_overflow=max_overflow)
-                def waiter(p):
+                def waiter(p, timeout, max_overflow):
                     success_key = (timeout, max_overflow)
                     conn = p.connect()
-                    time.sleep(.5)
                     success.append(success_key)
+                    time.sleep(.1)
                     conn.close()
 
-                time.sleep(.2)
                 c1 = p.connect()
                 c2 = p.connect()
 
                 for i in range(2):
-                    t = threading.Thread(target=waiter, args=(p, ))
+                    t = threading.Thread(target=waiter,
+                                    args=(p, timeout, max_overflow))
                     t.setDaemon(True)  # so the tests dont hang if this fails
                     t.start()
 
                 c1.invalidate()
                 c2.invalidate()
                 p2 = p._replace()
-        time.sleep(1)
+                time.sleep(.2)
+
         eq_(len(success), 12, "successes: %s" % success)
 
     @testing.requires.threading_with_mock
@@ -986,6 +987,7 @@ class QueuePoolTest(PoolTestBase):
         self._test_overflow(40, 5)
 
     def test_mixed_close(self):
+        pool._refs.clear()
         p = self._queuepool_fixture(pool_size=3, max_overflow=-1, use_threadlocal=True)
         c1 = p.connect()
         c2 = p.connect()

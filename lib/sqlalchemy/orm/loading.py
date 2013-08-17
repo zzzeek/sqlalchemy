@@ -19,7 +19,6 @@ from .interfaces import EXT_CONTINUE
 from ..sql import util as sql_util
 from .util import _none_set, state_str
 from .. import exc as sa_exc
-sessionlib = util.importlater("sqlalchemy.orm", "session")
 
 _new_runid = util.counter()
 
@@ -98,10 +97,9 @@ def instances(query, cursor, context):
             break
 
 
-def merge_result(query, iterator, load=True):
+@util.dependencies("sqlalchemy.orm.query")
+def merge_result(querylib, query, iterator, load=True):
     """Merge a result into this :class:`.Query` object's Session."""
-
-    from . import query as querylib
 
     session = query.session
     if load:
@@ -161,7 +159,7 @@ def get_from_identity(session, key, passive):
                 # expired state will be checked soon enough, if necessary
                 return instance
             try:
-                state(passive)
+                state(state, passive)
             except orm_exc.ObjectDeletedError:
                 session._remove_newly_deleted([state])
                 return None
@@ -547,7 +545,7 @@ def load_scalar_attributes(mapper, state, attribute_names):
     """initiate a column-based attribute refresh operation."""
 
     #assert mapper is _state_mapper(state)
-    session = sessionlib._state_session(state)
+    session = state.session
     if not session:
         raise orm_exc.DetachedInstanceError(
                     "Instance %s is not bound to a Session; "

@@ -7,6 +7,141 @@
     :version: 0.9.0
 
     .. change::
+        :tags: bug, mysql
+
+        Improved support for the cymysql driver, supporting version 0.6.5,
+        courtesy Hajime Nakagami.
+
+    .. change::
+        :tags: bug, examples
+
+        Added "autoincrement=False" to the history table created in the
+        versioning example, as this table shouldn't have autoinc on it
+        in any case, courtesy Patrick Schmid.  Also in 0.8.3.
+
+    .. change::
+        :tags: bug, sql
+
+        The :meth:`.Operators.notin_` operator added in 0.8 now properly
+        produces the negation of the expression "IN" returns
+        when used against an empty collection.  Also in 0.8.3.
+
+    .. change::
+        :tags: general
+
+        A large refactoring of packages has reorganized
+        the import structure of many Core modules as well as some aspects
+        of the ORM modules.  In particular ``sqlalchemy.sql`` has been broken
+        out into several more modules than before so that the very large size
+        of ``sqlalchemy.sql.expression`` is now pared down.   The effort
+        has focused on a large reduction in import cycles.   Additionally,
+        the system of API functions in ``sqlalchemy.sql.expression`` and
+        ``sqlalchemy.orm`` has been reorganized to eliminate redundancy
+        in documentation between the functions vs. the objects they produce.
+
+    .. change::
+        :tags: orm, feature, orm
+
+        Added a new attribute :attr:`.Session.info` to :class:`.Session`;
+        this is a dictionary where applications can store arbitrary
+        data local to a :class:`.Session`.
+        The contents of :attr:`.Session.info` can be also be initialized
+        using the ``info`` argument of :class:`.Session` or
+        :class:`.sessionmaker`.
+
+    .. change::
+        :tags: mysql, bug
+        :tickets: 2791
+
+        Updates to MySQL reserved words for versions 5.5, 5.6, courtesy
+        Hanno Schlichting.  Also in 0.8.3, 0.7.11.
+
+    .. change::
+        :tags: sql, bug, cte
+        :tickets: 2783
+
+        Fixed bug in common table expression system where if the CTE were
+        used only as an ``alias()`` construct, it would not render using the
+        WITH keyword.  Also in 0.8.3, 0.7.11.
+
+    .. change::
+        :tags: feature, general, py3k
+        :tickets: 2161
+
+        The C extensions are ported to Python 3 and will build under
+        any supported CPython 2 or 3 environment.
+
+    .. change::
+        :tags: feature, orm
+        :tickets: 2268
+
+        Removal of event listeners is now implemented.    The feature is
+        provided via the :func:`.event.remove` function.
+
+        .. seealso::
+
+            :ref:`feature_2268`
+
+    .. change::
+        :tags: feature, examples
+
+        Improved the examples in ``examples/generic_associations``, including
+        that ``discriminator_on_association.py`` makes use of single table
+        inheritance do the work with the "discriminator".  Also
+        added a true "generic foreign key" example, which works similarly
+        to other popular frameworks in that it uses an open-ended integer
+        to point to any other table, foregoing traditional referential
+        integrity.  While we don't recommend this pattern, information wants
+        to be free.  Also in 0.8.3.
+
+    .. change::
+        :tags: feature, orm, declarative
+
+        Added a convenience class decorator :func:`.as_declarative`, is
+        a wrapper for :func:`.declarative_base` which allows an existing base
+        class to be applied using a nifty class-decorated approach.  Also
+        in 0.8.3.
+
+    .. change::
+        :tags: bug, orm
+        :tickets: 2786
+
+        Fixed bug in ORM-level event registration where the "raw" or
+        "propagate" flags could potentially be mis-configured in some
+        "unmapped base class" configurations.  Also in 0.8.3.
+
+    .. change::
+        :tags: bug, sql
+        :tickets: 2784
+
+        Fixed bug in :class:`.CheckConstraint` DDL where the "quote" flag from a
+        :class:`.Column` object would not be propagated.  Also in 0.8.3, 0.7.11.
+
+    .. change::
+        :tags: bug, orm
+        :tickets: 2778
+
+        A performance fix related to the usage of the :func:`.defer` option
+        when loading mapped entities.   The function overhead of applying
+        a per-object deferred callable to an instance at load time was
+        significantly higher than that of just loading the data from the row
+        (note that ``defer()`` is meant to reduce DB/network overhead, not
+        necessarily function call count); the function call overhead is now
+        less than that of loading data from the column in all cases.  There
+        is also a reduction in the number of "lazy callable" objects created
+        per load from N (total deferred values in the result) to 1 (total
+        number of deferred cols).  Also in 0.8.3.
+
+    .. change::
+        :tags: bug, sqlite
+        :tickets: 2781
+
+        The newly added SQLite DATETIME arguments storage_format and
+        regexp apparently were not fully implemented correctly; while the
+        arguments were accepted, in practice they would have no effect;
+        this has been fixed.  Also in 0.8.3.
+
+    .. change::
         :tags: bug, sql, postgresql
         :tickets: 2780
 
@@ -28,6 +163,31 @@
         is recreated, due to a disconnect error.   This fixes a particular
         issue in the Oracle 8 dialect, but in general the dialect.initialize()
         phase should only be once per dialect.  Also in 0.8.3.
+
+    .. change::
+        :tags: feature, orm
+        :tickets: 2789
+
+        The mechanism by which attribute events pass along an
+        :class:`.AttributeImpl` as an "initiator" token has been changed;
+        the object is now an event-specific object called :class:`.attributes.Event`.
+        Additionally, the attribute system no longer halts events based
+        on a matching "initiator" token; this logic has been moved to be
+        specific to ORM backref event handlers, which are the typical source
+        of the re-propagation of an attribute event onto subsequent append/set/remove
+        operations.  End user code which emulates the behavior of backrefs
+        must now ensure that recursive event propagation schemes are halted,
+        if the scheme does not use the backref handlers.   Using this new system,
+        backref handlers can now peform a
+        "two-hop" operation when an object is appended to a collection,
+        associated with a new many-to-one, de-associated with the previous
+        many-to-one, and then removed from a previous collection.   Before this
+        change, the last step of removal from the previous collection would
+        not occur.
+
+        .. seealso::
+
+            :ref:`migration_2789`
 
     .. change::
         :tags: feature, sql
@@ -527,7 +687,7 @@
         official Python driver.
 
     .. change::
-    	:tags: feature, general
+    	:tags: feature, general, py3k
       	:tickets: 2671
 
         The codebase is now "in-place" for Python

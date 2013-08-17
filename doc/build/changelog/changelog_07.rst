@@ -7,6 +7,28 @@
     :version: 0.7.11
 
     .. change::
+        :tags: mysql, bug
+        :tickets: 2791
+
+        Updates to MySQL reserved words for versions 5.5, 5.6, courtesy
+        Hanno Schlichting.
+
+    .. change::
+        :tags: sql, bug, cte
+        :tickets: 2783
+
+        Fixed bug in common table expression system where if the CTE were
+        used only as an ``alias()`` construct, it would not render using the
+        WITH keyword.
+
+    .. change::
+        :tags: bug, sql
+        :tickets: 2784
+
+        Fixed bug in :class:`.CheckConstraint` DDL where the "quote" flag from a
+        :class:`.Column` object would not be propagated.
+
+    .. change::
       :tags: bug, orm
       :tickets: 2699
 

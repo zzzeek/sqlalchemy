@@ -9,7 +9,7 @@ What's New in SQLAlchemy 0.9?
     and SQLAlchemy version 0.9, which is expected for release
     in late 2013.
 
-    Document date: May 29, 2013
+    Document last updated: July 26, 2013
 
 Introduction
 ============
@@ -37,10 +37,15 @@ Python 3.   All SQLAlchemy modules and unit tests are now interpreted
 equally well with any Python interpreter from 2.6 forward, including
 the 3.1 and 3.2 interpreters.
 
-At the moment, the C extensions are still not fully ported to
-Python 3.
+:ticket:`2671`
 
+C Extensions Supported on Python 3
+-----------------------------------
 
+The C extensions have been ported to support Python 3 and now build
+in both Python 2 and Python 3 environments.
+
+:ticket:`2161`
 
 .. _behavioral_changes_09:
 
@@ -123,6 +128,78 @@ to this method first, ensure all tests continue to function, then upgrade
 to 0.9 without issue.
 
 :ticket:`2736`
+
+.. _migration_2789:
+
+Backref handlers can now propagate more than one level deep
+-----------------------------------------------------------
+
+The mechanism by which attribute events pass along their "initiator", that is
+the object associated with the start of the event, has been changed; instead
+of a :class:`.AttributeImpl` being passed, a new object :class:`.attributes.Event`
+is passed instead; this object refers to the :class:`.AttributeImpl` as well as
+to an "operation token", representing if the operation is an append, remove,
+or replace operation.
+
+The attribute event system no longer looks at this "initiator" object in order to halt a
+recursive series of attribute events.  Instead, the system of preventing endless
+recursion due to mutually-dependent backref handlers has been moved
+to the ORM backref event handlers specifically, which now take over the role
+of ensuring that a chain of mutually-dependent events (such as append to collection
+A.bs, set many-to-one attribute B.a in response) doesn't go into an endless recursion
+stream.  The rationale here is that the backref system, given more detail and control
+over event propagation, can finally allow operations more than one level deep
+to occur; the typical scenario is when a collection append results in a many-to-one
+replacement operation, which in turn should cause the item to be removed from a
+previous collection::
+
+    class Parent(Base):
+        __tablename__ = 'parent'
+
+        id = Column(Integer, primary_key=True)
+        children = relationship("Child", backref="parent")
+
+    class Child(Base):
+        __tablename__ = 'child'
+
+        id = Column(Integer, primary_key=True)
+        parent_id = Column(ForeignKey('parent.id'))
+
+    p1 = Parent()
+    p2 = Parent()
+    c1 = Child()
+
+    p1.children.append(c1)
+
+    assert c1.parent is p1  # backref event establishes c1.parent as p1
+
+    p2.children.append(c1)
+
+    assert c1.parent is p2  # backref event establishes c1.parent as p2
+    assert c1 not in p1.children  # second backref event removes c1 from p1.children
+
+Above, prior to this change, the ``c1`` object would still have been present
+in ``p1.children``, even though it is also present in ``p2.children`` at the
+same time; the backref handlers would have stopped at replacing ``c1.parent`` with
+``p2`` instead of ``p1``.   In 0.9, using the more detailed :class:`.Event`
+object as well as letting the backref handlers make more detailed decisions about
+these objects, the propagation can continue onto removing ``c1`` from ``p1.children``
+while maintaining a check against the propagation from going into an endless
+recursive loop.
+
+End-user code which a. makes use of the :meth:`.AttributeEvents.set`,
+:meth:`.AttributeEvents.append`, or :meth:`.AttributeEvents.remove` events,
+and b. initiates further attribute modification operations as a result of these
+events may need to be modified to prevent recursive loops, as the attribute system
+no longer stops a chain of events from propagating endlessly in the absense of the backref
+event handlers.   Additionally, code which depends upon the value of the ``initiator``
+will need to be adjusted to the new API, and furthermore must be ready for the
+value of ``initiator`` to change from its original value within a string of
+backref-initiated events, as the backref handlers may now swap in a
+new ``initiator`` value for some operations.
+
+:ticket:`2789`
+
 
 .. _migration_2751:
 
@@ -217,6 +294,40 @@ against ``b_value`` directly.
 
 New Features
 ============
+
+.. _feature_2268:
+
+Event Removal API
+-----------------
+
+Events established using :func:`.event.listen` or :func:`.event.listens_for`
+can now be removed using the new :func:`.event.remove` function.   The ``target``,
+``identifier`` and ``fn`` arguments sent to :func:`.event.remove` need to match
+exactly those which were sent for listening, and the event will be removed
+from all locations in which it had been established::
+
+    @event.listens_for(MyClass, "before_insert", propagate=True)
+    def my_before_insert(mapper, connection, target):
+        """listen for before_insert"""
+        # ...
+
+    event.remove(MyClass, "before_insert", my_before_insert)
+
+In the example above, the ``propagate=True`` flag is set.  This
+means ``my_before_insert()`` is established as a listener for ``MyClass``
+as well as all subclasses of ``MyClass``.
+The system tracks everywhere that the ``my_before_insert()``
+listener function had been placed as a result of this call and removes it as
+a result of calling :func:`.event.remove`.
+
+The removal system uses a registry to associate arguments passed to
+:func:`.event.listen` with collections of event listeners, which are in many
+cases wrapped versions of the original user-supplied function.   This registry
+makes heavy use of weak references in order to allow all the contained contents,
+such as listener targets, to be garbage collected when they go out of scope.
+
+:ticket:`2268`
+
 
 .. _feature_722:
 
@@ -546,6 +657,7 @@ Scenarios which now work correctly include:
     Integer()
 
 :ticket:`1765`
+
 
 Dialect Changes
 ===============

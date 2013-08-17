@@ -24,18 +24,18 @@ from . import (
     attributes, interfaces, object_mapper, persistence,
     exc as orm_exc, loading
     )
+from .base import _entity_descriptor, _is_aliased_class, _is_mapped_class, _orm_columns
+from .path_registry import PathRegistry
 from .util import (
-    AliasedClass, ORMAdapter, _entity_descriptor, PathRegistry,
-    _is_aliased_class, _is_mapped_class, _orm_columns,
-    join as orm_join, with_parent, aliased
+    AliasedClass, ORMAdapter, join as orm_join, with_parent, aliased
     )
-from .. import sql, util, log, exc as sa_exc, inspect, inspection, \
-        types as sqltypes
+from .. import sql, util, log, exc as sa_exc, inspect, inspection
 from ..sql.expression import _interpret_as_from
 from ..sql import (
         util as sql_util,
         expression, visitors
     )
+from . import properties
 
 __all__ = ['Query', 'QueryContext', 'aliased']
 
@@ -54,7 +54,8 @@ def _generative(*assertions):
 
 _path_registry = PathRegistry.root
 
-
+@inspection._self_inspects
+@log.class_logger
 class Query(object):
     """ORM-level SQL construction object.
 
@@ -723,12 +724,12 @@ class Query(object):
         loading, the full result for all rows is fetched which generally
         defeats the purpose of :meth:`~sqlalchemy.orm.query.Query.yield_per`.
 
-        Also note that many DBAPIs do not "stream" results, pre-buffering
-        all rows before making them available, including mysql-python and
-        psycopg2.  :meth:`~sqlalchemy.orm.query.Query.yield_per` will also
-        set the ``stream_results`` execution
-        option to ``True``, which currently is only understood by psycopg2
-        and causes server side cursors to be used.
+        Also note that while :meth:`~sqlalchemy.orm.query.Query.yield_per`
+        will set the ``stream_results`` execution option to True, currently
+        this is only understood by :mod:`~sqlalchemy.dialects.postgresql.psycopg2` dialect
+        which will stream results using server side cursors instead of pre-buffer
+        all rows for this query. Other DBAPIs pre-buffer all rows before
+        making them available.
 
         """
         self._yield_per = count
@@ -903,11 +904,10 @@ class Query(object):
         """
 
         if property is None:
-            from sqlalchemy.orm import properties
             mapper = object_mapper(instance)
 
             for prop in mapper.iterate_properties:
-                if isinstance(prop, properties.PropertyLoader) and \
+                if isinstance(prop, properties.RelationshipProperty) and \
                     prop.mapper is self._mapper_zero():
                     property = prop
                     break
@@ -2414,10 +2414,10 @@ class Query(object):
         """
         return [
             {
-                'name':ent._label_name,
-                'type':ent.type,
-                'aliased':getattr(ent, 'is_aliased_class', False),
-                'expr':ent.expr
+                'name': ent._label_name,
+                'type': ent.type,
+                'aliased': getattr(ent, 'is_aliased_class', False),
+                'expr': ent.expr
             }
             for ent in self._entities
         ]
@@ -2838,8 +2838,6 @@ class Query(object):
     def __str__(self):
         return str(self._compile_context().statement)
 
-inspection._self_inspects(Query)
-
 
 class _QueryEntity(object):
     """represent an entity column returned within a Query result."""
@@ -2939,10 +2937,8 @@ class _MapperEntity(_QueryEntity):
 
         return entity.common_parent(self.entity_zero)
 
-    #_adapted_selectable = None
     def adapt_to_selectable(self, query, sel):
         query._entities.append(self)
-    #    self._adapted_selectable = sel
 
     def _get_entity_clauses(self, query, context):
 
@@ -3188,8 +3184,6 @@ class _ColumnEntity(_QueryEntity):
         return str(self.column)
 
 
-log.class_logger(Query)
-
 
 class QueryContext(object):
     multi_row_eager_loaders = False
@@ -3230,6 +3224,37 @@ class QueryContext(object):
 class AliasOption(interfaces.MapperOption):
 
     def __init__(self, alias):
+        """Return a :class:`.MapperOption` that will indicate to the query that
+        the main table has been aliased.
+
+        This is used in the very rare case that :func:`.contains_eager`
+        is being used in conjunction with a user-defined SELECT
+        statement that aliases the parent table.  E.g.::
+
+            # define an aliased UNION called 'ulist'
+            statement = users.select(users.c.user_id==7).\\
+                            union(users.select(users.c.user_id>7)).\\
+                            alias('ulist')
+
+            # add on an eager load of "addresses"
+            statement = statement.outerjoin(addresses).\\
+                            select().apply_labels()
+
+            # create query, indicating "ulist" will be an
+            # alias for the main table, "addresses"
+            # property should be eager loaded
+            query = session.query(User).options(
+                                    contains_alias('ulist'),
+                                    contains_eager('addresses'))
+
+            # then get results via the statement
+            results = query.from_statement(statement).all()
+
+        :param alias: is the string name of an alias, or a
+         :class:`~.sql.expression.Alias` object representing
+         the alias.
+
+        """
         self.alias = alias
 
     def process_query(self, query):

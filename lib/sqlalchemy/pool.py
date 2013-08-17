@@ -20,7 +20,7 @@ import time
 import traceback
 import weakref
 
-from . import exc, log, event, events, interfaces, util
+from . import exc, log, event, interfaces, util
 from .util import queue as sqla_queue
 from .util import threading, memoized_property, \
     chop_traceback
@@ -185,8 +185,6 @@ class Pool(log.Identified):
             for l in listeners:
                 self.add_listener(l)
 
-    dispatch = event.dispatcher(events.PoolEvents)
-
     def _close_connection(self, connection):
         self.logger.debug("Closing connection %r", connection)
         try:
@@ -277,7 +275,8 @@ class Pool(log.Identified):
         except AttributeError:
             pass
         else:
-            return rec.checkout_existing()
+            if rec is not None:
+                return rec.checkout_existing()
 
         return _ConnectionFairy.checkout(self, self._threadconns)
 

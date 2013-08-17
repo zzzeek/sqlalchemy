@@ -7,6 +7,93 @@
     :version: 0.8.3
 
     .. change::
+        :tags: bug, examples
+
+        Added "autoincrement=False" to the history table created in the
+        versioning example, as this table shouldn't have autoinc on it
+        in any case, courtesy Patrick Schmid.
+
+    .. change::
+        :tags: bug, sql
+
+        The :meth:`.Operators.notin_` operator added in 0.8 now properly
+        produces the negation of the expression "IN" returns
+        when used against an empty collection.
+
+    .. change::
+        :tags: mysql, bug
+        :tickets: 2791
+
+        Updates to MySQL reserved words for versions 5.5, 5.6, courtesy
+        Hanno Schlichting.  Also in 0.7.11.
+
+    .. change::
+        :tags: sql, bug, cte
+        :tickets: 2783
+
+        Fixed bug in common table expression system where if the CTE were
+        used only as an ``alias()`` construct, it would not render using the
+        WITH keyword.  Also in 0.7.11.
+
+    .. change::
+        :tags: feature, examples
+
+        Improved the examples in ``examples/generic_associations``, including
+        that ``discriminator_on_association.py`` makes use of single table
+        inheritance do the work with the "discriminator".  Also
+        added a true "generic foreign key" example, which works similarly
+        to other popular frameworks in that it uses an open-ended integer
+        to point to any other table, foregoing traditional referential
+        integrity.  While we don't recommend this pattern, information wants
+        to be free.
+
+    .. change::
+        :tags: feature, orm, declarative
+
+        Added a convenience class decorator :func:`.as_declarative`, is
+        a wrapper for :func:`.declarative_base` which allows an existing base
+        class to be applied using a nifty class-decorated approach.
+
+    .. change::
+        :tags: bug, orm
+        :tickets: 2786
+
+        Fixed bug in ORM-level event registration where the "raw" or
+        "propagate" flags could potentially be mis-configured in some
+        "unmapped base class" configurations.
+
+    .. change::
+        :tags: bug, sql
+        :tickets: 2784
+
+        Fixed bug in :class:`.CheckConstraint` DDL where the "quote" flag from a
+        :class:`.Column` object would not be propagated.  Also in 0.7.11.
+
+    .. change::
+        :tags: bug, orm
+        :tickets: 2778
+
+        A performance fix related to the usage of the :func:`.defer` option
+        when loading mapped entities.   The function overhead of applying
+        a per-object deferred callable to an instance at load time was
+        significantly higher than that of just loading the data from the row
+        (note that ``defer()`` is meant to reduce DB/network overhead, not
+        necessarily function call count); the function call overhead is now
+        less than that of loading data from the column in all cases.  There
+        is also a reduction in the number of "lazy callable" objects created
+        per load from N (total deferred values in the result) to 1 (total
+        number of deferred cols).
+
+    .. change::
+        :tags: bug, sqlite
+        :tickets: 2781
+
+        The newly added SQLite DATETIME arguments storage_format and
+        regexp apparently were not fully implemented correctly; while the
+        arguments were accepted, in practice they would have no effect;
+        this has been fixed.
+
+    .. change::
         :tags: bug, sql, postgresql
         :tickets: 2780
 

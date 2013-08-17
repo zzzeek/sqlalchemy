@@ -499,9 +499,9 @@ class CollectionsTest(fixtures.ORMTest):
         control = set()
 
         def assert_eq():
-            self.assert_(set(direct) == canary.data)
-            self.assert_(set(adapter) == canary.data)
-            self.assert_(direct == control)
+            eq_(set(direct), canary.data)
+            eq_(set(adapter), canary.data)
+            eq_(direct, control)
 
         def addall(*values):
             for item in values:
@@ -519,10 +519,6 @@ class CollectionsTest(fixtures.ORMTest):
         addall(e)
         addall(e)
 
-        if hasattr(direct, 'pop'):
-            direct.pop()
-            control.pop()
-            assert_eq()
 
         if hasattr(direct, 'remove'):
             e = creator()
@@ -593,11 +589,19 @@ class CollectionsTest(fixtures.ORMTest):
             except TypeError:
                 assert True
 
-        if hasattr(direct, 'clear'):
-            addall(creator(), creator())
-            direct.clear()
-            control.clear()
-            assert_eq()
+        addall(creator(), creator())
+        direct.clear()
+        control.clear()
+        assert_eq()
+
+        # note: the clear test previously needs
+        # to have executed in order for this to
+        # pass in all cases; else there's the possibility
+        # of non-deterministic behavior.
+        addall(creator())
+        direct.pop()
+        control.pop()
+        assert_eq()
 
         if hasattr(direct, 'difference_update'):
             zap()
@@ -739,6 +743,7 @@ class CollectionsTest(fixtures.ORMTest):
             except TypeError:
                 assert True
 
+
     def _test_set_bulk(self, typecallable, creator=None):
         if creator is None:
             creator = self.entity_maker
@@ -809,6 +814,8 @@ class CollectionsTest(fixtures.ORMTest):
                 self.data.remove(item)
             def discard(self, item):
                 self.data.discard(item)
+            def clear(self):
+                self.data.clear()
             def pop(self):
                 return self.data.pop()
             def update(self, other):
@@ -841,6 +848,8 @@ class CollectionsTest(fixtures.ORMTest):
                 self.data.update(other)
             def __iter__(self):
                 return iter(self.data)
+            def clear(self):
+                self.data.clear()
             __hash__ = object.__hash__
             def __eq__(self, other):
                 return self.data == other

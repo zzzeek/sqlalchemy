@@ -15,11 +15,12 @@ from .. import log, util, exc
 from ..sql import operators
 from . import (
     attributes, object_session, util as orm_util, strategies,
-    object_mapper, exc as orm_exc
+    object_mapper, exc as orm_exc, properties
     )
 from .query import Query
 
-
+@log.class_logger
+@properties.RelationshipProperty._strategy_for(dict(lazy="dynamic"))
 class DynaLoader(strategies.AbstractRelationshipLoader):
     def init_class_attribute(self, mapper):
         self.is_class_level = True
@@ -38,9 +39,6 @@ class DynaLoader(strategies.AbstractRelationshipLoader):
             query_class=self.parent_property.query_class,
             backref=self.parent_property.back_populates,
         )
-
-log.class_logger(DynaLoader)
-
 
 class DynamicAttributeImpl(attributes.AttributeImpl):
     uses_objects = True
@@ -78,6 +76,9 @@ class DynamicAttributeImpl(attributes.AttributeImpl):
             history = self._get_collection_history(state, passive)
             return history.added_plus_unchanged
 
+    _append_token = attributes.Event._token_gen(attributes.OP_APPEND)
+    _remove_token = attributes.Event._token_gen(attributes.OP_REMOVE)
+
     def fire_append_event(self, state, dict_, value, initiator,
                                                     collection_history=None):
         if collection_history is None:
@@ -86,7 +87,7 @@ class DynamicAttributeImpl(attributes.AttributeImpl):
         collection_history.add_added(value)
 
         for fn in self.dispatch.append:
-            value = fn(state, value, initiator or self)
+            value = fn(state, value, initiator or self._append_token)
 
         if self.trackparent and value is not None:
             self.sethasparent(attributes.instance_state(value), state, True)
@@ -102,7 +103,7 @@ class DynamicAttributeImpl(attributes.AttributeImpl):
             self.sethasparent(attributes.instance_state(value), state, False)
 
         for fn in self.dispatch.remove:
-            fn(state, value, initiator or self)
+            fn(state, value, initiator or self._remove_token)
 
     def _modified_event(self, state, dict_):
 
