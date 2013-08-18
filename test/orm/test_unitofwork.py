@@ -17,6 +17,7 @@ from sqlalchemy.orm import mapper, relationship, create_session, \
 from sqlalchemy.testing import fixtures
 from test.orm import _fixtures
 from sqlalchemy.testing.assertsql import AllOf, CompiledSQL
+import unittest, sys
 
 class UnitOfWorkTest(object):
     pass
@@ -159,6 +160,7 @@ class UnicodeSchemaTest(fixtures.MappedTest):
 
     @testing.fails_on('mssql+pyodbc',
                       'pyodbc returns a non unicode encoding of the results description.')
+    @unittest.skipIf(hasattr(sys, 'pypy_version_info'), "pypy unsupported, fixed in 0.9")
     def test_mapping(self):
         t2, t1 = self.tables.t2, self.tables.t1
 
@@ -198,6 +200,7 @@ class UnicodeSchemaTest(fixtures.MappedTest):
 
     @testing.fails_on('mssql+pyodbc',
                       'pyodbc returns a non unicode encoding of the results description.')
+    @unittest.skipIf(hasattr(sys, 'pypy_version_info'), "pypy unsupported, fixed in 0.9")
     def test_inheritance_mapping(self):
         t2, t1 = self.tables.t2, self.tables.t1
 
