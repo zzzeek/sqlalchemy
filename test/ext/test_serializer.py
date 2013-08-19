@@ -8,7 +8,6 @@ from sqlalchemy.testing.schema import Column
 from sqlalchemy.orm import relationship, sessionmaker, scoped_session, \
     class_mapper, mapper, joinedload, configure_mappers, aliased
 from sqlalchemy.testing import eq_
-import unittest, sys
 
 from sqlalchemy.testing import fixtures
 
@@ -126,7 +125,7 @@ class SerializeTest(fixtures.MappedTest):
         eq_(list(q2.values(User.id, User.name)), [(9, 'fred')])
 
     @testing.requires.non_broken_pickle
-    @unittest.skipIf(hasattr(sys, 'pypy_version_info'), "pypy unsupported, fixed in 0.9")
+    @testing.skip_if(lambda: util.pypy, "pypy unsupported, fixed in 0.9")
     def test_query_three(self):
         ua = aliased(User)
         q = \
