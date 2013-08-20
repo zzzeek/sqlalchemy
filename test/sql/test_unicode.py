@@ -3,7 +3,7 @@
 
 from sqlalchemy import *
 from sqlalchemy.testing import fixtures, engines
-from sqlalchemy import testing
+from sqlalchemy import testing, util
 from sqlalchemy.testing.engines import utf8_engine
 from sqlalchemy.sql import column
 from sqlalchemy.testing.schema import Table, Column
@@ -72,6 +72,7 @@ class UnicodeSchemaTest(fixtures.TestBase):
         metadata.drop_all()
         del unicode_bind
 
+    @testing.skip_if(lambda: util.pypy, "pypy unsupported, fixed in 0.9")
     def test_insert(self):
         t1.insert().execute({u('méil'):1, ue('\u6e2c\u8a66'):5})
         t2.insert().execute({u('a'):1, u('b'):1})
@@ -84,6 +85,7 @@ class UnicodeSchemaTest(fixtures.TestBase):
         assert t2.select().execute().fetchall() == [(1, 1)]
         assert t3.select().execute().fetchall() == [(1, 5, 1, 1)]
 
+    @testing.skip_if(lambda: util.pypy, "pypy unsupported, fixed in 0.9")
     def test_reflect(self):
         t1.insert().execute({u('méil'):2, ue('\u6e2c\u8a66'):7})
         t2.insert().execute({u('a'):2, u('b'):2})

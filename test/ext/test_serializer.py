@@ -125,6 +125,7 @@ class SerializeTest(fixtures.MappedTest):
         eq_(list(q2.values(User.id, User.name)), [(9, 'fred')])
 
     @testing.requires.non_broken_pickle
+    @testing.skip_if(lambda: util.pypy, "pypy unsupported, fixed in 0.9")
     def test_query_three(self):
         ua = aliased(User)
         q = \

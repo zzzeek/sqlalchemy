@@ -4,10 +4,10 @@ from .. import exclusions
 from ..assertions import eq_
 from .. import engines
 
-from sqlalchemy import Integer, String, select, util
+from sqlalchemy import Integer, String, select, testing, util
 
 from ..schema import Table, Column
-
+         
 
 class LastrowidTest(fixtures.TablesTest):
     run_deletes = 'each'
@@ -60,6 +60,7 @@ class LastrowidTest(fixtures.TablesTest):
     #@exclusions.fails_if(lambda: util.pypy, "lastrowid not maintained after "
     #                        "connection close")
     @requirements.dbapi_lastrowid
+    @testing.skip_if(lambda: util.pypy, "pypy unsupported, fixed in 0.9")
     def test_native_lastrowid_autoinc(self):
         r = config.db.execute(
             self.tables.autoinc_pk.insert(),
