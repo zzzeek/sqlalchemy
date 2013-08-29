@@ -530,13 +530,10 @@ class MSTypeCompiler(compiler.GenericTypeCompiler):
         return self.visit_NTEXT(type_)
 
     def visit_NTEXT(self, type_):
-        type_.length = None
         return self._extend("NTEXT", type_)
 
     def visit_TEXT(self, type_):
-        type_.length = None
         return self._extend("TEXT", type_)
-
 
     def visit_VARCHAR(self, type_):
         length = type_.length

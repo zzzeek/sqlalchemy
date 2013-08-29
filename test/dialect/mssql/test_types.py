@@ -153,20 +153,11 @@ class TypeDDLTest(fixtures.TestBase):
             (mssql.MSText, [], {'collation': 'Latin1_General_CI_AS'},
              'TEXT COLLATE Latin1_General_CI_AS'),
 
-            (mssql.MSText, [10000], {},
-             'TEXT'),
-            (mssql.MSText, [10000], {'collation': 'Latin1_General_CI_AS'},
-             'TEXT COLLATE Latin1_General_CI_AS'),
-
             (mssql.MSNText, [], {},
              'NTEXT'),
             (mssql.MSNText, [], {'collation': 'Latin1_General_CI_AS'},
              'NTEXT COLLATE Latin1_General_CI_AS'),
 
-            (mssql.MSNText, [10000], {},
-             'NTEXT'),
-            (mssql.MSNText, [10000], {'collation': 'Latin1_General_CI_AS'},
-             'NTEXT COLLATE Latin1_General_CI_AS'),
            ]
 
         metadata = MetaData()
