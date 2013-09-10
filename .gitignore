@@ -10,7 +10,6 @@
 /doc/build/output/
 /dogpile_data/
 *.orig
-tox.ini
 .venv
 *.egg-info
 .coverage
