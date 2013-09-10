@@ -1,9 +1,9 @@
 from sqlalchemy.testing import eq_
-from sqlalchemy import *
-from sqlalchemy.orm import *
+from sqlalchemy import *  # NOQA
+from sqlalchemy.orm import *  # NOQA
 
 from sqlalchemy import testing
-from test.orm import _fixtures
+from test.orm import _fixtures  # NOQA
 from sqlalchemy.testing import fixtures, AssertsCompiledSQL
 from sqlalchemy.testing.schema import Table, Column
 
@@ -616,7 +616,6 @@ class ManyToManyToSingleTest(fixtures.MappedTest, AssertsCompiledSQL):
 
     def test_assert_joinedload_sql(self):
         Parent = self.classes.Parent
-        Child = self.classes.Child
 
         s = Session()
 
@@ -694,3 +693,77 @@ class SingleOnJoinedTest(fixtures.MappedTest):
             ])
         self.assert_sql_count(testing.db, go, 1)
 
+
+class SingleInheritanceMultiLevelsTest(testing.AssertsCompiledSQL, fixtures.MappedTest):
+    @classmethod
+    def define_tables(cls, metadata):
+        Table('employees', metadata,
+            Column('employee_id', Integer, primary_key=True, test_needs_autoincrement=True),
+            Column('name', String(50)),
+            Column('manager_data', String(50)),
+            Column('engineer_info', String(50)),
+            Column('type', String(20)),
+            Column('level', String(20)))
+
+    @classmethod
+    def setup_classes(cls):
+        global Employee, Manager, Engineer, JuniorEngineer
+        class Employee(cls.Comparable):
+            pass
+        class Manager(Employee):
+            pass
+        class Engineer(Employee):
+            pass
+        class JuniorEngineer(Engineer):
+            pass
+        class SeniorEngineer(Engineer):
+            pass
+
+    @classmethod
+    def setup_mappers(cls):
+        Employee, Manager, JuniorEngineer, SeniorEngineer, employees, Engineer = (
+            cls.classes.Employee,
+            cls.classes.Manager,
+            cls.classes.JuniorEngineer,
+            cls.classes.SeniorEngineer,
+            cls.tables.employees,
+            cls.classes.Engineer)
+
+        mapper(Employee, employees, polymorphic_on=employees.c.type)
+        mapper(Manager, inherits=Employee, polymorphic_identity='manager')
+        mapper(Engineer, inherits=Employee, polymorphic_identity='engineer', polymorphic_on=employees.c.level)
+        mapper(JuniorEngineer, inherits=Engineer, polymorphic_identity='junior')
+        mapper(SeniorEngineer, inherits=Engineer, polymorphic_identity='senior')
+
+    def test_single_inheritance_multi_level(self):
+        Employee, JuniorEngineer, SeniorEngineer, Manager, Engineer = (
+            self.classes.Employee,
+            self.classes.JuniorEngineer,
+            self.classes.SeniorEngineer,
+            self.classes.Manager,
+            self.classes.Engineer)
+
+        session = create_session()
+
+        m1 = Manager(name='Tom', manager_data='knows how to manage things')
+        e1 = Engineer(name='Kurt', engineer_info='knows how to hack')
+        e2 = JuniorEngineer(name='Ed', engineer_info='oh that ed')
+        e3 = SeniorEngineer(name='Fred', engineer_info='guru fred')
+        session.add_all([m1, e1, e2, e3])
+        session.flush()
+
+        assert session.query(Employee).all() == [m1, e1, e2, e3]
+        assert [e.type for e in session.query(Employee).all()] == ['manager', 'engineer', 'engineer', 'engineer']
+        assert [e.level for e in session.query(Employee).all()] == [None, None, 'junior', 'senior']
+        assert session.query(Engineer).all() == [e1, e2, e3]
+        assert session.query(Manager).all() == [m1]
+        assert session.query(JuniorEngineer).all() == [e2]
+        assert session.query(SeniorEngineer).all() == [e3]
+
+        m1 = session.query(Manager).one()
+        session.expire(m1, ['manager_data'])
+        eq_(m1.manager_data, "knows how to manage things")
+
+        row = session.query(Engineer.name, Engineer.employee_id).filter(Engineer.name == 'Kurt').first()
+        assert row.name == 'Kurt'
+        assert row.employee_id == e1.employee_id
