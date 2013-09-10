@@ -169,6 +169,12 @@ class DynamicTest(_DynamicFixture, _fixtures.FixtureTest, AssertsCompiledSQL):
         u = sess.query(User).first()
         eq_(u.addresses.count(), 1)
 
+    def test_len(self):
+        User, Address = self._user_address_fixture()
+        sess = create_session()
+        u = sess.query(User).first()
+        eq_(len(u.addresses), 1)
+
     def test_dynamic_on_backref(self):
         users, Address, addresses, User = (self.tables.users,
                                 self.classes.Address,

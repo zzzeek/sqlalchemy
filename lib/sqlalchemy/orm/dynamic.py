@@ -249,6 +249,9 @@ class AppenderMixin(object):
         else:
             return self._clone(sess).__getitem__(index)
 
+    def __len__(self):
+        return self.count()
+
     def count(self):
         sess = self.session
         if sess is None:
