@@ -1,6 +1,12 @@
 *.pyc
 /build/
 /dist/
+/bin/
+/lib/
+/include/
+/.Python
+/.tox/
+/*.egg
 /doc/build/output/
 /dogpile_data/
 *.orig
