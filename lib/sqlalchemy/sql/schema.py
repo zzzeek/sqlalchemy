@@ -31,7 +31,7 @@ as components in SQL expressions.
 import re
 import inspect
 from .. import exc, util, event, inspection
-from .base import SchemaEventTarget
+from .base import SchemaEventTarget, MethMixin
 from . import visitors
 from . import type_api
 from .base import _bind_or_error, ColumnCollection
@@ -63,13 +63,10 @@ def _validate_dialect_kwargs(kwargs, name):
                     "named <dialectname>_<argument>, got '%s'" % k)
 
 @inspection._self_inspects
-class SchemaItem(SchemaEventTarget, visitors.Visitable):
+class SchemaItem(MethMixin, SchemaEventTarget, visitors.Visitable):
     """Base class for items that define a database schema."""
 
     __visit_name__ = 'schema_item'
-
-    def _execute_on_connection(self, connection, multiparams, params):
-        return connection._execute_default(self, multiparams, params)
 
     def _init_items(self, *args):
         """Initialize the list of child items for this SchemaItem."""

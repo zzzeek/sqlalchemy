@@ -12,7 +12,7 @@ to invoke them for a create/drop call.
 from .. import util
 from .elements import ClauseElement
 from .visitors import traverse
-from .base import Executable, _generative, SchemaVisitor, _bind_or_error
+from .base import Executable, _generative, SchemaVisitor, _bind_or_error, MethMixin
 from ..util import topological
 from .. import event
 from .. import exc
@@ -25,7 +25,7 @@ class _DDLCompiles(ClauseElement):
         return dialect.ddl_compiler(dialect, self, **kw)
 
 
-class DDLElement(Executable, _DDLCompiles):
+class DDLElement(MethMixin, Executable, _DDLCompiles):
     """Base class for DDL expression constructs.
 
     This class is the base for the general purpose :class:`.DDL` class,
@@ -62,9 +62,6 @@ class DDLElement(Executable, _DDLCompiles):
     on = None
     dialect = None
     callable_ = None
-
-    def _execute_on_connection(self, connection, multiparams, params):
-        return connection._execute_ddl(self, multiparams, params)
 
     def execute(self, bind=None, target=None):
         """Execute this DDL immediately.

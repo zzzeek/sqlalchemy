@@ -23,6 +23,7 @@ To generate user-defined SQL strings, see
 """
 
 import re
+from .base import MethMixin
 from . import schema, sqltypes, operators, functions, \
         util as sql_util, visitors, elements, selectable, base
 from .. import util, exc
@@ -156,7 +157,7 @@ COMPOUND_KEYWORDS = {
     selectable.CompoundSelect.INTERSECT_ALL: 'INTERSECT ALL'
 }
 
-class Compiled(object):
+class Compiled(MethMixin, object):
     """Represent a compiled SQL or DDL expression.
 
     The ``__str__`` method of the ``Compiled`` object should produce
@@ -199,9 +200,6 @@ class Compiled(object):
     def compile(self):
         """Produce the internal string representation of this element."""
         pass
-
-    def _execute_on_connection(self, connection, multiparams, params):
-        return connection._execute_compiled(self, multiparams, params)
 
     @property
     def sql_compiler(self):
