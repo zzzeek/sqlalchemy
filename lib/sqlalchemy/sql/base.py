@@ -346,3 +346,8 @@ def _bind_or_error(schemaitem, msg=None):
                    "against." % item
         raise exc.UnboundExecutionError(msg)
     return bind
+
+class MethMixin(object):
+
+    def _execute_on_connection(self, connection, multiparams, params):
+        return connection._execute_function(self, multiparams, params)

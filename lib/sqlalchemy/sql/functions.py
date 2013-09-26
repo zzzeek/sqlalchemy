@@ -8,7 +8,7 @@
 
 """
 from . import sqltypes, schema
-from .base import Executable
+from .base import Executable, MethMixin
 from .elements import ClauseList, Cast, Extract, _literal_as_binds, \
         literal_column, _type_from_args, ColumnElement, _clone,\
         Over, BindParameter
@@ -34,7 +34,7 @@ def register_function(identifier, fn, package="_default"):
     reg[identifier] = fn
 
 
-class FunctionElement(Executable, ColumnElement, FromClause):
+class FunctionElement(MethMixin, Executable, ColumnElement, FromClause):
     """Base for SQL function-oriented constructs.
 
     .. seealso::
@@ -59,9 +59,6 @@ class FunctionElement(Executable, ColumnElement, FromClause):
                                 operator=operators.comma_op,
                                  group_contents=True, *args).\
                                  self_group()
-
-    def _execute_on_connection(self, connection, multiparams, params):
-        return connection._execute_function(self, multiparams, params)
 
     @property
     def columns(self):

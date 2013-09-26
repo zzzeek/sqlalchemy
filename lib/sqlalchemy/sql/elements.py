@@ -17,7 +17,7 @@ from . import operators
 from .visitors import Visitable, cloned_traverse, traverse
 from .annotation import Annotated
 import itertools
-from .base import Executable, PARSE_AUTOCOMMIT, Immutable, NO_ARG
+from .base import Executable, PARSE_AUTOCOMMIT, Immutable, NO_ARG, MethMixin
 import re
 import operator
 
@@ -188,7 +188,7 @@ def not_(clause):
 
 
 @inspection._self_inspects
-class ClauseElement(Visitable):
+class ClauseElement(MethMixin, Visitable):
     """Base class for elements of a programmatically constructed SQL
     expression.
 
@@ -291,9 +291,6 @@ class ClauseElement(Visitable):
             # if no clone, since we have no annotations we return
             # self
             return self
-
-    def _execute_on_connection(self, connection, multiparams, params):
-        return connection._execute_clauseelement(self, multiparams, params)
 
     def unique_params(self, *optionaldict, **kwargs):
         """Return a copy with :func:`bindparam()` elements replaced.
