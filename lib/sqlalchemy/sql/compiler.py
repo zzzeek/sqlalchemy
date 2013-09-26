@@ -23,7 +23,7 @@ To generate user-defined SQL strings, see
 """
 
 import re
-# from .base import MethMixin
+from .base import MethMixin
 from . import schema, sqltypes, operators, functions, \
         util as sql_util, visitors, elements, selectable, base
 from .. import util, exc
