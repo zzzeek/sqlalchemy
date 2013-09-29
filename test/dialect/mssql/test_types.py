@@ -132,6 +132,10 @@ class TypeDDLTest(fixtures.TestBase):
              'VARCHAR(1)'),
             (mssql.MSString, [1], {'collation': 'Latin1_General_CI_AS'},
              'VARCHAR(1) COLLATE Latin1_General_CI_AS'),
+            (mssql.MSString, [8001], {},
+             'VARCHAR(max)'),
+            (mssql.MSString, [8001], {'collation': 'Latin1_General_CI_AS'},
+             'VARCHAR(max) COLLATE Latin1_General_CI_AS'),
 
             (mssql.MSNVarchar, [], {},
              'NVARCHAR(max)'),
@@ -139,6 +143,10 @@ class TypeDDLTest(fixtures.TestBase):
              'NVARCHAR(1)'),
             (mssql.MSNVarchar, [1], {'collation': 'Latin1_General_CI_AS'},
              'NVARCHAR(1) COLLATE Latin1_General_CI_AS'),
+            (mssql.MSNVarchar, [4001], {},
+             'NVARCHAR(max)'),
+            (mssql.MSNVarchar, [4001], {'collation': 'Latin1_General_CI_AS'},
+             'NVARCHAR(max) COLLATE Latin1_General_CI_AS'),
 
             (mssql.MSText, [], {},
              'TEXT'),
@@ -149,6 +157,7 @@ class TypeDDLTest(fixtures.TestBase):
              'NTEXT'),
             (mssql.MSNText, [], {'collation': 'Latin1_General_CI_AS'},
              'NTEXT COLLATE Latin1_General_CI_AS'),
+
            ]
 
         metadata = MetaData()
