@@ -1,0 +1,5 @@
+language: python
+# command to install dependencies
+install: "pip install detox"
+# # command to run tests
+script: detox --recreate
