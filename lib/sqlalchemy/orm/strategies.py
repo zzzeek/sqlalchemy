@@ -770,6 +770,8 @@ class SubqueryLoader(AbstractRelationshipLoader):
         # select from the identity columns of the outer
         q._set_entities(q._adapt_col_list(leftmost_attr))
 
+        q._distinct = True
+
         if q._order_by is False:
             q._order_by = leftmost_mapper.order_by
 

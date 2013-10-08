@@ -287,7 +287,7 @@ class RelationshipFromSingleTest(testing.AssertsCompiledSQL, fixtures.MappedTest
                             '_id AS employee_stuff_employee_id, '
                             'employee_stuff.name AS '
                             'employee_stuff_name, anon_1.employee_id '
-                            'AS anon_1_employee_id FROM (SELECT '
+                            'AS anon_1_employee_id FROM (SELECT DISTINCT '
                             'employee.id AS employee_id FROM employee '
                             'WHERE employee.type IN (:type_1)) AS anon_1 '
                             'JOIN employee_stuff ON anon_1.employee_id '
