@@ -1563,3 +1563,94 @@ class CyclicalInheritingEagerTestTwo(fixtures.DeclarativeMappedTest,
         d = session.query(Director).options(subqueryload('*')).first()
         assert len(list(session)) == 3
 
+
+class SubqueryloadDistinctTest(fixtures.DeclarativeMappedTest,
+                               testing.AssertsCompiledSQL):
+    __dialect__ = 'default'
+
+    @classmethod
+    def setup_classes(cls):
+        Base = cls.DeclarativeBasic
+
+        class Director(Base):
+            __tablename__ = 'director'
+            id = Column(Integer, primary_key=True, test_needs_autoincrement=True)
+            name = Column(String(50))
+            movies = relationship('Movie')
+            photos = relationship('DirectorPhoto')
+
+        class DirectorPhoto(Base):
+            __tablename__ = 'director_photo'
+            id = Column(Integer, primary_key=True, test_needs_autoincrement=True)
+            path = Column(String(255))
+            director_id = Column(Integer, ForeignKey('director.id'))
+            director = relationship(Director, primaryjoin=director_id == Director.id)
+            
+        class Movie(Base):
+            __tablename__ = 'movie'
+            id = Column(Integer, primary_key=True, test_needs_autoincrement=True)
+            director_id = Column(Integer, ForeignKey('director.id'))
+            director = relationship(Director, primaryjoin=director_id == Director.id)
+            title = Column(String(50))
+
+    @classmethod
+    def insert_data(cls):
+        Movie = cls.classes.Movie
+        Director = cls.classes.Director
+        DirectorPhoto = cls.classes.DirectorPhoto
+
+        d = Director(name='Woody Allen')
+        d.photos = [DirectorPhoto(path='/1.jpg'),
+                    DirectorPhoto(path='/2.jpg')]
+        d.movies = [Movie(title='Manhattan'),
+                    Movie(title='Sweet and Lowdown')]
+        sess = create_session()
+        sess.add_all([d])
+        sess.flush()
+
+    def test(self):
+        Movie = self.classes.Movie
+        Director = self.classes.Director
+
+        s = create_session()
+
+        q = (
+            s.query(Movie)
+            .options(
+                subqueryload(Movie.director)
+                .subqueryload(Director.photos)
+            )
+        )
+        ctx = q._compile_context()
+
+        q2 = ctx.attributes[
+            ('subquery', (inspect(Movie), inspect(Movie).attrs.director))
+        ]
+        ctx2 = q2._compile_context()
+
+        q3 = ctx2.attributes[
+            ('subquery', (inspect(Director), inspect(Director).attrs.photos))
+        ]
+        q3._compile_context()
+        self.assert_compile(
+            q3,
+            'SELECT director_photo.id AS director_photo_id, '
+            'director_photo.path AS director_photo_path, '
+            'director_photo.director_id AS director_photo_director_id, '
+            'director_1.id AS director_1_id '
+            'FROM (SELECT DISTINCT movie.director_id AS movie_director_id '
+            'FROM movie) AS anon_1 '
+            'JOIN director AS director_1 ON anon_1.movie_director_id = director_1.id '
+            'JOIN director_photo ON director_1.id = director_photo.director_id '
+            'ORDER BY director_1.id',
+            dialect='default'
+        )
+        result = s.execute(q3)
+        rows = result.fetchall()
+        eq_(rows, [
+            (1, u'/1.jpg', 1, 1),
+            (2, u'/2.jpg', 1, 1),
+        ])
+
+        movies = q.all()
+        eq_(len(list(s)), 5)
