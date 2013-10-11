@@ -767,10 +767,17 @@ class SubqueryLoader(AbstractRelationshipLoader):
         if not q._from_obj and entity_mapper.isa(leftmost_mapper):
             q._set_select_from([entity_mapper], False)
 
-        # select from the identity columns of the outer
-        q._set_entities(q._adapt_col_list(leftmost_attr))
+        target_cols = q._adapt_col_list(leftmost_attr)
 
-        q._distinct = True
+        # select from the identity columns of the outer
+        q._set_entities(target_cols)
+
+        # if target_cols refer to a non-primary key or only
+        # part of a composite primary key, set the q as distinct
+        for c in target_cols:
+            if not set(target_cols).issuperset(c.table.primary_key):
+                q._distinct = True
+                break
 
         if q._order_by is False:
             q._order_by = leftmost_mapper.order_by

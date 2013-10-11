@@ -1071,7 +1071,7 @@ class BaseRelationFromJoinedSubclassTest(_Polymorphic):
                     "paperwork.description AS paperwork_description, "
                     "paperwork.person_id AS paperwork_person_id, "
                     "anon_1.people_person_id AS anon_1_people_person_id "
-                    "FROM (SELECT DISTINCT people.person_id AS people_person_id "
+                    "FROM (SELECT people.person_id AS people_person_id "
                         "FROM people JOIN engineers "
                         "ON people.person_id = engineers.engineer_id "
                         "WHERE engineers.primary_language = "
@@ -1119,7 +1119,7 @@ class BaseRelationFromJoinedSubclassTest(_Polymorphic):
                 "paperwork.description AS paperwork_description, "
                 "paperwork.person_id AS paperwork_person_id, "
                 "anon_1.people_person_id AS anon_1_people_person_id "
-                "FROM (SELECT DISTINCT people.person_id AS people_person_id "
+                "FROM (SELECT people.person_id AS people_person_id "
                 "FROM people JOIN engineers ON people.person_id = "
                 "engineers.engineer_id JOIN paperwork "
                 "ON people.person_id = paperwork.person_id "
@@ -1537,7 +1537,7 @@ class CyclicalInheritingEagerTestTwo(fixtures.DeclarativeMappedTest,
             "movie.director_id AS movie_director_id, "
             "movie.title AS movie_title, "
             "anon_1.director_id AS anon_1_director_id "
-            "FROM (SELECT DISTINCT director.id AS director_id "
+            "FROM (SELECT director.id AS director_id "
                 "FROM persistent JOIN director "
                 "ON persistent.id = director.id) AS anon_1 "
             "JOIN (persistent JOIN movie ON persistent.id = movie.id) "
@@ -1626,8 +1626,24 @@ class SubqueryloadDistinctTest(fixtures.DeclarativeMappedTest,
         q2 = ctx.attributes[
             ('subquery', (inspect(Movie), inspect(Movie).attrs.director))
         ]
+        self.assert_compile(
+            q2,
+            'SELECT director.id AS director_id, '
+            'director.name AS director_name, '
+            'anon_1.movie_director_id AS anon_1_movie_director_id '
+            'FROM (SELECT DISTINCT movie.director_id AS movie_director_id '
+            'FROM movie) AS anon_1 '
+            'JOIN director ON anon_1.movie_director_id = director.id '
+            'ORDER BY anon_1.movie_director_id',
+            dialect='default'
+        )
         ctx2 = q2._compile_context()
-
+        result = s.execute(q2)
+        rows = result.fetchall()
+        eq_(rows, [
+            (1, 'Woody Allen', 1),
+        ])
+        
         q3 = ctx2.attributes[
             ('subquery', (inspect(Director), inspect(Director).attrs.photos))
         ]
