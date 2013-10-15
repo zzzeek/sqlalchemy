@@ -1451,6 +1451,29 @@ class MySQLCompiler(compiler.SQLCompiler):
 class MySQLDDLCompiler(compiler.DDLCompiler):
     def create_table_constraints(self, table):
         """Get table constraints."""
+
+        # For foreign keys, MySQL silently fails or drops other FK attributes
+        # if MATCH, DEFERRABLE, or INITIALLY are defined. Warn on 0.8, raise
+        # an error on 0.9
+        # https://dev.mysql.com/doc/refman/5.5/en/create-table-foreign-keys.html
+        warned = False
+        for fk in table.foreign_keys:
+            if warned is True:
+                break
+            for attr in ('match', 'deferrable', 'initially'):
+                if getattr(fk, attr) is not None:
+                    util.warn(
+                        "MySQL silently ignores the options MATCH, DEFERRABLE, "
+                        "or INITIALLY on foreign keys, and the options ON UPDATE "
+                        "and ON DELETE when MATCH is used, but table '%s' uses "
+                        "at least one such option. Your MySQL schema probably "
+                        "differs from your definition. This will throw a "
+                        "CompileError on SQLAlchemy 0.9." % table.name
+                    )
+                    warned = True
+                    break
+
+
         constraint_string = super(
                         MySQLDDLCompiler, self).create_table_constraints(table)
 
