@@ -624,7 +624,7 @@ class ReflectionTest(fixtures.TestBase, ComparesTables):
         finally:
             testing.db.execute("drop table book")
 
-    def test_fk_error(self):
+    def test_fk_table_error(self):
         metadata = MetaData(testing.db)
         Table('slots', metadata,
             Column('slot_id', sa.Integer, primary_key=True),
@@ -637,6 +637,33 @@ class ReflectionTest(fixtures.TestBase, ComparesTables):
                             "could not find table 'pkgs' with which to generate "
                             "a foreign key to target column 'pkg_id'",
                               metadata.create_all)
+
+    @testing.only_on('mysql')
+    def test_fk_attribute_error(self):
+        """
+        MySQL FKs cannot handle certain attributes... throw a CompileError
+        """
+        meta = MetaData(testing.db)
+        Table('users', meta,
+            Column('id', sa.Integer, primary_key=True),
+            Column('name', sa.String(30)),
+            test_needs_fk=True)
+        Table('addresses', meta,
+            Column('id', sa.Integer, primary_key=True),
+            Column('user_id', sa.Integer, sa.ForeignKey(
+                'users.id',
+                name = 'addresses_user_id_fkey',
+                match = 'FULL',
+                onupdate='CASCADE',
+                ondelete='CASCADE'
+            )),
+            test_needs_fk=True)
+
+        assert_raises_message(sa.exc.CompileError,
+            "MySQL does not support specifying MATCH, DEFERRABLE, or "
+            "INITIALLY on foreign keys, but a foreign key on table "
+            "'addresses' defines at least one.",
+            meta.create_all)
 
     def test_composite_pks(self):
         """test reflection of a composite primary key"""
