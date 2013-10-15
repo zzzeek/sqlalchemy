@@ -1451,6 +1451,20 @@ class MySQLCompiler(compiler.SQLCompiler):
 class MySQLDDLCompiler(compiler.DDLCompiler):
     def create_table_constraints(self, table):
         """Get table constraints."""
+
+        # For foreign keys, MySQL silently fails or drops other FK attributes
+        # if MATCH, DEFERRABLE, or INITIALLY are defined. Warn on 0.8, raise
+        # an error on 0.9
+        # https://dev.mysql.com/doc/refman/5.5/en/create-table-foreign-keys.html
+        for fk in table.foreign_keys:
+            for attr in ('match', 'deferrable', 'initially'):
+                if getattr(fk, attr) is not None:
+                    raise exc.CompileError(
+                        "MySQL does not support specifying MATCH, DEFERRABLE, "
+                        "or INITIALLY on foreign keys, but a foreign key on "
+                        "table '%s' defines at least one." % table.name
+                    )
+
         constraint_string = super(
                         MySQLDDLCompiler, self).create_table_constraints(table)
 
