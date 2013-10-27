@@ -1,3 +1,9 @@
+# testing/assertions.py
+# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+#
+# This module is part of SQLAlchemy and is released under
+# the MIT License: http://www.opensource.org/licenses/mit-license.php
+
 from __future__ import absolute_import
 
 from . import util as testutil
@@ -92,29 +98,35 @@ def uses_deprecated(*messages):
 
     @decorator
     def decorate(fn, *args, **kw):
-        # todo: should probably be strict about this, too
-        filters = [dict(action='ignore',
-                        category=sa_exc.SAPendingDeprecationWarning)]
-        if not messages:
-            filters.append(dict(action='ignore',
-                                category=sa_exc.SADeprecationWarning))
-        else:
-            filters.extend(
-                [dict(action='ignore',
-                      message=message,
-                      category=sa_exc.SADeprecationWarning)
-                 for message in
-                 [(m.startswith('//') and
-                    ('Call to deprecated function ' + m[2:]) or m)
-                   for m in messages]])
-
-        for f in filters:
-            warnings.filterwarnings(**f)
-        try:
+        with expect_deprecated(*messages):
             return fn(*args, **kw)
-        finally:
-            resetwarnings()
     return decorate
+
+@contextlib.contextmanager
+def expect_deprecated(*messages):
+    # todo: should probably be strict about this, too
+    filters = [dict(action='ignore',
+                    category=sa_exc.SAPendingDeprecationWarning)]
+    if not messages:
+        filters.append(dict(action='ignore',
+                            category=sa_exc.SADeprecationWarning))
+    else:
+        filters.extend(
+            [dict(action='ignore',
+                  message=message,
+                  category=sa_exc.SADeprecationWarning)
+             for message in
+             [(m.startswith('//') and
+                ('Call to deprecated function ' + m[2:]) or m)
+               for m in messages]])
+
+    for f in filters:
+        warnings.filterwarnings(**f)
+    try:
+        yield
+    finally:
+        resetwarnings()
+
 
 
 def global_cleanup_assertions():
@@ -181,7 +193,8 @@ class AssertsCompiledSQL(object):
                         checkparams=None, dialect=None,
                         checkpositional=None,
                         use_default_dialect=False,
-                        allow_dialect_select=False):
+                        allow_dialect_select=False,
+                        literal_binds=False):
         if use_default_dialect:
             dialect = default.DefaultDialect()
         elif allow_dialect_select:
@@ -199,13 +212,21 @@ class AssertsCompiledSQL(object):
 
 
         kw = {}
+        compile_kwargs = {}
+
         if params is not None:
             kw['column_keys'] = list(params)
+
+        if literal_binds:
+            compile_kwargs['literal_binds'] = True
 
         if isinstance(clause, orm.Query):
             context = clause._compile_context()
             context.statement.use_labels = True
             clause = context.statement
+
+        if compile_kwargs:
+            kw['compile_kwargs'] = compile_kwargs
 
         c = clause.compile(dialect=dialect, **kw)
 

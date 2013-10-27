@@ -24,7 +24,8 @@ from . import (
     attributes, interfaces, object_mapper, persistence,
     exc as orm_exc, loading
     )
-from .base import _entity_descriptor, _is_aliased_class, _is_mapped_class, _orm_columns
+from .base import _entity_descriptor, _is_aliased_class, \
+            _is_mapped_class, _orm_columns, _generative
 from .path_registry import PathRegistry
 from .util import (
     AliasedClass, ORMAdapter, join as orm_join, with_parent, aliased
@@ -35,22 +36,12 @@ from ..sql import (
         util as sql_util,
         expression, visitors
     )
+from ..sql.base import ColumnCollection
+from ..sql import operators
 from . import properties
 
 __all__ = ['Query', 'QueryContext', 'aliased']
 
-
-def _generative(*assertions):
-    """Mark a method as generative."""
-
-    @util.decorator
-    def generate(fn, *args, **kw):
-        self = args[0]._clone()
-        for assertion in assertions:
-            assertion(self, fn.__name__)
-        fn(self, *args[1:], **kw)
-        return self
-    return generate
 
 _path_registry = PathRegistry.root
 
@@ -119,6 +110,7 @@ class Query(object):
         if entity_wrapper is None:
             entity_wrapper = _QueryEntity
         self._entities = []
+        self._primary_entity = None
         for ent in util.to_list(entities):
             entity_wrapper(self, ent)
 
@@ -300,11 +292,8 @@ class Query(object):
 
     @property
     def _mapper_entities(self):
-        # TODO: this is wrong, its hardcoded to "primary entity" when
-        # for the case of __all_equivs() it should not be
-        # the name of this accessor is wrong too
         for ent in self._entities:
-            if hasattr(ent, 'primary_entity'):
+            if isinstance(ent, _MapperEntity):
                 yield ent
 
     def _joinpoint_zero(self):
@@ -314,9 +303,10 @@ class Query(object):
         )
 
     def _mapper_zero_or_none(self):
-        if not getattr(self._entities[0], 'primary_entity', False):
+        if self._primary_entity:
+            return self._primary_entity.mapper
+        else:
             return None
-        return self._entities[0].mapper
 
     def _only_mapper_zero(self, rationale=None):
         if len(self._entities) > 1:
@@ -328,16 +318,11 @@ class Query(object):
         return self._mapper_zero()
 
     def _only_full_mapper_zero(self, methname):
-        if len(self._entities) != 1:
+        if self._entities != [self._primary_entity]:
             raise sa_exc.InvalidRequestError(
                     "%s() can only be used against "
                     "a single mapped class." % methname)
-        entity = self._entity_zero()
-        if not hasattr(entity, 'primary_entity'):
-            raise sa_exc.InvalidRequestError(
-                    "%s() can only be used against "
-                    "a single mapped class." % methname)
-        return entity.entity_zero
+        return self._primary_entity.entity_zero
 
     def _only_entity_zero(self, rationale=None):
         if len(self._entities) > 1:
@@ -699,7 +684,7 @@ class Query(object):
 
         """
 
-        if not getattr(self._entities[0], 'primary_entity', False):
+        if not self._primary_entity:
             raise sa_exc.InvalidRequestError(
                             "No primary mapper set up for this Query.")
         entity = self._entities[0]._clone()
@@ -2500,7 +2485,7 @@ class Query(object):
         .. versionadded:: 0.8.1
 
         """
-        return sql.exists(self.with_entities('1').statement)
+        return sql.exists(self.statement.with_only_columns(['1']))
 
     def count(self):
         """Return a count of rows this Query would return.
@@ -2571,19 +2556,37 @@ class Query(object):
             The expression evaluator currently doesn't account for differing
             string collations between the database and Python.
 
-        Returns the number of rows deleted, excluding any cascades.
+        :return: the count of rows matched as returned by the database's
+          "row count" feature.
 
-        The method does *not* offer in-Python cascading of relationships - it
-        is assumed that ON DELETE CASCADE is configured for any foreign key
-        references which require it. The Session needs to be expired (occurs
-        automatically after commit(), or call expire_all()) in order for the
-        state of dependent objects subject to delete or delete-orphan cascade
-        to be correctly represented.
+        This method has several key caveats:
 
-        Note that the :meth:`.MapperEvents.before_delete` and
-        :meth:`.MapperEvents.after_delete`
-        events are **not** invoked from this method.  It instead
-        invokes :meth:`.SessionEvents.after_bulk_delete`.
+        * The method does **not** offer in-Python cascading of relationships - it
+          is assumed that ON DELETE CASCADE/SET NULL/etc. is configured for any foreign key
+          references which require it, otherwise the database may emit an
+          integrity violation if foreign key references are being enforced.
+
+          After the DELETE, dependent objects in the :class:`.Session` which
+          were impacted by an ON DELETE may not contain the current
+          state, or may have been deleted. This issue is resolved once the
+          :class:`.Session` is expired,
+          which normally occurs upon :meth:`.Session.commit` or can be forced
+          by using :meth:`.Session.expire_all`.  Accessing an expired object
+          whose row has been deleted will invoke a SELECT to locate the
+          row; when the row is not found, an :class:`.ObjectDeletedError`
+          is raised.
+
+        * The :meth:`.MapperEvents.before_delete` and
+          :meth:`.MapperEvents.after_delete`
+          events are **not** invoked from this method.  Instead, the
+          :meth:`.SessionEvents.after_bulk_delete` method is provided to act
+          upon a mass DELETE of entity rows.
+
+        .. seealso::
+
+            :meth:`.Query.update`
+
+            :ref:`inserts_and_updates` - Core SQL tutorial
 
         """
         #TODO: cascades need handling.
@@ -2622,20 +2625,50 @@ class Query(object):
             The expression evaluator currently doesn't account for differing
             string collations between the database and Python.
 
-        Returns the number of rows matched by the update.
+        :return: the count of rows matched as returned by the database's
+          "row count" feature.
 
-        The method does *not* offer in-Python cascading of relationships - it
-        is assumed that ON UPDATE CASCADE is configured for any foreign key
-        references which require it.
+        This method has several key caveats:
 
-        The Session needs to be expired (occurs automatically after commit(),
-        or call expire_all()) in order for the state of dependent objects
-        subject foreign key cascade to be correctly represented.
+        * The method does **not** offer in-Python cascading of relationships - it
+          is assumed that ON UPDATE CASCADE is configured for any foreign key
+          references which require it, otherwise the database may emit an
+          integrity violation if foreign key references are being enforced.
 
-        Note that the :meth:`.MapperEvents.before_update` and
-        :meth:`.MapperEvents.after_update`
-        events are **not** invoked from this method.  It instead
-        invokes :meth:`.SessionEvents.after_bulk_update`.
+          After the UPDATE, dependent objects in the :class:`.Session` which
+          were impacted by an ON UPDATE CASCADE may not contain the current
+          state; this issue is resolved once the :class:`.Session` is expired,
+          which normally occurs upon :meth:`.Session.commit` or can be forced
+          by using :meth:`.Session.expire_all`.
+
+        * As of 0.8, this method will support multiple table updates, as detailed
+          in :ref:`multi_table_updates`, and this behavior does extend to support
+          updates of joined-inheritance and other multiple table mappings.  However,
+          the **join condition of an inheritance mapper is currently not
+          automatically rendered**.
+          Care must be taken in any multiple-table update to explicitly include
+          the joining condition between those tables, even in mappings where
+          this is normally automatic.
+          E.g. if a class ``Engineer`` subclasses ``Employee``, an UPDATE of the
+          ``Engineer`` local table using criteria against the ``Employee``
+          local table might look like::
+
+                session.query(Engineer).\\
+                    filter(Engineer.id == Employee.id).\\
+                    filter(Employee.name == 'dilbert').\\
+                    update({"engineer_type": "programmer"})
+
+        * The :meth:`.MapperEvents.before_update` and
+          :meth:`.MapperEvents.after_update`
+          events are **not** invoked from this method.  Instead, the
+          :meth:`.SessionEvents.after_bulk_update` method is provided to act
+          upon a mass UPDATE of entity rows.
+
+        .. seealso::
+
+            :meth:`.Query.delete`
+
+            :ref:`inserts_and_updates` - Core SQL tutorial
 
         """
 
@@ -2832,8 +2865,9 @@ class Query(object):
                 if adapter:
                     single_crit = adapter.traverse(single_crit)
                 single_crit = self._adapt_clause(single_crit, False, False)
-                context.whereclause = sql.and_(context.whereclause,
-                                            single_crit)
+                context.whereclause = sql.and_(
+                                    sql.True_._ifnone(context.whereclause),
+                                    single_crit)
 
     def __str__(self):
         return str(self._compile_context().statement)
@@ -2848,6 +2882,8 @@ class _QueryEntity(object):
             if not isinstance(entity, util.string_types) and \
                         _is_mapped_class(entity):
                 cls = _MapperEntity
+            elif isinstance(entity, Bundle):
+                cls = _BundleEntity
             else:
                 cls = _ColumnEntity
         return object.__new__(cls)
@@ -2862,11 +2898,14 @@ class _MapperEntity(_QueryEntity):
     """mapper/class/AliasedClass entity"""
 
     def __init__(self, query, entity):
-        self.primary_entity = not query._entities
+        if not query._primary_entity:
+            query._primary_entity = self
         query._entities.append(self)
 
         self.entities = [entity]
         self.expr = entity
+
+    supports_single_entity = True
 
     def setup_entity(self, ext_info, aliased_adapter):
         self.mapper = ext_info.mapper
@@ -2882,6 +2921,7 @@ class _MapperEntity(_QueryEntity):
         else:
             self._label_name = self.mapper.class_.__name__
         self.path = self.entity_zero._path_registry
+        self.custom_rows = bool(self.mapper.dispatch.append_result)
 
     def set_with_polymorphic(self, query, cls_or_mappers,
                                 selectable, polymorphic_on):
@@ -2976,7 +3016,7 @@ class _MapperEntity(_QueryEntity):
                 self.selectable,
                 self.mapper._equivalent_columns)
 
-        if self.primary_entity:
+        if query._primary_entity is self:
             _instance = loading.instance_processor(
                 self.mapper,
                 context,
@@ -3046,6 +3086,187 @@ class _MapperEntity(_QueryEntity):
     def __str__(self):
         return str(self.mapper)
 
+@inspection._self_inspects
+class Bundle(object):
+    """A grouping of SQL expressions that are returned by a :class:`.Query`
+    under one namespace.
+
+    The :class:`.Bundle` essentially allows nesting of the tuple-based
+    results returned by a column-oriented :class:`.Query` object.  It also
+    is extensible via simple subclassing, where the primary capability
+    to override is that of how the set of expressions should be returned,
+    allowing post-processing as well as custom return types, without
+    involving ORM identity-mapped classes.
+
+    .. versionadded:: 0.9.0
+
+    .. seealso::
+
+        :ref:`bundles`
+
+    """
+
+    single_entity = False
+    """If True, queries for a single Bundle will be returned as a single
+    entity, rather than an element within a keyed tuple."""
+
+    def __init__(self, name, *exprs, **kw):
+        """Construct a new :class:`.Bundle`.
+
+        e.g.::
+
+            bn = Bundle("mybundle", MyClass.x, MyClass.y)
+
+            for row in session.query(bn).filter(bn.c.x == 5).filter(bn.c.y == 4):
+                print(row.mybundle.x, row.mybundle.y)
+
+        :param name: name of the bundle.
+        :param \*exprs: columns or SQL expressions comprising the bundle.
+        :param single_entity=False: if True, rows for this :class:`.Bundle`
+         can be returned as a "single entity" outside of any enclosing tuple
+         in the same manner as a mapped entity.
+
+        """
+        self.name = self._label = name
+        self.exprs = exprs
+        self.c = self.columns = ColumnCollection()
+        self.columns.update((getattr(col, "key", col._label), col)
+                    for col in exprs)
+        self.single_entity = kw.pop('single_entity', self.single_entity)
+
+    columns = None
+    """A namespace of SQL expressions referred to by this :class:`.Bundle`.
+
+        e.g.::
+
+            bn = Bundle("mybundle", MyClass.x, MyClass.y)
+
+            q = sess.query(bn).filter(bn.c.x == 5)
+
+        Nesting of bundles is also supported::
+
+            b1 = Bundle("b1",
+                    Bundle('b2', MyClass.a, MyClass.b),
+                    Bundle('b3', MyClass.x, MyClass.y)
+                )
+
+            q = sess.query(b1).filter(b1.c.b2.c.a == 5).filter(b1.c.b3.c.y == 9)
+
+    .. seealso::
+
+        :attr:`.Bundle.c`
+
+    """
+
+    c = None
+    """An alias for :attr:`.Bundle.columns`."""
+
+    def _clone(self):
+        cloned = self.__class__.__new__(self.__class__)
+        cloned.__dict__.update(self.__dict__)
+        return cloned
+
+    def __clause_element__(self):
+        return expression.ClauseList(group=False, *self.c)
+
+    @property
+    def clauses(self):
+        return self.__clause_element__().clauses
+
+    def label(self, name):
+        """Provide a copy of this :class:`.Bundle` passing a new label."""
+
+        cloned = self._clone()
+        cloned.name = name
+        return cloned
+
+    def create_row_processor(self, query, procs, labels):
+        """Produce the "row processing" function for this :class:`.Bundle`.
+
+        May be overridden by subclasses.
+
+        .. seealso::
+
+            :ref:`bundles` - includes an example of subclassing.
+
+        """
+        def proc(row, result):
+            return util.KeyedTuple([proc(row, None) for proc in procs], labels)
+        return proc
+
+
+class _BundleEntity(_QueryEntity):
+    def __init__(self, query, bundle, setup_entities=True):
+        query._entities.append(self)
+        self.bundle = bundle
+        self.type = type(bundle)
+        self._label_name = bundle.name
+        self._entities = []
+
+        if setup_entities:
+            for expr in bundle.exprs:
+                if isinstance(expr, Bundle):
+                    _BundleEntity(self, expr)
+                else:
+                    _ColumnEntity(self, expr, namespace=self)
+
+        self.entities = ()
+
+        self.filter_fn = lambda item: item
+
+        self.supports_single_entity = self.bundle.single_entity
+
+    custom_rows = False
+
+    @property
+    def entity_zero(self):
+        for ent in self._entities:
+            ezero = ent.entity_zero
+            if ezero is not None:
+                return ezero
+        else:
+            return None
+
+    def corresponds_to(self, entity):
+        # TODO: this seems to have no effect for
+        # _ColumnEntity either
+        return False
+
+    @property
+    def entity_zero_or_selectable(self):
+        for ent in self._entities:
+            ezero = ent.entity_zero_or_selectable
+            if ezero is not None:
+                return ezero
+        else:
+            return None
+
+    def adapt_to_selectable(self, query, sel):
+        c = _BundleEntity(query, self.bundle, setup_entities=False)
+        #c._label_name = self._label_name
+        #c.entity_zero = self.entity_zero
+        #c.entities = self.entities
+
+        for ent in self._entities:
+            ent.adapt_to_selectable(c, sel)
+
+    def setup_entity(self, ext_info, aliased_adapter):
+        for ent in self._entities:
+            ent.setup_entity(ext_info, aliased_adapter)
+
+    def setup_context(self, query, context):
+        for ent in self._entities:
+            ent.setup_context(query, context)
+
+    def row_processor(self, query, context, custom_rows):
+        procs, labels = zip(
+                *[ent.row_processor(query, context, custom_rows)
+                for ent in self._entities]
+            )
+
+        proc = self.bundle.create_row_processor(query, procs, labels)
+
+        return proc, self._label_name
 
 class _ColumnEntity(_QueryEntity):
     """Column/expression based entity."""
@@ -3062,7 +3283,7 @@ class _ColumnEntity(_QueryEntity):
                                     interfaces.PropComparator
                                 )):
             self._label_name = column.key
-            column = column.__clause_element__()
+            column = column._query_clause_element()
         else:
             self._label_name = getattr(column, 'key', None)
 
@@ -3075,6 +3296,9 @@ class _ColumnEntity(_QueryEntity):
 
             if c is not column:
                 return
+        elif isinstance(column, Bundle):
+            _BundleEntity(query, column)
+            return
 
         if not isinstance(column, sql.ColumnElement):
             raise sa_exc.InvalidRequestError(
@@ -3082,7 +3306,7 @@ class _ColumnEntity(_QueryEntity):
                 "expected - got '%r'" % (column, )
             )
 
-        type_ = column.type
+        self.type = type_ = column.type
         if type_.hashable:
             self.filter_fn = lambda item: item
         else:
@@ -3125,6 +3349,9 @@ class _ColumnEntity(_QueryEntity):
         else:
             self.entity_zero = None
 
+    supports_single_entity = False
+    custom_rows = False
+
     @property
     def entity_zero_or_selectable(self):
         if self.entity_zero is not None:
@@ -3133,10 +3360,6 @@ class _ColumnEntity(_QueryEntity):
             return list(self.actual_froms)[0]
         else:
             return None
-
-    @property
-    def type(self):
-        return self.column.type
 
     def adapt_to_selectable(self, query, sel):
         c = _ColumnEntity(query, sel.corresponding_column(self.column))
@@ -3150,6 +3373,8 @@ class _ColumnEntity(_QueryEntity):
         self.froms.add(ext_info.selectable)
 
     def corresponds_to(self, entity):
+        # TODO: just returning False here,
+        # no tests fail
         if self.entity_zero is None:
             return False
         elif _is_aliased_class(entity):
@@ -3224,28 +3449,29 @@ class QueryContext(object):
 class AliasOption(interfaces.MapperOption):
 
     def __init__(self, alias):
-        """Return a :class:`.MapperOption` that will indicate to the query that
-        the main table has been aliased.
+        """Return a :class:`.MapperOption` that will indicate to the :class:`.Query`
+        that the main table has been aliased.
 
-        This is used in the very rare case that :func:`.contains_eager`
+        This is a seldom-used option to suit the
+        very rare case that :func:`.contains_eager`
         is being used in conjunction with a user-defined SELECT
         statement that aliases the parent table.  E.g.::
 
             # define an aliased UNION called 'ulist'
-            statement = users.select(users.c.user_id==7).\\
+            ulist = users.select(users.c.user_id==7).\\
                             union(users.select(users.c.user_id>7)).\\
                             alias('ulist')
 
             # add on an eager load of "addresses"
-            statement = statement.outerjoin(addresses).\\
+            statement = ulist.outerjoin(addresses).\\
                             select().apply_labels()
 
             # create query, indicating "ulist" will be an
             # alias for the main table, "addresses"
             # property should be eager loaded
             query = session.query(User).options(
-                                    contains_alias('ulist'),
-                                    contains_eager('addresses'))
+                                    contains_alias(ulist),
+                                    contains_eager(User.addresses))
 
             # then get results via the statement
             results = query.from_statement(statement).all()

@@ -1,3 +1,9 @@
+# testing/requirements.py
+# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+#
+# This module is part of SQLAlchemy and is released under
+# the MIT License: http://www.opensource.org/licenses/mit-license.php
+
 """Global database feature support policy.
 
 Provides decorators to mark tests requiring specific feature support from the
@@ -293,6 +299,15 @@ class SuiteRequirements(Requirements):
     @property
     def unicode_ddl(self):
         """Target driver must support some degree of non-ascii symbol names."""
+        return exclusions.closed()
+
+    @property
+    def datetime_literals(self):
+        """target dialect supports rendering of a date, time, or datetime as a
+        literal string, e.g. via the TypeEngine.literal_processor() method.
+
+        """
+
         return exclusions.closed()
 
     @property

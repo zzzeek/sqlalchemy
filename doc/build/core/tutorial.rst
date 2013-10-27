@@ -50,13 +50,13 @@ Version Check
 =============
 
 
-A quick check to verify that we are on at least **version 0.8** of SQLAlchemy:
+A quick check to verify that we are on at least **version 0.9** of SQLAlchemy:
 
 .. sourcecode:: pycon+sql
 
     >>> import sqlalchemy
     >>> sqlalchemy.__version__ # doctest:+SKIP
-    0.8.0
+    0.9.0
 
 Connecting
 ==========
@@ -1592,6 +1592,8 @@ table, or the same table:
     (1, 0)
     COMMIT
     {stop}<sqlalchemy.engine.result.ResultProxy object at 0x...>
+
+.. _multi_table_updates:
 
 Multiple Table Updates
 ----------------------

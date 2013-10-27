@@ -17,6 +17,7 @@ from sqlalchemy.dialects.postgresql import base as postgresql
 import logging
 import logging.handlers
 from sqlalchemy.testing.mock import Mock
+from sqlalchemy.engine.reflection import Inspector
 
 class MiscTest(fixtures.TestBase, AssertsExecutionResults, AssertsCompiledSQL):
 
@@ -53,7 +54,11 @@ class MiscTest(fixtures.TestBase, AssertsExecutionResults, AssertsCompiledSQL):
              'compiled by GCC gcc (GCC) 4.4.2, 64-bit', (8, 5)),
              ('EnterpriseDB 9.1.2.2 on x86_64-unknown-linux-gnu, '
              'compiled by gcc (GCC) 4.1.2 20080704 (Red Hat 4.1.2-50), '
-             '64-bit', (9, 1, 2))]:
+             '64-bit', (9, 1, 2)),
+             ('[PostgreSQL 9.2.4 ] VMware vFabric Postgres 9.2.4.0 '
+                'release build 1080137', (9, 2, 4))
+
+             ]:
             eq_(testing.db.dialect._get_server_version_info(mock_conn(string)),
                 version)
 
@@ -199,18 +204,32 @@ class MiscTest(fixtures.TestBase, AssertsExecutionResults, AssertsCompiledSQL):
         assert_raises(exc.InvalidRequestError, testing.db.execute, stmt)
 
     def test_serial_integer(self):
-        for type_, expected in [
-            (Integer, 'SERIAL'),
-            (BigInteger, 'BIGSERIAL'),
-            (SmallInteger, 'SMALLINT'),
-            (postgresql.INTEGER, 'SERIAL'),
-            (postgresql.BIGINT, 'BIGSERIAL'),
+
+        for version, type_, expected in [
+            (None, Integer, 'SERIAL'),
+            (None, BigInteger, 'BIGSERIAL'),
+            ((9, 1), SmallInteger, 'SMALLINT'),
+            ((9, 2), SmallInteger, 'SMALLSERIAL'),
+            (None, postgresql.INTEGER, 'SERIAL'),
+            (None, postgresql.BIGINT, 'BIGSERIAL'),
         ]:
             m = MetaData()
 
             t = Table('t', m, Column('c', type_, primary_key=True))
-            ddl_compiler = testing.db.dialect.ddl_compiler(testing.db.dialect, schema.CreateTable(t))
+
+            if version:
+                dialect = postgresql.dialect()
+                dialect._get_server_version_info = Mock(return_value=version)
+                dialect.initialize(testing.db.connect())
+            else:
+                dialect = testing.db.dialect
+
+            ddl_compiler = dialect.ddl_compiler(
+                                dialect,
+                                schema.CreateTable(t)
+                            )
             eq_(
                 ddl_compiler.get_column_specification(t.c.c),
                 "c %s NOT NULL" % expected
             )
+

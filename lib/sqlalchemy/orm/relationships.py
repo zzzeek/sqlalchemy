@@ -83,7 +83,7 @@ class RelationshipProperty(StrategizedProperty):
 
     """
 
-    strategy_wildcard_key = 'relationship:*'
+    strategy_wildcard_key = 'relationship'
 
     _dependency_processor = None
 
@@ -103,6 +103,7 @@ class RelationshipProperty(StrategizedProperty):
         enable_typechecks=True, join_depth=None,
         comparator_factory=None,
         single_parent=False, innerjoin=False,
+        distinct_target_key=None,
         doc=None,
         active_history=False,
         cascade_backrefs=True,
@@ -281,6 +282,27 @@ class RelationshipProperty(StrategizedProperty):
         :param comparator_factory:
           a class which extends :class:`.RelationshipProperty.Comparator` which
           provides custom SQL clause generation for comparison operations.
+
+        :param distinct_target_key=None:
+          Indicate if a "subquery" eager load should apply the DISTINCT
+          keyword to the innermost SELECT statement.  When left as ``None``,
+          the DISTINCT keyword will be applied in those cases when the target
+          columns do not comprise the full primary key of the target table.
+          When set to ``True``, the DISTINCT keyword is applied to the innermost
+          SELECT unconditionally.
+
+          It may be desirable to set this flag to False when the DISTINCT is
+          reducing performance of the innermost subquery beyond that of what
+          duplicate innermost rows may be causing.
+
+          .. versionadded:: 0.8.3 - distinct_target_key allows the
+             subquery eager loader to apply a DISTINCT modifier to the
+             innermost SELECT.
+
+          .. versionchanged:: 0.9.0 - distinct_target_key now defaults to
+             ``None``, so that the feature enables itself automatically for
+             those cases where the innermost query targets a non-unique
+             key.
 
         :param doc:
           docstring which will be applied to the resulting descriptor.
@@ -621,6 +643,7 @@ class RelationshipProperty(StrategizedProperty):
         self.enable_typechecks = enable_typechecks
         self.query_class = query_class
         self.innerjoin = innerjoin
+        self.distinct_target_key = distinct_target_key
         self.doc = doc
         self.active_history = active_history
         self.join_depth = join_depth
@@ -638,8 +661,7 @@ class RelationshipProperty(StrategizedProperty):
         if strategy_class:
             self.strategy_class = strategy_class
         else:
-            self.strategy_class = self._strategy_lookup(lazy=self.lazy)
-        self._lazy_strategy = self._strategy_lookup(lazy="select")
+            self.strategy_class = self._strategy_lookup(("lazy", self.lazy))
 
         self._reverse_property = set()
 
@@ -878,7 +900,7 @@ class RelationshipProperty(StrategizedProperty):
                 criterion = criterion._annotate(
                     {'no_replacement_traverse': True})
 
-            crit = j & criterion
+            crit = j & sql.True_._ifnone(criterion)
 
             ex = sql.exists([1], crit, from_obj=dest).correlate_except(dest)
             if secondary is not None:
@@ -1149,7 +1171,7 @@ class RelationshipProperty(StrategizedProperty):
                                     alias_secondary=True):
         if value is not None:
             value = attributes.instance_state(value)
-        return self._get_strategy(self._lazy_strategy).lazy_clause(value,
+        return self._lazy_strategy.lazy_clause(value,
                 reverse_direction=not value_is_parent,
                 alias_secondary=alias_secondary,
                 adapt_source=adapt_source)
@@ -1361,6 +1383,8 @@ class RelationshipProperty(StrategizedProperty):
         self._post_init()
         self._generate_backref()
         super(RelationshipProperty, self).do_init()
+        self._lazy_strategy = self._get_strategy((("lazy", "select"),))
+
 
     def _process_dependent_arguments(self):
         """Convert incoming configuration arguments to their
@@ -1602,7 +1626,7 @@ class RelationshipProperty(StrategizedProperty):
         """memoize the 'use_get' attribute of this RelationshipLoader's
         lazyloader."""
 
-        strategy = self._get_strategy(self._lazy_strategy)
+        strategy = self._lazy_strategy
         return strategy.use_get
 
     @util.memoized_property

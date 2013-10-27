@@ -151,7 +151,6 @@ a.headerlink:hover {
 #docs-body-container {
   background-color:#EFEFEF;
   border: solid 1px #CCC;
-
 }
 
 #docs-body,
@@ -164,6 +163,10 @@ a.headerlink:hover {
   font-size:.85em;
   line-height:1.5em;
 
+}
+
+#docs-body {
+  min-height: 700px;
 }
 
 #docs-sidebar > ul {
@@ -324,12 +327,35 @@ div.note, div.warning, p.deprecated, div.topic, div.admonition  {
 }
 
 
+div.faq {
+  background-color: #EFEFEF;
+}
+
+div.faq ul {
+  list-style: square outside none;
+}
+
 div.admonition, div.topic, .deprecated, .versionadded, .versionchanged {
     border:1px solid #CCCCCC;
     padding:5px 10px;
     font-size:.9em;
     margin-top:5px;
     box-shadow: 2px 2px 3px #DFDFDF;
+}
+
+
+div.sidebar {
+    background-color: #FFFFEE;
+    border: 1px solid #DDDDBB;
+    float: right;
+    margin: 0 0 0.5em 1em;
+    padding: 7px 7px 0;
+    width: 40%;
+    font-size:.9em;
+}
+
+p.sidebar-title {
+    font-weight: bold;
 }
 
 /* grrr sphinx changing your document structures, removing classes.... */
@@ -339,7 +365,7 @@ div.admonition, div.topic, .deprecated, .versionadded, .versionchanged {
 .deprecated .versionmodified,
 .versionadded > p:first-child > span:first-child,
 .versionchanged > p:first-child > span:first-child,
-.deprecated > p:first-child > span:first-child 
+.deprecated > p:first-child > span:first-child
 {
     background-color: #ECF0F3;
     color: #990000;

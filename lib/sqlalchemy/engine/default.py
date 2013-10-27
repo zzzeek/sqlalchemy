@@ -27,6 +27,7 @@ AUTOCOMMIT_REGEXP = re.compile(
             re.I | re.UNICODE)
 
 
+
 class DefaultDialect(interfaces.Dialect):
     """Default implementation of Dialect"""
 
@@ -112,6 +113,7 @@ class DefaultDialect(interfaces.Dialect):
                  implicit_returning=None,
                  supports_right_nested_joins=None,
                  case_sensitive=True,
+                 supports_native_boolean=None,
                  label_length=None, **kwargs):
 
         if not getattr(self, 'ported_sqla_06', True):
@@ -137,7 +139,8 @@ class DefaultDialect(interfaces.Dialect):
         self.type_compiler = self.type_compiler(self)
         if supports_right_nested_joins is not None:
             self.supports_right_nested_joins = supports_right_nested_joins
-
+        if supports_native_boolean is not None:
+            self.supports_native_boolean = supports_native_boolean
         self.case_sensitive = case_sensitive
 
         if label_length and label_length > self.max_identifier_length:
@@ -159,6 +162,7 @@ class DefaultDialect(interfaces.Dialect):
                                     )
         self._encoder = codecs.getencoder(self.encoding)
         self._decoder = processors.to_unicode_processor_factory(self.encoding)
+
 
     @util.memoized_property
     def _type_memos(self):
@@ -287,8 +291,7 @@ class DefaultDialect(interfaces.Dialect):
         """
         return sqltypes.adapt_type(typeobj, self.colspecs)
 
-    def reflecttable(self, connection, table, include_columns,
-                    exclude_columns=None):
+    def reflecttable(self, connection, table, include_columns, exclude_columns):
         insp = reflection.Inspector.from_engine(connection)
         return insp.reflecttable(table, include_columns, exclude_columns)
 
@@ -396,6 +399,7 @@ class DefaultExecutionContext(interfaces.ExecutionContext):
     statement = None
     postfetch_cols = None
     prefetch_cols = None
+    returning_cols = None
     _is_implicit_returning = False
     _is_explicit_returning = False
 
@@ -492,6 +496,7 @@ class DefaultExecutionContext(interfaces.ExecutionContext):
         if self.isinsert or self.isupdate:
             self.postfetch_cols = self.compiled.postfetch
             self.prefetch_cols = self.compiled.prefetch
+            self.returning_cols = self.compiled.returning
             self.__process_defaults()
 
         processors = compiled._bind_processors
@@ -750,6 +755,11 @@ class DefaultExecutionContext(interfaces.ExecutionContext):
                 ipk.append(row[c])
 
         self.inserted_primary_key = ipk
+        self.returned_defaults = row
+
+    def _fetch_implicit_update_returning(self, resultproxy):
+        row = resultproxy.fetchone()
+        self.returned_defaults = row
 
     def lastrow_has_defaults(self):
         return (self.isinsert or self.isupdate) and \

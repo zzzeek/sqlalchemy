@@ -143,6 +143,12 @@ class QueryableAttribute(interfaces._MappedAttribute,
     def __clause_element__(self):
         return self.comparator.__clause_element__()
 
+    def _query_clause_element(self):
+        """like __clause_element__(), but called specifically
+        by :class:`.Query` to allow special behavior."""
+
+        return self.comparator._query_clause_element()
+
     def of_type(self, cls):
         return QueryableAttribute(
                     self.class_,
@@ -153,7 +159,7 @@ class QueryableAttribute(interfaces._MappedAttribute,
                     of_type=cls)
 
     def label(self, name):
-        return self.__clause_element__().label(name)
+        return self._query_clause_element().label(name)
 
     def operate(self, op, *other, **kwargs):
         return op(self.comparator, *other, **kwargs)
@@ -546,7 +552,6 @@ class AttributeImpl(object):
 
     def get(self, state, dict_, passive=PASSIVE_OFF):
         """Retrieve a value from the given object.
-
         If a callable is assembled on this object's attribute, and
         passive is False, the callable will be executed and the
         resulting value will be set as the new value for this attribute.
@@ -646,8 +651,16 @@ class ScalarAttributeImpl(AttributeImpl):
         del dict_[self.key]
 
     def get_history(self, state, dict_, passive=PASSIVE_OFF):
-        return History.from_scalar_attribute(
-            self, state, dict_.get(self.key, NO_VALUE))
+        if self.key in dict_:
+            return History.from_scalar_attribute(self, state, dict_[self.key])
+        else:
+            if passive & INIT_OK:
+                passive ^= INIT_OK
+            current = self.get(state, dict_, passive=passive)
+            if current is PASSIVE_NO_RESULT:
+                return HISTORY_BLANK
+            else:
+                return History.from_scalar_attribute(self, state, current)
 
     def set(self, state, dict_, value, initiator,
                 passive=PASSIVE_OFF, check_old=None, pop=False):
@@ -1220,7 +1233,7 @@ class History(History):
         original = state.committed_state.get(attribute.key, _NO_HISTORY)
 
         if original is _NO_HISTORY:
-            if current is NO_VALUE:
+            if current is NEVER_SET:
                 return cls((), (), ())
             else:
                 return cls((), [current], ())
@@ -1237,7 +1250,7 @@ class History(History):
                 deleted = ()
             else:
                 deleted = [original]
-            if current is NO_VALUE:
+            if current is NEVER_SET:
                 return cls((), (), deleted)
             else:
                 return cls([current], (), deleted)

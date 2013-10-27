@@ -3,6 +3,7 @@
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
+
 """Constants and rudimental functions used throughout the ORM.
 
 """
@@ -127,6 +128,19 @@ NOT_EXTENSION = util.symbol('NOT_EXTENSION')
 """
 
 _none_set = frozenset([None])
+
+
+def _generative(*assertions):
+    """Mark a method as generative, e.g. method-chained."""
+
+    @util.decorator
+    def generate(fn, *args, **kw):
+        self = args[0]._clone()
+        for assertion in assertions:
+            assertion(self, fn.__name__)
+        fn(self, *args[1:], **kw)
+        return self
+    return generate
 
 
 # these can be replaced by sqlalchemy.ext.instrumentation

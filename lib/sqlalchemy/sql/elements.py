@@ -117,8 +117,8 @@ def type_coerce(expr, type_):
     """
     type_ = type_api.to_instance(type_)
 
-    if hasattr(expr, '__clause_expr__'):
-        return type_coerce(expr.__clause_expr__())
+    if hasattr(expr, '__clause_element__'):
+        return type_coerce(expr.__clause_element__(), type_)
     elif isinstance(expr, BindParameter):
         bp = expr._clone()
         bp.type = type_
@@ -149,30 +149,6 @@ def outparam(key, type_=None):
                 key, None, type_=type_, unique=False, isoutparam=True)
 
 
-def and_(*clauses):
-    """Join a list of clauses together using the ``AND`` operator.
-
-    The ``&`` operator is also overloaded on all :class:`.ColumnElement`
-    subclasses to produce the
-    same result.
-
-    """
-    if len(clauses) == 1:
-        return clauses[0]
-    return BooleanClauseList(operator=operators.and_, *clauses)
-
-
-def or_(*clauses):
-    """Join a list of clauses together using the ``OR`` operator.
-
-    The ``|`` operator is also overloaded on all
-    :class:`.ColumnElement` subclasses to produce the
-    same result.
-
-    """
-    if len(clauses) == 1:
-        return clauses[0]
-    return BooleanClauseList(operator=operators.or_, *clauses)
 
 
 def not_(clause):
@@ -291,6 +267,9 @@ class ClauseElement(Visitable):
             # if no clone, since we have no annotations we return
             # self
             return self
+
+    def _execute_on_connection(self, connection, multiparams, params):
+        return connection._execute_clauseelement(self, multiparams, params)
 
     def unique_params(self, *optionaldict, **kwargs):
         """Return a copy with :func:`bindparam()` elements replaced.
@@ -462,7 +441,10 @@ class ClauseElement(Visitable):
         return or_(self, other)
 
     def __invert__(self):
-        return self._negate()
+        if hasattr(self, 'negation_clause'):
+            return self.negation_clause
+        else:
+            return self._negate()
 
     def __bool__(self):
         raise TypeError("Boolean value of this clause is not defined")
@@ -470,13 +452,10 @@ class ClauseElement(Visitable):
     __nonzero__ = __bool__
 
     def _negate(self):
-        if hasattr(self, 'negation_clause'):
-            return self.negation_clause
-        else:
-            return UnaryExpression(
-                        self.self_group(against=operators.inv),
-                        operator=operators.inv,
-                        negate=None)
+        return UnaryExpression(
+                    self.self_group(against=operators.inv),
+                    operator=operators.inv,
+                    negate=None)
 
     def __repr__(self):
         friendly = getattr(self, 'description', None)
@@ -530,10 +509,22 @@ class ColumnElement(ClauseElement, operators.ColumnOperators):
     __visit_name__ = 'column'
     primary_key = False
     foreign_keys = []
-    quote = None
     _label = None
     _key_label = None
     _alt_names = ()
+
+    def self_group(self, against=None):
+        if against in (operators.and_, operators.or_, operators._asbool) and \
+            self.type._type_affinity is type_api.BOOLEANTYPE._type_affinity:
+            return AsBoolean(self, operators.istrue, operators.isfalse)
+        else:
+            return self
+
+    def _negate(self):
+        if self.type._type_affinity is type_api.BOOLEANTYPE._type_affinity:
+            return AsBoolean(self, operators.isfalse, operators.istrue)
+        else:
+            return super(ColumnElement, self)._negate()
 
     @util.memoized_property
     def type(self):
@@ -693,7 +684,6 @@ class BindParameter(ColumnElement):
     """
 
     __visit_name__ = 'bindparam'
-    quote = None
 
     _is_crud = False
 
@@ -778,6 +768,8 @@ class BindParameter(ColumnElement):
         if value is NO_ARG:
             value = None
 
+        if quote is not None:
+            key = quoted_name(key, quote)
 
         if unique:
             self.key = _anonymous_label('%%(%d %s)s' % (id(self), key
@@ -800,7 +792,6 @@ class BindParameter(ColumnElement):
         self.callable = callable_
         self.isoutparam = isoutparam
         self.required = required
-        self.quote = quote
         if type_ is None:
             if _compared_to_type is not None:
                 self.type = \
@@ -1060,52 +1051,153 @@ class TextClause(Executable, ClauseElement):
 class Null(ColumnElement):
     """Represent the NULL keyword in a SQL statement.
 
+    :class:`.Null` is accessed as a constant via the
+    :func:`.null` function.
+
     """
 
     __visit_name__ = 'null'
 
-    def __init__(self):
-        """Return a :class:`Null` object, which compiles to ``NULL``.
+    @util.memoized_property
+    def type(self):
+        return type_api.NULLTYPE
 
-        """
-        self.type = type_api.NULLTYPE
+    @classmethod
+    def _singleton(cls):
+        """Return a constant :class:`.Null` construct."""
+
+        return NULL
 
     def compare(self, other):
         return isinstance(other, Null)
 
 
 class False_(ColumnElement):
-    """Represent the ``false`` keyword in a SQL statement.
+    """Represent the ``false`` keyword, or equivalent, in a SQL statement.
+
+    :class:`.False_` is accessed as a constant via the
+    :func:`.false` function.
 
     """
 
     __visit_name__ = 'false'
 
-    def __init__(self):
-        """Return a :class:`False_` object.
+    @util.memoized_property
+    def type(self):
+        return type_api.BOOLEANTYPE
+
+    def _negate(self):
+        return TRUE
+
+    @classmethod
+    def _singleton(cls):
+        """Return a constant :class:`.False_` construct.
+
+        E.g.::
+
+            >>> from sqlalchemy import false
+            >>> print select([t.c.x]).where(false())
+            SELECT x FROM t WHERE false
+
+        A backend which does not support true/false constants will render as
+        an expression against 1 or 0::
+
+            >>> print select([t.c.x]).where(false())
+            SELECT x FROM t WHERE 0 = 1
+
+        The :func:`.true` and :func:`.false` constants also feature
+        "short circuit" operation within an :func:`.and_` or :func:`.or_`
+        conjunction::
+
+            >>> print select([t.c.x]).where(or_(t.c.x > 5, true()))
+            SELECT x FROM t WHERE true
+
+            >>> print select([t.c.x]).where(and_(t.c.x > 5, false()))
+            SELECT x FROM t WHERE false
+
+        .. versionchanged:: 0.9 :func:`.true` and :func:`.false` feature
+           better integrated behavior within conjunctions and on dialects
+           that don't support true/false constants.
+
+        .. seealso::
+
+            :func:`.true`
 
         """
-        self.type = type_api.BOOLEANTYPE
+
+        return FALSE
 
     def compare(self, other):
         return isinstance(other, False_)
 
 class True_(ColumnElement):
-    """Represent the ``true`` keyword in a SQL statement.
+    """Represent the ``true`` keyword, or equivalent, in a SQL statement.
+
+    :class:`.True_` is accessed as a constant via the
+    :func:`.true` function.
 
     """
 
     __visit_name__ = 'true'
 
-    def __init__(self):
-        """Return a :class:`True_` object.
+    @util.memoized_property
+    def type(self):
+        return type_api.BOOLEANTYPE
+
+    def _negate(self):
+        return FALSE
+
+    @classmethod
+    def _ifnone(cls, other):
+        if other is None:
+            return cls._singleton()
+        else:
+            return other
+
+    @classmethod
+    def _singleton(cls):
+        """Return a constant :class:`.True_` construct.
+
+        E.g.::
+
+            >>> from sqlalchemy import true
+            >>> print select([t.c.x]).where(true())
+            SELECT x FROM t WHERE true
+
+        A backend which does not support true/false constants will render as
+        an expression against 1 or 0::
+
+            >>> print select([t.c.x]).where(true())
+            SELECT x FROM t WHERE 1 = 1
+
+        The :func:`.true` and :func:`.false` constants also feature
+        "short circuit" operation within an :func:`.and_` or :func:`.or_`
+        conjunction::
+
+            >>> print select([t.c.x]).where(or_(t.c.x > 5, true()))
+            SELECT x FROM t WHERE true
+
+            >>> print select([t.c.x]).where(and_(t.c.x > 5, false()))
+            SELECT x FROM t WHERE false
+
+        .. versionchanged:: 0.9 :func:`.true` and :func:`.false` feature
+           better integrated behavior within conjunctions and on dialects
+           that don't support true/false constants.
+
+        .. seealso::
+
+            :func:`.false`
 
         """
-        self.type = type_api.BOOLEANTYPE
+
+        return TRUE
 
     def compare(self, other):
         return isinstance(other, True_)
 
+NULL = Null()
+FALSE = False_()
+TRUE = True_()
 
 class ClauseList(ClauseElement):
     """Describe a list of clauses, separated by an operator.
@@ -1122,11 +1214,11 @@ class ClauseList(ClauseElement):
         if self.group_contents:
             self.clauses = [
                 _literal_as_text(clause).self_group(against=self.operator)
-                for clause in clauses if clause is not None]
+                for clause in clauses]
         else:
             self.clauses = [
                 _literal_as_text(clause)
-                for clause in clauses if clause is not None]
+                for clause in clauses]
 
     def __iter__(self):
         return iter(self.clauses)
@@ -1139,10 +1231,6 @@ class ClauseList(ClauseElement):
         return iter(self)
 
     def append(self, clause):
-        # TODO: not sure if i like the 'group_contents' flag.  need to
-        # define the difference between a ClauseList of ClauseLists,
-        # and a "flattened" ClauseList of ClauseLists.  flatten()
-        # method ?
         if self.group_contents:
             self.clauses.append(_literal_as_text(clause).\
                                 self_group(against=self.operator))
@@ -1183,13 +1271,65 @@ class ClauseList(ClauseElement):
             return False
 
 
+
 class BooleanClauseList(ClauseList, ColumnElement):
     __visit_name__ = 'clauselist'
 
-    def __init__(self, *clauses, **kwargs):
-        super(BooleanClauseList, self).__init__(*clauses, **kwargs)
-        self.type = type_api.to_instance(kwargs.get('type_',
-                type_api.BOOLEANTYPE))
+    def __init__(self, *arg, **kw):
+        raise NotImplementedError(
+                "BooleanClauseList has a private constructor")
+
+    @classmethod
+    def _construct(cls, operator, continue_on, skip_on, *clauses, **kw):
+        convert_clauses = []
+
+        for clause in clauses:
+            clause = _literal_as_text(clause)
+
+            if isinstance(clause, continue_on):
+                continue
+            elif isinstance(clause, skip_on):
+                return clause.self_group(against=operators._asbool)
+
+            convert_clauses.append(clause)
+
+        if len(convert_clauses) == 1:
+            return convert_clauses[0].self_group(against=operators._asbool)
+        elif not convert_clauses and clauses:
+            return clauses[0].self_group(against=operators._asbool)
+
+        convert_clauses = [c.self_group(against=operator)
+                                for c in convert_clauses]
+
+        self = cls.__new__(cls)
+        self.clauses = convert_clauses
+        self.group = True
+        self.operator = operator
+        self.group_contents = True
+        self.type = type_api.BOOLEANTYPE
+        return self
+
+    @classmethod
+    def and_(cls, *clauses):
+        """Join a list of clauses together using the ``AND`` operator.
+
+        The ``&`` operator is also overloaded on all :class:`.ColumnElement`
+        subclasses to produce the
+        same result.
+
+        """
+        return cls._construct(operators.and_, True_, False_, *clauses)
+
+    @classmethod
+    def or_(cls, *clauses):
+        """Join a list of clauses together using the ``OR`` operator.
+
+        The ``|`` operator is also overloaded on all
+        :class:`.ColumnElement` subclasses to produce the
+        same result.
+
+        """
+        return cls._construct(operators.or_, False_, True_, *clauses)
 
     @property
     def _select_iterable(self):
@@ -1201,6 +1341,12 @@ class BooleanClauseList(ClauseList, ColumnElement):
         else:
             return super(BooleanClauseList, self).self_group(against=against)
 
+    def _negate(self):
+        return ClauseList._negate(self)
+
+
+and_ = BooleanClauseList.and_
+or_ = BooleanClauseList.or_
 
 class Tuple(ClauseList, ColumnElement):
     """Represent a SQL tuple."""
@@ -1463,9 +1609,7 @@ class UnaryExpression(ColumnElement):
                             type_=None, negate=None):
         self.operator = operator
         self.modifier = modifier
-
-        self.element = _literal_as_text(element).\
-                    self_group(against=self.operator or self.modifier)
+        self.element = element.self_group(against=self.operator or self.modifier)
         self.type = type_api.to_instance(type_)
         self.negate = negate
 
@@ -1482,7 +1626,8 @@ class UnaryExpression(ColumnElement):
           ORDER BY mycol DESC NULLS FIRST
 
         """
-        return UnaryExpression(column, modifier=operators.nullsfirst_op)
+        return UnaryExpression(
+                _literal_as_text(column), modifier=operators.nullsfirst_op)
 
 
     @classmethod
@@ -1498,7 +1643,8 @@ class UnaryExpression(ColumnElement):
             ORDER BY mycol DESC NULLS LAST
 
         """
-        return UnaryExpression(column, modifier=operators.nullslast_op)
+        return UnaryExpression(
+            _literal_as_text(column), modifier=operators.nullslast_op)
 
 
     @classmethod
@@ -1514,7 +1660,8 @@ class UnaryExpression(ColumnElement):
             ORDER BY mycol DESC
 
         """
-        return UnaryExpression(column, modifier=operators.desc_op)
+        return UnaryExpression(
+            _literal_as_text(column), modifier=operators.desc_op)
 
     @classmethod
     def _create_asc(cls, column):
@@ -1529,7 +1676,8 @@ class UnaryExpression(ColumnElement):
           ORDER BY mycol ASC
 
         """
-        return UnaryExpression(column, modifier=operators.asc_op)
+        return UnaryExpression(
+            _literal_as_text(column), modifier=operators.asc_op)
 
     @classmethod
     def _create_distinct(cls, expr):
@@ -1585,14 +1733,29 @@ class UnaryExpression(ColumnElement):
                 modifier=self.modifier,
                 type_=self.type)
         else:
-            return super(UnaryExpression, self)._negate()
+            return ClauseElement._negate(self)
 
     def self_group(self, against=None):
-        if self.operator and operators.is_precedent(self.operator,
-                against):
+        if self.operator and operators.is_precedent(self.operator, against):
             return Grouping(self)
         else:
             return self
+
+
+class AsBoolean(UnaryExpression):
+
+    def __init__(self, element, operator, negate):
+        self.element = element
+        self.type = type_api.BOOLEANTYPE
+        self.operator = operator
+        self.negate = negate
+        self.modifier = None
+
+    def self_group(self, against=None):
+        return self
+
+    def _negate(self):
+        return self.element._negate()
 
 
 class BinaryExpression(ColumnElement):
@@ -1618,8 +1781,8 @@ class BinaryExpression(ColumnElement):
         if isinstance(operator, util.string_types):
             operator = operators.custom_op(operator)
         self._orig = (left, right)
-        self.left = _literal_as_text(left).self_group(against=operator)
-        self.right = _literal_as_text(right).self_group(against=operator)
+        self.left = left.self_group(against=operator)
+        self.right = right.self_group(against=operator)
         self.operator = operator
         self.type = type_api.to_instance(type_)
         self.negate = negate
@@ -1699,6 +1862,9 @@ class Grouping(ColumnElement):
     def __init__(self, element):
         self.element = element
         self.type = getattr(element, 'type', type_api.NULLTYPE)
+
+    def self_group(self, against=None):
+        return self
 
     @property
     def _label(self):
@@ -1838,8 +2004,10 @@ class Label(ColumnElement):
         self.key = self._label = self._key_label = self.name
         self._element = element
         self._type = type_
-        self.quote = element.quote
         self._proxies = [element]
+
+    def __reduce__(self):
+        return self.__class__, (self.name, self._element, self._type)
 
     @util.memoized_property
     def _order_by_label_element(self):
@@ -2017,6 +2185,7 @@ class ColumnClause(Immutable, ColumnElement):
 
     def _gen_label(self, name):
         t = self.table
+
         if self.is_literal:
             return None
 
@@ -2026,6 +2195,18 @@ class ColumnClause(Immutable, ColumnElement):
                             t.name + "_" + name
             else:
                 label = t.name + "_" + name
+
+            # propagate name quoting rules for labels.
+            if getattr(name, "quote", None) is not None:
+                if isinstance(label, quoted_name):
+                    label.quote = name.quote
+                else:
+                    label = quoted_name(label, name.quote)
+            elif getattr(t.name, "quote", None) is not None:
+                # can't get this situation to occur, so let's
+                # assert false on it for now
+                assert not isinstance(label, quoted_name)
+                label = quoted_name(label, t.name.quote)
 
             # ensure the label name doesn't conflict with that
             # of an existing column
@@ -2078,7 +2259,6 @@ class _IdentifiedClause(Executable, ClauseElement):
     __visit_name__ = 'identified'
     _execution_options = \
         Executable._execution_options.union({'autocommit': False})
-    quote = None
 
     def __init__(self, ident):
         self.ident = ident
@@ -2096,9 +2276,98 @@ class ReleaseSavepointClause(_IdentifiedClause):
     __visit_name__ = 'release_savepoint'
 
 
-class _truncated_label(util.text_type):
+class quoted_name(util.text_type):
+    """Represent a SQL identifier combined with quoting preferences.
+
+    :class:`.quoted_name` is a Python unicode/str subclass which
+    represents a particular identifier name along with a
+    ``quote`` flag.  This ``quote`` flag, when set to
+    ``True`` or ``False``, overrides automatic quoting behavior
+    for this identifier in order to either unconditionally quote
+    or to not quote the name.  If left at its default of ``None``,
+    quoting behavior is applied to the identifier on a per-backend basis
+    based on an examination of the token itself.
+
+    A :class:`.quoted_name` object with ``quote=True`` is also
+    prevented from being modified in the case of a so-called
+    "name normalize" option.  Certain database backends, such as
+    Oracle, Firebird, and DB2 "normalize" case-insensitive names
+    as uppercase.  The SQLAlchemy dialects for these backends
+    convert from SQLAlchemy's lower-case-means-insensitive convention
+    to the upper-case-means-insensitive conventions of those backends.
+    The ``quote=True`` flag here will prevent this conversion from occurring
+    to support an identifier that's quoted as all lower case against
+    such a backend.
+
+    The :class:`.quoted_name` object is normally created automatically
+    when specifying the name for key schema constructs such as :class:`.Table`,
+    :class:`.Column`, and others.   The class can also be passed explicitly
+    as the name to any function that receives a name which can be quoted.
+    Such as to use the :meth:`.Engine.has_table` method with an unconditionally
+    quoted name::
+
+        from sqlaclchemy import create_engine
+        from sqlalchemy.sql.elements import quoted_name
+
+        engine = create_engine("oracle+cx_oracle://some_dsn")
+        engine.has_table(quoted_name("some_table", True))
+
+    The above logic will run the "has table" logic against the Oracle backend,
+    passing the name exactly as ``"some_table"`` without converting to
+    upper case.
+
+    .. versionadded:: 0.9.0
+
+    """
+
+    #def __new__(cls, value, quote, sprcls=False):
+    def __new__(cls, value, quote):
+        if value is None:
+            return None
+        # experimental - don't bother with quoted_name
+        # if quote flag is None.  doesn't seem to make any dent
+        # in performance however
+        # elif not sprcls and quote is None:
+        #   return value
+        elif isinstance(value, cls) and (
+                quote is None or value.quote == quote
+            ):
+            return value
+        self = super(quoted_name, cls).__new__(cls, value)
+        self.quote = quote
+        return self
+
+    def __reduce__(self):
+        return quoted_name, (util.text_type(self), self.quote)
+
+    @util.memoized_instancemethod
+    def lower(self):
+        if self.quote:
+            return self
+        else:
+            return util.text_type(self).lower()
+
+    @util.memoized_instancemethod
+    def upper(self):
+        if self.quote:
+            return self
+        else:
+            return util.text_type(self).upper()
+
+    def __repr__(self):
+        return "'%s'" % self
+
+class _truncated_label(quoted_name):
     """A unicode subclass used to identify symbolic "
     "names that may require truncation."""
+
+    def __new__(cls, value, quote=None):
+        quote = getattr(value, "quote", quote)
+        #return super(_truncated_label, cls).__new__(cls, value, quote, True)
+        return super(_truncated_label, cls).__new__(cls, value, quote)
+
+    def __reduce__(self):
+        return self.__class__, (util.text_type(self), self.quote)
 
     def apply_map(self, map_):
         return self
@@ -2116,16 +2385,25 @@ class _anonymous_label(_truncated_label):
 
     def __add__(self, other):
         return _anonymous_label(
-                    util.text_type(self) +
-                    util.text_type(other))
+                    quoted_name(
+                        util.text_type.__add__(self, util.text_type(other)),
+                        self.quote)
+                )
 
     def __radd__(self, other):
         return _anonymous_label(
-                    util.text_type(other) +
-                    util.text_type(self))
+                    quoted_name(
+                        util.text_type.__add__(util.text_type(other), self),
+                        self.quote)
+                    )
 
     def apply_map(self, map_):
-        return self % map_
+        if self.quote is not None:
+            # preserve quoting only if necessary
+            return quoted_name(self % map_, self.quote)
+        else:
+            # else skip the constructor call
+            return self % map_
 
 
 def _as_truncated(value):
@@ -2355,7 +2633,7 @@ class AnnotatedColumnElement(Annotated):
     def __init__(self, element, values):
         Annotated.__init__(self, element, values)
         ColumnElement.comparator._reset(self)
-        for attr in ('name', 'key'):
+        for attr in ('name', 'key', 'table'):
             if self.__dict__.get(attr, False) is None:
                 self.__dict__.pop(attr)
 
@@ -2368,6 +2646,11 @@ class AnnotatedColumnElement(Annotated):
     def name(self):
         """pull 'name' from parent, if not present"""
         return self._Annotated__element.name
+
+    @util.memoized_property
+    def table(self):
+        """pull 'table' from parent, if not present"""
+        return self._Annotated__element.table
 
     @util.memoized_property
     def key(self):

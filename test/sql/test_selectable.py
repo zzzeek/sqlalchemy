@@ -10,6 +10,7 @@ from sqlalchemy.sql import util as sql_util, visitors, expression
 from sqlalchemy import exc
 from sqlalchemy.sql import table, column, null
 from sqlalchemy import util
+from sqlalchemy.schema import Column, Table, MetaData
 
 metadata = MetaData()
 table1 = Table('table1', metadata,
@@ -511,6 +512,18 @@ class SelectableTest(fixtures.TestBase, AssertsExecutionResults, AssertsCompiled
         self.assert_compile(
             s2.select(),
             "SELECT c FROM (SELECT (SELECT (SELECT table1.col1 AS a FROM table1) AS b) AS c)"
+        )
+
+    def test_self_referential_select_raises(self):
+        t = table('t', column('x'))
+
+        s = select([t])
+
+        s.append_whereclause(s.c.x > 5)
+        assert_raises_message(
+            exc.InvalidRequestError,
+            r"select\(\) construct refers to itself as a FROM",
+            s.compile
         )
 
     def test_unusual_column_elements_text(self):
@@ -1459,6 +1472,12 @@ class AnnotationsTest(fixtures.TestBase):
         c1_a = c1._annotate({"foo": "bar"})
         c1.name = 'somename'
         eq_(c1_a.name, 'somename')
+
+    def test_late_table_add(self):
+        c1 = Column("foo", Integer)
+        c1_a = c1._annotate({"foo": "bar"})
+        t = Table('t', MetaData(), c1)
+        is_(c1_a.table, t)
 
     def test_custom_constructions(self):
         from sqlalchemy.schema import Column

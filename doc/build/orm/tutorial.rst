@@ -42,11 +42,11 @@ following text represents the expected return value.
 Version Check
 =============
 
-A quick check to verify that we are on at least **version 0.8** of SQLAlchemy::
+A quick check to verify that we are on at least **version 0.9** of SQLAlchemy::
 
     >>> import sqlalchemy
     >>> sqlalchemy.__version__ # doctest:+SKIP
-    0.8.0
+    0.9.0
 
 Connecting
 ==========
@@ -879,6 +879,8 @@ an error:
     WHERE users.name LIKE ? AND users.id = ? ORDER BY users.id
     ('%ed', 99)
     {stop}No row was found for one()
+
+.. _orm_tutorial_literal_sql:
 
 Using Literal SQL
 -----------------

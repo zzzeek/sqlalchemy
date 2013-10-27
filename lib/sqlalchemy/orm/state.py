@@ -16,7 +16,7 @@ from .. import util
 from . import exc as orm_exc, interfaces
 from .path_registry import PathRegistry
 from .base import PASSIVE_NO_RESULT, SQL_OK, NEVER_SET, ATTR_WAS_SET, \
-        NO_VALUE, PASSIVE_NO_INITIALIZE
+        NO_VALUE, PASSIVE_NO_INITIALIZE, INIT_OK, PASSIVE_OFF
 from . import base
 
 class InstanceState(interfaces._InspectionAttr):
@@ -393,6 +393,13 @@ class InstanceState(interfaces._InspectionAttr):
                     difference(self.dict)
 
     @property
+    def _unloaded_non_object(self):
+        return self.unloaded.intersection(
+                attr for attr in self.manager
+                    if self.manager[attr].impl.accepts_scalar_loader
+            )
+
+    @property
     def expired_attributes(self):
         """Return the set of keys which are 'expired' to be loaded by
            the manager's deferred scalar loader, assuming no pending
@@ -507,13 +514,13 @@ class AttributeState(object):
     to a particular attribute on a particular mapped object.
 
     The :class:`.AttributeState` object is accessed
-    via the :attr:`.InstanceState.attr` collection
+    via the :attr:`.InstanceState.attrs` collection
     of a particular :class:`.InstanceState`::
 
         from sqlalchemy import inspect
 
         insp = inspect(some_mapped_object)
-        attr_state = insp.attr.some_attribute
+        attr_state = insp.attrs.some_attribute
 
     """
 
@@ -548,9 +555,39 @@ class AttributeState(object):
         """Return the current pre-flush change history for
         this attribute, via the :class:`.History` interface.
 
+        This method will **not** emit loader callables if the value of the
+        attribute is unloaded.
+
+        .. seealso::
+
+            :meth:`.AttributeState.load_history` - retrieve history
+            using loader callables if the value is not locally present.
+
+            :func:`.attributes.get_history` - underlying function
+
         """
         return self.state.get_history(self.key,
                     PASSIVE_NO_INITIALIZE)
+
+    def load_history(self):
+        """Return the current pre-flush change history for
+        this attribute, via the :class:`.History` interface.
+
+        This method **will** emit loader callables if the value of the
+        attribute is unloaded.
+
+        .. seealso::
+
+            :attr:`.AttributeState.history`
+
+            :func:`.attributes.get_history` - underlying function
+
+        .. versionadded:: 0.9.0
+
+        """
+        return self.state.get_history(self.key,
+                    PASSIVE_OFF ^ INIT_OK)
+
 
 
 class PendingCollection(object):

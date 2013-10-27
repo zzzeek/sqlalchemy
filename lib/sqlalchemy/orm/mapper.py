@@ -208,6 +208,22 @@ class Mapper(_InspectionAttr):
 
            See the section :ref:`concrete_inheritance` for an example.
 
+        :param eager_defaults: if True, the ORM will immediately fetch the
+          value of server-generated default values after an INSERT or UPDATE,
+          rather than leaving them as expired to be fetched on next access.
+          This can be used for event schemes where the server-generated values
+          are needed immediately before the flush completes.   By default,
+          this scheme will emit an individual ``SELECT`` statement per row
+          inserted or updated, which note can add significant performance
+          overhead.  However, if the
+          target database supports :term:`RETURNING`, the default values will be
+          returned inline with the INSERT or UPDATE statement, which can
+          greatly enhance performance for an application that needs frequent
+          access to just-generated server defaults.
+
+          .. versionchanged:: 0.9.0 The ``eager_defaults`` option can now
+             make use of :term:`RETURNING` for backends which support it.
+
         :param exclude_properties: A list or set of string column names to
           be excluded from mapping.
 
@@ -391,9 +407,9 @@ class Mapper(_InspectionAttr):
           thus persisting the value to the ``discriminator`` column
           in the database.
 
-          See also:
+          .. seealso::
 
-          :ref:`inheritance_toplevel`
+            :ref:`inheritance_toplevel`
 
         :param polymorphic_identity: Specifies the value which
           identifies this particular class as returned by the
@@ -419,34 +435,45 @@ class Mapper(_InspectionAttr):
            can be overridden here.
 
         :param version_id_col: A :class:`.Column`
-           that will be used to keep a running version id of mapped entities
-           in the database.  This is used during save operations to ensure that
-           no other thread or process has updated the instance during the
-           lifetime of the entity, else a
+           that will be used to keep a running version id of rows
+           in the table.  This is used to detect concurrent updates or
+           the presence of stale data in a flush.  The methodology is to
+           detect if an UPDATE statement does not match the last known
+           version id, a
            :class:`~sqlalchemy.orm.exc.StaleDataError` exception is
-           thrown.  By default the column must be of :class:`.Integer` type,
-           unless ``version_id_generator`` specifies a new generation
-           algorithm.
+           thrown.
+           By default, the column must be of :class:`.Integer` type,
+           unless ``version_id_generator`` specifies an alternative version
+           generator.
 
-        :param version_id_generator: A callable which defines the algorithm
-            used to generate new version ids. Defaults to an integer
-            generator. Can be replaced with one that generates timestamps,
-            uuids, etc. e.g.::
+           .. seealso::
 
-                import uuid
+              :ref:`mapper_version_counter` - discussion of version counting
+              and rationale.
 
-                class MyClass(Base):
-                    __tablename__ = 'mytable'
-                    id = Column(Integer, primary_key=True)
-                    version_uuid = Column(String(32))
+        :param version_id_generator: Define how new version ids should
+          be generated.  Defaults to ``None``, which indicates that
+          a simple integer counting scheme be employed.  To provide a custom
+          versioning scheme, provide a callable function of the form::
 
-                    __mapper_args__ = {
-                        'version_id_col':version_uuid,
-                        'version_id_generator':lambda version:uuid.uuid4().hex
-                    }
+              def generate_version(version):
+                  return next_version
 
-            The callable receives the current version identifier as its
-            single argument.
+          Alternatively, server-side versioning functions such as triggers,
+          or programmatic versioning schemes outside of the version id generator
+          may be used, by specifying the value ``False``.
+          Please see :ref:`server_side_version_counter` for a discussion
+          of important points when using this option.
+
+          .. versionadded:: 0.9.0 ``version_id_generator`` supports server-side
+             version number generation.
+
+          .. seealso::
+
+             :ref:`custom_version_counter`
+
+             :ref:`server_side_version_counter`
+
 
         :param with_polymorphic: A tuple in the form ``(<classes>,
             <selectable>)`` indicating the default style of "polymorphic"
@@ -458,13 +485,9 @@ class Mapper(_InspectionAttr):
             indicates a selectable that will be used to query for multiple
             classes.
 
-            See also:
+            .. seealso::
 
-            :ref:`concrete_inheritance` - typically uses ``with_polymorphic``
-            to specify a UNION statement to select from.
-
-            :ref:`with_polymorphic` - usage example of the related
-            :meth:`.Query.with_polymorphic` method
+              :ref:`with_polymorphic` - discussion of polymorphic querying techniques.
 
         """
 
@@ -481,9 +504,19 @@ class Mapper(_InspectionAttr):
             self.order_by = order_by
 
         self.always_refresh = always_refresh
-        self.version_id_col = version_id_col
-        self.version_id_generator = version_id_generator or \
-                                        (lambda x: (x or 0) + 1)
+
+        if isinstance(version_id_col, MapperProperty):
+            self.version_id_prop = version_id_col
+            self.version_id_col = None
+        else:
+            self.version_id_col = version_id_col
+        if version_id_generator is False:
+            self.version_id_generator = False
+        elif version_id_generator is None:
+            self.version_id_generator = lambda x: (x or 0) + 1
+        else:
+            self.version_id_generator = version_id_generator
+
         self.concrete = concrete
         self.single = False
         self.inherits = inherits
@@ -824,7 +857,7 @@ class Mapper(_InspectionAttr):
         being present."""
 
         # a set of all mappers which inherit from this one.
-        self._inheriting_mappers = util.WeakSet()
+        self._inheriting_mappers = util.WeakSequence()
 
         if self.inherits:
             if isinstance(self.inherits, type):
@@ -898,7 +931,7 @@ class Mapper(_InspectionAttr):
 
             self.polymorphic_map = self.inherits.polymorphic_map
             self.batch = self.inherits.batch
-            self.inherits._inheriting_mappers.add(self)
+            self.inherits._inheriting_mappers.append(self)
             self.base_mapper = self.inherits.base_mapper
             self.passive_updates = self.inherits.passive_updates
             self._all_tables = self.inherits._all_tables
@@ -965,7 +998,7 @@ class Mapper(_InspectionAttr):
         self.batch = self.inherits.batch
         for mp in self.self_and_descendants:
             mp.base_mapper = self.inherits.base_mapper
-        self.inherits._inheriting_mappers.add(self)
+        self.inherits._inheriting_mappers.append(self)
         self.passive_updates = self.inherits.passive_updates
         self._all_tables = self.inherits._all_tables
         for key, prop in mapper._props.items():
@@ -1406,6 +1439,13 @@ class Mapper(_InspectionAttr):
     _validate_polymorphic_identity = None
 
     @_memoized_configured_property
+    def _version_id_prop(self):
+        if self.version_id_col is not None:
+            return self._columntoproperty[self.version_id_col]
+        else:
+            return None
+
+    @_memoized_configured_property
     def _acceptable_polymorphic_identities(self):
         identities = set()
 
@@ -1819,7 +1859,7 @@ class Mapper(_InspectionAttr):
 
         Normally, this is equivalent to :attr:`.mapped_table`, unless
         the ``with_polymorphic`` feature is in use, in which case the
-        full "polymoprhic" selectable is returned.
+        full "polymorphic" selectable is returned.
 
         """
         return self._with_polymorphic_selectable
@@ -2131,7 +2171,7 @@ class Mapper(_InspectionAttr):
         while stack:
             item = stack.popleft()
             descendants.append(item)
-            stack.extend(sorted(item._inheriting_mappers, key=lambda m: m.class_.__name__))
+            stack.extend(item._inheriting_mappers)
         return util.WeakSequence(descendants)
 
     def polymorphic_iterator(self):

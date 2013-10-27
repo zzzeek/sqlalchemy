@@ -906,12 +906,11 @@ class QueuePoolTest(PoolTestBase):
                 c1.invalidate()
                 c2.invalidate()
                 p2 = p._replace()
-                time.sleep(.2)
+                time.sleep(.5)
 
         eq_(len(success), 12, "successes: %s" % success)
 
     @testing.requires.threading_with_mock
-    @testing.requires.python26
     def test_notify_waiters(self):
         dbapi = MockDBAPI()
         canary = []

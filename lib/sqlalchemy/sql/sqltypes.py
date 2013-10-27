@@ -12,6 +12,7 @@ import datetime as dt
 import codecs
 
 from .type_api import TypeEngine, TypeDecorator, to_instance
+from .elements import quoted_name, type_coerce
 from .default_comparator import _DefaultColumnComparator
 from .. import exc, util, processors
 from .base import _bind_or_error, SchemaEventTarget
@@ -152,6 +153,12 @@ class String(Concatenable, TypeEngine):
         self.convert_unicode = convert_unicode
         self.unicode_error = unicode_error
         self._warn_on_bytestring = _warn_on_bytestring
+
+    def literal_processor(self, dialect):
+        def process(value):
+            value = value.replace("'", "''")
+            return "'%s'" % value
+        return process
 
     def bind_processor(self, dialect):
         if self.convert_unicode or dialect.convert_unicode:
@@ -344,6 +351,11 @@ class Integer(_DateAffinity, TypeEngine):
     def python_type(self):
         return int
 
+    def literal_processor(self, dialect):
+        def process(value):
+            return str(value)
+        return process
+
     @util.memoized_property
     def _expression_adaptations(self):
         # TODO: need a dictionary object that will
@@ -479,6 +491,11 @@ class Numeric(_DateAffinity, TypeEngine):
 
     def get_dbapi_type(self, dbapi):
         return dbapi.NUMBER
+
+    def literal_processor(self, dialect):
+        def process(value):
+            return str(value)
+        return process
 
     @property
     def python_type(self):
@@ -727,6 +744,12 @@ class _Binary(TypeEngine):
     def __init__(self, length=None):
         self.length = length
 
+    def literal_processor(self, dialect):
+        def process(value):
+            value = value.decode(self.dialect.encoding).replace("'", "''")
+            return "'%s'" % value
+        return process
+
     @property
     def python_type(self):
         return util.binary_type
@@ -840,8 +863,11 @@ class SchemaType(SchemaEventTarget):
     """
 
     def __init__(self, **kw):
-        self.name = kw.pop('name', None)
-        self.quote = kw.pop('quote', None)
+        name = kw.pop('name', None)
+        if name is not None:
+            self.name = quoted_name(name, kw.pop('quote', None))
+        else:
+            self.name = None
         self.schema = kw.pop('schema', None)
         self.metadata = kw.pop('metadata', None)
         self.inherit_schema = kw.pop('inherit_schema', False)
@@ -896,7 +922,6 @@ class SchemaType(SchemaEventTarget):
         schema = kw.pop('schema', self.schema)
         metadata = kw.pop('metadata', self.metadata)
         return impltype(name=self.name,
-                    quote=self.quote,
                     schema=schema,
                     metadata=metadata,
                     inherit_schema=self.inherit_schema,
@@ -1008,10 +1033,7 @@ class Enum(String, SchemaType):
                 owning :class:`.Table`.  If this behavior is desired,
                 set the ``inherit_schema`` flag to ``True``.
 
-        :param quote: Force quoting to be on or off on the type's name. If
-           left as the default of `None`, the usual schema-level "case
-           sensitive"/"reserved name" rules are used to determine if this
-           type's name should be quoted.
+        :param quote: Set explicit quoting preferences for the type's name.
 
         :param inherit_schema: When ``True``, the "schema" from the owning
            :class:`.Table` will be copied to the "schema" attribute of this
@@ -1059,7 +1081,7 @@ class Enum(String, SchemaType):
             SchemaType._set_table(self, column, table)
 
         e = schema.CheckConstraint(
-                        column.in_(self.enums),
+                        type_coerce(column, self).in_(self.enums),
                         name=self.name,
                         _create_rule=util.portable_instancemethod(
                                         self._should_create_constraint)
@@ -1071,7 +1093,6 @@ class Enum(String, SchemaType):
         metadata = kw.pop('metadata', self.metadata)
         if issubclass(impltype, Enum):
             return impltype(name=self.name,
-                        quote=self.quote,
                         schema=schema,
                         metadata=metadata,
                         convert_unicode=self.convert_unicode,
@@ -1197,7 +1218,7 @@ class Boolean(TypeEngine, SchemaType):
             return
 
         e = schema.CheckConstraint(
-                        column.in_([0, 1]),
+                        type_coerce(column, self).in_([0, 1]),
                         name=self.name,
                         _create_rule=util.portable_instancemethod(
                                     self._should_create_constraint)
@@ -1500,6 +1521,11 @@ class NullType(TypeEngine):
     __visit_name__ = 'null'
 
     _isnull = True
+
+    def literal_processor(self, dialect):
+        def process(value):
+            return "NULL"
+        return process
 
     class Comparator(TypeEngine.Comparator):
         def _adapt_expression(self, op, other_comparator):

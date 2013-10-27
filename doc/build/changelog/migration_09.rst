@@ -9,7 +9,7 @@ What's New in SQLAlchemy 0.9?
     and SQLAlchemy version 0.9, which is expected for release
     in late 2013.
 
-    Document last updated: July 26, 2013
+    Document last updated: October 23, 2013
 
 Introduction
 ============
@@ -51,6 +51,35 @@ in both Python 2 and Python 3 environments.
 
 Behavioral Changes
 ==================
+
+.. _migration_2824:
+
+Composite attributes are now returned as their object form when queried on a per-attribute basis
+------------------------------------------------------------------------------------------------
+
+Using a :class:`.Query` in conjunction with a composite attribute now returns the object
+type maintained by that composite, rather than being broken out into individual
+columns.   Using the mapping setup at :ref:`mapper_composite`::
+
+    >>> session.query(Vertex.start, Vertex.end).\
+    ...     filter(Vertex.start == Point(3, 4)).all()
+    [(Point(x=3, y=4), Point(x=5, y=6))]
+
+This change is backwards-incompatible with code that expects the indivdual attribute
+to be expanded into individual columns.  To get that behavior, use the ``.clauses``
+accessor::
+
+
+    >>> session.query(Vertex.start.clauses, Vertex.end.clauses).\
+    ...     filter(Vertex.start == Point(3, 4)).all()
+    [(3, 4, 5, 6)]
+
+.. seealso::
+
+    :ref:`change_2824`
+
+:ticket:`2824`
+
 
 .. _migration_2736:
 
@@ -292,6 +321,261 @@ against ``b_value`` directly.
 
 :ticket:`2751`
 
+.. _migration_2810:
+
+Association Proxy Missing Scalar returns None
+---------------------------------------------
+
+An association proxy from a scalar attribute to a scalar will now return
+``None`` if the proxied object isn't present.  This is consistent with the
+fact that missing many-to-ones return None in SQLAlchemy, so should the
+proxied value.  E.g.::
+
+    from sqlalchemy import *
+    from sqlalchemy.orm import *
+    from sqlalchemy.ext.declarative import declarative_base
+    from sqlalchemy.ext.associationproxy import association_proxy
+
+    Base = declarative_base()
+
+    class A(Base):
+        __tablename__ = 'a'
+
+        id = Column(Integer, primary_key=True)
+        b = relationship("B", uselist=False)
+
+        bname = association_proxy("b", "name")
+
+    class B(Base):
+        __tablename__ = 'b'
+
+        id = Column(Integer, primary_key=True)
+        a_id = Column(Integer, ForeignKey('a.id'))
+        name = Column(String)
+
+    a1 = A()
+
+    # this is how m2o's always have worked
+    assert a1.b is None
+
+    # but prior to 0.9, this would raise AttributeError,
+    # now returns None just like the proxied value.
+    assert a1.bname is None
+
+:ticket:`2810`
+
+.. _migration_2850:
+
+A bindparam() construct with no type gets upgraded via copy when a type is available
+------------------------------------------------------------------------------------
+
+The logic which "upgrades" a :func:`.bindparam` construct to take on the
+type of the enclosing expression has been improved in two ways.  First, the
+:func:`.bindparam` object is **copied** before the new type is assigned, so that
+the given :func:`.bindparam` is not mutated in place.  Secondly, this same
+operation occurs when an :class:`.Insert` or :class:`.Update` construct is compiled,
+regarding the "values" that were set in the statement via the :meth:`.ValuesBase.values`
+method.
+
+If given an untyped :func:`.bindparam`::
+
+    bp = bindparam("some_col")
+
+If we use this parameter as follows::
+
+    expr = mytable.c.col == bp
+
+The type for ``bp`` remains as ``NullType``, however if ``mytable.c.col``
+is of type ``String``, then ``expr.right``, that is the right side of the
+binary expression, will take on the ``String`` type.   Previously, ``bp`` itself
+would have been changed in place to have ``String`` as its type.
+
+Similarly, this operation occurs in an :class:`.Insert` or :class:`.Update`::
+
+    stmt = mytable.update().values(col=bp)
+
+Above, ``bp`` remains unchanged, but the ``String`` type will be used when
+the statement is executed, which we can see by examining the ``binds`` dictionary::
+
+    >>> compiled = stmt.compile()
+    >>> compiled.binds['some_col'].type
+    String
+
+The feature allows custom types to take their expected effect within INSERT/UPDATE
+statements without needing to explicitly specify those types within every
+:func:`.bindparam` expression.
+
+The potentially backwards-compatible changes involve two unlikely
+scenarios.  Since the the bound parameter is
+**cloned**, users should not be relying upon making in-place changes to a
+:func:`.bindparam` construct once created.   Additionally, code which uses
+:func:`.bindparam` within an :class:`.Insert` or :class:`.Update` statement
+which is relying on the fact that the :func:`.bindparam` is not typed according
+to the column being assigned towards will no longer function in that way.
+
+:ticket:`2850`
+
+.. _change_2838:
+
+The typing system now handles the task of rendering "literal bind" values
+-------------------------------------------------------------------------
+
+A new method is added to :class:`.TypeEngine` :meth:`.TypeEngine.literal_processor`
+as well as :meth:`.TypeDecorator.process_literal_param` for :class:`.TypeDecorator`
+which take on the task of rendering so-called "inline literal paramters" - parameters
+that normally render as "bound" values, but are instead being rendered inline
+into the SQL statement due to the compiler configuration.  This feature is used
+when generating DDL for constructs such as :class:`.CheckConstraint`, as well
+as by Alembic when using constructs such as ``op.inline_literal()``.   Previously,
+a simple "isinstance" check checked for a few basic types, and the "bind processor"
+was used unconditionally, leading to such issues as strings being encoded into utf-8
+prematurely.
+
+Custom types written with :class:`.TypeDecorator` should continue to work in
+"inline literal" scenarios, as the :meth:`.TypeDecorator.process_literal_param`
+falls back to :meth:`.TypeDecorator.process_bind_param` by default, as these methods
+usually handle a data manipulation, not as much how the data is presented to the
+database.  :meth:`.TypeDecorator.process_literal_param` can be specified to
+specifically produce a string representing how a value should be rendered
+into an inline DDL statement.
+
+:ticket:`2838`
+
+.. _change_2812:
+
+Schema identifiers now carry along their own quoting information
+---------------------------------------------------------------------
+
+This change simplifies the Core's usage of so-called "quote" flags, such
+as the ``quote`` flag passed to :class:`.Table` and :class:`.Column`.  The flag
+is now internalized within the string name itself, which is now represented
+as an instance of  :class:`.quoted_name`, a string subclass.   The
+:class:`.IdentifierPreparer` now relies solely on the quoting preferences
+reported by the :class:`.quoted_name` object rather than checking for any
+explicit ``quote`` flags in most cases.   The issue resolved here includes
+that various case-sensitive methods such as :meth:`.Engine.has_table` as well
+as similar methods within dialects now function with explicitly quoted names,
+without the need to complicate or introduce backwards-incompatible changes
+to those APIs (many of which are 3rd party) with the details of quoting flags -
+in particular, a wider range of identifiers now function correctly with the
+so-called "uppercase" backends like Oracle, Firebird, and DB2 (backends that
+store and report upon table and column names using all uppercase for case
+insensitive names).
+
+The :class:`.quoted_name` object is used internally as needed; however if
+other keywords require fixed quoting preferences, the class is available
+publically.
+
+:ticket:`2812`
+
+.. _migration_2804:
+
+Improved rendering of Boolean constants, NULL constants, conjunctions
+----------------------------------------------------------------------
+
+New capabilities have been added to the :func:`.true` and :func:`.false`
+constants, in particular in conjunction with :func:`.and_` and :func:`.or_`
+functions as well as the behavior of the WHERE/HAVING clauses in conjunction
+with these types, boolean types overall, and the :func:`.null` constant.
+
+Starting with a table such as this::
+
+    from sqlalchemy import Table, Boolean, Integer, Column, MetaData
+
+    t1 = Table('t', MetaData(), Column('x', Boolean()), Column('y', Integer))
+
+A select construct will now render the boolean column as a binary expression
+on backends that don't feature ``true``/``false`` constant beahvior::
+
+    >>> from sqlalchemy import select, and_, false, true
+    >>> from sqlalchemy.dialects import mysql, postgresql
+
+    >>> print select([t1]).where(t1.c.x).compile(dialect=mysql.dialect())
+    SELECT t.x, t.y  FROM t WHERE t.x = 1
+
+The :func:`.and_` and :func:`.or_` constructs will now exhibit quasi
+"short circuit" behavior, that is truncating a rendered expression, when a
+:func:`.true` or :func:`.false` constant is present::
+
+    >>> print select([t1]).where(and_(t1.c.y > 5, false())).compile(
+    ...     dialect=postgresql.dialect())
+    SELECT t.x, t.y FROM t WHERE false
+
+:func:`.true` can be used as the base to build up an expression::
+
+    >>> expr = true()
+    >>> expr = expr & (t1.c.y > 5)
+    >>> print select([t1]).where(expr)
+    SELECT t.x, t.y FROM t WHERE t.y > :y_1
+
+The boolean constants :func:`.true` and :func:`.false` themselves render as
+``0 = 1`` and ``1 = 1`` for a backend with no boolean constants::
+
+    >>> print select([t1]).where(and_(t1.c.y > 5, false())).compile(
+    ...     dialect=mysql.dialect())
+    SELECT t.x, t.y FROM t WHERE 0 = 1
+
+Interpretation of ``None``, while not particularly valid SQL, is at least
+now consistent::
+
+    >>> print select([t1.c.x]).where(None)
+    SELECT t.x FROM t WHERE NULL
+
+    >>> print select([t1.c.x]).where(None).where(None)
+    SELECT t.x FROM t WHERE NULL AND NULL
+
+    >>> print select([t1.c.x]).where(and_(None, None))
+    SELECT t.x FROM t WHERE NULL AND NULL
+
+:ticket:`2804`
+
+.. _change_2787:
+
+attributes.get_history() will query from the DB by default if value not present
+-------------------------------------------------------------------------------
+
+A bugfix regarding :func:`.attributes.get_history` allows a column-based attribute
+to query out to the database for an unloaded value, assuming the ``passive``
+flag is left at its default of ``PASSIVE_OFF``.  Previously, this flag would
+not be honored.  Additionally, a new method :meth:`.AttributeState.load_history`
+is added to complement the :attr:`.AttributeState.history` attribute, which
+will emit loader callables for an unloaded attribute.
+
+This is a small change demonstrated as follows::
+
+    from sqlalchemy import Column, Integer, String, create_engine, inspect
+    from sqlalchemy.orm import Session, attributes
+    from sqlalchemy.ext.declarative import declarative_base
+
+    Base = declarative_base()
+
+    class A(Base):
+        __tablename__ = 'a'
+        id = Column(Integer, primary_key=True)
+        data = Column(String)
+
+    e = create_engine("sqlite://", echo=True)
+    Base.metadata.create_all(e)
+
+    sess = Session(e)
+
+    a1 = A(data='a1')
+    sess.add(a1)
+    sess.commit()  # a1 is now expired
+
+    # history doesn't emit loader callables
+    assert inspect(a1).attrs.data.history == (None, None, None)
+
+    # in 0.8, this would fail to load the unloaded state.
+    assert attributes.get_history(a1, 'data') == ((), ['a1',], ())
+
+    # load_history() is now equiavlent to get_history() with
+    # passive=PASSIVE_OFF ^ INIT_OK
+    assert inspect(a1).attrs.data.load_history() == ((), ['a1',], ())
+
+:ticket:`2787`
+
+
 New Features
 ============
 
@@ -328,6 +612,150 @@ such as listener targets, to be garbage collected when they go out of scope.
 
 :ticket:`2268`
 
+.. _feature_1418:
+
+New Query Options API; ``load_only()`` option
+---------------------------------------------
+
+The system of loader options such as :func:`.orm.joinedload`,
+:func:`.orm.subqueryload`, :func:`.orm.lazyload`, :func:`.orm.defer`, etc.
+all build upon a new system known as :class:`.Load`.  :class:`.Load` provides
+a "method chained" (a.k.a. :term:`generative`) approach to loader options, so that
+instead of joining together long paths using dots or multiple attribute names,
+an explicit loader style is given for each path.
+
+While the new way is slightly more verbose, it is simpler to understand
+in that there is no ambiguity in what options are being applied to which paths;
+it simplifies the method signatures of the options and provides greater flexibility
+particularly for column-based options.  The old systems are to remain functional
+indefinitely as well and all styles can be mixed.
+
+**Old Way**
+
+To set a certain style of loading along every link in a multi-element path, the ``_all()``
+option has to be used::
+
+    query(User).options(joinedload_all("orders.items.keywords"))
+
+**New Way**
+
+Loader options are now chainable, so the same ``joinedload(x)`` method is applied
+equally to each link, without the need to keep straight between
+:func:`.joinedload` and :func:`.joinedload_all`::
+
+    query(User).options(joinedload("orders").joinedload("items").joinedload("keywords"))
+
+**Old Way**
+
+Setting an option on path that is based on a subclass requires that all
+links in the path be spelled out as class bound attributes, since the
+:meth:`.PropComparator.of_type` method needs to be called::
+
+    session.query(Company).\
+        options(
+            subqueryload_all(
+                Company.employees.of_type(Engineer),
+                Engineer.machines
+            )
+        )
+
+**New Way**
+
+Only those elements in the path that actually need :meth:`.PropComparator.of_type`
+need to be set as a class-bound attribute, string-based names can be resumed
+afterwards::
+
+    session.query(Company).\
+        options(
+            subqueryload(Company.employees.of_type(Engineer)).
+            subqueryload("machines")
+            )
+        )
+
+**Old Way**
+
+Setting the loader option on the last link in a long path uses a syntax
+that looks a lot like it should be setting the option for all links in the
+path, causing confusion::
+
+    query(User).options(subqueryload("orders.items.keywords"))
+
+**New Way**
+
+A path can now be spelled out using :func:`.defaultload` for entries in the
+path where the existing loader style should be unchanged.  More verbose
+but the intent is clearer::
+
+    query(User).options(defaultload("orders").defaultload("items").subqueryload("keywords"))
+
+
+The dotted style can still be taken advantage of, particularly in the case
+of skipping over several path elements::
+
+    query(User).options(defaultload("orders.items").subqueryload("keywords"))
+
+**Old Way**
+
+The :func:`.defer` option on a path needed to be spelled out with the full
+path for each column::
+
+    query(User).options(defer("orders.description"), defer("orders.isopen"))
+
+**New Way**
+
+A single :class:`.Load` object that arrives at the target path can have
+:meth:`.Load.defer` called upon it repeatedly::
+
+    query(User).options(defaultload("orders").defer("description").defer("isopen"))
+
+The Load Class
+^^^^^^^^^^^^^^^
+
+The :class:`.Load` class can be used directly to provide a "bound" target,
+especially when multiple parent entities are present::
+
+    from sqlalchemy.orm import Load
+
+    query(User, Address).options(Load(Address).joinedload("entries"))
+
+Load Only
+^^^^^^^^^
+
+A new option :func:`.load_only` achieves a "defer everything but" style of load,
+loading only the given columns and deferring the rest::
+
+    from sqlalchemy.orm import load_only
+
+    query(User).options(load_only("name", "fullname"))
+
+    # specify explicit parent entity
+    query(User, Address).options(Load(User).load_only("name", "fullname"))
+
+    # specify path
+    query(User).options(joinedload(User.addresses).load_only("email_address"))
+
+Class-specific Wildcards
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Using :class:`.Load`, a wildcard may be used to set the loading for all
+relationships (or perhaps columns) on a given entity, without affecting any
+others::
+
+    # lazyload all User relationships
+    query(User).options(Load(User).lazyload("*"))
+
+    # undefer all User columns
+    query(User).options(Load(User).undefer("*"))
+
+    # lazyload all Address relationships
+    query(User).options(defaultload(User.addresses).lazyload("*"))
+
+    # undefer all Address columns
+    query(User).options(defaultload(User.addresses).undefer("*"))
+
+
+:ticket:`1418`
+
 
 .. _feature_722:
 
@@ -362,6 +790,53 @@ rendering::
     FROM users WHERE users.name = :name_1
 
 :ticket:`722`
+
+.. _change_2824:
+
+Column Bundles for ORM queries
+------------------------------
+
+The :class:`.Bundle` allows for querying of sets of columns, which are then
+grouped into one name under the tuple returned by the query.  The initial
+purposes of :class:`.Bundle` are 1. to allow "composite" ORM columns to be
+returned as a single value in a column-based result set, rather than expanding
+them out into individual columns and 2. to allow the creation of custom result-set
+constructs within the ORM, using ad-hoc columns and return types, without involving
+the more heavyweight mechanics of mapped classes.
+
+.. seealso::
+
+    :ref:`migration_2824`
+
+    :ref:`bundles`
+
+:ticket:`2824`
+
+
+Server Side Version Counting
+-----------------------------
+
+The versioning feature of the ORM (now also documented at :ref:`mapper_version_counter`)
+can now make use of server-side version counting schemes, such as those produced
+by triggers or database system columns, as well as conditional programmatic schemes outside
+of the version_id_counter function itself.  By providing the value ``False``
+to the ``version_id_generator`` parameter, the ORM will use the already-set version
+identifier, or alternatively fetch the version identifier
+from each row at the same time the INSERT or UPDATE is emitted.   When using a
+server-generated version identifier, it is strongly
+recommended that this feature be used only on a backend with strong RETURNING
+support (Postgresql, SQL Server; Oracle also supports RETURNING but the cx_oracle
+driver has only limited support), else the additional SELECT statements will
+add significant performance
+overhead.   The example provided at :ref:`server_side_version_counter` illustrates
+the usage of the Postgresql ``xmin`` system column in order to integrate it with
+the ORM's versioning feature.
+
+.. seealso::
+
+    :ref:`server_side_version_counter`
+
+:ticket:`2793`
 
 Behavioral Improvements
 =======================
@@ -532,6 +1007,69 @@ Generates (everywhere except SQLite)::
         OR managers.manager_name = %(manager_name_1)s
 
 :ticket:`2369` :ticket:`2587`
+
+ORM can efficiently fetch just-generated INSERT/UPDATE defaults using RETURNING
+-------------------------------------------------------------------------------
+
+The :class:`.Mapper` has long supported an undocumented flag known as
+``eager_defaults=True``.  The effect of this flag is that when an INSERT or UPDATE
+proceeds, and the row is known to have server-generated default values,
+a SELECT would immediately follow it in order to "eagerly" load those new values.
+Normally, the server-generated columns are marked as "expired" on the object,
+so that no overhead is incurred unless the application actually accesses these
+columns soon after the flush.   The ``eager_defaults`` flag was therefore not
+of much use as it could only decrease performance, and was present only to support
+exotic event schemes where users needed default values to be available
+immediately within the flush process.
+
+In 0.9, as a result of the version id enhancements, ``eager_defaults`` can now
+emit a RETURNING clause for these values, so on a backend with strong RETURNING
+support in particular Postgresql, the ORM can fetch newly generated default
+and SQL expression values inline with the INSERT or UPDATE.  ``eager_defaults``,
+when enabled, makes use of RETURNING automatically when the target backend
+and :class:`.Table` supports "implicit returning".
+
+.. _change_2836:
+
+Subquery Eager Loading will apply DISTINCT to the innermost SELECT for some queries
+------------------------------------------------------------------------------------
+
+In an effort to reduce the number of duplicate rows that can be generated
+by subquery eager loading when a many-to-one relationship is involved, a
+DISTINCT keyword will be applied to the innermost SELECT when the join is
+targeting columns that do not comprise the primary key, as in when loading
+along a many to one.
+
+That is, when subquery loading on a many-to-one from A->B::
+
+    SELECT b.id AS b_id, b.name AS b_name, anon_1.b_id AS a_b_id
+    FROM (SELECT DISTINCT a_b_id FROM a) AS anon_1
+    JOIN b ON b.id = anon_1.a_b_id
+
+Since ``a.b_id`` is a non-distinct foreign key, DISTINCT is applied so that
+redundant ``a.b_id`` are eliminated.  The behavior can be turned on or off
+unconditionally for a particular :func:`.relationship` using the flag
+``distinct_target_key``, setting the value to ``True`` for unconditionally
+on, ``False`` for unconditionally off, and ``None`` for the feature to take
+effect when the target SELECT is against columns that do not comprise a full
+primary key.  In 0.9, ``None`` is the default.
+
+The option is also backported to 0.8 where the ``distinct_target_key``
+option defaults to ``False``.
+
+While the feature here is designed to help performance by eliminating
+duplicate rows, the ``DISTINCT`` keyword in SQL itself can have a negative
+performance impact.  If columns in the SELECT are not indexed, ``DISTINCT``
+will likely perform an ``ORDER BY`` on the rowset which can be expensive.
+By keeping the feature limited just to foreign keys which are hopefully
+indexed in any case, it's expected that the new defaults are reasonable.
+
+The feature also does not eliminate every possible dupe-row scenario; if
+a many-to-one is present elsewhere in the chain of joins, dupe rows may still
+be present.
+
+:ticket:`2836`
+
 
 .. _migration_1068:
 

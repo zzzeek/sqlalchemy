@@ -652,17 +652,16 @@ class Connection(Connectable):
          DBAPI-agnostic way, use the :func:`~.expression.text` construct.
 
         """
-        for c in type(object).__mro__:
-            if c in Connection.executors:
-                return Connection.executors[c](
-                                                self,
-                                                object,
-                                                multiparams,
-                                                params)
-        else:
+        if isinstance(object, util.string_types[0]):
+            return self._execute_text(object, multiparams, params)
+        try:
+            meth = object._execute_on_connection
+        except AttributeError:
             raise exc.InvalidRequestError(
                                 "Unexecutable object type: %s" %
                                 type(object))
+        else:
+            return meth(self, multiparams, params)
 
     def _execute_function(self, func, multiparams, params):
         """Execute a sql.FunctionElement object."""
@@ -898,6 +897,11 @@ class Connection(Connectable):
             elif not context._is_explicit_returning:
                 result.close(_autoclose_connection=False)
                 result._metadata = None
+        elif context.isupdate and context._is_implicit_returning:
+            context._fetch_implicit_update_returning(result)
+            result.close(_autoclose_connection=False)
+            result._metadata = None
+
         elif result._metadata is None:
             # no results, get rowcount
             # (which requires open cursor on some drivers
@@ -1032,16 +1036,6 @@ class Connection(Connectable):
                     self.engine.dispose()
             if self.should_close_with_result:
                 self.close()
-
-    # poor man's multimethod/generic function thingy
-    executors = {
-        expression.FunctionElement: _execute_function,
-        expression.ClauseElement: _execute_clauseelement,
-        Compiled: _execute_compiled,
-        schema.SchemaItem: _execute_default,
-        ddl.DDLElement: _execute_ddl,
-        util.string_types[0]: _execute_text
-    }
 
     def default_schema_name(self):
         return self.engine.dialect.get_default_schema_name(self)
@@ -1423,7 +1417,7 @@ class Engine(Connectable, log.Identified):
     echo = log.echo_property()
 
     def __repr__(self):
-        return 'Engine(%s)' % str(self.url)
+        return 'Engine(%r)' % self.url
 
     def dispose(self):
         """Dispose of the connection pool used by this :class:`.Engine`.
@@ -1667,6 +1661,17 @@ class Engine(Connectable, log.Identified):
             return self.dialect.get_table_names(conn, schema)
 
     def has_table(self, table_name, schema=None):
+        """Return True if the given backend has a table of the given name.
+
+        .. seealso::
+
+            :ref:`metadata_reflection_inspector` - detailed schema inspection using
+            the :class:`.Inspector` interface.
+
+            :class:`.quoted_name` - used to pass quoting information along
+            with a schema identifier.
+
+        """
         return self.run_callable(self.dialect.has_table, table_name, schema)
 
     def raw_connection(self):

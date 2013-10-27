@@ -432,6 +432,15 @@ class DefaultRequirements(SuiteRequirements):
                     'sybase')
 
     @property
+    def datetime_literals(self):
+        """target dialect supports rendering of a date, time, or datetime as a
+        literal string, e.g. via the TypeEngine.literal_processor() method.
+
+        """
+
+        return fails_on_everything_except("sqlite")
+
+    @property
     def datetime(self):
         """target dialect supports representation of Python
         datetime.datetime() objects."""
@@ -553,20 +562,6 @@ class DefaultRequirements(SuiteRequirements):
                 lambda: sys.version_info < (3,),
                 "Python version 3.xx is required."
                 )
-
-    @property
-    def python26(self):
-        return skip_if(
-                lambda: sys.version_info < (2, 6),
-                "Python version 2.6 or greater is required"
-            )
-
-    @property
-    def python25(self):
-        return skip_if(
-                lambda: sys.version_info < (2, 5),
-                "Python version 2.5 or greater is required"
-            )
 
     @property
     def cpython(self):

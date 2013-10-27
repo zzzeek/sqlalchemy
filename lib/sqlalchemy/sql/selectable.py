@@ -14,7 +14,7 @@ from .elements import ClauseElement, TextClause, ClauseList, \
 from .elements import _clone, \
         _literal_as_text, _interpret_as_column_or_from, _expand_cloned,\
         _select_iterables, _anonymous_label, _clause_element_as_expr,\
-        _cloned_intersection, _cloned_difference
+        _cloned_intersection, _cloned_difference, True_
 from .base import Immutable, Executable, _generative, \
             ColumnCollection, ColumnSet, _from_objects, Generative
 from . import type_api
@@ -136,7 +136,6 @@ class FromClause(Selectable):
     __visit_name__ = 'fromclause'
     named_with_column = False
     _hide_froms = []
-    quote = None
     schema = None
     _memoized_property = util.group_expirable_memoized_property(["_columns"])
 
@@ -1153,7 +1152,7 @@ class TableClause(Immutable, FromClause):
 
 
 class SelectBase(Executable, FromClause):
-    """Base class for :class:`.Select` and ``CompoundSelects``."""
+    """Base class for :class:`.Select` and :class:`.CompoundSelect`."""
 
     _order_by_clause = ClauseList()
     _group_by_clause = ClauseList()
@@ -1446,7 +1445,24 @@ class SelectBase(Executable, FromClause):
 
 class CompoundSelect(SelectBase):
     """Forms the basis of ``UNION``, ``UNION ALL``, and other
-        SELECT-based set operations."""
+        SELECT-based set operations.
+
+
+    .. seealso::
+
+        :func:`.union`
+
+        :func:`.union_all`
+
+        :func:`.intersect`
+
+        :func:`.intersect_all`
+
+        :func:`.except`
+
+        :func:`.except_all`
+
+    """
 
     __visit_name__ = 'compound_select'
 
@@ -1920,6 +1936,9 @@ class Select(HasPrefixes, SelectBase):
 
         def add(items):
             for item in items:
+                if item is self:
+                    raise exc.InvalidRequestError(
+                            "select() construct refers to itself as a FROM")
                 if translate and item in translate:
                     item = translate[item]
                 if not seen.intersection(item._cloned_set):
@@ -2500,13 +2519,9 @@ class Select(HasPrefixes, SelectBase):
         :term:`method chaining`.
 
         """
-        self._reset_exported()
-        whereclause = _literal_as_text(whereclause)
 
-        if self._whereclause is not None:
-            self._whereclause = and_(self._whereclause, whereclause)
-        else:
-            self._whereclause = whereclause
+        self._reset_exported()
+        self._whereclause = and_(True_._ifnone(self._whereclause), whereclause)
 
     def append_having(self, having):
         """append the given expression to this select() construct's HAVING
@@ -2519,10 +2534,8 @@ class Select(HasPrefixes, SelectBase):
         :term:`method chaining`.
 
         """
-        if self._having is not None:
-            self._having = and_(self._having, _literal_as_text(having))
-        else:
-            self._having = _literal_as_text(having)
+        self._reset_exported()
+        self._having = and_(True_._ifnone(self._having), having)
 
     def append_from(self, fromclause):
         """append the given FromClause expression to this select() construct's

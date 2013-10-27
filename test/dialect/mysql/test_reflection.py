@@ -140,33 +140,33 @@ class ReflectionTest(fixtures.TestBase, AssertsExecutionResults):
     @testing.uses_deprecated('Manually quoting ENUM value literals')
     def test_type_reflection(self):
         # (ask_for, roundtripped_as_if_different)
-        specs = [( String(1), mysql.MSString(1), ),
-                 ( String(3), mysql.MSString(3), ),
-                 ( Text(), mysql.MSText(), ),
-                 ( Unicode(1), mysql.MSString(1), ),
-                 ( Unicode(3), mysql.MSString(3), ),
-                 ( UnicodeText(), mysql.MSText(), ),
-                 ( mysql.MSChar(1), ),
-                 ( mysql.MSChar(3), ),
-                 ( NCHAR(2), mysql.MSChar(2), ),
-                 ( mysql.MSNChar(2), mysql.MSChar(2), ), # N is CREATE only
-                 ( mysql.MSNVarChar(22), mysql.MSString(22), ),
-                 ( SmallInteger(), mysql.MSSmallInteger(), ),
-                 ( SmallInteger(), mysql.MSSmallInteger(4), ),
-                 ( mysql.MSSmallInteger(), ),
-                 ( mysql.MSSmallInteger(4), mysql.MSSmallInteger(4), ),
-                 ( mysql.MSMediumInteger(), mysql.MSMediumInteger(), ),
-                 ( mysql.MSMediumInteger(8), mysql.MSMediumInteger(8), ),
-                 ( LargeBinary(3), mysql.TINYBLOB(), ),
-                 ( LargeBinary(), mysql.BLOB() ),
-                 ( mysql.MSBinary(3), mysql.MSBinary(3), ),
-                 ( mysql.MSVarBinary(3),),
-                 ( mysql.MSTinyBlob(),),
-                 ( mysql.MSBlob(),),
-                 ( mysql.MSBlob(1234), mysql.MSBlob()),
-                 ( mysql.MSMediumBlob(),),
-                 ( mysql.MSLongBlob(),),
-                 ( mysql.ENUM("''","'fleem'"), ),
+        specs = [(String(1), mysql.MSString(1), ),
+                 (String(3), mysql.MSString(3), ),
+                 (Text(), mysql.MSText(), ),
+                 (Unicode(1), mysql.MSString(1), ),
+                 (Unicode(3), mysql.MSString(3), ),
+                 (UnicodeText(), mysql.MSText(), ),
+                 (mysql.MSChar(1), ),
+                 (mysql.MSChar(3), ),
+                 (NCHAR(2), mysql.MSChar(2), ),
+                 (mysql.MSNChar(2), mysql.MSChar(2), ), # N is CREATE only
+                 (mysql.MSNVarChar(22), mysql.MSString(22), ),
+                 (SmallInteger(), mysql.MSSmallInteger(), ),
+                 (SmallInteger(), mysql.MSSmallInteger(4), ),
+                 (mysql.MSSmallInteger(), ),
+                 (mysql.MSSmallInteger(4), mysql.MSSmallInteger(4), ),
+                 (mysql.MSMediumInteger(), mysql.MSMediumInteger(), ),
+                 (mysql.MSMediumInteger(8), mysql.MSMediumInteger(8), ),
+                 (LargeBinary(3), mysql.TINYBLOB(), ),
+                 (LargeBinary(), mysql.BLOB() ),
+                 (mysql.MSBinary(3), mysql.MSBinary(3), ),
+                 (mysql.MSVarBinary(3),),
+                 (mysql.MSTinyBlob(),),
+                 (mysql.MSBlob(),),
+                 (mysql.MSBlob(1234), mysql.MSBlob()),
+                 (mysql.MSMediumBlob(),),
+                 (mysql.MSLongBlob(),),
+                 (mysql.ENUM("''","'fleem'"), ),
                  ]
 
         columns = [Column('c%i' % (i + 1), t[0]) for i, t in enumerate(specs)]
@@ -297,4 +297,23 @@ class RawReflectionTest(fixtures.TestBase):
         assert regex.match('  PRIMARY KEY (`id`)')
         assert regex.match('  PRIMARY KEY USING BTREE (`id`)')
         assert regex.match('  PRIMARY KEY (`id`) USING BTREE')
+
+    def test_fk_reflection(self):
+        regex = self.parser._re_constraint
+
+        m = regex.match('  CONSTRAINT `addresses_user_id_fkey` '
+                        'FOREIGN KEY (`user_id`) '
+                        'REFERENCES `users` (`id`) '
+                        'ON DELETE CASCADE ON UPDATE CASCADE')
+        eq_(m.groups(), ('addresses_user_id_fkey', '`user_id`',
+                            '`users`', '`id`', None, 'CASCADE', 'CASCADE'))
+
+
+        m = regex.match('  CONSTRAINT `addresses_user_id_fkey` '
+                        'FOREIGN KEY (`user_id`) '
+                        'REFERENCES `users` (`id`) '
+                        'ON DELETE CASCADE ON UPDATE SET NULL')
+        eq_(m.groups(), ('addresses_user_id_fkey', '`user_id`',
+                            '`users`', '`id`', None, 'CASCADE', 'SET NULL'))
+
 

@@ -494,6 +494,47 @@ class MetaDataTest(fixtures.TestBase, ComparesTables):
         eq_(str(table_c.join(table2_c).onclause),
             'myschema.mytable.myid = myschema.othertable.myid')
 
+    def test_tometadata_copy_info(self):
+        m = MetaData()
+        fk = ForeignKey('t2.id')
+        c = Column('c', Integer, fk)
+        ck = CheckConstraint('c > 5')
+        t = Table('t', m, c, ck)
+
+        m.info['minfo'] = True
+        fk.info['fkinfo'] = True
+        c.info['cinfo'] = True
+        ck.info['ckinfo'] = True
+        t.info['tinfo'] = True
+        t.primary_key.info['pkinfo'] = True
+        fkc = [const for const in t.constraints if
+                    isinstance(const, ForeignKeyConstraint)][0]
+        fkc.info['fkcinfo'] = True
+
+        m2 = MetaData()
+        t2 = t.tometadata(m2)
+
+        m.info['minfo'] = False
+        fk.info['fkinfo'] = False
+        c.info['cinfo'] = False
+        ck.info['ckinfo'] = False
+        t.primary_key.info['pkinfo'] = False
+        fkc.info['fkcinfo'] = False
+
+        eq_(m2.info, {})
+        eq_(t2.info, {"tinfo": True})
+        eq_(t2.c.c.info, {"cinfo": True})
+        eq_(list(t2.c.c.foreign_keys)[0].info, {"fkinfo": True})
+        eq_(t2.primary_key.info, {"pkinfo": True})
+
+        fkc2 = [const for const in t2.constraints
+                    if isinstance(const, ForeignKeyConstraint)][0]
+        eq_(fkc2.info, {"fkcinfo": True})
+
+        ck2 = [const for const in
+                    t2.constraints if isinstance(const, CheckConstraint)][0]
+        eq_(ck2.info, {"ckinfo": True})
+
 
     def test_tometadata_kwargs(self):
         meta = MetaData()
@@ -581,11 +622,13 @@ class MetaDataTest(fixtures.TestBase, ComparesTables):
                 kw['quote_schema'] = quote_schema
             t = Table(name, metadata, **kw)
             eq_(t.schema, exp_schema, "test %d, table schema" % i)
-            eq_(t.quote_schema, exp_quote_schema,
+            eq_(t.schema.quote if t.schema is not None else None,
+                            exp_quote_schema,
                             "test %d, table quote_schema" % i)
             seq = Sequence(name, metadata=metadata, **kw)
             eq_(seq.schema, exp_schema, "test %d, seq schema" % i)
-            eq_(seq.quote_schema, exp_quote_schema,
+            eq_(seq.schema.quote if seq.schema is not None else None,
+                            exp_quote_schema,
                             "test %d, seq quote_schema" % i)
 
     def test_manual_dependencies(self):
@@ -1039,7 +1082,7 @@ class UseExistingTest(fixtures.TablesTest):
         meta2 = self._useexisting_fixture()
         users = Table('users', meta2, quote=True, autoload=True,
                       keep_existing=True)
-        assert not users.quote
+        assert not users.name.quote
 
     def test_keep_existing_add_column(self):
         meta2 = self._useexisting_fixture()
@@ -1055,12 +1098,15 @@ class UseExistingTest(fixtures.TablesTest):
                       autoload=True, keep_existing=True)
         assert isinstance(users.c.name.type, Unicode)
 
+    @testing.skip_if(
+            lambda: testing.db.dialect.requires_name_normalize,
+            "test depends on lowercase as case insensitive")
     def test_keep_existing_quote_no_orig(self):
         meta2 = self._notexisting_fixture()
         users = Table('users', meta2, quote=True,
                         autoload=True,
                       keep_existing=True)
-        assert users.quote
+        assert users.name.quote
 
     def test_keep_existing_add_column_no_orig(self):
         meta2 = self._notexisting_fixture()
@@ -1080,7 +1126,7 @@ class UseExistingTest(fixtures.TablesTest):
         meta2 = self._useexisting_fixture()
         users = Table('users', meta2, quote=True,
                       keep_existing=True)
-        assert not users.quote
+        assert not users.name.quote
 
     def test_keep_existing_add_column_no_reflection(self):
         meta2 = self._useexisting_fixture()
@@ -1097,9 +1143,12 @@ class UseExistingTest(fixtures.TablesTest):
 
     def test_extend_existing_quote(self):
         meta2 = self._useexisting_fixture()
-        users = Table('users', meta2, quote=True, autoload=True,
-                      extend_existing=True)
-        assert users.quote
+        assert_raises_message(
+            tsa.exc.ArgumentError,
+            "Can't redefine 'quote' or 'quote_schema' arguments",
+            Table, 'users', meta2, quote=True, autoload=True,
+                      extend_existing=True
+        )
 
     def test_extend_existing_add_column(self):
         meta2 = self._useexisting_fixture()
@@ -1115,12 +1164,15 @@ class UseExistingTest(fixtures.TablesTest):
                       autoload=True, extend_existing=True)
         assert isinstance(users.c.name.type, Unicode)
 
+    @testing.skip_if(
+            lambda: testing.db.dialect.requires_name_normalize,
+            "test depends on lowercase as case insensitive")
     def test_extend_existing_quote_no_orig(self):
         meta2 = self._notexisting_fixture()
         users = Table('users', meta2, quote=True,
                         autoload=True,
                       extend_existing=True)
-        assert users.quote
+        assert users.name.quote
 
     def test_extend_existing_add_column_no_orig(self):
         meta2 = self._notexisting_fixture()
@@ -1138,9 +1190,12 @@ class UseExistingTest(fixtures.TablesTest):
 
     def test_extend_existing_quote_no_reflection(self):
         meta2 = self._useexisting_fixture()
-        users = Table('users', meta2, quote=True,
-                      extend_existing=True)
-        assert users.quote
+        assert_raises_message(
+            tsa.exc.ArgumentError,
+            "Can't redefine 'quote' or 'quote_schema' arguments",
+            Table, 'users', meta2, quote=True,
+                      extend_existing=True
+        )
 
     def test_extend_existing_add_column_no_reflection(self):
         meta2 = self._useexisting_fixture()
@@ -1546,6 +1601,28 @@ class ColumnDefinitionTest(AssertsCompiledSQL, fixtures.TestBase):
         assert c.name == 'named'
         assert c.name == c.key
 
+    def test_unique_index_flags_default_to_none(self):
+        c = Column(Integer)
+        eq_(c.unique, None)
+        eq_(c.index, None)
+
+        c = Column('c', Integer, index=True)
+        eq_(c.unique, None)
+        eq_(c.index, True)
+
+        t = Table('t', MetaData(), c)
+        eq_(list(t.indexes)[0].unique, False)
+
+        c = Column(Integer, unique=True)
+        eq_(c.unique, True)
+        eq_(c.index, None)
+
+        c = Column('c', Integer, index=True, unique=True)
+        eq_(c.unique, True)
+        eq_(c.index, True)
+
+        t = Table('t', MetaData(), c)
+        eq_(list(t.indexes)[0].unique, True)
 
     def test_bogus(self):
         assert_raises(exc.ArgumentError, Column, 'foo', name='bar')
@@ -1841,7 +1918,6 @@ class ColumnOptionsTest(fixtures.TestBase):
             c.info['bar'] = 'zip'
             assert c.info['bar'] == 'zip'
 
-
 class CatchAllEventsTest(fixtures.TestBase):
 
     def teardown(self):
@@ -1890,6 +1966,7 @@ class CatchAllEventsTest(fixtures.TestBase):
                                         parent.__class__.__name__))
 
             def after_attach(obj, parent):
+                assert hasattr(obj, 'name')  # so we can change it
                 canary.append("%s->%s" % (target.__name__, parent))
             event.listen(target, "before_parent_attach", before_attach)
             event.listen(target, "after_parent_attach", after_attach)
@@ -1897,14 +1974,15 @@ class CatchAllEventsTest(fixtures.TestBase):
         for target in [
             schema.ForeignKeyConstraint, schema.PrimaryKeyConstraint,
             schema.UniqueConstraint,
-            schema.CheckConstraint
+            schema.CheckConstraint,
+            schema.Index
         ]:
             evt(target)
 
         m = MetaData()
         Table('t1', m,
             Column('id', Integer, Sequence('foo_id'), primary_key=True),
-            Column('bar', String, ForeignKey('t2.id')),
+            Column('bar', String, ForeignKey('t2.id'), index=True),
             Column('bat', Integer, unique=True),
         )
         Table('t2', m,
@@ -1912,17 +1990,20 @@ class CatchAllEventsTest(fixtures.TestBase):
             Column('bar', Integer),
             Column('bat', Integer),
             CheckConstraint("bar>5"),
-            UniqueConstraint('bar', 'bat')
+            UniqueConstraint('bar', 'bat'),
+            Index(None, 'bar', 'bat')
         )
         eq_(
             canary,
             [
                 'PrimaryKeyConstraint->Table', 'PrimaryKeyConstraint->t1',
+                'Index->Table', 'Index->t1',
                 'ForeignKeyConstraint->Table', 'ForeignKeyConstraint->t1',
                 'UniqueConstraint->Table', 'UniqueConstraint->t1',
                 'PrimaryKeyConstraint->Table', 'PrimaryKeyConstraint->t2',
                 'CheckConstraint->Table', 'CheckConstraint->t2',
-                'UniqueConstraint->Table', 'UniqueConstraint->t2'
+                'UniqueConstraint->Table', 'UniqueConstraint->t2',
+                'Index->Table', 'Index->t2'
             ]
         )
 

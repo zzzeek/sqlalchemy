@@ -169,7 +169,7 @@ class Inspector(object):
          database's default schema is
          used, else the named schema is searched.  If the database does not
          support named schemas, behavior is undefined if ``schema`` is not
-         passed as ``None``.
+         passed as ``None``.  For special quoting, use :class:`.quoted_name`.
 
         :param order_by: Optional, may be the string "foreign_key" to sort
          the result on foreign key dependencies.
@@ -206,6 +206,13 @@ class Inspector(object):
 
         This currently includes some options that apply to MySQL tables.
 
+        :param table_name: string name of the table.  For special quoting,
+         use :class:`.quoted_name`.
+
+        :param schema: string schema name; if omitted, uses the default schema
+         of the database connection.  For special quoting,
+         use :class:`.quoted_name`.
+
         """
         if hasattr(self.dialect, 'get_table_options'):
             return self.dialect.get_table_options(
@@ -217,6 +224,8 @@ class Inspector(object):
         """Return all view names in `schema`.
 
         :param schema: Optional, retrieve names from a non-default schema.
+         For special quoting, use :class:`.quoted_name`.
+
         """
 
         return self.dialect.get_view_names(self.bind, schema,
@@ -226,6 +235,8 @@ class Inspector(object):
         """Return definition for `view_name`.
 
         :param schema: Optional, retrieve names from a non-default schema.
+         For special quoting, use :class:`.quoted_name`.
+
         """
 
         return self.dialect.get_view_definition(
@@ -251,6 +262,14 @@ class Inspector(object):
 
         attrs
           dict containing optional column attributes
+
+        :param table_name: string name of the table.  For special quoting,
+         use :class:`.quoted_name`.
+
+        :param schema: string schema name; if omitted, uses the default schema
+         of the database connection.  For special quoting,
+         use :class:`.quoted_name`.
+
         """
 
         col_defs = self.dialect.get_columns(self.bind, table_name, schema,
@@ -288,6 +307,13 @@ class Inspector(object):
         name
           optional name of the primary key constraint.
 
+        :param table_name: string name of the table.  For special quoting,
+         use :class:`.quoted_name`.
+
+        :param schema: string schema name; if omitted, uses the default schema
+         of the database connection.  For special quoting,
+         use :class:`.quoted_name`.
+
         """
         return self.dialect.get_pk_constraint(self.bind, table_name, schema,
                                               info_cache=self.info_cache,
@@ -315,6 +341,13 @@ class Inspector(object):
         name
           optional name of the foreign key constraint.
 
+        :param table_name: string name of the table.  For special quoting,
+         use :class:`.quoted_name`.
+
+        :param schema: string schema name; if omitted, uses the default schema
+         of the database connection.  For special quoting,
+         use :class:`.quoted_name`.
+
         """
 
         return self.dialect.get_foreign_keys(self.bind, table_name, schema,
@@ -336,6 +369,13 @@ class Inspector(object):
         unique
           boolean
 
+        :param table_name: string name of the table.  For special quoting,
+         use :class:`.quoted_name`.
+
+        :param schema: string schema name; if omitted, uses the default schema
+         of the database connection.  For special quoting,
+         use :class:`.quoted_name`.
+
         """
 
         return self.dialect.get_indexes(self.bind, table_name,
@@ -353,6 +393,13 @@ class Inspector(object):
 
         column_names
           list of column names in order
+
+        :param table_name: string name of the table.  For special quoting,
+         use :class:`.quoted_name`.
+
+        :param schema: string schema name; if omitted, uses the default schema
+         of the database connection.  For special quoting,
+         use :class:`.quoted_name`.
 
         .. versionadded:: 0.9.0
 
@@ -386,7 +433,8 @@ class Inspector(object):
 
         # table attributes we might need.
         reflection_options = dict(
-            (k, table.kwargs.get(k)) for k in dialect.reflection_options if k in table.kwargs)
+            (k, table.kwargs.get(k))
+            for k in dialect.reflection_options if k in table.kwargs)
 
         schema = table.schema
         table_name = table.name
@@ -411,8 +459,12 @@ class Inspector(object):
 
         # columns
         found_table = False
+        cols_by_orig_name = {}
+
         for col_d in self.get_columns(table_name, schema, **tblkw):
             found_table = True
+            orig_name = col_d['name']
+
             table.dispatch.column_reflect(self, table, col_d)
 
             name = col_d['name']
@@ -450,7 +502,9 @@ class Inspector(object):
                     sequence.increment = seq['increment']
                 colargs.append(sequence)
 
-            col = sa_schema.Column(name, coltype, *colargs, **col_kw)
+            cols_by_orig_name[orig_name] = col = \
+                        sa_schema.Column(name, coltype, *colargs, **col_kw)
+
             table.append_column(col)
 
         if not found_table:
@@ -460,9 +514,9 @@ class Inspector(object):
         pk_cons = self.get_pk_constraint(table_name, schema, **tblkw)
         if pk_cons:
             pk_cols = [
-                table.c[pk]
+                cols_by_orig_name[pk]
                 for pk in pk_cons['constrained_columns']
-                if pk in table.c and pk not in exclude_columns
+                if pk in cols_by_orig_name and pk not in exclude_columns
             ]
             pk_cols += [
                 pk
@@ -480,7 +534,13 @@ class Inspector(object):
         fkeys = self.get_foreign_keys(table_name, schema, **tblkw)
         for fkey_d in fkeys:
             conname = fkey_d['name']
-            constrained_columns = fkey_d['constrained_columns']
+            # look for columns by orig name in cols_by_orig_name,
+            # but support columns that are in-Python only as fallback
+            constrained_columns = [
+                                    cols_by_orig_name[c].key
+                                    if c in cols_by_orig_name else c
+                                    for c in fkey_d['constrained_columns']
+                                ]
             if exclude_columns and set(constrained_columns).intersection(
                                 exclude_columns):
                 continue
@@ -504,9 +564,14 @@ class Inspector(object):
                                 )
                 for column in referred_columns:
                     refspec.append(".".join([referred_table, column]))
+            if 'options' in fkey_d:
+                options = fkey_d['options']
+            else:
+                options = {}
             table.append_constraint(
                 sa_schema.ForeignKeyConstraint(constrained_columns, refspec,
-                                               conname, link_to_name=True))
+                                               conname, link_to_name=True,
+                                               **options))
         # Indexes
         indexes = self.get_indexes(table_name, schema)
         for index_d in indexes:
@@ -520,5 +585,11 @@ class Inspector(object):
                     "Omitting %s KEY for (%s), key covers omitted columns." %
                     (flavor, ', '.join(columns)))
                 continue
-            sa_schema.Index(name, *[table.columns[c] for c in columns],
+            # look for columns by orig name in cols_by_orig_name,
+            # but support columns that are in-Python only as fallback
+            sa_schema.Index(name, *[
+                                cols_by_orig_name[c] if c in cols_by_orig_name
+                                        else table.c[c]
+                                for c in columns
+                        ],
                          **dict(unique=unique))

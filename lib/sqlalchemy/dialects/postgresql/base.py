@@ -210,7 +210,7 @@ import re
 
 from ... import sql, schema, exc, util
 from ...engine import default, reflection
-from ...sql import compiler, expression, util as sql_util, operators
+from ...sql import compiler, expression, operators
 from ... import types as sqltypes
 
 try:
@@ -954,25 +954,30 @@ class PGCompiler(compiler.SQLCompiler):
 
     def visit_ilike_op_binary(self, binary, operator, **kw):
         escape = binary.modifiers.get("escape", None)
+
         return '%s ILIKE %s' % \
                 (self.process(binary.left, **kw),
                     self.process(binary.right, **kw)) \
-                + (escape and
-                        (' ESCAPE ' + self.render_literal_value(escape, None))
-                        or '')
+            + (
+                ' ESCAPE ' +
+                self.render_literal_value(escape, sqltypes.STRINGTYPE)
+                if escape else ''
+            )
 
     def visit_notilike_op_binary(self, binary, operator, **kw):
         escape = binary.modifiers.get("escape", None)
         return '%s NOT ILIKE %s' % \
                 (self.process(binary.left, **kw),
                     self.process(binary.right, **kw)) \
-                + (escape and
-                        (' ESCAPE ' + self.render_literal_value(escape, None))
-                        or '')
+            + (
+                ' ESCAPE ' +
+                self.render_literal_value(escape, sqltypes.STRINGTYPE)
+                if escape else ''
+            )
 
     def render_literal_value(self, value, type_):
         value = super(PGCompiler, self).render_literal_value(value, type_)
-        # TODO: need to inspect "standard_conforming_strings"
+
         if self.dialect._backslash_escapes:
             value = value.replace('\\', '\\\\')
         return value
@@ -1039,12 +1044,15 @@ class PGCompiler(compiler.SQLCompiler):
 
 class PGDDLCompiler(compiler.DDLCompiler):
     def get_column_specification(self, column, **kwargs):
+
         colspec = self.preparer.format_column(column)
         impl_type = column.type.dialect_impl(self.dialect)
         if column.primary_key and \
             column is column.table._autoincrement_column and \
-            not isinstance(impl_type, sqltypes.SmallInteger) and \
             (
+                self.dialect.supports_smallserial or
+                not isinstance(impl_type, sqltypes.SmallInteger)
+            ) and (
                 column.default is None or
                 (
                     isinstance(column.default, schema.Sequence) and
@@ -1052,6 +1060,8 @@ class PGDDLCompiler(compiler.DDLCompiler):
                 )):
             if isinstance(impl_type, sqltypes.BigInteger):
                 colspec += " BIGSERIAL"
+            elif isinstance(impl_type, sqltypes.SmallInteger):
+                colspec += " SMALLSERIAL"
             else:
                 colspec += " SERIAL"
         else:
@@ -1094,18 +1104,18 @@ class PGDDLCompiler(compiler.DDLCompiler):
 
         if 'postgresql_using' in index.kwargs:
             using = index.kwargs['postgresql_using']
-            text += "USING %s " % preparer.quote(using, index.quote)
+            text += "USING %s " % preparer.quote(using)
 
         ops = index.kwargs.get('postgresql_ops', {})
         text += "(%s)" \
                 % (
                     ', '.join([
-                        self.sql_compiler.process(expr, include_table=False) +
-
-
+                        self.sql_compiler.process(
+                                expr.self_group()
+                                if not isinstance(expr, expression.ColumnClause)
+                                    else expr,
+                                include_table=False, literal_binds=True) +
                         (c.key in ops and (' ' + ops[c.key]) or '')
-
-
                         for expr, c in zip(index.expressions, index.columns)])
                     )
 
@@ -1115,8 +1125,9 @@ class PGDDLCompiler(compiler.DDLCompiler):
             whereclause = None
 
         if whereclause is not None:
-            whereclause = sql_util.expression_as_ddl(whereclause)
-            where_compiled = self.sql_compiler.process(whereclause)
+            where_compiled = self.sql_compiler.process(
+                                    whereclause, include_table=False,
+                                    literal_binds=True)
             text += " WHERE " + where_compiled
         return text
 
@@ -1128,11 +1139,12 @@ class PGDDLCompiler(compiler.DDLCompiler):
         elements = []
         for c in constraint.columns:
             op = constraint.operators[c.name]
-            elements.append(self.preparer.quote(c.name, c.quote)+' WITH '+op)
+            elements.append(self.preparer.quote(c.name) + ' WITH '+op)
         text += "EXCLUDE USING %s (%s)" % (constraint.using, ', '.join(elements))
         if constraint.where is not None:
-            sqltext = sql_util.expression_as_ddl(constraint.where)
-            text += ' WHERE (%s)' % self.sql_compiler.process(sqltext)
+            text += ' WHERE (%s)' % self.sql_compiler.process(
+                                            constraint.where,
+                                            literal_binds=True)
         text += self.define_constraint_deferrability(constraint)
         return text
 
@@ -1250,9 +1262,9 @@ class PGIdentifierPreparer(compiler.IdentifierPreparer):
         if not type_.name:
             raise exc.CompileError("Postgresql ENUM type requires a name.")
 
-        name = self.quote(type_.name, type_.quote)
+        name = self.quote(type_.name)
         if not self.omit_schema and use_schema and type_.schema is not None:
-            name = self.quote_schema(type_.schema, type_.quote) + "." + name
+            name = self.quote_schema(type_.schema) + "." + name
         return name
 
 
@@ -1328,6 +1340,7 @@ class PGDialect(default.DefaultDialect):
 
     supports_native_enum = True
     supports_native_boolean = True
+    supports_smallserial = True
 
     supports_sequences = True
     sequences_optional = True
@@ -1349,7 +1362,6 @@ class PGDialect(default.DefaultDialect):
     inspector = PGInspector
     isolation_level = None
 
-    # TODO: need to inspect "standard_conforming_strings"
     _backslash_escapes = True
 
     def __init__(self, isolation_level=None, **kwargs):
@@ -1367,6 +1379,13 @@ class PGDialect(default.DefaultDialect):
             self.colspecs.pop(sqltypes.Enum, None)
             # psycopg2, others may have placed ENUM here as well
             self.colspecs.pop(ENUM, None)
+
+        # http://www.postgresql.org/docs/9.3/static/release-9-2.html#AEN116689
+        self.supports_smallserial = self.server_version_info >= (9, 2)
+
+        self._backslash_escapes = connection.scalar(
+                                    "show standard_conforming_strings"
+                                    ) == 'off'
 
     def on_connect(self):
         if self.isolation_level is not None:
@@ -1544,7 +1563,7 @@ class PGDialect(default.DefaultDialect):
     def _get_server_version_info(self, connection):
         v = connection.execute("select version()").scalar()
         m = re.match(
-            '(?:PostgreSQL|EnterpriseDB) '
+            '.*(?:PostgreSQL|EnterpriseDB) '
             '(\d+)\.(\d+)(?:\.(\d+))?(?:\.\d+)?(?:devel)?',
             v)
         if not m:
@@ -1675,8 +1694,7 @@ class PGDialect(default.DefaultDialect):
         SQL_COLS = """
             SELECT a.attname,
               pg_catalog.format_type(a.atttypid, a.atttypmod),
-              (SELECT substring(pg_catalog.pg_get_expr(d.adbin, d.adrelid)
-                for 128)
+              (SELECT pg_catalog.pg_get_expr(d.adbin, d.adrelid)
                 FROM pg_catalog.pg_attrdef d
                WHERE d.adrelid = a.attrelid AND d.adnum = a.attnum
                AND a.atthasdef)
@@ -1883,6 +1901,15 @@ class PGDialect(default.DefaultDialect):
                 n.oid = c.relnamespace
           ORDER BY 1
         """
+        # http://www.postgresql.org/docs/9.0/static/sql-createtable.html
+        FK_REGEX = re.compile(
+            r'FOREIGN KEY \((.*?)\) REFERENCES (?:(.*?)\.)?(.*?)\((.*?)\)'
+            r'[\s]?(MATCH (FULL|PARTIAL|SIMPLE)+)?'
+            r'[\s]?(ON UPDATE (CASCADE|RESTRICT|NO ACTION|SET NULL|SET DEFAULT)+)?'
+            r'[\s]?(ON DELETE (CASCADE|RESTRICT|NO ACTION|SET NULL|SET DEFAULT)+)?'
+            r'[\s]?(DEFERRABLE|NOT DEFERRABLE)?'
+            r'[\s]?(INITIALLY (DEFERRED|IMMEDIATE)+)?'
+        )
 
         t = sql.text(FK_SQL, typemap={
                                 'conname': sqltypes.Unicode,
@@ -1890,15 +1917,18 @@ class PGDialect(default.DefaultDialect):
         c = connection.execute(t, table=table_oid)
         fkeys = []
         for conname, condef, conschema in c.fetchall():
-            m = re.search('FOREIGN KEY \((.*?)\) REFERENCES '
-                            '(?:(.*?)\.)?(.*?)\((.*?)\)', condef).groups()
+            m = re.search(FK_REGEX, condef).groups()
             constrained_columns, referred_schema, \
-                    referred_table, referred_columns = m
+                    referred_table, referred_columns, \
+                    _, match, _, onupdate, _, ondelete, \
+                    deferrable, _, initially = m
+            if deferrable is not None:
+                deferrable = True if deferrable == 'DEFERRABLE' else False
             constrained_columns = [preparer._unquote_identifier(x)
                         for x in re.split(r'\s*,\s*', constrained_columns)]
 
             if referred_schema:
-                referred_schema =\
+                referred_schema = \
                                 preparer._unquote_identifier(referred_schema)
             elif schema is not None and schema == conschema:
                 # no schema was returned by pg_get_constraintdef().  This
@@ -1916,7 +1946,14 @@ class PGDialect(default.DefaultDialect):
                 'constrained_columns': constrained_columns,
                 'referred_schema': referred_schema,
                 'referred_table': referred_table,
-                'referred_columns': referred_columns
+                'referred_columns': referred_columns,
+                'options': {
+                    'onupdate': onupdate,
+                    'ondelete': ondelete,
+                    'deferrable': deferrable,
+                    'initially': initially,
+                    'match': match
+                }
             }
             fkeys.append(fkey_d)
         return fkeys

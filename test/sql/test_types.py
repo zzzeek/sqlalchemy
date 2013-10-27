@@ -8,6 +8,7 @@ from sqlalchemy import exc, types, util, dialects
 for name in dialects.__all__:
     __import__("sqlalchemy.dialects.%s" % name)
 from sqlalchemy.sql import operators, column, table
+from sqlalchemy.schema import CheckConstraint, AddConstraint
 from sqlalchemy.engine import default
 from sqlalchemy.testing.schema import Table, Column
 from sqlalchemy import testing
@@ -272,6 +273,36 @@ class UserDefinedTest(fixtures.TablesTest, AssertsCompiledSQL):
             for col in row[3], row[4]:
                 assert isinstance(col, util.text_type)
 
+    def test_typedecorator_literal_render(self):
+        class MyType(types.TypeDecorator):
+            impl = String
+
+            def process_literal_param(self, value, dialect):
+                return "HI->%s<-THERE" % value
+
+        self.assert_compile(
+            select([literal("test", MyType)]),
+            "SELECT 'HI->test<-THERE' AS anon_1",
+            dialect='default',
+            literal_binds=True
+        )
+
+    def test_typedecorator_literal_render_fallback_bound(self):
+        # fall back to process_bind_param for literal
+        # value rendering.
+        class MyType(types.TypeDecorator):
+            impl = String
+
+            def process_bind_param(self, value, dialect):
+                return "HI->%s<-THERE" % value
+
+        self.assert_compile(
+            select([literal("test", MyType)]),
+            "SELECT 'HI->test<-THERE' AS anon_1",
+            dialect='default',
+            literal_binds=True
+        )
+
     def test_typedecorator_impl(self):
         for impl_, exp, kw in [
             (Float, "FLOAT", {}),
@@ -449,6 +480,17 @@ class UserDefinedTest(fixtures.TablesTest, AssertsCompiledSQL):
                 select([type_coerce(literal('d1BIND_OUT'), MyType)])
             ),
             'd1BIND_OUT'
+        )
+
+        class MyFoob(object):
+            def __clause_element__(self):
+                return t.c.data
+
+        eq_(
+            testing.db.execute(
+                select([t.c.data, type_coerce(MyFoob(), MyType)])
+            ).fetchall(),
+            [('d1', 'd1BIND_OUT')]
         )
 
     @classmethod
@@ -768,7 +810,7 @@ class UnicodeTest(fixtures.TestBase):
         )
 
 
-class EnumTest(fixtures.TestBase):
+class EnumTest(AssertsCompiledSQL, fixtures.TestBase):
     @classmethod
     def setup_class(cls):
         global enum_table, non_native_enum_table, metadata
@@ -850,6 +892,42 @@ class EnumTest(fixtures.TestBase):
             enum_table.insert().execute,
             {'id': 4, 'someenum': 'four'}
         )
+
+    def test_non_native_constraint_custom_type(self):
+        class Foob(object):
+            def __init__(self, name):
+                self.name = name
+
+        class MyEnum(types.SchemaType, TypeDecorator):
+            def __init__(self, values):
+                self.impl = Enum(
+                                *[v.name for v in values],
+                                name="myenum",
+                                native_enum=False
+                            )
+
+
+            def _set_table(self, table, column):
+                self.impl._set_table(table, column)
+
+            # future method
+            def process_literal_param(self, value, dialect):
+                return value.name
+
+            def process_bind_param(self, value, dialect):
+                return value.name
+
+        m = MetaData()
+        t1 = Table('t', m, Column('x', MyEnum([Foob('a'), Foob('b')])))
+        const = [c for c in t1.constraints if isinstance(c, CheckConstraint)][0]
+
+        self.assert_compile(
+            AddConstraint(const),
+            "ALTER TABLE t ADD CONSTRAINT myenum CHECK (x IN ('a', 'b'))",
+            dialect="default"
+        )
+
+
 
     @testing.fails_on('mysql',
                     "the CHECK constraint doesn't raise an exception for unknown reason")
@@ -995,6 +1073,8 @@ class ExpressionTest(fixtures.TestBase, AssertsExecutionResults, AssertsCompiled
                 def process(value):
                     return value / 10
                 return process
+
+        class MyOldCustomType(MyCustomType):
             def adapt_operator(self, op):
                 return {operators.add: operators.sub,
                     operators.sub: operators.add}.get(op, op)
@@ -1070,6 +1150,26 @@ class ExpressionTest(fixtures.TestBase, AssertsExecutionResults, AssertsCompiled
             [(1, 'somedata',
                 datetime.date(2007, 10, 15), 25, 'BIND_INfooBIND_OUT')]
         )
+
+    def test_bind_adapt_update(self):
+        bp = bindparam("somevalue")
+        stmt = test_table.update().values(avalue=bp)
+        compiled = stmt.compile()
+        eq_(bp.type._type_affinity, types.NullType)
+        eq_(compiled.binds['somevalue'].type._type_affinity, MyCustomType)
+
+    def test_bind_adapt_insert(self):
+        bp = bindparam("somevalue")
+        stmt = test_table.insert().values(avalue=bp)
+        compiled = stmt.compile()
+        eq_(bp.type._type_affinity, types.NullType)
+        eq_(compiled.binds['somevalue'].type._type_affinity, MyCustomType)
+
+    def test_bind_adapt_expression(self):
+        bp = bindparam("somevalue")
+        stmt = test_table.c.avalue == bp
+        eq_(bp.type._type_affinity, types.NullType)
+        eq_(stmt.right.type._type_affinity, MyCustomType)
 
     def test_literal_adapt(self):
         # literals get typed based on the types dictionary, unless
@@ -1150,15 +1250,18 @@ class ExpressionTest(fixtures.TestBase, AssertsExecutionResults, AssertsCompiled
         )
         self.assert_compile(
             and_(c1 == True, c2 == True, c3 == True),
-            "x = :x_1 AND x = true AND x = :x_2"
+            "x = :x_1 AND x = true AND x = :x_2",
+            dialect=default.DefaultDialect(supports_native_boolean=True)
         )
         self.assert_compile(
             and_(c1 == 3, c2 == 3, c3 == 3),
-            "x = :x_1 AND x = :x_2 AND x = :x_3"
+            "x = :x_1 AND x = :x_2 AND x = :x_3",
+            dialect=default.DefaultDialect(supports_native_boolean=True)
         )
         self.assert_compile(
             and_(c1.is_(True), c2.is_(True), c3.is_(True)),
-            "x IS :x_1 AND x IS true AND x IS :x_2"
+            "x IS :x_1 AND x IS true AND x IS :x_2",
+            dialect=default.DefaultDialect(supports_native_boolean=True)
         )
 
 
@@ -1202,7 +1305,9 @@ class ExpressionTest(fixtures.TestBase, AssertsExecutionResults, AssertsCompiled
         assert expr.right.type._type_affinity is MyFoobarType
 
         # untyped bind - it gets assigned MyFoobarType
-        expr = column("foo", MyFoobarType) + bindparam("foo")
+        bp = bindparam("foo")
+        expr = column("foo", MyFoobarType) + bp
+        assert bp.type._type_affinity is types.NullType
         assert expr.right.type._type_affinity is MyFoobarType
 
         expr = column("foo", MyFoobarType) + bindparam("foo", type_=Integer)
@@ -1453,7 +1558,7 @@ class IntervalTest(fixtures.TestBase, AssertsExecutionResults):
         eq_(row['non_native_interval'], None)
 
 
-class BooleanTest(fixtures.TestBase, AssertsExecutionResults):
+class BooleanTest(fixtures.TestBase, AssertsExecutionResults, AssertsCompiledSQL):
     @classmethod
     def setup_class(cls):
         global bool_table
@@ -1514,6 +1619,35 @@ class BooleanTest(fixtures.TestBase, AssertsExecutionResults):
     def test_unconstrained(self):
         testing.db.execute(
             "insert into booltest (id, unconstrained_value) values (1, 5)")
+
+    def test_non_native_constraint_custom_type(self):
+        class Foob(object):
+            def __init__(self, value):
+                self.value = value
+
+        class MyBool(types.SchemaType, TypeDecorator):
+            impl = Boolean()
+
+            def _set_table(self, table, column):
+                self.impl._set_table(table, column)
+
+            # future method
+            def process_literal_param(self, value, dialect):
+                return value.value
+
+            def process_bind_param(self, value, dialect):
+                return value.value
+
+        m = MetaData()
+        t1 = Table('t', m, Column('x', MyBool()))
+        const = [c for c in t1.constraints if isinstance(c, CheckConstraint)][0]
+
+        self.assert_compile(
+            AddConstraint(const),
+            "ALTER TABLE t ADD CHECK (x IN (0, 1))",
+            dialect="sqlite"
+        )
+
 
 class PickleTest(fixtures.TestBase):
     def test_eq_comparison(self):

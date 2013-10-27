@@ -37,7 +37,7 @@ from . import type_api
 from .base import _bind_or_error, ColumnCollection
 from .elements import ClauseElement, ColumnClause, _truncated_label, \
                         _as_truncated, TextClause, _literal_as_text,\
-                        ColumnElement, _find_columns
+                        ColumnElement, _find_columns, quoted_name
 from .selectable import TableClause
 import collections
 import sqlalchemy
@@ -67,7 +67,9 @@ class SchemaItem(SchemaEventTarget, visitors.Visitable):
     """Base class for items that define a database schema."""
 
     __visit_name__ = 'schema_item'
-    quote = None
+
+    def _execute_on_connection(self, connection, multiparams, params):
+        return connection._execute_default(self, multiparams, params)
 
     def _init_items(self, *args):
         """Initialize the list of child items for this SchemaItem."""
@@ -83,6 +85,17 @@ class SchemaItem(SchemaEventTarget, visitors.Visitable):
     def __repr__(self):
         return util.generic_repr(self)
 
+    @property
+    @util.deprecated('0.9', 'Use ``<obj>.name.quote``')
+    def quote(self):
+        """Return the value of the ``quote`` flag passed
+        to this schema object, for those schema items which
+        have a ``name`` field.
+
+        """
+
+        return self.name.quote
+
     @util.memoized_property
     def info(self):
         """Info dictionary associated with the object, allowing user-defined
@@ -95,6 +108,11 @@ class SchemaItem(SchemaEventTarget, visitors.Visitable):
         """
         return {}
 
+    def _schema_item_copy(self, schema_item):
+        if 'info' in self.__dict__:
+            schema_item.info = self.info.copy()
+        schema_item.dispatch._update(self.dispatch)
+        return schema_item
 
 
 class Table(SchemaItem, TableClause):
@@ -114,25 +132,29 @@ class Table(SchemaItem, TableClause):
     a second time will return the *same* :class:`.Table` object - in this way
     the :class:`.Table` constructor acts as a registry function.
 
-    See also:
+    .. seealso::
 
-    :ref:`metadata_describing` - Introduction to database metadata
+        :ref:`metadata_describing` - Introduction to database metadata
 
     Constructor arguments are as follows:
 
     :param name: The name of this table as represented in the database.
 
-        This property, along with the *schema*, indicates the *singleton
-        identity* of this table in relation to its parent :class:`.MetaData`.
+        The table name, along with the value of the ``schema`` parameter,
+        forms a key which uniquely identifies this :class:`.Table` within
+        the owning :class:`.MetaData` collection.
         Additional calls to :class:`.Table` with the same name, metadata,
         and schema name will return the same :class:`.Table` object.
 
         Names which contain no upper case characters
         will be treated as case insensitive names, and will not be quoted
-        unless they are a reserved word.  Names with any number of upper
-        case characters will be quoted and sent exactly.  Note that this
-        behavior applies even for databases which standardize upper
-        case names as case insensitive such as Oracle.
+        unless they are a reserved word or contain special characters.
+        A name with any number of upper case characters is considered
+        to be case sensitive, and will be sent as quoted.
+
+        To enable unconditional quoting for the table name, specify the flag
+        ``quote=True`` to the constructor, or use the :class:`.quoted_name`
+        construct to specify the name.
 
     :param metadata: a :class:`.MetaData` object which will contain this
         table.  The metadata is used as a point of association of this table
@@ -263,9 +285,17 @@ class Table(SchemaItem, TableClause):
 
     :param quote_schema: same as 'quote' but applies to the schema identifier.
 
-    :param schema: The *schema name* for this table, which is required if
+    :param schema: The schema name for this table, which is required if
         the table resides in a schema other than the default selected schema
-        for the engine's database connection. Defaults to ``None``.
+        for the engine's database connection.  Defaults to ``None``.
+
+        The quoting rules for the schema name are the same as those for the
+        ``name`` parameter, in that quoting is applied for reserved words or
+        case-sensitive names; to enable unconditional quoting for the
+        schema name, specify the flag
+        ``quote_schema=True`` to the constructor, or use the :class:`.quoted_name`
+        construct to specify the name.
+
 
     :param useexisting: Deprecated.  Use extend_existing.
 
@@ -329,6 +359,15 @@ class Table(SchemaItem, TableClause):
                 #metadata._remove_table(name, schema)
                 raise
 
+
+    @property
+    @util.deprecated('0.9', 'Use ``table.schema.quote``')
+    def quote_schema(self):
+        """Return the value of the ``quote_schema`` flag passed
+        to this :class:`.Table`."""
+
+        return self.schema.quote
+
     def __init__(self, *args, **kw):
         """Constructor for :class:`~.schema.Table`.
 
@@ -341,15 +380,15 @@ class Table(SchemaItem, TableClause):
         # calling the superclass constructor.
 
     def _init(self, name, metadata, *args, **kwargs):
-        super(Table, self).__init__(name)
+        super(Table, self).__init__(quoted_name(name, kwargs.pop('quote', None)))
         self.metadata = metadata
+
         self.schema = kwargs.pop('schema', None)
         if self.schema is None:
             self.schema = metadata.schema
-            self.quote_schema = kwargs.pop(
-                'quote_schema', metadata.quote_schema)
         else:
-            self.quote_schema = kwargs.pop('quote_schema', None)
+            quote_schema = kwargs.pop('quote_schema', None)
+            self.schema = quoted_name(self.schema, quote_schema)
 
         self.indexes = set()
         self.constraints = set()
@@ -370,7 +409,7 @@ class Table(SchemaItem, TableClause):
         include_columns = kwargs.pop('include_columns', None)
 
         self.implicit_returning = kwargs.pop('implicit_returning', True)
-        self.quote = kwargs.pop('quote', None)
+
         if 'info' in kwargs:
             self.info = kwargs.pop('info')
         if 'listeners' in kwargs:
@@ -444,7 +483,8 @@ class Table(SchemaItem, TableClause):
 
         for key in ('quote', 'quote_schema'):
             if key in kwargs:
-                setattr(self, key, kwargs.pop(key))
+                raise exc.ArgumentError(
+                    "Can't redefine 'quote' or 'quote_schema' arguments")
 
         if 'info' in kwargs:
             self.info = kwargs.pop('info')
@@ -597,7 +637,9 @@ class Table(SchemaItem, TableClause):
         :class:`.Table`, using the given :class:`.Connectable`
         for connectivity.
 
-        See also :meth:`.MetaData.create_all`.
+        .. seealso::
+
+            :meth:`.MetaData.create_all`.
 
         """
 
@@ -612,7 +654,9 @@ class Table(SchemaItem, TableClause):
         :class:`.Table`, using the given :class:`.Connectable`
         for connectivity.
 
-        See also :meth:`.MetaData.drop_all`.
+        .. seealso::
+
+            :meth:`.MetaData.drop_all`.
 
         """
         if bind is None:
@@ -679,8 +723,7 @@ class Table(SchemaItem, TableClause):
                   unique=index.unique,
                   *[table.c[col] for col in index.columns.keys()],
                   **index.kwargs)
-        table.dispatch._update(self.dispatch)
-        return table
+        return self._schema_item_copy(table)
 
 
 class Column(SchemaItem, ColumnClause):
@@ -893,6 +936,18 @@ class Column(SchemaItem, ColumnClause):
              an explicit name, use the :class:`.UniqueConstraint` or
              :class:`.Index` constructs explicitly.
 
+        :param system: When ``True``, indicates this is a "system" column,
+             that is a column which is automatically made available by the
+             database, and should not be included in the columns list for a
+             ``CREATE TABLE`` statement.
+
+             For more elaborate scenarios where columns should be conditionally
+             rendered differently on different backends, consider custom
+             compilation rules for :class:`.CreateColumn`.
+
+             ..versionadded:: 0.8.3 Added the ``system=True`` parameter to
+               :class:`.Column`.
+
         """
 
         name = kwargs.pop('name', None)
@@ -913,6 +968,12 @@ class Column(SchemaItem, ColumnClause):
                         "May not pass type_ positionally and as a keyword.")
                 type_ = args.pop(0)
 
+        if name is not None:
+            name = quoted_name(name, kwargs.pop('quote', None))
+        elif "quote" in kwargs:
+            raise exc.ArgumentError("Explicit 'name' is required when "
+                            "sending 'quote' argument")
+
         super(Column, self).__init__(name, type_)
         self.key = kwargs.pop('key', name)
         self.primary_key = kwargs.pop('primary_key', False)
@@ -920,9 +981,14 @@ class Column(SchemaItem, ColumnClause):
         self.default = kwargs.pop('default', None)
         self.server_default = kwargs.pop('server_default', None)
         self.server_onupdate = kwargs.pop('server_onupdate', None)
+
+        # these default to None because .index and .unique is *not*
+        # an informational flag about Column - there can still be an
+        # Index or UniqueConstraint referring to this Column.
         self.index = kwargs.pop('index', None)
         self.unique = kwargs.pop('unique', None)
-        self.quote = kwargs.pop('quote', None)
+
+        self.system = kwargs.pop('system', False)
         self.doc = kwargs.pop('doc', None)
         self.onupdate = kwargs.pop('onupdate', None)
         self.autoincrement = kwargs.pop('autoincrement', True)
@@ -974,6 +1040,10 @@ class Column(SchemaItem, ColumnClause):
         if kwargs:
             raise exc.ArgumentError(
                 "Unknown arguments passed to Column: " + repr(list(kwargs)))
+
+#    @property
+#    def quote(self):
+#        return getattr(self.name, "quote", None)
 
     def __str__(self):
         if self.name is None:
@@ -1065,7 +1135,7 @@ class Column(SchemaItem, ColumnClause):
                     "To create indexes with a specific name, create an "
                     "explicit Index object external to the Table.")
             Index(_truncated_label('ix_%s' % self._label),
-                                    self, unique=self.unique)
+                                    self, unique=bool(self.unique))
         elif self.unique:
             if isinstance(self.unique, util.string_types):
                 raise exc.ArgumentError(
@@ -1109,19 +1179,18 @@ class Column(SchemaItem, ColumnClause):
                 primary_key=self.primary_key,
                 nullable=self.nullable,
                 unique=self.unique,
-                quote=self.quote,
+                system=self.system,
+                #quote=self.quote,
                 index=self.index,
                 autoincrement=self.autoincrement,
                 default=self.default,
                 server_default=self.server_default,
                 onupdate=self.onupdate,
                 server_onupdate=self.server_onupdate,
-                info=self.info,
                 doc=self.doc,
                 *args
                 )
-        c.dispatch._update(self.dispatch)
-        return c
+        return self._schema_item_copy(c)
 
     def _make_proxy(self, selectable, name=None, key=None,
                             name_is_truncatable=False, **kw):
@@ -1147,7 +1216,6 @@ class Column(SchemaItem, ColumnClause):
                 key=key if key else name if name else self.key,
                 primary_key=self.primary_key,
                 nullable=self.nullable,
-                quote=self.quote,
                 _proxies=[self], *fk)
         except TypeError:
             util.raise_from_cause(
@@ -1218,7 +1286,6 @@ class ForeignKey(SchemaItem):
 
     def __init__(self, column, _constraint=None, use_alter=False, name=None,
                     onupdate=None, ondelete=None, deferrable=None,
-                    schema=None,
                     initially=None, link_to_name=False, match=None):
         """
         Construct a column-level FOREIGN KEY.
@@ -1319,8 +1386,7 @@ class ForeignKey(SchemaItem):
                 link_to_name=self.link_to_name,
                 match=self.match
                 )
-        fk.dispatch._update(self.dispatch)
-        return fk
+        return self._schema_item_copy(fk)
 
     def _get_colspec(self, schema=None):
         """Return a string based 'column specification' for this
@@ -1716,7 +1782,7 @@ class ColumnDefault(DefaultGenerator):
         on everyone.
 
         """
-        if inspect.isfunction(fn):
+        if inspect.isfunction(fn) or inspect.ismethod(fn):
             inspectable = fn
         elif inspect.isclass(fn):
             inspectable = fn.__init__
@@ -1777,7 +1843,11 @@ class Sequence(DefaultGenerator):
     be emitted as well.   For platforms that don't support sequences,
     the :class:`.Sequence` construct is ignored.
 
-    See also: :class:`.CreateSequence` :class:`.DropSequence`
+    .. seealso::
+
+        :class:`.CreateSequence`
+
+        :class:`.DropSequence`
 
     """
 
@@ -1814,6 +1884,8 @@ class Sequence(DefaultGenerator):
          forces quoting of the schema name on or off.  When left at its
          default of ``None``, normal quoting rules based on casing and reserved
          words take place.
+        :param quote_schema: set the quoting preferences for the ``schema``
+         name.
         :param metadata: optional :class:`.MetaData` object which will be
          associated with this :class:`.Sequence`.  A :class:`.Sequence`
          that is associated with a :class:`.MetaData` gains access to the
@@ -1841,17 +1913,14 @@ class Sequence(DefaultGenerator):
 
         """
         super(Sequence, self).__init__(for_update=for_update)
-        self.name = name
+        self.name = quoted_name(name, quote)
         self.start = start
         self.increment = increment
         self.optional = optional
-        self.quote = quote
         if metadata is not None and schema is None and metadata.schema:
             self.schema = schema = metadata.schema
-            self.quote_schema = metadata.quote_schema
         else:
-            self.schema = schema
-            self.quote_schema = quote_schema
+            self.schema = quoted_name(schema, quote_schema)
         self.metadata = metadata
         self._key = _get_table_key(name, schema)
         if metadata:
@@ -2160,8 +2229,7 @@ class ColumnCollectionConstraint(ColumnCollectionMixin, Constraint):
     def copy(self, **kw):
         c = self.__class__(name=self.name, deferrable=self.deferrable,
                               initially=self.initially, *self.columns.keys())
-        c.dispatch._update(self.dispatch)
-        return c
+        return self._schema_item_copy(c)
 
     def contains_column(self, col):
         return self.columns.contains_column(col)
@@ -2242,8 +2310,7 @@ class CheckConstraint(Constraint):
                                 _create_rule=self._create_rule,
                                 table=target_table,
                                 _autoattach=False)
-        c.dispatch._update(self.dispatch)
-        return c
+        return self._schema_item_copy(c)
 
 
 class ForeignKeyConstraint(Constraint):
@@ -2333,7 +2400,9 @@ class ForeignKeyConstraint(Constraint):
                     ondelete=self.ondelete,
                     use_alter=self.use_alter,
                     link_to_name=self.link_to_name,
-                    match=self.match
+                    match=self.match,
+                    deferrable=self.deferrable,
+                    initially=self.initially
                 )
 
         if table is not None:
@@ -2412,8 +2481,11 @@ class ForeignKeyConstraint(Constraint):
                     link_to_name=self.link_to_name,
                     match=self.match
                 )
-        fkc.dispatch._update(self.dispatch)
-        return fkc
+        for self_fk, other_fk in zip(
+                                self._elements.values(),
+                                fkc._elements.values()):
+            self_fk._schema_item_copy(other_fk)
+        return self._schema_item_copy(fkc)
 
 
 class PrimaryKeyConstraint(ColumnCollectionConstraint):
@@ -2537,14 +2609,15 @@ class Index(ColumnCollectionMixin, SchemaItem):
                     columns.append(expr)
 
         self.expressions = expressions
+        self.name = quoted_name(name, kw.pop("quote", None))
+        self.unique = kw.pop('unique', False)
+        self.kwargs = kw
 
         # will call _set_parent() if table-bound column
         # objects are present
         ColumnCollectionMixin.__init__(self, *columns)
 
-        self.name = name
-        self.unique = kw.pop('unique', False)
-        self.kwargs = kw
+
 
     def _set_parent(self, table):
         ColumnCollectionMixin._set_parent(self, table)
@@ -2584,7 +2657,9 @@ class Index(ColumnCollectionMixin, SchemaItem):
         :class:`.Index`, using the given :class:`.Connectable`
         for connectivity.
 
-        See also :meth:`.MetaData.create_all`.
+        .. seealso::
+
+            :meth:`.MetaData.create_all`.
 
         """
         if bind is None:
@@ -2597,7 +2672,9 @@ class Index(ColumnCollectionMixin, SchemaItem):
         :class:`.Index`, using the given :class:`.Connectable`
         for connectivity.
 
-        See also :meth:`.MetaData.drop_all`.
+        .. seealso::
+
+            :meth:`.MetaData.drop_all`.
 
         """
         if bind is None:
@@ -2639,12 +2716,9 @@ class MetaData(SchemaItem):
     MetaData is a thread-safe object after tables have been explicitly defined
     or loaded via reflection.
 
-    See also:
+    .. seealso::
 
-    :ref:`metadata_describing` - Introduction to database metadata
-
-    .. index::
-      single: thread safety; MetaData
+        :ref:`metadata_describing` - Introduction to database metadata
 
     """
 
@@ -2681,8 +2755,7 @@ class MetaData(SchemaItem):
 
         """
         self.tables = util.immutabledict()
-        self.schema = schema
-        self.quote_schema = quote_schema
+        self.schema = quoted_name(schema, quote_schema)
         self._schemas = set()
         self._sequences = {}
         self._fk_memos = collections.defaultdict(list)
@@ -2728,7 +2801,6 @@ class MetaData(SchemaItem):
     def __getstate__(self):
         return {'tables': self.tables,
                 'schema': self.schema,
-                'quote_schema': self.quote_schema,
                 'schemas': self._schemas,
                 'sequences': self._sequences,
                 'fk_memos': self._fk_memos}
@@ -2736,7 +2808,6 @@ class MetaData(SchemaItem):
     def __setstate__(self, state):
         self.tables = state['tables']
         self.schema = state['schema']
-        self.quote_schema = state['quote_schema']
         self._bind = None
         self._sequences = state['sequences']
         self._schemas = state['schemas']
