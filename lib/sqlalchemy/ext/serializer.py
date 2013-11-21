@@ -82,7 +82,7 @@ def Serializer(*args, **kw):
         elif isinstance(obj, Table):
             id = "table:" + str(obj)
         elif isinstance(obj, Column) and isinstance(obj.table, Table):
-            id = "column:" + str(obj.table) + ":" + obj.key
+            id = "column:" + str(obj.table) + ":" + str(obj.key)
         elif isinstance(obj, Session):
             id = "session:"
         elif isinstance(obj, Engine):
