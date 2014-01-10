@@ -46,6 +46,9 @@ MySQL-python version 1.2.2 has a serious memory leak related
 to unicode conversion, a feature which is disabled via ``use_unicode=0``.
 It is strongly advised to use the latest version of MySQL-Python.
 
+:class:`~sqlalchemy.Unicode` and  :class:`~sqlalchemy.UnicodeText`
+columns will have :class:`str` instead of :class:`unicode` values when
+used with MySQL-python versions prior to 1.2.5.
 """
 
 from .base import (MySQLDialect, MySQLExecutionContext,
