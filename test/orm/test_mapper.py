@@ -17,6 +17,7 @@ from sqlalchemy.testing import fixtures
 from test.orm import _fixtures
 from sqlalchemy.testing.assertsql import CompiledSQL
 import logging
+import logging.handlers
 
 class MapperTest(_fixtures.FixtureTest, AssertsCompiledSQL):
     __dialect__ = 'default'
@@ -58,7 +59,7 @@ class MapperTest(_fixtures.FixtureTest, AssertsCompiledSQL):
         addresses = self.tables.addresses
         Address = self.classes.Address
 
-        from sqlalchemy.orm.util import _is_mapped_class, _is_aliased_class
+        from sqlalchemy.orm.base import _is_mapped_class, _is_aliased_class
 
         class Foo(object):
             x = "something"
@@ -95,7 +96,7 @@ class MapperTest(_fixtures.FixtureTest, AssertsCompiledSQL):
     def test_entity_descriptor(self):
         users = self.tables.users
 
-        from sqlalchemy.orm.util import _entity_descriptor
+        from sqlalchemy.orm.base import _entity_descriptor
 
         class Foo(object):
             x = "something"
@@ -195,16 +196,16 @@ class MapperTest(_fixtures.FixtureTest, AssertsCompiledSQL):
 
         mapper(User, users)
         sa.orm.configure_mappers()
-        assert sa.orm.mapperlib._new_mappers is False
+        assert sa.orm.mapperlib.Mapper._new_mappers is False
 
         m = mapper(Address, addresses, properties={
                 'user': relationship(User, backref="addresses")})
 
         assert m.configured is False
-        assert sa.orm.mapperlib._new_mappers is True
+        assert sa.orm.mapperlib.Mapper._new_mappers is True
         u = User()
         assert User.addresses
-        assert sa.orm.mapperlib._new_mappers is False
+        assert sa.orm.mapperlib.Mapper._new_mappers is False
 
     def test_configure_on_session(self):
         User, users = self.classes.User, self.tables.users
@@ -301,6 +302,22 @@ class MapperTest(_fixtures.FixtureTest, AssertsCompiledSQL):
             'addresses' : relationship(mapper(Address, addresses))
         })
         assert User.addresses.property is m.get_property('addresses')
+
+    def test_unicode_relationship_backref_names(self):
+        # test [ticket:2901]
+        users, Address, addresses, User = (self.tables.users,
+                                self.classes.Address,
+                                self.tables.addresses,
+                                self.classes.User)
+
+        mapper(Address, addresses)
+        mapper(User, users, properties={
+            util.u('addresses'): relationship(Address, backref=util.u('user'))
+        })
+        u1 = User()
+        a1 = Address()
+        u1.addresses.append(a1)
+        assert a1.user is u1
 
     def test_configure_on_prop_1(self):
         users, Address, addresses, User = (self.tables.users,
@@ -1566,6 +1583,13 @@ class MapperTest(_fixtures.FixtureTest, AssertsCompiledSQL):
             class_mapper, 5
         )
 
+    def test_unmapped_not_type_error_iter_ok(self):
+        assert_raises_message(
+            sa.exc.ArgumentError,
+            r"Class object expected, got '\(5, 6\)'.",
+            class_mapper, (5, 6)
+        )
+
     def test_unmapped_subclass_error_postmap(self):
         users = self.tables.users
 
@@ -1706,7 +1730,6 @@ class ORMLoggingTest(_fixtures.FixtureTest):
 
 class OptionsTest(_fixtures.FixtureTest):
 
-    @testing.fails_on('maxdb', 'FIXME: unknown')
     def test_synonym_options(self):
         Address, addresses, users, User = (self.classes.Address,
                                 self.tables.addresses,
@@ -1749,7 +1772,6 @@ class OptionsTest(_fixtures.FixtureTest):
             eq_(l, self.static.user_address_result)
         self.sql_count_(0, go)
 
-    @testing.fails_on('maxdb', 'FIXME: unknown')
     def test_eager_options_with_limit(self):
         Address, addresses, users, User = (self.classes.Address,
                                 self.tables.addresses,
@@ -1775,7 +1797,6 @@ class OptionsTest(_fixtures.FixtureTest):
         eq_(u.id, 8)
         eq_(len(u.addresses), 3)
 
-    @testing.fails_on('maxdb', 'FIXME: unknown')
     def test_lazy_options_with_limit(self):
         Address, addresses, users, User = (self.classes.Address,
                                 self.tables.addresses,
@@ -1924,12 +1945,11 @@ class OptionsTest(_fixtures.FixtureTest):
 
         oalias = aliased(Order)
         opt1 = sa.orm.joinedload(User.orders, Order.items)
-        opt2a, opt2b = sa.orm.contains_eager(User.orders, Order.items, alias=oalias)
-        u1 = sess.query(User).join(oalias, User.orders).options(opt1, opt2a, opt2b).first()
+        opt2 = sa.orm.contains_eager(User.orders, Order.items, alias=oalias)
+        u1 = sess.query(User).join(oalias, User.orders).options(opt1, opt2).first()
         ustate = attributes.instance_state(u1)
         assert opt1 in ustate.load_options
-        assert opt2a not in ustate.load_options
-        assert opt2b not in ustate.load_options
+        assert opt2 not in ustate.load_options
 
 
 class DeepOptionsTest(_fixtures.FixtureTest):
@@ -2038,139 +2058,6 @@ class DeepOptionsTest(_fixtures.FixtureTest):
             x = u[0].orders[1].items[0].keywords[1]
         self.sql_count_(2, go)
 
-class ValidatorTest(_fixtures.FixtureTest):
-    def test_scalar(self):
-        users = self.tables.users
-        canary = []
-        class User(fixtures.ComparableEntity):
-            @validates('name')
-            def validate_name(self, key, name):
-                canary.append((key, name))
-                assert name != 'fred'
-                return name + ' modified'
-
-        mapper(User, users)
-        sess = create_session()
-        u1 = User(name='ed')
-        eq_(u1.name, 'ed modified')
-        assert_raises(AssertionError, setattr, u1, "name", "fred")
-        eq_(u1.name, 'ed modified')
-        eq_(canary, [('name', 'ed'), ('name', 'fred')])
-        sess.add(u1)
-        sess.flush()
-        sess.expunge_all()
-        eq_(sess.query(User).filter_by(name='ed modified').one(), User(name='ed'))
-
-    def test_collection(self):
-        users, addresses, Address = (self.tables.users,
-                                self.tables.addresses,
-                                self.classes.Address)
-
-        canary = []
-        class User(fixtures.ComparableEntity):
-            @validates('addresses')
-            def validate_address(self, key, ad):
-                canary.append((key, ad))
-                assert '@' in ad.email_address
-                return ad
-
-        mapper(User, users, properties={'addresses':relationship(Address)})
-        mapper(Address, addresses)
-        sess = create_session()
-        u1 = User(name='edward')
-        a0 = Address(email_address='noemail')
-        assert_raises(AssertionError, u1.addresses.append, a0)
-        a1 = Address(id=15, email_address='foo@bar.com')
-        u1.addresses.append(a1)
-        eq_(canary, [('addresses', a0), ('addresses', a1)])
-        sess.add(u1)
-        sess.flush()
-        sess.expunge_all()
-        eq_(
-            sess.query(User).filter_by(name='edward').one(),
-            User(name='edward', addresses=[Address(email_address='foo@bar.com')])
-        )
-
-    def test_validators_dict(self):
-        users, addresses, Address = (self.tables.users,
-                                     self.tables.addresses,
-                                     self.classes.Address)
-
-        class User(fixtures.ComparableEntity):
-
-            @validates('name')
-            def validate_name(self, key, name):
-                assert name != 'fred'
-                return name + ' modified'
-
-            @validates('addresses')
-            def validate_address(self, key, ad):
-                assert '@' in ad.email_address
-                return ad
-
-            def simple_function(self, key, value):
-                return key, value
-
-        u_m = mapper(User,
-                      users,
-                      properties={'addresses':relationship(Address)})
-        mapper(Address, addresses)
-
-        eq_(
-            dict((k, v[0].__name__) for k, v in list(u_m.validators.items())),
-            {'name':'validate_name',
-            'addresses':'validate_address'}
-        )
-
-    def test_validator_w_removes(self):
-        users, addresses, Address = (self.tables.users,
-                                     self.tables.addresses,
-                                     self.classes.Address)
-        canary = []
-        class User(fixtures.ComparableEntity):
-
-            @validates('name', include_removes=True)
-            def validate_name(self, key, item, remove):
-                canary.append((key, item, remove))
-                return item
-
-            @validates('addresses', include_removes=True)
-            def validate_address(self, key, item, remove):
-                canary.append((key, item, remove))
-                return item
-
-        mapper(User,
-                      users,
-                      properties={'addresses':relationship(Address)})
-        mapper(Address, addresses)
-
-        u1 = User()
-        u1.name = "ed"
-        u1.name = "mary"
-        del u1.name
-        a1, a2, a3 = Address(), Address(), Address()
-        u1.addresses.append(a1)
-        u1.addresses.remove(a1)
-        u1.addresses = [a1, a2]
-        u1.addresses = [a2, a3]
-
-        eq_(canary, [
-                ('name', 'ed', False),
-                ('name', 'mary', False),
-                ('name', 'mary', True),
-                # append a1
-                ('addresses', a1, False),
-                # remove a1
-                ('addresses', a1, True),
-                # set to [a1, a2] - this is two appends
-                ('addresses', a1, False), ('addresses', a2, False),
-                # set to [a2, a3] - this is a remove of a1,
-                # append of a3.  the appends are first.
-                ('addresses', a3, False),
-                ('addresses', a1, True),
-            ]
-        )
-
 class ComparatorFactoryTest(_fixtures.FixtureTest, AssertsCompiledSQL):
     def test_kwarg_accepted(self):
         users, Address = self.tables.users, self.classes.Address
@@ -2241,18 +2128,18 @@ class ComparatorFactoryTest(_fixtures.FixtureTest, AssertsCompiledSQL):
                                 self.tables.addresses,
                                 self.classes.User)
 
-        from sqlalchemy.orm.properties import PropertyLoader
+        from sqlalchemy.orm.properties import RelationshipProperty
 
         # NOTE: this API changed in 0.8, previously __clause_element__()
         # gave the parent selecatable, now it gives the
         # primaryjoin/secondaryjoin
-        class MyFactory(PropertyLoader.Comparator):
+        class MyFactory(RelationshipProperty.Comparator):
             __hash__ = None
             def __eq__(self, other):
                 return func.foobar(self._source_selectable().c.user_id) == \
                     func.foobar(other.id)
 
-        class MyFactory2(PropertyLoader.Comparator):
+        class MyFactory2(RelationshipProperty.Comparator):
             __hash__ = None
             def __eq__(self, other):
                 return func.foobar(self._source_selectable().c.id) == \
@@ -2284,349 +2171,6 @@ class ComparatorFactoryTest(_fixtures.FixtureTest, AssertsCompiledSQL):
                 "foobar(users_1.id) = foobar(:foobar_1)",
                 dialect=default.DefaultDialect())
 
-
-class DeferredTest(_fixtures.FixtureTest):
-
-    def test_basic(self):
-        """A basic deferred load."""
-
-        Order, orders = self.classes.Order, self.tables.orders
-
-
-        mapper(Order, orders, order_by=orders.c.id, properties={
-            'description': deferred(orders.c.description)})
-
-        o = Order()
-        self.assert_(o.description is None)
-
-        q = create_session().query(Order)
-        def go():
-            l = q.all()
-            o2 = l[2]
-            x = o2.description
-
-        self.sql_eq_(go, [
-            ("SELECT orders.id AS orders_id, "
-             "orders.user_id AS orders_user_id, "
-             "orders.address_id AS orders_address_id, "
-             "orders.isopen AS orders_isopen "
-             "FROM orders ORDER BY orders.id", {}),
-            ("SELECT orders.description AS orders_description "
-             "FROM orders WHERE orders.id = :param_1",
-             {'param_1':3})])
-
-    def test_unsaved(self):
-        """Deferred loading does not kick in when just PK cols are set."""
-
-        Order, orders = self.classes.Order, self.tables.orders
-
-
-        mapper(Order, orders, properties={
-            'description': deferred(orders.c.description)})
-
-        sess = create_session()
-        o = Order()
-        sess.add(o)
-        o.id = 7
-        def go():
-            o.description = "some description"
-        self.sql_count_(0, go)
-
-    def test_synonym_group_bug(self):
-        orders, Order = self.tables.orders, self.classes.Order
-
-        mapper(Order, orders, properties={
-            'isopen':synonym('_isopen', map_column=True),
-            'description':deferred(orders.c.description, group='foo')
-        })
-
-        sess = create_session()
-        o1 = sess.query(Order).get(1)
-        eq_(o1.description, "order 1")
-
-    def test_unsaved_2(self):
-        Order, orders = self.classes.Order, self.tables.orders
-
-        mapper(Order, orders, properties={
-            'description': deferred(orders.c.description)})
-
-        sess = create_session()
-        o = Order()
-        sess.add(o)
-        def go():
-            o.description = "some description"
-        self.sql_count_(0, go)
-
-    def test_unsaved_group(self):
-        """Deferred loading doesnt kick in when just PK cols are set"""
-
-        orders, Order = self.tables.orders, self.classes.Order
-
-
-        mapper(Order, orders, order_by=orders.c.id, properties=dict(
-            description=deferred(orders.c.description, group='primary'),
-            opened=deferred(orders.c.isopen, group='primary')))
-
-        sess = create_session()
-        o = Order()
-        sess.add(o)
-        o.id = 7
-        def go():
-            o.description = "some description"
-        self.sql_count_(0, go)
-
-    def test_unsaved_group_2(self):
-        orders, Order = self.tables.orders, self.classes.Order
-
-        mapper(Order, orders, order_by=orders.c.id, properties=dict(
-            description=deferred(orders.c.description, group='primary'),
-            opened=deferred(orders.c.isopen, group='primary')))
-
-        sess = create_session()
-        o = Order()
-        sess.add(o)
-        def go():
-            o.description = "some description"
-        self.sql_count_(0, go)
-
-    def test_save(self):
-        Order, orders = self.classes.Order, self.tables.orders
-
-        m = mapper(Order, orders, properties={
-            'description': deferred(orders.c.description)})
-
-        sess = create_session()
-        o2 = sess.query(Order).get(2)
-        o2.isopen = 1
-        sess.flush()
-
-    def test_group(self):
-        """Deferred load with a group"""
-
-        orders, Order = self.tables.orders, self.classes.Order
-
-        mapper(Order, orders, properties=util.OrderedDict([
-            ('userident', deferred(orders.c.user_id, group='primary')),
-            ('addrident', deferred(orders.c.address_id, group='primary')),
-            ('description', deferred(orders.c.description, group='primary')),
-            ('opened', deferred(orders.c.isopen, group='primary'))
-        ]))
-
-        sess = create_session()
-        q = sess.query(Order).order_by(Order.id)
-        def go():
-            l = q.all()
-            o2 = l[2]
-            eq_(o2.opened, 1)
-            eq_(o2.userident, 7)
-            eq_(o2.description, 'order 3')
-
-        self.sql_eq_(go, [
-            ("SELECT orders.id AS orders_id "
-             "FROM orders ORDER BY orders.id", {}),
-            ("SELECT orders.user_id AS orders_user_id, "
-             "orders.address_id AS orders_address_id, "
-             "orders.description AS orders_description, "
-             "orders.isopen AS orders_isopen "
-             "FROM orders WHERE orders.id = :param_1",
-             {'param_1':3})])
-
-        o2 = q.all()[2]
-        eq_(o2.description, 'order 3')
-        assert o2 not in sess.dirty
-        o2.description = 'order 3'
-        def go():
-            sess.flush()
-        self.sql_count_(0, go)
-
-    def test_preserve_changes(self):
-        """A deferred load operation doesn't revert modifications on attributes"""
-
-        orders, Order = self.tables.orders, self.classes.Order
-
-        mapper(Order, orders, properties = {
-            'userident': deferred(orders.c.user_id, group='primary'),
-            'description': deferred(orders.c.description, group='primary'),
-            'opened': deferred(orders.c.isopen, group='primary')
-        })
-        sess = create_session()
-        o = sess.query(Order).get(3)
-        assert 'userident' not in o.__dict__
-        o.description = 'somenewdescription'
-        eq_(o.description, 'somenewdescription')
-        def go():
-            eq_(o.opened, 1)
-        self.assert_sql_count(testing.db, go, 1)
-        eq_(o.description, 'somenewdescription')
-        assert o in sess.dirty
-
-    def test_commits_state(self):
-        """
-        When deferred elements are loaded via a group, they get the proper
-        CommittedState and don't result in changes being committed
-
-        """
-
-        orders, Order = self.tables.orders, self.classes.Order
-
-        mapper(Order, orders, properties = {
-            'userident':deferred(orders.c.user_id, group='primary'),
-            'description':deferred(orders.c.description, group='primary'),
-            'opened':deferred(orders.c.isopen, group='primary')})
-
-        sess = create_session()
-        o2 = sess.query(Order).get(3)
-
-        # this will load the group of attributes
-        eq_(o2.description, 'order 3')
-        assert o2 not in sess.dirty
-        # this will mark it as 'dirty', but nothing actually changed
-        o2.description = 'order 3'
-        # therefore the flush() shouldnt actually issue any SQL
-        self.assert_sql_count(testing.db, sess.flush, 0)
-
-    def test_options(self):
-        """Options on a mapper to create deferred and undeferred columns"""
-
-        orders, Order = self.tables.orders, self.classes.Order
-
-
-        mapper(Order, orders)
-
-        sess = create_session()
-        q = sess.query(Order).order_by(Order.id).options(defer('user_id'))
-
-        def go():
-            q.all()[0].user_id
-
-        self.sql_eq_(go, [
-            ("SELECT orders.id AS orders_id, "
-             "orders.address_id AS orders_address_id, "
-             "orders.description AS orders_description, "
-             "orders.isopen AS orders_isopen "
-             "FROM orders ORDER BY orders.id", {}),
-            ("SELECT orders.user_id AS orders_user_id "
-             "FROM orders WHERE orders.id = :param_1",
-             {'param_1':1})])
-        sess.expunge_all()
-
-        q2 = q.options(sa.orm.undefer('user_id'))
-        self.sql_eq_(q2.all, [
-            ("SELECT orders.id AS orders_id, "
-             "orders.user_id AS orders_user_id, "
-             "orders.address_id AS orders_address_id, "
-             "orders.description AS orders_description, "
-             "orders.isopen AS orders_isopen "
-             "FROM orders ORDER BY orders.id",
-             {})])
-
-    def test_undefer_group(self):
-        orders, Order = self.tables.orders, self.classes.Order
-
-        mapper(Order, orders, properties=util.OrderedDict([
-            ('userident',deferred(orders.c.user_id, group='primary')),
-            ('description',deferred(orders.c.description, group='primary')),
-            ('opened',deferred(orders.c.isopen, group='primary'))
-            ]
-            ))
-
-        sess = create_session()
-        q = sess.query(Order).order_by(Order.id)
-        def go():
-            l = q.options(sa.orm.undefer_group('primary')).all()
-            o2 = l[2]
-            eq_(o2.opened, 1)
-            eq_(o2.userident, 7)
-            eq_(o2.description, 'order 3')
-
-        self.sql_eq_(go, [
-            ("SELECT orders.user_id AS orders_user_id, "
-             "orders.description AS orders_description, "
-             "orders.isopen AS orders_isopen, "
-             "orders.id AS orders_id, "
-             "orders.address_id AS orders_address_id "
-             "FROM orders ORDER BY orders.id",
-             {})])
-
-    def test_locates_col(self):
-        """Manually adding a column to the result undefers the column."""
-
-        orders, Order = self.tables.orders, self.classes.Order
-
-
-        mapper(Order, orders, properties={
-            'description':deferred(orders.c.description)})
-
-        sess = create_session()
-        o1 = sess.query(Order).order_by(Order.id).first()
-        def go():
-            eq_(o1.description, 'order 1')
-        self.sql_count_(1, go)
-
-        sess = create_session()
-        o1 = (sess.query(Order).
-              order_by(Order.id).
-              add_column(orders.c.description).first())[0]
-        def go():
-            eq_(o1.description, 'order 1')
-        self.sql_count_(0, go)
-
-    def test_map_selectable_wo_deferred(self):
-        """test mapping to a selectable with deferred cols,
-        the selectable doesn't include the deferred col.
-
-        """
-
-        Order, orders = self.classes.Order, self.tables.orders
-
-
-        order_select = sa.select([
-                        orders.c.id,
-                        orders.c.user_id,
-                        orders.c.address_id,
-                        orders.c.description,
-                        orders.c.isopen]).alias()
-        mapper(Order, order_select, properties={
-            'description':deferred(order_select.c.description)
-        })
-
-        sess = Session()
-        o1 = sess.query(Order).order_by(Order.id).first()
-        assert 'description' not in o1.__dict__
-        eq_(o1.description, 'order 1')
-
-    def test_deep_options(self):
-        users, items, order_items, Order, Item, User, orders = (self.tables.users,
-                                self.tables.items,
-                                self.tables.order_items,
-                                self.classes.Order,
-                                self.classes.Item,
-                                self.classes.User,
-                                self.tables.orders)
-
-        mapper(Item, items, properties=dict(
-            description=deferred(items.c.description)))
-        mapper(Order, orders, properties=dict(
-            items=relationship(Item, secondary=order_items)))
-        mapper(User, users, properties=dict(
-            orders=relationship(Order, order_by=orders.c.id)))
-
-        sess = create_session()
-        q = sess.query(User).order_by(User.id)
-        l = q.all()
-        item = l[0].orders[1].items[1]
-        def go():
-            eq_(item.description, 'item 4')
-        self.sql_count_(1, go)
-        eq_(item.description, 'item 4')
-
-        sess.expunge_all()
-        l = q.options(sa.orm.undefer('orders.items.description')).all()
-        item = l[0].orders[1].items[1]
-        def go():
-            eq_(item.description, 'item 4')
-        self.sql_count_(0, go)
-        eq_(item.description, 'item 4')
 
 
 class SecondaryOptionsTest(fixtures.MappedTest):

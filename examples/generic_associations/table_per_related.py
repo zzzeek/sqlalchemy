@@ -1,7 +1,8 @@
 """table_per_related.py
 
-The HasAddresses mixin will provide a new "address" table for
-each parent class, as well as a distinct "Address" subclass.
+Illustrates a generic association which persists association
+objects within individual tables, each one generated to persist
+those objects on behalf of a particular parent class.
 
 This configuration has the advantage that each type of parent
 maintains its "Address" rows separately, so that collection
@@ -9,11 +10,19 @@ size for one type of parent will have no impact on other types
 of parent.   Navigation between parent and "Address" is simple,
 direct, and bidirectional.
 
+This recipe is the most efficient (speed wise and storage wise)
+and simple of all of them.
+
+The creation of many related tables may seem at first like an issue
+but there really isn't any - the management and targeting of these tables
+is completely automated.
+
 """
-from sqlalchemy.ext.declarative import declarative_base, declared_attr
+from sqlalchemy.ext.declarative import as_declarative, declared_attr
 from sqlalchemy import create_engine, Integer, Column, String, ForeignKey
 from sqlalchemy.orm import Session, relationship
 
+@as_declarative()
 class Base(object):
     """Base class which provides automated table name
     and surrogate primary key column.
@@ -23,7 +32,6 @@ class Base(object):
     def __tablename__(cls):
         return cls.__name__.lower()
     id = Column(Integer, primary_key=True)
-Base = declarative_base(cls=Base)
 
 class Address(object):
     """Define columns that will be present in each
@@ -54,11 +62,11 @@ class HasAddresses(object):
             "%sAddress" % cls.__name__,
             (Address, Base,),
             dict(
-                __tablename__ = "%s_address" %
+                __tablename__="%s_address" %
                             cls.__tablename__,
-                parent_id = Column(Integer,
-                    ForeignKey("%s.id" % cls.__tablename__)),
-                parent = relationship(cls)
+                parent_id=Column(Integer,
+                            ForeignKey("%s.id" % cls.__tablename__)),
+                parent=relationship(cls)
             )
         )
         return relationship(cls.Address)

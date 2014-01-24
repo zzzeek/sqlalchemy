@@ -201,7 +201,6 @@ class InheritTest3(fixtures.MappedTest):
         found = [repr(l[0])] + sorted([repr(o) for o in l[0].foos])
         eq_(found, compare)
 
-    @testing.fails_on('maxdb', 'FIXME: unknown')
     def testadvanced(self):
         class Foo(object):
             def __init__(self, data=None):
@@ -217,11 +216,13 @@ class InheritTest3(fixtures.MappedTest):
 
         class Blub(Bar):
             def __repr__(self):
-                return "Blub id %d, data %s, bars %s, foos %s" % (self.id, self.data, repr([b for b in self.bars]), repr([f for f in self.foos]))
+                return "Blub id %d, data %s, bars %s, foos %s" % (
+                        self.id, self.data, repr([b for b in self.bars]),
+                        repr([f for f in self.foos]))
 
         mapper(Blub, blub, inherits=Bar, properties={
-            'bars':relationship(Bar, secondary=blub_bar, lazy='joined'),
-            'foos':relationship(Foo, secondary=blub_foo, lazy='joined'),
+            'bars': relationship(Bar, secondary=blub_bar, lazy='joined'),
+            'foos': relationship(Foo, secondary=blub_foo, lazy='joined'),
         })
 
         sess = create_session()

@@ -1,5 +1,5 @@
 # ext/associationproxy.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -242,7 +242,11 @@ class AssociationProxy(interfaces._InspectionAttr):
             return self
 
         if self.scalar:
-            return self._scalar_get(getattr(obj, self.target_collection))
+            target = getattr(obj, self.target_collection)
+            if target is not None:
+                return self._scalar_get(target)
+            else:
+                return None
         else:
             try:
                 # If the owning instance is reborn (orm session resurrect,

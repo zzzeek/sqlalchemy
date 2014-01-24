@@ -68,7 +68,7 @@ class QueryTest(fixtures.TestBase):
             r"A value is required for bind parameter 'user_name', in "
             "parameter group 2 \(original cause: (sqlalchemy.exc.)?InvalidRequestError: A "
             "value is required for bind parameter 'user_name', in "
-            "parameter group 2\) 'INSERT INTO query_users",
+            "parameter group 2\) u?'INSERT INTO query_users",
             users.insert().execute,
             {'user_id':7, 'user_name':'jack'},
             {'user_id':8, 'user_name':'ed'},
@@ -1090,6 +1090,19 @@ class QueryTest(fixtures.TestBase):
         eq_(len(r), 1)
 
 
+    def test_sorting_in_python(self):
+        users.insert().execute(
+                dict(user_id=1, user_name='foo'),
+                dict(user_id=2, user_name='bar'),
+                dict(user_id=3, user_name='def'),
+            )
+
+        rows = users.select().order_by(users.c.user_name).execute().fetchall()
+
+        eq_(rows, [(2, 'bar'), (3, 'def'), (1, 'foo')])
+
+        eq_(sorted(rows), [(1, 'foo'), (2, 'bar'), (3, 'def')])
+
     def test_column_order_with_simple_query(self):
         # should return values in column definition order
         users.insert().execute(user_id=1, user_name='foo')
@@ -1110,7 +1123,6 @@ class QueryTest(fixtures.TestBase):
 
     @testing.crashes('oracle', 'FIXME: unknown, varify not fails_on()')
     @testing.crashes('firebird', 'An identifier must begin with a letter')
-    @testing.crashes('maxdb', 'FIXME: unknown, verify not fails_on()')
     def test_column_accessor_shadow(self):
         meta = MetaData(testing.db)
         shadowed = Table('test_shadowed', meta,
@@ -1900,7 +1912,6 @@ class CompoundTest(fixtures.TestBase):
         eq_(u.execute().fetchall(), wanted)
 
     @testing.fails_on('firebird', "doesn't like ORDER BY with UNIONs")
-    @testing.fails_on('maxdb', 'FIXME: unknown')
     @testing.requires.subqueries
     def test_union_ordered_alias(self):
         (s1, s2) = (
@@ -1919,7 +1930,6 @@ class CompoundTest(fixtures.TestBase):
     @testing.fails_on('firebird', "has trouble extracting anonymous column from union subquery")
     @testing.fails_on('mysql', 'FIXME: unknown')
     @testing.fails_on('sqlite', 'FIXME: unknown')
-    @testing.fails_on('informix', "FIXME: unknown (maybe the second alias isn't allows)")
     def test_union_all(self):
         e = union_all(
             select([t1.c.col3]),

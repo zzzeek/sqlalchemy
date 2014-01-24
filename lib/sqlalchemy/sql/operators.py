@@ -1,5 +1,5 @@
 # sql/operators.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -27,8 +27,11 @@ else:
 class Operators(object):
     """Base of comparison and logical operators.
 
-    Implements base methods :meth:`operate` and :meth:`reverse_operate`,
-    as well as :meth:`__and__`, :meth:`__or__`, :meth:`__invert__`.
+    Implements base methods :meth:`~sqlalchemy.sql.operators.Operators.operate` and
+    :meth:`~sqlalchemy.sql.operators.Operators.reverse_operate`, as well as
+    :meth:`~sqlalchemy.sql.operators.Operators.__and__`,
+    :meth:`~sqlalchemy.sql.operators.Operators.__or__`,
+    :meth:`~sqlalchemy.sql.operators.Operators.__invert__`.
 
     Usually is used via its most common subclass
     :class:`.ColumnOperators`.
@@ -654,6 +657,12 @@ def exists():
     raise NotImplementedError()
 
 
+def istrue(a):
+    raise NotImplementedError()
+
+def isfalse(a):
+    raise NotImplementedError()
+
 def is_(a, b):
     return a.is_(b)
 
@@ -779,6 +788,7 @@ parenthesize (a op b).
 
 """
 
+_asbool = util.symbol('_asbool', canonical=-10)
 _smallest = util.symbol('_smallest', canonical=-100)
 _largest = util.symbol('_largest', canonical=100)
 
@@ -816,12 +826,19 @@ _PRECEDENCE = {
     between_op: 5,
     distinct_op: 5,
     inv: 5,
+    istrue: 5,
+    isfalse: 5,
     and_: 3,
     or_: 2,
     comma_op: -1,
-    collate: 7,
+
+    desc_op: 3,
+    asc_op: 3,
+    collate: 4,
+
     as_: -1,
     exists: 0,
+    _asbool: -10,
     _smallest: _smallest,
     _largest: _largest
 }

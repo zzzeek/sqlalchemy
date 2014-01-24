@@ -4,12 +4,13 @@ from sqlalchemy.testing import eq_, assert_raises
 from sqlalchemy import *
 from sqlalchemy import sql, exc, schema
 from sqlalchemy.util import u
+from sqlalchemy import util
 from sqlalchemy.dialects.mysql import base as mysql
 from sqlalchemy.testing import fixtures, AssertsCompiledSQL, AssertsExecutionResults
 from sqlalchemy import testing
 from sqlalchemy.testing.engines import utf8_engine
 import datetime
-
+import decimal
 
 class TypesTest(fixtures.TestBase, AssertsExecutionResults, AssertsCompiledSQL):
     "Test MySQL column types"
@@ -141,10 +142,36 @@ class TypesTest(fixtures.TestBase, AssertsExecutionResults, AssertsCompiledSQL):
            ]
 
         for type_, args, kw, res in columns:
+            type_inst = type_(*args, **kw)
             self.assert_compile(
-                type_(*args, **kw),
+                type_inst,
                 res
             )
+            # test that repr() copies out all arguments
+            self.assert_compile(
+                eval("mysql.%r" % type_inst),
+                res
+            )
+
+    @testing.only_if('mysql')
+    @testing.provide_metadata
+    def test_precision_float_roundtrip(self):
+        t = Table('t', self.metadata,
+                    Column('scale_value', mysql.DOUBLE(
+                                        precision=15, scale=12, asdecimal=True)),
+                    Column('unscale_value', mysql.DOUBLE(
+                                        decimal_return_scale=12, asdecimal=True))
+            )
+        t.create(testing.db)
+        testing.db.execute(
+            t.insert(), scale_value=45.768392065789,
+            unscale_value=45.768392065789
+        )
+        result = testing.db.scalar(select([t.c.scale_value]))
+        eq_(result, decimal.Decimal("45.768392065789"))
+
+        result = testing.db.scalar(select([t.c.unscale_value]))
+        eq_(result, decimal.Decimal("45.768392065789"))
 
     @testing.exclude('mysql', '<', (4, 1, 1), 'no charset support')
     def test_charset(self):
@@ -212,14 +239,22 @@ class TypesTest(fixtures.TestBase, AssertsExecutionResults, AssertsCompiledSQL):
             (mysql.ENUM, ["foo", "bar"], {'unicode':True},
              '''ENUM('foo','bar') UNICODE'''),
 
-            (String, [20], {"collation":"utf8"}, 'VARCHAR(20) COLLATE utf8')
+            (String, [20], {"collation": "utf8"}, 'VARCHAR(20) COLLATE utf8')
 
 
            ]
 
         for type_, args, kw, res in columns:
+            type_inst = type_(*args, **kw)
             self.assert_compile(
-                type_(*args, **kw),
+                type_inst,
+                res
+            )
+            # test that repr() copies out all arguments
+            self.assert_compile(
+                eval("mysql.%r" % type_inst)
+                    if type_ is not String
+                    else eval("%r" % type_inst),
                 res
             )
 
@@ -229,14 +264,22 @@ class TypesTest(fixtures.TestBase, AssertsExecutionResults, AssertsCompiledSQL):
     def test_charset_collate_table(self):
         t = Table('foo', self.metadata,
             Column('id', Integer),
+            Column('data', UnicodeText),
             mysql_default_charset='utf8',
-            mysql_collate='utf8_unicode_ci'
+            mysql_collate='utf8_bin'
         )
         t.create()
         m2 = MetaData(testing.db)
         t2 = Table('foo', m2, autoload=True)
-        eq_(t2.kwargs['mysql_collate'], 'utf8_unicode_ci')
+        eq_(t2.kwargs['mysql_collate'], 'utf8_bin')
         eq_(t2.kwargs['mysql_default charset'], 'utf8')
+
+        # test [ticket:2906]
+        # in order to test the condition here, need to use
+        # MySQLdb 1.2.3 and also need to pass either use_unicode=1
+        # or charset=utf8 to the URL.
+        t.insert().execute(id=1, data=u('some text'))
+        assert isinstance(testing.db.scalar(select([t.c.data])), util.text_type)
 
     def test_bit_50(self):
         """Exercise BIT types on 5.0+ (not valid for all engine types)"""
@@ -250,7 +293,9 @@ class TypesTest(fixtures.TestBase, AssertsExecutionResults, AssertsCompiledSQL):
 
     @testing.only_if('mysql')
     @testing.exclude('mysql', '<', (5, 0, 5), 'a 5.0+ feature')
-    @testing.fails_on('mysql+oursql', 'some round trips fail, oursql bug ?')
+    @testing.fails_if(
+            lambda: testing.against("mysql+oursql") and util.py3k,
+            'some round trips fail, oursql bug ?')
     @testing.provide_metadata
     def test_bit_50_roundtrip(self):
         bit_table = Table('mysql_bits', self.metadata,
@@ -474,72 +519,24 @@ class TypesTest(fixtures.TestBase, AssertsExecutionResults, AssertsCompiledSQL):
             self.assert_(colspec(table.c.y1).startswith('y1 YEAR'))
             eq_(colspec(table.c.y5), 'y5 YEAR(4)')
 
-    @testing.only_if('mysql')
-    @testing.provide_metadata
-    def test_set(self):
-        """Exercise the SET type."""
 
-        set_table = Table('mysql_set', self.metadata,
-                        Column('s1',
-                          mysql.MSSet("'dq'", "'sq'")), Column('s2',
-                          mysql.MSSet("'a'")), Column('s3',
-                          mysql.MSSet("'5'", "'7'", "'9'")))
-        eq_(colspec(set_table.c.s1), "s1 SET('dq','sq')")
-        eq_(colspec(set_table.c.s2), "s2 SET('a')")
-        eq_(colspec(set_table.c.s3), "s3 SET('5','7','9')")
-        set_table.create()
-        reflected = Table('mysql_set', MetaData(testing.db),
-                          autoload=True)
-        for table in set_table, reflected:
-
-            def roundtrip(store, expected=None):
-                expected = expected or store
-                table.insert(store).execute()
-                row = table.select().execute().first()
-                self.assert_(list(row) == expected)
-                table.delete().execute()
-
-            roundtrip([None, None, None], [None] * 3)
-            roundtrip(['', '', ''], [set([''])] * 3)
-            roundtrip([set(['dq']), set(['a']), set(['5'])])
-            roundtrip(['dq', 'a', '5'], [set(['dq']), set(['a']),
-                      set(['5'])])
-            roundtrip([1, 1, 1], [set(['dq']), set(['a']), set(['5'
-                      ])])
-            roundtrip([set(['dq', 'sq']), None, set(['9', '5', '7'
-                      ])])
-        set_table.insert().execute({'s3': set(['5'])},
-                {'s3': set(['5', '7'])}, {'s3': set(['5', '7', '9'])},
-                {'s3': set(['7', '9'])})
-
-        # NOTE: the string sent to MySQL here is sensitive to ordering.
-        # for some reason the set ordering is always "5, 7" when we test on
-        # MySQLdb but in Py3K this is not guaranteed.   So basically our
-        # SET type doesn't do ordering correctly (not sure how it can,
-        # as we don't know how the SET was configured in the first place.)
-        rows = select([set_table.c.s3],
-                    set_table.c.s3.in_([set(['5']), ['5', '7']])
-                        ).execute().fetchall()
-        found = set([frozenset(row[0]) for row in rows])
-        eq_(found, set([frozenset(['5']), frozenset(['5', '7'])]))
-
-class EnumTest(fixtures.TestBase, AssertsExecutionResults, AssertsCompiledSQL):
+class EnumSetTest(fixtures.TestBase, AssertsExecutionResults, AssertsCompiledSQL):
 
     __only_on__ = 'mysql'
     __dialect__ = mysql.dialect()
 
 
-    @testing.uses_deprecated('Manually quoting ENUM value literals')
     @testing.provide_metadata
     def test_enum(self):
         """Exercise the ENUM type."""
 
+        with testing.expect_deprecated('Manually quoting ENUM value literals'):
+            e1, e2 = mysql.ENUM("'a'", "'b'"), mysql.ENUM("'a'", "'b'")
+
         enum_table = Table('mysql_enum', self.metadata,
-            Column('e1', mysql.ENUM("'a'", "'b'")),
-            Column('e2', mysql.ENUM("'a'", "'b'"),
-                   nullable=False),
-            Column('e2generic', Enum("a", "b"),
-                  nullable=False),
+            Column('e1', e1),
+            Column('e2', e2, nullable=False),
+            Column('e2generic', Enum("a", "b"), nullable=False),
             Column('e3', mysql.ENUM("'a'", "'b'", strict=True)),
             Column('e4', mysql.ENUM("'a'", "'b'", strict=True),
                    nullable=False),
@@ -586,6 +583,106 @@ class EnumTest(fixtures.TestBase, AssertsExecutionResults, AssertsCompiledSQL):
                     ('b', 'b', 'b', 'b', 'b', 'b', 'b', 'b')]
 
         eq_(res, expected)
+
+    @testing.provide_metadata
+    def test_set(self):
+
+        with testing.expect_deprecated('Manually quoting SET value literals'):
+            e1, e2 = mysql.SET("'a'", "'b'"), mysql.SET("'a'", "'b'")
+
+        set_table = Table('mysql_set', self.metadata,
+            Column('e1', e1),
+            Column('e2', e2, nullable=False),
+            Column('e3', mysql.SET("a", "b")),
+            Column('e4', mysql.SET("'a'", "b")),
+            Column('e5', mysql.SET("'a'", "'b'", quoting="quoted"))
+            )
+
+        eq_(colspec(set_table.c.e1),
+                       "e1 SET('a','b')")
+        eq_(colspec(set_table.c.e2),
+                       "e2 SET('a','b') NOT NULL")
+        eq_(colspec(set_table.c.e3),
+                       "e3 SET('a','b')")
+        eq_(colspec(set_table.c.e4),
+                       "e4 SET('''a''','b')")
+        eq_(colspec(set_table.c.e5),
+                       "e5 SET('a','b')")
+        set_table.create()
+
+        assert_raises(exc.DBAPIError, set_table.insert().execute,
+                        e1=None, e2=None, e3=None, e4=None)
+
+        if testing.against("+oursql"):
+            assert_raises(exc.StatementError, set_table.insert().execute,
+                                        e1='c', e2='c', e3='c', e4='c')
+
+        set_table.insert().execute(e1='a', e2='a', e3='a', e4="'a'", e5="a,b")
+        set_table.insert().execute(e1='b', e2='b', e3='b', e4='b', e5="a,b")
+
+        res = set_table.select().execute().fetchall()
+
+        if testing.against("+oursql"):
+            expected = [
+                # 1st row with all c's, data truncated
+                (set(['']), set(['']), set(['']), set(['']), None),
+            ]
+        else:
+            expected = []
+
+        expected.extend([
+            (set(['a']), set(['a']), set(['a']), set(["'a'"]), set(['a', 'b'])),
+            (set(['b']), set(['b']), set(['b']), set(['b']), set(['a', 'b']))
+        ])
+
+        eq_(res, expected)
+
+    @testing.provide_metadata
+    def test_set_roundtrip_plus_reflection(self):
+        set_table = Table('mysql_set', self.metadata,
+                        Column('s1',
+                          mysql.SET("dq", "sq")),
+                            Column('s2', mysql.SET("a")),
+                            Column('s3', mysql.SET("5", "7", "9")))
+
+        eq_(colspec(set_table.c.s1), "s1 SET('dq','sq')")
+        eq_(colspec(set_table.c.s2), "s2 SET('a')")
+        eq_(colspec(set_table.c.s3), "s3 SET('5','7','9')")
+        set_table.create()
+        reflected = Table('mysql_set', MetaData(testing.db),
+                          autoload=True)
+        for table in set_table, reflected:
+
+            def roundtrip(store, expected=None):
+                expected = expected or store
+                table.insert(store).execute()
+                row = table.select().execute().first()
+                self.assert_(list(row) == expected)
+                table.delete().execute()
+
+            roundtrip([None, None, None], [None] * 3)
+            roundtrip(['', '', ''], [set([''])] * 3)
+            roundtrip([set(['dq']), set(['a']), set(['5'])])
+            roundtrip(['dq', 'a', '5'], [set(['dq']), set(['a']),
+                      set(['5'])])
+            roundtrip([1, 1, 1], [set(['dq']), set(['a']), set(['5'
+                      ])])
+            roundtrip([set(['dq', 'sq']), None, set(['9', '5', '7'
+                      ])])
+        set_table.insert().execute({'s3': set(['5'])},
+                {'s3': set(['5', '7'])}, {'s3': set(['5', '7', '9'])},
+                {'s3': set(['7', '9'])})
+
+        # NOTE: the string sent to MySQL here is sensitive to ordering.
+        # for some reason the set ordering is always "5, 7" when we test on
+        # MySQLdb but in Py3K this is not guaranteed.   So basically our
+        # SET type doesn't do ordering correctly (not sure how it can,
+        # as we don't know how the SET was configured in the first place.)
+        rows = select([set_table.c.s3],
+                    set_table.c.s3.in_([set(['5']), ['5', '7']])
+                        ).execute().fetchall()
+        found = set([frozenset(row[0]) for row in rows])
+        eq_(found, set([frozenset(['5']), frozenset(['5', '7'])]))
 
     def test_unicode_enum(self):
         unicode_engine = utf8_engine()
@@ -634,38 +731,64 @@ class EnumTest(fixtures.TestBase, AssertsExecutionResults, AssertsCompiledSQL):
                             "VARCHAR(1), CHECK (somecolumn IN ('x', "
                             "'y', 'z')))")
 
+    @testing.provide_metadata
     @testing.exclude('mysql', '<', (4,), "3.23 can't handle an ENUM of ''")
-    @testing.uses_deprecated('Manually quoting ENUM value literals')
     def test_enum_parse(self):
-        """More exercises for the ENUM type."""
 
-        # MySQL 3.23 can't handle an ENUM of ''....
-
-        enum_table = Table('mysql_enum', MetaData(testing.db),
-            Column('e1', mysql.ENUM("'a'")),
-            Column('e2', mysql.ENUM("''")),
-            Column('e3', mysql.ENUM('a')),
-            Column('e4', mysql.ENUM('')),
-            Column('e5', mysql.ENUM("'a'", "''")),
-            Column('e6', mysql.ENUM("''", "'a'")),
-            Column('e7', mysql.ENUM("''", "'''a'''", "'b''b'", "''''")))
+        with testing.expect_deprecated('Manually quoting ENUM value literals'):
+            enum_table = Table('mysql_enum', self.metadata,
+                Column('e1', mysql.ENUM("'a'")),
+                Column('e2', mysql.ENUM("''")),
+                Column('e3', mysql.ENUM('a')),
+                Column('e4', mysql.ENUM('')),
+                Column('e5', mysql.ENUM("'a'", "''")),
+                Column('e6', mysql.ENUM("''", "'a'")),
+                Column('e7', mysql.ENUM("''", "'''a'''", "'b''b'", "''''")))
 
         for col in enum_table.c:
             self.assert_(repr(col))
-        try:
-            enum_table.create()
-            reflected = Table('mysql_enum', MetaData(testing.db),
-                              autoload=True)
-            for t in enum_table, reflected:
-                eq_(t.c.e1.type.enums, ("a",))
-                eq_(t.c.e2.type.enums, ("",))
-                eq_(t.c.e3.type.enums, ("a",))
-                eq_(t.c.e4.type.enums, ("",))
-                eq_(t.c.e5.type.enums, ("a", ""))
-                eq_(t.c.e6.type.enums, ("", "a"))
-                eq_(t.c.e7.type.enums, ("", "'a'", "b'b", "'"))
-        finally:
-            enum_table.drop()
+
+        enum_table.create()
+        reflected = Table('mysql_enum', MetaData(testing.db),
+                          autoload=True)
+        for t in enum_table, reflected:
+            eq_(t.c.e1.type.enums, ("a",))
+            eq_(t.c.e2.type.enums, ("",))
+            eq_(t.c.e3.type.enums, ("a",))
+            eq_(t.c.e4.type.enums, ("",))
+            eq_(t.c.e5.type.enums, ("a", ""))
+            eq_(t.c.e6.type.enums, ("", "a"))
+            eq_(t.c.e7.type.enums, ("", "'a'", "b'b", "'"))
+
+    @testing.provide_metadata
+    @testing.exclude('mysql', '<', (5,))
+    def test_set_parse(self):
+        with testing.expect_deprecated('Manually quoting SET value literals'):
+            set_table = Table('mysql_set', self.metadata,
+                Column('e1', mysql.SET("'a'")),
+                Column('e2', mysql.SET("''")),
+                Column('e3', mysql.SET('a')),
+                Column('e4', mysql.SET('')),
+                Column('e5', mysql.SET("'a'", "''")),
+                Column('e6', mysql.SET("''", "'a'")),
+                Column('e7', mysql.SET("''", "'''a'''", "'b''b'", "''''")))
+
+        for col in set_table.c:
+            self.assert_(repr(col))
+
+        set_table.create()
+
+        # don't want any warnings on reflection
+        reflected = Table('mysql_set', MetaData(testing.db),
+                          autoload=True)
+        for t in set_table, reflected:
+            eq_(t.c.e1.type.values, ("a",))
+            eq_(t.c.e2.type.values, ("",))
+            eq_(t.c.e3.type.values, ("a",))
+            eq_(t.c.e4.type.values, ("",))
+            eq_(t.c.e5.type.values, ("a", ""))
+            eq_(t.c.e6.type.values, ("", "a"))
+            eq_(t.c.e7.type.values, ("", "'a'", "b'b", "'"))
 
 def colspec(c):
     return testing.db.dialect.ddl_compiler(

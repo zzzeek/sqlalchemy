@@ -1,18 +1,14 @@
 from sqlalchemy.testing import assert_raises, assert_raises_message
 import sqlalchemy as sa
 from sqlalchemy import testing
-from sqlalchemy import MetaData, Integer, String, ForeignKey, func, \
-    util, select
+from sqlalchemy import Integer, String, ForeignKey, \
+    select
 from sqlalchemy.testing.schema import Table, Column
-from sqlalchemy.orm import mapper, relationship, backref, \
-    class_mapper, CompositeProperty, \
-    validates, aliased
-from sqlalchemy.orm import attributes, \
-    composite, relationship, \
-    Session
+from sqlalchemy.orm import mapper, relationship, \
+    CompositeProperty, aliased
+from sqlalchemy.orm import composite, Session, configure_mappers
 from sqlalchemy.testing import eq_
 from sqlalchemy.testing import fixtures
-from test.orm import _fixtures
 
 
 class PointTest(fixtures.MappedTest):
@@ -214,17 +210,45 @@ class PointTest(fixtures.MappedTest):
             ((), [Point(x=None, y=None)], ())
         )
 
-    def test_query_cols(self):
+    def test_query_cols_legacy(self):
         Edge = self.classes.Edge
 
         sess = self._fixture()
 
         eq_(
-            sess.query(Edge.start, Edge.end).all(),
+            sess.query(Edge.start.clauses, Edge.end.clauses).all(),
             [(3, 4, 5, 6), (14, 5, 2, 7)]
         )
 
+    def test_query_cols(self):
+        Edge = self.classes.Edge
+        Point = self.classes.Point
+
+        sess = self._fixture()
+
+        start, end = Edge.start, Edge.end
+
+        eq_(
+            sess.query(start, end).filter(start == Point(3, 4)).all(),
+            [(Point(3, 4), Point(5, 6))]
+        )
+
+    def test_query_cols_labeled(self):
+        Edge = self.classes.Edge
+        Point = self.classes.Point
+
+        sess = self._fixture()
+
+        start, end = Edge.start, Edge.end
+
+        row = sess.query(start.label('s1'), end).filter(start == Point(3, 4)).first()
+        eq_(row.s1.x, 3)
+        eq_(row.s1.y, 4)
+        eq_(row.end.x, 5)
+        eq_(row.end.y, 6)
+
     def test_delete(self):
+        Point = self.classes.Point
         Graph, Edge = self.classes.Graph, self.classes.Edge
 
         sess = self._fixture()
@@ -235,7 +259,10 @@ class PointTest(fixtures.MappedTest):
         sess.flush()
         eq_(
             sess.query(Edge.start, Edge.end).all(),
-            [(3, 4, 5, 6), (14, 5, None, None)]
+            [
+                (Point(x=3, y=4), Point(x=5, y=6)),
+                (Point(x=14, y=5), Point(x=None, y=None))
+            ]
         )
 
     def test_save_null(self):
@@ -712,6 +739,24 @@ class ConfigurationTest(fixtures.MappedTest):
         })
         self._test_roundtrip()
 
+    def test_check_prop_type(self):
+        edge, Edge, Point = (self.tables.edge,
+                                self.classes.Edge,
+                                self.classes.Point)
+        mapper(Edge, edge, properties={
+            'start': sa.orm.composite(Point, (edge.c.x1,), edge.c.y1),
+        })
+        assert_raises_message(
+            sa.exc.ArgumentError,
+            # note that we also are checking that the tuple
+            # renders here, so the "%" operator in the string needs to
+            # apply the tuple also
+            r"Composite expects Column objects or mapped "
+            "attributes/attribute names as "
+            "arguments, got: \(Column",
+            configure_mappers
+        )
+
 class ComparatorTest(fixtures.MappedTest, testing.AssertsCompiledSQL):
     __dialect__ = 'default'
 
@@ -861,5 +906,17 @@ class ComparatorTest(fixtures.MappedTest, testing.AssertsCompiledSQL):
             "edge_1.y2 AS edge_1_y2 "
             "FROM edge AS edge_1 ORDER BY edge_1.x1, edge_1.y1, "
             "edge_1.x2, edge_1.y2"
+        )
+
+    def test_clause_expansion(self):
+        self._fixture(False)
+        Edge = self.classes.Edge
+        from sqlalchemy.orm import configure_mappers
+        configure_mappers()
+
+        self.assert_compile(
+            select([Edge]).order_by(Edge.start),
+            "SELECT edge.id, edge.x1, edge.y1, edge.x2, edge.y2 FROM edge "
+            "ORDER BY edge.x1, edge.y1"
         )
 

@@ -1,5 +1,5 @@
 # engine/base.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -11,8 +11,8 @@ from __future__ import with_statement
 
 
 import sys
-from .. import exc, schema, util, log, interfaces
-from ..sql import expression, util as sql_util
+from .. import exc, util, log, interfaces
+from ..sql import expression, util as sql_util, schema, ddl
 from .interfaces import Connectable, Compiled
 from .util import _distill_params
 import contextlib
@@ -303,20 +303,40 @@ class Connection(Connectable):
 
     def invalidate(self, exception=None):
         """Invalidate the underlying DBAPI connection associated with
-        this Connection.
+        this :class:`.Connection`.
 
-        The underlying DB-API connection is literally closed (if
+        The underlying DBAPI connection is literally closed (if
         possible), and is discarded.  Its source connection pool will
         typically lazily create a new connection to replace it.
 
-        Upon the next usage, this Connection will attempt to reconnect
-        to the pool with a new connection.
+        Upon the next use (where "use" typically means using the
+        :meth:`.Connection.execute` method or similar),
+        this :class:`.Connection` will attempt to
+        procure a new DBAPI connection using the services of the
+        :class:`.Pool` as a source of connectivty (e.g. a "reconnection").
 
-        Transactions in progress remain in an "opened" state (even though the
-        actual transaction is gone); these must be explicitly rolled back
-        before a reconnect on this Connection can proceed. This is to prevent
-        applications from accidentally continuing their transactional
-        operations in a non-transactional state.
+        If a transaction was in progress (e.g. the
+        :meth:`.Connection.begin` method has been called) when
+        :meth:`.Connection.invalidate` method is called, at the DBAPI
+        level all state associated with this transaction is lost, as
+        the DBAPI connection is closed.  The :class:`.Connection`
+        will not allow a reconnection to proceed until the :class:`.Transaction`
+        object is ended, by calling the :meth:`.Transaction.rollback`
+        method; until that point, any attempt at continuing to use the
+        :class:`.Connection` will raise an
+        :class:`~sqlalchemy.exc.InvalidRequestError`.
+        This is to prevent applications from accidentally
+        continuing an ongoing transactional operations despite the
+        fact that the transaction has been lost due to an
+        invalidation.
+
+        The :meth:`.Connection.invalidate` method, just like auto-invalidation,
+        will at the connection pool level invoke the :meth:`.PoolEvents.invalidate`
+        event.
+
+        .. seealso::
+
+            :ref:`pool_connection_invalidation`
 
         """
         if self.invalidated:
@@ -403,7 +423,6 @@ class Connection(Connectable):
         See also :meth:`.Connection.begin`,
         :meth:`.Connection.begin_twophase`.
         """
-
         if self.__transaction is None:
             self.__transaction = RootTransaction(self)
         else:
@@ -450,7 +469,7 @@ class Connection(Connectable):
 
         return self.__transaction is not None
 
-    def _begin_impl(self):
+    def _begin_impl(self, transaction):
         if self._echo:
             self.engine.logger.info("BEGIN (implicit)")
 
@@ -459,6 +478,8 @@ class Connection(Connectable):
 
         try:
             self.engine.dialect.do_begin(self.connection)
+            if self.connection._reset_agent is None:
+                self.connection._reset_agent = transaction
         except Exception as e:
             self._handle_dbapi_exception(e, None, None, None, None)
 
@@ -471,9 +492,12 @@ class Connection(Connectable):
                 self.engine.logger.info("ROLLBACK")
             try:
                 self.engine.dialect.do_rollback(self.connection)
-                self.__transaction = None
             except Exception as e:
                 self._handle_dbapi_exception(e, None, None, None, None)
+            finally:
+                if self.connection._reset_agent is self.__transaction:
+                    self.connection._reset_agent = None
+                self.__transaction = None
         else:
             self.__transaction = None
 
@@ -485,9 +509,12 @@ class Connection(Connectable):
             self.engine.logger.info("COMMIT")
         try:
             self.engine.dialect.do_commit(self.connection)
-            self.__transaction = None
         except Exception as e:
             self._handle_dbapi_exception(e, None, None, None, None)
+        finally:
+            if self.connection._reset_agent is self.__transaction:
+                self.connection._reset_agent = None
+            self.__transaction = None
 
     def _savepoint_impl(self, name=None):
         if self._has_events:
@@ -516,14 +543,17 @@ class Connection(Connectable):
             self.engine.dialect.do_release_savepoint(self, name)
         self.__transaction = context
 
-    def _begin_twophase_impl(self, xid):
+    def _begin_twophase_impl(self, transaction):
         if self._echo:
             self.engine.logger.info("BEGIN TWOPHASE (implicit)")
         if self._has_events:
-            self.dispatch.begin_twophase(self, xid)
+            self.dispatch.begin_twophase(self, transaction.xid)
 
         if self._still_open_and_connection_is_valid:
-            self.engine.dialect.do_begin_twophase(self, xid)
+            self.engine.dialect.do_begin_twophase(self, transaction.xid)
+
+            if self.connection._reset_agent is None:
+                self.connection._reset_agent = transaction
 
     def _prepare_twophase_impl(self, xid):
         if self._has_events:
@@ -539,8 +569,14 @@ class Connection(Connectable):
 
         if self._still_open_and_connection_is_valid:
             assert isinstance(self.__transaction, TwoPhaseTransaction)
-            self.engine.dialect.do_rollback_twophase(self, xid, is_prepared)
-        self.__transaction = None
+            try:
+                self.engine.dialect.do_rollback_twophase(self, xid, is_prepared)
+            finally:
+                if self.connection._reset_agent is self.__transaction:
+                    self.connection._reset_agent = None
+                self.__transaction = None
+        else:
+            self.__transaction = None
 
     def _commit_twophase_impl(self, xid, is_prepared):
         if self._has_events:
@@ -548,8 +584,14 @@ class Connection(Connectable):
 
         if self._still_open_and_connection_is_valid:
             assert isinstance(self.__transaction, TwoPhaseTransaction)
-            self.engine.dialect.do_commit_twophase(self, xid, is_prepared)
-        self.__transaction = None
+            try:
+                self.engine.dialect.do_commit_twophase(self, xid, is_prepared)
+            finally:
+                if self.connection._reset_agent is self.__transaction:
+                    self.connection._reset_agent = None
+                self.__transaction = None
+        else:
+            self.__transaction = None
 
     def _autorollback(self):
         if not self.in_transaction():
@@ -581,6 +623,8 @@ class Connection(Connectable):
         else:
             if not self.__branch:
                 conn.close()
+            if conn._reset_agent is self.__transaction:
+                conn._reset_agent = None
             del self.__connection
         self.__can_reconnect = False
         self.__transaction = None
@@ -652,17 +696,16 @@ class Connection(Connectable):
          DBAPI-agnostic way, use the :func:`~.expression.text` construct.
 
         """
-        for c in type(object).__mro__:
-            if c in Connection.executors:
-                return Connection.executors[c](
-                                                self,
-                                                object,
-                                                multiparams,
-                                                params)
-        else:
+        if isinstance(object, util.string_types[0]):
+            return self._execute_text(object, multiparams, params)
+        try:
+            meth = object._execute_on_connection
+        except AttributeError:
             raise exc.InvalidRequestError(
                                 "Unexecutable object type: %s" %
                                 type(object))
+        else:
+            return meth(self, multiparams, params)
 
     def _execute_function(self, func, multiparams, params):
         """Execute a sql.FunctionElement object."""
@@ -825,7 +868,7 @@ class Connection(Connectable):
             context = constructor(dialect, self, conn, *args)
         except Exception as e:
             self._handle_dbapi_exception(e,
-                        str(statement), parameters,
+                        util.text_type(statement), parameters,
                         None, None)
 
         if context.compiled:
@@ -898,6 +941,11 @@ class Connection(Connectable):
             elif not context._is_explicit_returning:
                 result.close(_autoclose_connection=False)
                 result._metadata = None
+        elif context.isupdate and context._is_implicit_returning:
+            context._fetch_implicit_update_returning(result)
+            result.close(_autoclose_connection=False)
+            result._metadata = None
+
         elif result._metadata is None:
             # no results, get rowcount
             # (which requires open cursor on some drivers
@@ -1032,16 +1080,6 @@ class Connection(Connectable):
                     self.engine.dispose()
             if self.should_close_with_result:
                 self.close()
-
-    # poor man's multimethod/generic function thingy
-    executors = {
-        expression.FunctionElement: _execute_function,
-        expression.ClauseElement: _execute_clauseelement,
-        Compiled: _execute_compiled,
-        schema.SchemaItem: _execute_default,
-        schema.DDLElement: _execute_ddl,
-        util.string_types[0]: _execute_text
-    }
 
     def default_schema_name(self):
         return self.engine.dialect.get_default_schema_name(self)
@@ -1210,7 +1248,7 @@ class Transaction(object):
 class RootTransaction(Transaction):
     def __init__(self, connection):
         super(RootTransaction, self).__init__(connection, None)
-        self.connection._begin_impl()
+        self.connection._begin_impl(self)
 
     def _do_rollback(self):
         if self.is_active:
@@ -1259,7 +1297,7 @@ class TwoPhaseTransaction(Transaction):
         super(TwoPhaseTransaction, self).__init__(connection, None)
         self._is_prepared = False
         self.xid = xid
-        self.connection._begin_twophase_impl(self.xid)
+        self.connection._begin_twophase_impl(self)
 
     def prepare(self):
         """Prepare this :class:`.TwoPhaseTransaction`.
@@ -1423,7 +1461,7 @@ class Engine(Connectable, log.Identified):
     echo = log.echo_property()
 
     def __repr__(self):
-        return 'Engine(%s)' % str(self.url)
+        return 'Engine(%r)' % self.url
 
     def dispose(self):
         """Dispose of the connection pool used by this :class:`.Engine`.
@@ -1667,6 +1705,17 @@ class Engine(Connectable, log.Identified):
             return self.dialect.get_table_names(conn, schema)
 
     def has_table(self, table_name, schema=None):
+        """Return True if the given backend has a table of the given name.
+
+        .. seealso::
+
+            :ref:`metadata_reflection_inspector` - detailed schema inspection using
+            the :class:`.Inspector` interface.
+
+            :class:`.quoted_name` - used to pass quoting information along
+            with a schema identifier.
+
+        """
         return self.run_callable(self.dialect.has_table, table_name, schema)
 
     def raw_connection(self):

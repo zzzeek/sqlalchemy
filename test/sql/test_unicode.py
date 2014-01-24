@@ -2,7 +2,7 @@
 """verrrrry basic unicode column name testing"""
 
 from sqlalchemy import *
-from sqlalchemy.testing import fixtures, engines
+from sqlalchemy.testing import fixtures, engines, eq_
 from sqlalchemy import testing
 from sqlalchemy.testing.engines import utf8_engine
 from sqlalchemy.sql import column
@@ -113,6 +113,20 @@ class UnicodeSchemaTest(fixtures.TestBase):
                      [(2, 7, 2, 2), (1, 5, 1, 1)])
         meta.drop_all()
         metadata.create_all()
+
+    def test_repr(self):
+
+        m = MetaData()
+        t = Table(ue('\u6e2c\u8a66'), m, Column(ue('\u6e2c\u8a66_id'), Integer))
+
+        # I hardly understand what's going on with the backslashes in
+        # this one on py2k vs. py3k
+        eq_(
+            repr(t),
+            (
+                "Table('\\u6e2c\\u8a66', MetaData(bind=None), "
+                "Column('\\u6e2c\\u8a66_id', Integer(), table=<\u6e2c\u8a66>), "
+                "schema=None)"))
 
 class EscapesDefaultsTest(fixtures.TestBase):
     def test_default_exec(self):

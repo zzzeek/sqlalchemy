@@ -312,6 +312,22 @@ class CTETest(fixtures.TestBase, AssertsCompiledSQL):
             "FROM regional_sales"
             )
 
+    def test_multi_subq_quote(self):
+        cte = select([literal(1).label("id")]).cte(name='CTE')
+
+        s1 = select([cte.c.id]).alias()
+        s2 = select([cte.c.id]).alias()
+
+        s = select([s1, s2])
+        self.assert_compile(
+            s,
+            'WITH "CTE" AS (SELECT :param_1 AS id) '
+            'SELECT anon_1.id, anon_2.id FROM '
+            '(SELECT "CTE".id AS id FROM "CTE") AS anon_1, '
+            '(SELECT "CTE".id AS id FROM "CTE") AS anon_2'
+        )
+
+
     def test_positional_binds(self):
         orders = table('orders',
             column('order'),
@@ -351,3 +367,32 @@ class CTETest(fixtures.TestBase, AssertsCompiledSQL):
             dialect=dialect
         )
 
+
+    def test_all_aliases(self):
+        orders = table('order', column('order'))
+        s = select([orders.c.order]).cte("regional_sales")
+
+        r1 = s.alias()
+        r2 = s.alias()
+
+        s2 = select([r1, r2]).where(r1.c.order > r2.c.order)
+
+        self.assert_compile(
+            s2,
+            'WITH regional_sales AS (SELECT "order"."order" '
+            'AS "order" FROM "order") '
+            'SELECT anon_1."order", anon_2."order" '
+            'FROM regional_sales AS anon_1, '
+            'regional_sales AS anon_2 WHERE anon_1."order" > anon_2."order"'
+        )
+
+        s3 = select([orders]).select_from(orders.join(r1, r1.c.order == orders.c.order))
+
+        self.assert_compile(
+            s3,
+            'WITH regional_sales AS '
+            '(SELECT "order"."order" AS "order" '
+            'FROM "order")'
+            ' SELECT "order"."order" '
+            'FROM "order" JOIN regional_sales AS anon_1 ON anon_1."order" = "order"."order"'
+        )

@@ -1,5 +1,5 @@
 # ext/compiler.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -238,7 +238,7 @@ A synopsis is as follows:
       class timestamp(ColumnElement):
           type = TIMESTAMP()
 
-* :class:`~sqlalchemy.sql.expression.FunctionElement` - This is a hybrid of a
+* :class:`~sqlalchemy.sql.functions.FunctionElement` - This is a hybrid of a
   ``ColumnElement`` and a "from clause" like object, and represents a SQL
   function or stored procedure type of call. Since most databases support
   statements along the line of "SELECT FROM <some function>"

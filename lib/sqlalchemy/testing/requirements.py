@@ -1,3 +1,9 @@
+# testing/requirements.py
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
+#
+# This module is part of SQLAlchemy and is released under
+# the MIT License: http://www.opensource.org/licenses/mit-license.php
+
 """Global database feature support policy.
 
 Provides decorators to mark tests requiring specific feature support from the
@@ -131,6 +137,20 @@ class SuiteRequirements(Requirements):
         when insert() is executed, excluding the pk column."""
 
         return exclusions.open()
+
+    @property
+    def fetch_rows_post_commit(self):
+        """target platform will allow cursor.fetchone() to proceed after a
+        COMMIT.
+
+        Typically this refers to an INSERT statement with RETURNING which
+        is invoked within "autocommit".   If the row can be returned
+        after the autocommit, then this rule can be open.
+
+        """
+
+        return exclusions.open()
+
 
     @property
     def empty_inserts(self):
@@ -296,6 +316,15 @@ class SuiteRequirements(Requirements):
         return exclusions.closed()
 
     @property
+    def datetime_literals(self):
+        """target dialect supports rendering of a date, time, or datetime as a
+        literal string, e.g. via the TypeEngine.literal_processor() method.
+
+        """
+
+        return exclusions.closed()
+
+    @property
     def datetime(self):
         """target dialect supports representation of Python
         datetime.datetime() objects."""
@@ -379,12 +408,30 @@ class SuiteRequirements(Requirements):
         return exclusions.closed()
 
     @property
+    def precision_generic_float_type(self):
+        """target backend will return native floating point numbers with at
+        least seven decimal places when using the generic Float type.
+
+        """
+        return exclusions.open()
+
+    @property
     def floats_to_four_decimals(self):
         """target backend can return a floating-point number with four
         significant digits (such as 15.7563) accurately
         (i.e. without FP inaccuracies, such as 15.75629997253418).
 
         """
+        return exclusions.open()
+
+    @property
+    def fetch_null_from_numeric(self):
+        """target backend doesn't crash when you try to select a NUMERIC
+        value that has a value of NULL.
+
+        Added to support Pyodbc bug #351.
+        """
+
         return exclusions.open()
 
     @property

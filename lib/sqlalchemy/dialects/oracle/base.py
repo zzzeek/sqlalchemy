@@ -1,5 +1,5 @@
 # oracle/base.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -16,12 +16,12 @@ Connect Arguments
 The dialect supports several :func:`~sqlalchemy.create_engine()` arguments which
 affect the behavior of the dialect regardless of driver in use.
 
-* *use_ansi* - Use ANSI JOIN constructs (see the section on Oracle 8).  Defaults
+* ``use_ansi`` - Use ANSI JOIN constructs (see the section on Oracle 8).  Defaults
   to ``True``.  If ``False``, Oracle-8 compatible constructs are used for joins.
 
-* *optimize_limits* - defaults to ``False``. see the section on LIMIT/OFFSET.
+* ``optimize_limits`` - defaults to ``False``. see the section on LIMIT/OFFSET.
 
-* *use_binds_for_limits* - defaults to ``True``.  see the section on LIMIT/OFFSET.
+* ``use_binds_for_limits`` - defaults to ``True``.  see the section on LIMIT/OFFSET.
 
 Auto Increment Behavior
 -----------------------
@@ -99,6 +99,41 @@ http://www.sqlalchemy.org/trac/wiki/UsageRecipes/WindowFunctionsByDefault
 which installs a select compiler that overrides the generation of limit/offset with
 a window function.
 
+RETURNING Support
+-----------------
+
+The Oracle database supports a limited form of RETURNING, in order to retrieve result
+sets of matched rows from INSERT, UPDATE and DELETE statements.  Oracle's
+RETURNING..INTO syntax only supports one row being returned, as it relies upon
+OUT parameters in order to function.  In addition, supported DBAPIs have further
+limitations (see :ref:`cx_oracle_returning`).
+
+SQLAlchemy's "implicit returning" feature, which employs RETURNING within an INSERT
+and sometimes an UPDATE statement in order to fetch newly generated primary key values
+and other SQL defaults and expressions, is normally enabled on the Oracle
+backend.  By default, "implicit returning" typically only fetches the value of a
+single ``nextval(some_seq)`` expression embedded into an INSERT in order to increment
+a sequence within an INSERT statement and get the value back at the same time.
+To disable this feature across the board, specify ``implicit_returning=False`` to
+:func:`.create_engine`::
+
+    engine = create_engine("oracle://scott:tiger@dsn", implicit_returning=False)
+
+Implicit returning can also be disabled on a table-by-table basis as a table option::
+
+    # Core Table
+    my_table = Table("my_table", metadata, ..., implicit_returning=False)
+
+
+    # declarative
+    class MyClass(Base):
+        __tablename__ = 'my_table'
+        __table_args__ = {"implicit_returning": False}
+
+.. seealso::
+
+    :ref:`cx_oracle_returning` - additional cx_oracle-specific restrictions on implicit returning.
+
 ON UPDATE CASCADE
 -----------------
 
@@ -133,9 +168,10 @@ Synonym/DBLINK Reflection
 -------------------------
 
 When using reflection with Table objects, the dialect can optionally search for tables
-indicated by synonyms that reference DBLINK-ed tables by passing the flag
-oracle_resolve_synonyms=True as a keyword argument to the Table construct.  If DBLINK
-is not in use this flag should be left off.
+indicated by synonyms, either in local or remote schemas or accessed over DBLINK,
+by passing the flag oracle_resolve_synonyms=True as a
+keyword argument to the Table construct.   If synonyms are not in use
+this flag should be left off.
 
 """
 
@@ -145,7 +181,7 @@ from sqlalchemy import util, sql
 from sqlalchemy.engine import default, base, reflection
 from sqlalchemy.sql import compiler, visitors, expression
 from sqlalchemy.sql import operators as sql_operators, functions as sql_functions
-from sqlalchemy import types as sqltypes
+from sqlalchemy import types as sqltypes, schema as sa_schema
 from sqlalchemy.types import VARCHAR, NVARCHAR, CHAR, DATE, DATETIME, \
                 BLOB, CLOB, TIMESTAMP, FLOAT
 
@@ -362,7 +398,9 @@ class OracleTypeCompiler(compiler.GenericTypeCompiler):
         return self._visit_varchar(type_, '', '')
 
     def _visit_varchar(self, type_, n, num):
-        if not n and self.dialect._supports_char_length:
+        if not type_.length:
+            return "%(n)sVARCHAR%(two)s" % {'two': num, 'n': n}
+        elif not n and self.dialect._supports_char_length:
             varchar = "VARCHAR%(two)s(%(length)s CHAR)"
             return varchar % {'length': type_.length, 'two': num}
         else:
@@ -521,7 +559,6 @@ class OracleCompiler(compiler.SQLCompiler):
             return self.process(alias.original, **kwargs)
 
     def returning_clause(self, stmt, returning_cols):
-
         columns = []
         binds = []
         for i, column in enumerate(expression._select_iterables(returning_cols)):
@@ -595,7 +632,7 @@ class OracleCompiler(compiler.SQLCompiler):
 
                 # If needed, add the ora_rn, and wrap again with offset.
                 if select._offset is None:
-                    limitselect.for_update = select.for_update
+                    limitselect._for_update_arg = select._for_update_arg
                     select = limitselect
                 else:
                     limitselect = limitselect.column(
@@ -614,7 +651,7 @@ class OracleCompiler(compiler.SQLCompiler):
                     offsetselect.append_whereclause(
                              sql.literal_column("ora_rn") > offset_value)
 
-                    offsetselect.for_update = select.for_update
+                    offsetselect._for_update_arg = select._for_update_arg
                     select = offsetselect
 
         kwargs['iswrapper'] = getattr(select, '_is_wrapper', False)
@@ -626,10 +663,19 @@ class OracleCompiler(compiler.SQLCompiler):
     def for_update_clause(self, select):
         if self.is_subquery():
             return ""
-        elif select.for_update == "nowait":
-            return " FOR UPDATE NOWAIT"
-        else:
-            return super(OracleCompiler, self).for_update_clause(select)
+
+        tmp = ' FOR UPDATE'
+
+        if select._for_update_arg.of:
+            tmp += ' OF ' + ', '.join(
+                                    self.process(elem) for elem in
+                                    select._for_update_arg.of
+                                )
+
+        if select._for_update_arg.nowait:
+            tmp += " NOWAIT"
+
+        return tmp
 
 
 class OracleDDLCompiler(compiler.DDLCompiler):
@@ -707,6 +753,10 @@ class OracleDialect(default.DefaultDialect):
     execution_ctx_cls = OracleExecutionContext
 
     reflection_options = ('oracle_resolve_synonyms', )
+
+    construct_arguments = [
+        (sa_schema.Table, {"resolve_synonyms": False})
+    ]
 
     def __init__(self,
                 use_ansi=True,
@@ -800,14 +850,15 @@ class OracleDialect(default.DefaultDialect):
         returns the actual name, owner, dblink name, and synonym name if found.
         """
 
-        q = "SELECT owner, table_owner, table_name, db_link, synonym_name FROM all_synonyms WHERE "
+        q = "SELECT owner, table_owner, table_name, db_link, "\
+                    "synonym_name FROM all_synonyms WHERE "
         clauses = []
         params = {}
         if desired_synonym:
             clauses.append("synonym_name = :synonym_name")
             params['synonym_name'] = desired_synonym
         if desired_owner:
-            clauses.append("table_owner = :desired_owner")
+            clauses.append("owner = :desired_owner")
             params['desired_owner'] = desired_owner
         if desired_table:
             clauses.append("table_name = :tname")

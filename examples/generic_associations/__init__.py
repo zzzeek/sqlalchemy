@@ -9,17 +9,10 @@ subclassing the ``HasAddresses`` mixin, which ensures that the
 parent class is provided with an ``addresses`` collection
 which contains ``Address`` objects.
 
-The configurations include:
+The :viewsource:`.discriminator_on_association` and :viewsource:`.generic_fk` scripts
+are modernized versions of recipes presented in the 2007 blog post
+`Polymorphic Associations with SQLAlchemy <http://techspot.zzzeek.org/2007/05/29/polymorphic-associations-with-sqlalchemy/>`_.
 
-* ``table_per_related.py`` - illustrates a distinct table per related collection.
-* ``table_per_association.py`` - illustrates a shared collection table, using a
-  table per association.
-* ``discriminator_on_association.py`` - shared collection table and shared
-  association table, including a discriminator column.
-
-The ``discriminator_on_association.py`` script in particular is a modernized
-version of the "polymorphic associations" example present in older versions of
-SQLAlchemy, originally from the blog post at
-http://techspot.zzzeek.org/2007/05/29/polymorphic-associations-with-sqlalchemy/.
+.. autosource::
 
 """

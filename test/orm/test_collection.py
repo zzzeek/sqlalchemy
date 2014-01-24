@@ -128,9 +128,9 @@ class CollectionsTest(fixtures.ORMTest):
         control = list()
 
         def assert_eq():
-            self.assert_(set(direct) == canary.data)
-            self.assert_(set(adapter) == canary.data)
-            self.assert_(direct == control)
+            eq_(set(direct), canary.data)
+            eq_(set(adapter), canary.data)
+            eq_(direct, control)
 
         # assume append() is available for list tests
         e = creator()
@@ -260,6 +260,11 @@ class CollectionsTest(fixtures.ORMTest):
             control[-2:-1] = values
             assert_eq()
 
+            values = [creator()]
+            direct[0:0] = values
+            control[0:0] = values
+            assert_eq()
+
 
         if hasattr(direct, '__delitem__') or hasattr(direct, '__delslice__'):
             for i in range(1, 4):
@@ -277,6 +282,16 @@ class CollectionsTest(fixtures.ORMTest):
 
             del direct[:]
             del control[:]
+            assert_eq()
+
+        if hasattr(direct, 'clear'):
+            for i in range(1, 4):
+                e = creator()
+                direct.append(e)
+                control.append(e)
+
+            direct.clear()
+            control.clear()
             assert_eq()
 
         if hasattr(direct, 'extend'):
@@ -499,9 +514,9 @@ class CollectionsTest(fixtures.ORMTest):
         control = set()
 
         def assert_eq():
-            self.assert_(set(direct) == canary.data)
-            self.assert_(set(adapter) == canary.data)
-            self.assert_(direct == control)
+            eq_(set(direct), canary.data)
+            eq_(set(adapter), canary.data)
+            eq_(direct, control)
 
         def addall(*values):
             for item in values:
@@ -519,10 +534,6 @@ class CollectionsTest(fixtures.ORMTest):
         addall(e)
         addall(e)
 
-        if hasattr(direct, 'pop'):
-            direct.pop()
-            control.pop()
-            assert_eq()
 
         if hasattr(direct, 'remove'):
             e = creator()
@@ -593,11 +604,19 @@ class CollectionsTest(fixtures.ORMTest):
             except TypeError:
                 assert True
 
-        if hasattr(direct, 'clear'):
-            addall(creator(), creator())
-            direct.clear()
-            control.clear()
-            assert_eq()
+        addall(creator(), creator())
+        direct.clear()
+        control.clear()
+        assert_eq()
+
+        # note: the clear test previously needs
+        # to have executed in order for this to
+        # pass in all cases; else there's the possibility
+        # of non-deterministic behavior.
+        addall(creator())
+        direct.pop()
+        control.pop()
+        assert_eq()
 
         if hasattr(direct, 'difference_update'):
             zap()
@@ -739,6 +758,7 @@ class CollectionsTest(fixtures.ORMTest):
             except TypeError:
                 assert True
 
+
     def _test_set_bulk(self, typecallable, creator=None):
         if creator is None:
             creator = self.entity_maker
@@ -809,6 +829,8 @@ class CollectionsTest(fixtures.ORMTest):
                 self.data.remove(item)
             def discard(self, item):
                 self.data.discard(item)
+            def clear(self):
+                self.data.clear()
             def pop(self):
                 return self.data.pop()
             def update(self, other):
@@ -841,6 +863,8 @@ class CollectionsTest(fixtures.ORMTest):
                 self.data.update(other)
             def __iter__(self):
                 return iter(self.data)
+            def clear(self):
+                self.data.clear()
             __hash__ = object.__hash__
             def __eq__(self, other):
                 return self.data == other
@@ -967,11 +991,10 @@ class CollectionsTest(fixtures.ORMTest):
             control.update(d)
             assert_eq()
 
-            if sys.version_info >= (2, 4):
-                kw = dict([(ee.a, ee) for ee in [e, creator()]])
-                direct.update(**kw)
-                control.update(**kw)
-                assert_eq()
+            kw = dict([(ee.a, ee) for ee in [e, creator()]])
+            direct.update(**kw)
+            control.update(**kw)
+            assert_eq()
 
     def _test_dict_bulk(self, typecallable, creator=None):
         if creator is None:

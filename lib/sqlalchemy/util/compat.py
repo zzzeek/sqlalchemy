@@ -1,5 +1,5 @@
 # util/compat.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -40,7 +40,7 @@ if py3k:
     import builtins
 
     from inspect import getfullargspec as inspect_getfullargspec
-    from urllib.parse import quote_plus, unquote_plus, parse_qsl
+    from urllib.parse import quote_plus, unquote_plus, parse_qsl, quote, unquote
     import configparser
     from io import StringIO
 
@@ -95,7 +95,7 @@ if py3k:
 else:
     from inspect import getargspec as inspect_getfullargspec
     inspect_getargspec = inspect_getfullargspec
-    from urllib import quote_plus, unquote_plus
+    from urllib import quote_plus, unquote_plus, quote, unquote
     from urlparse import parse_qsl
     import ConfigParser as configparser
     from StringIO import StringIO
@@ -148,29 +148,6 @@ else:
     itertools_filter = itertools.ifilter
     itertools_imap = itertools.imap
 
-
-
-try:
-    from weakref import WeakSet
-except:
-    import weakref
-
-    class WeakSet(object):
-        """Implement the small subset of set() which SQLAlchemy needs
-        here. """
-        def __init__(self, values=None):
-            self._storage = weakref.WeakKeyDictionary()
-            if values is not None:
-                self._storage.update((value, None) for value in values)
-
-        def __iter__(self):
-            return iter(self._storage)
-
-        def union(self, other):
-            return WeakSet(set(self).union(other))
-
-        def add(self, other):
-            self._storage[other] = True
 
 import time
 if win32 or jython:

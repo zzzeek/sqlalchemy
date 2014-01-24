@@ -85,8 +85,6 @@ class DefaultRequirements(SuiteRequirements):
             no_support('oracle', 'not supported by database'),
             no_support('mssql', 'not supported by database'),
             no_support('sybase', 'not supported by database'),
-            no_support('maxdb', 'FIXME: verify not supported by database'),
-            no_support('informix', 'not supported by database'),
         ])
 
     @property
@@ -123,6 +121,18 @@ class DefaultRequirements(SuiteRequirements):
         return skip_if(["firebird", "oracle", "sybase"],
                 "not supported by database"
             )
+
+    @property
+    def insert_from_select(self):
+        return skip_if(
+                    ["firebird"], "crashes for unknown reason"
+                )
+
+    @property
+    def fetch_rows_post_commit(self):
+        return skip_if(
+                    ["firebird"], "not supported"
+                )
 
     @property
     def binary_comparisons(self):
@@ -226,7 +236,6 @@ class DefaultRequirements(SuiteRequirements):
                     "sqlite",
                     "sybase",
                     ("mysql", "<", (5, 0, 3)),
-                    ("informix", "<", (11, 55, "xC3"))
                     ], "savepoints not supported")
 
 
@@ -283,14 +292,14 @@ class DefaultRequirements(SuiteRequirements):
         """Target database must support INTERSECT or equivalent."""
 
         return fails_if([
-                "firebird", "mysql", "sybase", "informix"
+                "firebird", "mysql", "sybase",
             ], 'no support for INTERSECT')
 
     @property
     def except_(self):
         """Target database must support EXCEPT or equivalent (i.e. MINUS)."""
         return fails_if([
-                "firebird", "mysql", "sybase", "informix"
+                "firebird", "mysql", "sybase",
             ], 'no support for EXCEPT')
 
     @property
@@ -313,7 +322,6 @@ class DefaultRequirements(SuiteRequirements):
 
         return skip_if([
             no_support('firebird', 'no SA implementation'),
-            no_support('maxdb', 'two-phase xact not supported by database'),
             no_support('mssql', 'two-phase xact not supported by drivers'),
             no_support('oracle', 'two-phase xact not implemented in SQLA/oracle'),
             no_support('drizzle', 'two-phase xact not supported by database'),
@@ -366,7 +374,6 @@ class DefaultRequirements(SuiteRequirements):
         """Target driver must support some degree of non-ascii symbol names."""
         # TODO: expand to exclude MySQLdb versions w/ broken unicode
         return skip_if([
-            no_support('maxdb', 'database support flakey'),
             no_support('oracle', 'FIXME: no support in database?'),
             no_support('sybase', 'FIXME: guessing, needs confirmation'),
             no_support('mssql+pymssql', 'no FreeTDS support'),
@@ -394,7 +401,7 @@ class DefaultRequirements(SuiteRequirements):
         return fails_on_everything_except('mysql+mysqldb', 'mysql+oursql',
                                       'sqlite+pysqlite', 'mysql+pymysql',
                                       'mysql+cymysql',
-                                      'sybase', 'mssql+pyodbc', 'mssql+mxodbc')
+                                      'sybase', 'mssql')
 
     @property
     def implements_get_lastrowid(self):
@@ -408,7 +415,8 @@ class DefaultRequirements(SuiteRequirements):
         cursor object.
 
         """
-        return fails_on_everything_except('mysql+mysqldb', 'mysql+oursql',
+        return skip_if('mssql+pymssql', 'crashes on pymssql') + \
+                    fails_on_everything_except('mysql+mysqldb', 'mysql+oursql',
                                        'sqlite+pysqlite', 'mysql+pymysql',
                                        'mysql+cymysql')
 
@@ -430,6 +438,15 @@ class DefaultRequirements(SuiteRequirements):
 
         return fails_on_everything_except('postgresql', 'oracle', 'mssql',
                     'sybase')
+
+    @property
+    def datetime_literals(self):
+        """target dialect supports rendering of a date, time, or datetime as a
+        literal string, e.g. via the TypeEngine.literal_processor() method.
+
+        """
+
+        return fails_on_everything_except("sqlite")
 
     @property
     def datetime(self):
@@ -486,23 +503,24 @@ class DefaultRequirements(SuiteRequirements):
     def precision_numerics_general(self):
         """target backend has general support for moderately high-precision
         numerics."""
-        return fails_if('mssql+pymssql', 'FIXME: improve pymssql dec handling')
+        return exclusions.open()
 
     @property
     def precision_numerics_enotation_small(self):
         """target backend supports Decimal() objects using E notation
         to represent very small values."""
-        return fails_if('mssql+pymssql', 'FIXME: improve pymssql dec handling')
+        # NOTE: this exclusion isn't used in current tests.
+        return exclusions.open()
 
     @property
     def precision_numerics_enotation_large(self):
         """target backend supports Decimal() objects using E notation
         to represent very large values."""
 
-        return fails_if(
-                ("sybase+pyodbc", None, None,
+        return skip_if(
+                [("sybase+pyodbc", None, None,
                     "Don't know how do get these values through FreeTDS + Sybase"),
-                ("firebird", None, None, "Precision must be from 1 to 18"),
+                ("firebird", None, None, "Precision must be from 1 to 18"),]
             )
 
     @property
@@ -537,8 +555,39 @@ class DefaultRequirements(SuiteRequirements):
                 )
 
     @property
+    def precision_generic_float_type(self):
+        """target backend will return native floating point numbers with at
+        least seven decimal places when using the generic Float type."""
+
+        return fails_if([
+                    ('mysql', None, None,
+                                'mysql FLOAT type only returns 4 decimals'),
+                    ('firebird', None, None,
+                                "firebird FLOAT type isn't high precision"),
+                ])
+
+    @property
     def floats_to_four_decimals(self):
-        return fails_if("mysql+oursql", "Floating point error")
+        return fails_if([
+                    ("mysql+oursql", None, None, "Floating point error"),
+                    ("firebird", None, None,
+                        "Firebird still has FP inaccuracy even "
+                        "with only four decimal places"),
+                    ('mssql+pyodbc', None, None,
+                                'mssql+pyodbc has FP inaccuracy even with '
+                                'only four decimal places '
+                            ),
+                    ('mssql+pymssql', None, None,
+                                'mssql+pymssql has FP inaccuracy even with '
+                                'only four decimal places '
+                            )
+                ])
+
+    @property
+    def fetch_null_from_numeric(self):
+        return skip_if(
+                    ("mssql+pyodbc", None, None, "crashes due to bug #351"),
+                )
 
     @property
     def python2(self):
@@ -555,20 +604,6 @@ class DefaultRequirements(SuiteRequirements):
                 )
 
     @property
-    def python26(self):
-        return skip_if(
-                lambda: sys.version_info < (2, 6),
-                "Python version 2.6 or greater is required"
-            )
-
-    @property
-    def python25(self):
-        return skip_if(
-                lambda: sys.version_info < (2, 5),
-                "Python version 2.5 or greater is required"
-            )
-
-    @property
     def cpython(self):
         return only_if(lambda: util.cpython,
                "cPython interpreter needed"
@@ -579,8 +614,9 @@ class DefaultRequirements(SuiteRequirements):
     def non_broken_pickle(self):
         from sqlalchemy.util import pickle
         return only_if(
-            lambda: pickle.__name__ == 'cPickle' or sys.version_info >= (3, 2),
-            "Needs cPickle or newer Python 3 pickle"
+            lambda: not util.pypy and pickle.__name__ == 'cPickle'
+                or sys.version_info >= (3, 2),
+            "Needs cPickle+cPython or newer Python 3 pickle"
         )
 
 

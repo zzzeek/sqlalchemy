@@ -45,8 +45,13 @@ class DefaultTest(fixtures.TestBase):
                 # since its a "branched" connection
                 conn.close()
 
-        use_function_defaults = testing.against('postgresql', 'mssql', 'maxdb')
+        use_function_defaults = testing.against('postgresql', 'mssql')
         is_oracle = testing.against('oracle')
+
+        class MyClass(object):
+            @classmethod
+            def gen_default(cls, ctx):
+                return "hi"
 
         # select "count(1)" returns different results on different DBs also
         # correct for "current_date" compatible as column default, value
@@ -68,9 +73,7 @@ class DefaultTest(fixtures.TestBase):
             f2 = sa.select([func.length('abcdefghijk')], bind=db).scalar()
             def1 = currenttime
             deftype = sa.Date
-            if testing.against('maxdb'):
-                def2 = sa.text("curdate")
-            elif testing.against('mssql'):
+            if testing.against('mssql'):
                 def2 = sa.text("getdate()")
             else:
                 def2 = sa.text("current_date")
@@ -125,7 +128,12 @@ class DefaultTest(fixtures.TestBase):
             # combo
             Column('col9', String(20),
                    default='py',
-                   server_default='ddl'))
+                   server_default='ddl'),
+
+            # python method w/ context
+            Column('col10', String(20), default=MyClass.gen_default)
+        )
+
         t.create()
 
     @classmethod
@@ -285,7 +293,7 @@ class DefaultTest(fixtures.TestBase):
         today = datetime.date.today()
         eq_(l.fetchall(), [
             (x, 'imthedefault', f, ts, ts, ctexec, True, False,
-             12, today, 'py')
+             12, today, 'py', 'hi')
             for x in range(51, 54)])
 
         t.insert().execute(col9=None)
@@ -295,7 +303,7 @@ class DefaultTest(fixtures.TestBase):
 
         eq_(t.select(t.c.col1 == 54).execute().fetchall(),
             [(54, 'imthedefault', f, ts, ts, ctexec, True, False,
-              12, today, None)])
+              12, today, None, 'hi')])
 
     @testing.fails_on('firebird', 'Data type unknown')
     def test_insertmany(self):
@@ -311,11 +319,11 @@ class DefaultTest(fixtures.TestBase):
         today = datetime.date.today()
         eq_(l.fetchall(),
             [(51, 'imthedefault', f, ts, ts, ctexec, True, False,
-              12, today, 'py'),
+              12, today, 'py', 'hi'),
              (52, 'imthedefault', f, ts, ts, ctexec, True, False,
-              12, today, 'py'),
+              12, today, 'py', 'hi'),
              (53, 'imthedefault', f, ts, ts, ctexec, True, False,
-              12, today, 'py')])
+              12, today, 'py', 'hi')])
 
     def test_no_embed_in_sql(self):
         """Using a DefaultGenerator, Sequence, DefaultClause
@@ -379,11 +387,11 @@ class DefaultTest(fixtures.TestBase):
         today = datetime.date.today()
         eq_(l.fetchall(),
             [(51, 'im the update', f2, ts, ts, ctexec, False, False,
-              13, today, 'py'),
+              13, today, 'py', 'hi'),
              (52, 'im the update', f2, ts, ts, ctexec, True, False,
-              13, today, 'py'),
+              13, today, 'py', 'hi'),
              (53, 'im the update', f2, ts, ts, ctexec, True, False,
-              13, today, 'py')])
+              13, today, 'py', 'hi')])
 
     @testing.fails_on('firebird', 'Data type unknown')
     def test_update(self):
@@ -395,7 +403,7 @@ class DefaultTest(fixtures.TestBase):
         l = l.first()
         eq_(l,
             (pk, 'im the update', f2, None, None, ctexec, True, False,
-             13, datetime.date.today(), 'py'))
+             13, datetime.date.today(), 'py', 'hi'))
         eq_(11, f2)
 
     @testing.fails_on('firebird', 'Data type unknown')
@@ -606,6 +614,33 @@ class AutoIncrementTest(fixtures.TablesTest):
         )
 
         nonai.insert().execute(id=1, data='row 1')
+
+
+    def test_col_w_sequence_non_autoinc_no_firing(self):
+        metadata = self.metadata
+        # plain autoincrement/PK table in the actual schema
+        Table("x", metadata,
+            Column("set_id", Integer, primary_key=True)
+        )
+        metadata.create_all()
+
+        # for the INSERT use a table with a Sequence
+        # and autoincrement=False.  Using a ForeignKey
+        # would have the same effect
+        dataset_no_autoinc = Table("x", MetaData(),
+            Column("set_id", Integer, Sequence("some_seq"),
+                        primary_key=True, autoincrement=False)
+            )
+
+        testing.db.execute(
+                dataset_no_autoinc.insert()
+        )
+        eq_(
+            testing.db.scalar(dataset_no_autoinc.count()), 1
+        )
+
+
+
 
 class SequenceDDLTest(fixtures.TestBase, testing.AssertsCompiledSQL):
     __dialect__ = 'default'
@@ -878,6 +913,7 @@ class SequenceTest(fixtures.TestBase, testing.AssertsCompiledSQL):
         metadata.drop_all(testing.db)
         assert not self._has_sequence('s1')
         assert not self._has_sequence('s2')
+
 
 cartitems = sometable = metadata = None
 class TableBoundSequenceTest(fixtures.TestBase):

@@ -1,3 +1,9 @@
+# plugin/noseplugin.py
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
+#
+# This module is part of SQLAlchemy and is released under
+# the MIT License: http://www.opensource.org/licenses/mit-license.php
+
 """Enhance nose with extra options and behaviors for running SQLAlchemy tests.
 
 When running ./sqla_nose.py, this module is imported relative to the
@@ -351,6 +357,8 @@ class NoseSQLAlchemy(Plugin):
         return ""
 
     def wantFunction(self, fn):
+        if fn.__module__ is None:
+            return False
         if fn.__module__.startswith('sqlalchemy.testing'):
             return False
 
@@ -385,8 +393,9 @@ class NoseSQLAlchemy(Plugin):
                         check.reason if check.reason
                         else
                         (
-                            "'%s' unsupported on DB implementation '%s'" % (
-                                cls.__name__, config.db.name
+                            "'%s' unsupported on DB implementation '%s' == %s" % (
+                                cls.__name__, config.db.name,
+                                config.db.dialect.server_version_info
                             )
                         )
                     )
@@ -395,16 +404,18 @@ class NoseSQLAlchemy(Plugin):
             spec = exclusions.db_spec(*cls.__unsupported_on__)
             if spec(config.db):
                 raise SkipTest(
-                    "'%s' unsupported on DB implementation '%s'" % (
-                     cls.__name__, config.db.name)
+                    "'%s' unsupported on DB implementation '%s' == %s" % (
+                     cls.__name__, config.db.name,
+                        config.db.dialect.server_version_info)
                     )
 
         if getattr(cls, '__only_on__', None):
             spec = exclusions.db_spec(*util.to_list(cls.__only_on__))
             if not spec(config.db):
                 raise SkipTest(
-                    "'%s' unsupported on DB implementation '%s'" % (
-                     cls.__name__, config.db.name)
+                    "'%s' unsupported on DB implementation '%s' == %s" % (
+                     cls.__name__, config.db.name,
+                        config.db.dialect.server_version_info)
                     )
 
         if getattr(cls, '__skip_if__', False):

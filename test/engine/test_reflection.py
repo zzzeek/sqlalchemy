@@ -361,6 +361,27 @@ class ReflectionTest(fixtures.TestBase, ComparesTables):
         self.assert_(isinstance(table.c.col4.type, sa.String))
 
     @testing.provide_metadata
+    def test_override_upgrade_pk_flag(self):
+        meta = self.metadata
+        table = Table(
+            'override_test', meta,
+            Column('col1', sa.Integer),
+            Column('col2', sa.String(20)),
+            Column('col3', sa.Numeric)
+        )
+        table.create()
+
+        meta2 = MetaData(testing.db)
+        table = Table(
+            'override_test', meta2,
+            Column('col1', sa.Integer, primary_key=True),
+            autoload=True)
+
+        eq_(list(table.primary_key), [table.c.col1])
+        eq_(table.c.col1.primary_key, True)
+
+
+    @testing.provide_metadata
     def test_override_pkfk(self):
         """test that you can override columns which contain foreign keys
         to other reflected tables, where the foreign key column is also
@@ -602,6 +623,55 @@ class ReflectionTest(fixtures.TestBase, ComparesTables):
             is a2.c.user_id
         assert u2.join(a2).onclause.compare(u2.c.id == a2.c.user_id)
 
+    @testing.only_on(['postgresql', 'mysql'])
+    @testing.provide_metadata
+    def test_fk_options(self):
+        """test that foreign key reflection includes options (on
+        backends with {dialect}.get_foreign_keys() support)"""
+
+        if testing.against('postgresql'):
+            test_attrs = ('match', 'onupdate', 'ondelete', 'deferrable', 'initially')
+            addresses_user_id_fkey = sa.ForeignKey(
+                # Each option is specifically not a Postgres default, or
+                # it won't be returned by PG's inspection
+                'users.id',
+                name = 'addresses_user_id_fkey',
+                match='FULL',
+                onupdate='RESTRICT',
+                ondelete='RESTRICT',
+                deferrable=True,
+                initially='DEFERRED'
+            )
+        elif testing.against('mysql'):
+            # MATCH, DEFERRABLE, and INITIALLY cannot be defined for MySQL
+            # ON UPDATE and ON DELETE have defaults of RESTRICT, which are
+            # elided by MySQL's inspection
+            addresses_user_id_fkey = sa.ForeignKey(
+                'users.id',
+                name = 'addresses_user_id_fkey',
+                onupdate='CASCADE',
+                ondelete='CASCADE'
+            )
+            test_attrs = ('onupdate', 'ondelete')
+
+        meta = self.metadata
+        Table('users', meta,
+            Column('id', sa.Integer, primary_key=True),
+            Column('name', sa.String(30)),
+            test_needs_fk=True)
+        Table('addresses', meta,
+            Column('id', sa.Integer, primary_key=True),
+            Column('user_id', sa.Integer, addresses_user_id_fkey),
+            test_needs_fk=True)
+        meta.create_all()
+
+        meta2 = MetaData()
+        meta2.reflect(testing.db)
+        for fk in meta2.tables['addresses'].foreign_keys:
+            ref = addresses_user_id_fkey
+            for attr in test_attrs:
+                eq_(getattr(fk, attr), getattr(ref, attr))
+
     def test_pks_not_uniques(self):
         """test that primary key reflection not tripped up by unique
         indexes"""
@@ -705,10 +775,6 @@ class ReflectionTest(fixtures.TestBase, ComparesTables):
 
 
     @testing.crashes('oracle', 'FIXME: unknown, confirm not fails_on')
-    @testing.fails_on('+informixdb',
-                        "FIXME: should be supported via the "
-                        "DELIMITED env var but that breaks "
-                        "everything else for now")
     @testing.provide_metadata
     def test_reserved(self):
 
@@ -725,7 +791,7 @@ class ReflectionTest(fixtures.TestBase, ComparesTables):
         # There's currently no way to calculate identifier case
         # normalization in isolation, so...
 
-        if testing.against('firebird', 'oracle', 'maxdb'):
+        if testing.against('firebird', 'oracle'):
             check_col = 'TRUE'
         else:
             check_col = 'true'
@@ -777,6 +843,7 @@ class ReflectionTest(fixtures.TestBase, ComparesTables):
 
     def test_reflect_uses_bind_engine_reflect(self):
         self._test_reflect_uses_bind(lambda e: MetaData().reflect(e))
+
 
     @testing.provide_metadata
     def test_reflect_all(self):
@@ -832,6 +899,18 @@ class ReflectionTest(fixtures.TestBase, ComparesTables):
             sa.exc.UnboundExecutionError,
             m8.reflect
         )
+
+        m8_e1 = MetaData(testing.db)
+        rt_c = Table('rt_c', m8_e1)
+        m8_e1.reflect(extend_existing=True)
+        eq_(set(m8_e1.tables.keys()), set(names))
+        eq_(rt_c.c.keys(), ['id'])
+
+        m8_e2 = MetaData(testing.db)
+        rt_c = Table('rt_c', m8_e2)
+        m8_e2.reflect(extend_existing=True, only=['rt_a', 'rt_c'])
+        eq_(set(m8_e2.tables.keys()), set(['rt_a', 'rt_c']))
+        eq_(rt_c.c.keys(), ['id'])
 
         if existing:
             print("Other tables present in database, skipping some checks.")
@@ -1423,6 +1502,7 @@ class CaseSensitiveTest(fixtures.TablesTest):
 
 
 class ColumnEventsTest(fixtures.TestBase):
+
     @classmethod
     def setup_class(cls):
         cls.metadata = MetaData()
@@ -1430,7 +1510,16 @@ class ColumnEventsTest(fixtures.TestBase):
             'to_reflect',
             cls.metadata,
             Column('x', sa.Integer, primary_key=True),
+            Column('y', sa.Integer),
+            test_needs_fk=True
         )
+        cls.related = Table(
+            'related',
+            cls.metadata,
+            Column('q', sa.Integer, sa.ForeignKey('to_reflect.x')),
+            test_needs_fk=True
+        )
+        sa.Index("some_index", cls.to_reflect.c.y)
         cls.metadata.create_all(testing.db)
 
     @classmethod
@@ -1440,7 +1529,7 @@ class ColumnEventsTest(fixtures.TestBase):
     def teardown(self):
         events.SchemaEventTarget.dispatch._clear()
 
-    def _do_test(self, col, update, assert_):
+    def _do_test(self, col, update, assert_, tablename="to_reflect"):
         # load the actual Table class, not the test
         # wrapper
         from sqlalchemy.schema import Table
@@ -1450,21 +1539,53 @@ class ColumnEventsTest(fixtures.TestBase):
             if column_info['name'] == col:
                 column_info.update(update)
 
-        t = Table('to_reflect', m, autoload=True, listeners=[
+        t = Table(tablename, m, autoload=True, listeners=[
             ('column_reflect', column_reflect),
         ])
         assert_(t)
 
         m = MetaData(testing.db)
         event.listen(Table, 'column_reflect', column_reflect)
-        t2 = Table('to_reflect', m, autoload=True)
+        t2 = Table(tablename, m, autoload=True)
         assert_(t2)
 
     def test_override_key(self):
+        def assertions(table):
+            eq_(table.c.YXZ.name, "x")
+            eq_(set(table.primary_key), set([table.c.YXZ]))
+
         self._do_test(
             "x", {"key": "YXZ"},
-            lambda table: eq_(table.c.YXZ.name, "x")
+            assertions
         )
+
+    def test_override_index(self):
+        def assertions(table):
+            idx = list(table.indexes)[0]
+            eq_(idx.columns, [table.c.YXZ])
+
+        self._do_test(
+            "y", {"key": "YXZ"},
+            assertions
+        )
+
+    def test_override_key_fk(self):
+        m = MetaData(testing.db)
+        def column_reflect(insp, table, column_info):
+
+            if column_info['name'] == 'q':
+                column_info['key'] = 'qyz'
+            elif column_info['name'] == 'x':
+                column_info['key'] = 'xyz'
+
+        to_reflect = Table("to_reflect", m, autoload=True, listeners=[
+            ('column_reflect', column_reflect),
+        ])
+        related = Table("related", m, autoload=True, listeners=[
+            ('column_reflect', column_reflect),
+            ])
+
+        assert related.c.qyz.references(to_reflect.c.xyz)
 
     def test_override_type(self):
         def assert_(table):

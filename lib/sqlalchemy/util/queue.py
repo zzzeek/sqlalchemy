@@ -1,5 +1,5 @@
 # util/queue.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -25,14 +25,7 @@ within QueuePool.
 from collections import deque
 from time import time as _time
 from .compat import threading
-import sys
 
-if sys.version_info < (2, 6):
-    def notify_all(condition):
-        condition.notify()
-else:
-    def notify_all(condition):
-        condition.notify_all()
 
 __all__ = ['Empty', 'Full', 'Queue', 'SAAbort']
 
@@ -158,7 +151,6 @@ class Queue:
         return an item if one is immediately available, else raise the
         ``Empty`` exception (`timeout` is ignored in that case).
         """
-
         self.not_empty.acquire()
         try:
             if not block:
@@ -166,7 +158,11 @@ class Queue:
                     raise Empty
             elif timeout is None:
                 while self._empty():
-                    self.not_empty.wait()
+                    # wait for only half a second, then
+                    # loop around, so that we can see a change in
+                    # _sqla_abort_context in case we missed the notify_all()
+                    # called by abort()
+                    self.not_empty.wait(.5)
                     if self._sqla_abort_context:
                         raise SAAbort(self._sqla_abort_context)
             else:
@@ -195,7 +191,10 @@ class Queue:
         if not self.not_full.acquire(False):
             return
         try:
-            notify_all(self.not_empty)
+            # note that this is now optional
+            # as the waiters in get() both loop around
+            # to check the _sqla_abort_context flag periodically
+            self.not_empty.notify_all()
         finally:
             self.not_full.release()
 

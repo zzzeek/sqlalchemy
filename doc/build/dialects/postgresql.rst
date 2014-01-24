@@ -15,9 +15,9 @@ they originate from :mod:`sqlalchemy.types` or from the local dialect::
     from sqlalchemy.dialects.postgresql import \
         ARRAY, BIGINT, BIT, BOOLEAN, BYTEA, CHAR, CIDR, DATE, \
         DOUBLE_PRECISION, ENUM, FLOAT, HSTORE, INET, INTEGER, \
-        INTERVAL, MACADDR, NUMERIC, REAL, SMALLINT, TEXT, TIME, \
+        INTERVAL, JSON, MACADDR, NUMERIC, REAL, SMALLINT, TEXT, TIME, \
         TIMESTAMP, UUID, VARCHAR, INT4RANGE, INT8RANGE, NUMRANGE, \
-        DATERANGE, TSRANGE, TSTZRANGE
+        DATERANGE, TSRANGE, TSTZRANGE, TSVECTOR
 
 Types which are specific to PostgreSQL, or have PostgreSQL-specific
 construction arguments, are as follows:
@@ -28,7 +28,7 @@ construction arguments, are as follows:
 
 .. autoclass:: ARRAY
     :members: __init__, Comparator
-    :show-inheritance:
+
 
 .. autoclass:: Any
 
@@ -36,51 +36,58 @@ construction arguments, are as follows:
 
 .. autoclass:: BIT
     :members: __init__
-    :show-inheritance:
+
 
 .. autoclass:: BYTEA
     :members: __init__
-    :show-inheritance:
+
 
 .. autoclass:: CIDR
     :members: __init__
-    :show-inheritance:
+
 
 .. autoclass:: DOUBLE_PRECISION
     :members: __init__
-    :show-inheritance:
+
 
 .. autoclass:: ENUM
     :members: __init__, create, drop
-    :show-inheritance:
+
 
 .. autoclass:: HSTORE
     :members:
-    :show-inheritance:
+
 
 .. autoclass:: hstore
     :members:
-    :show-inheritance:
+
 
 .. autoclass:: INET
     :members: __init__
-    :show-inheritance:
+
 
 .. autoclass:: INTERVAL
     :members: __init__
-    :show-inheritance:
+
+.. autoclass:: JSON
+    :members:
+
+.. autoclass:: JSONElement
+    :members:
 
 .. autoclass:: MACADDR
     :members: __init__
-    :show-inheritance:
+
 
 .. autoclass:: REAL
     :members: __init__
-    :show-inheritance:
+
+.. autoclass:: TSVECTOR
+    :members: __init__
 
 .. autoclass:: UUID
     :members: __init__
-    :show-inheritance:
+
 
 Range Types
 ~~~~~~~~~~~
@@ -89,22 +96,22 @@ The new range column types founds in PostgreSQL 9.2 onwards are
 catered for by the following types:
 
 .. autoclass:: INT4RANGE
-   :show-inheritance:
+
 
 .. autoclass:: INT8RANGE
-   :show-inheritance:
+
 
 .. autoclass:: NUMRANGE
-   :show-inheritance:
+
 
 .. autoclass:: DATERANGE
-   :show-inheritance:
+
 
 .. autoclass:: TSRANGE
-   :show-inheritance:
+
 
 .. autoclass:: TSTZRANGE
-   :show-inheritance:
+
 
 The types above get most of their functionality from the following
 mixin:
@@ -127,7 +134,6 @@ SQLAlchemy supports Postgresql EXCLUDE constraints via the
 :class:`ExcludeConstraint` class:
 
 .. autoclass:: ExcludeConstraint
-   :show-inheritance:
    :members: __init__
 
 For example::

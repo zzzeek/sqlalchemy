@@ -1,5 +1,5 @@
 # orm/state.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -13,16 +13,11 @@ defines a large part of the ORM's interactivity.
 
 import weakref
 from .. import util
-from . import exc as orm_exc, attributes, util as orm_util, interfaces
-from .attributes import (
-    PASSIVE_NO_RESULT,
-    SQL_OK, NEVER_SET, ATTR_WAS_SET, NO_VALUE,\
-    PASSIVE_NO_INITIALIZE
-    )
-sessionlib = util.importlater("sqlalchemy.orm", "session")
-instrumentation = util.importlater("sqlalchemy.orm", "instrumentation")
-mapperlib = util.importlater("sqlalchemy.orm", "mapperlib")
-
+from . import exc as orm_exc, interfaces
+from .path_registry import PathRegistry
+from .base import PASSIVE_NO_RESULT, SQL_OK, NEVER_SET, ATTR_WAS_SET, \
+        NO_VALUE, PASSIVE_NO_INITIALIZE, INIT_OK, PASSIVE_OFF
+from . import base
 
 class InstanceState(interfaces._InspectionAttr):
     """tracks state information at the instance level."""
@@ -89,15 +84,16 @@ class InstanceState(interfaces._InspectionAttr):
             not self._attached
 
     @property
-    def _attached(self):
+    @util.dependencies("sqlalchemy.orm.session")
+    def _attached(self, sessionlib):
         return self.session_id is not None and \
             self.session_id in sessionlib._sessions
 
     @property
-    def session(self):
+    @util.dependencies("sqlalchemy.orm.session")
+    def session(self, sessionlib):
         """Return the owning :class:`.Session` for this instance,
         or ``None`` if none available."""
-
         return sessionlib._state_session(self)
 
     @property
@@ -186,7 +182,7 @@ class InstanceState(interfaces._InspectionAttr):
     def dict(self):
         o = self.obj()
         if o is not None:
-            return attributes.instance_dict(o)
+            return base.instance_dict(o)
         else:
             return {}
 
@@ -214,8 +210,8 @@ class InstanceState(interfaces._InspectionAttr):
         return self._pending_mutations[key]
 
     def __getstate__(self):
-        d = {'instance': self.obj()}
-        d.update(
+        state_dict = {'instance': self.obj()}
+        state_dict.update(
             (k, self.__dict__[k]) for k in (
                 'committed_state', '_pending_mutations', 'modified', 'expired',
                 'callables', 'key', 'parents', 'load_options',
@@ -223,14 +219,14 @@ class InstanceState(interfaces._InspectionAttr):
             ) if k in self.__dict__
         )
         if self.load_path:
-            d['load_path'] = self.load_path.serialize()
+            state_dict['load_path'] = self.load_path.serialize()
 
-        self.manager.dispatch.pickle(self, d)
+        state_dict['manager'] = self.manager._serialize(self, state_dict)
 
-        return d
+        return state_dict
 
-    def __setstate__(self, state):
-        inst = state['instance']
+    def __setstate__(self, state_dict):
+        inst = state_dict['instance']
         if inst is not None:
             self.obj = weakref.ref(inst, self._cleanup)
             self.class_ = inst.__class__
@@ -239,42 +235,26 @@ class InstanceState(interfaces._InspectionAttr):
             # due to storage of state in "parents".  "class_"
             # also new.
             self.obj = None
-            self.class_ = state['class_']
-        self.manager = manager = instrumentation.manager_of_class(self.class_)
-        if manager is None:
-            raise orm_exc.UnmappedInstanceError(
-                        inst,
-                        "Cannot deserialize object of type %r - "
-                        "no mapper() has "
-                        "been configured for this class within the current "
-                        "Python process!" %
-                        self.class_)
-        elif manager.is_mapped and not manager.mapper.configured:
-            mapperlib.configure_mappers()
+            self.class_ = state_dict['class_']
 
-        self.committed_state = state.get('committed_state', {})
-        self._pending_mutations = state.get('_pending_mutations', {})
-        self.parents = state.get('parents', {})
-        self.modified = state.get('modified', False)
-        self.expired = state.get('expired', False)
-        self.callables = state.get('callables', {})
+        self.committed_state = state_dict.get('committed_state', {})
+        self._pending_mutations = state_dict.get('_pending_mutations', {})
+        self.parents = state_dict.get('parents', {})
+        self.modified = state_dict.get('modified', False)
+        self.expired = state_dict.get('expired', False)
+        self.callables = state_dict.get('callables', {})
 
         self.__dict__.update([
-            (k, state[k]) for k in (
+            (k, state_dict[k]) for k in (
                 'key', 'load_options',
-            ) if k in state
+            ) if k in state_dict
         ])
 
-        if 'load_path' in state:
-            self.load_path = orm_util.PathRegistry.\
-                                deserialize(state['load_path'])
+        if 'load_path' in state_dict:
+            self.load_path = PathRegistry.\
+                                deserialize(state_dict['load_path'])
 
-        # setup _sa_instance_state ahead of time so that
-        # unpickle events can access the object normally.
-        # see [ticket:2362]
-        if inst is not None:
-            manager.setup_instance(inst, self)
-        manager.dispatch.unpickle(self, state)
+        state_dict['manager'](self, inst, state_dict)
 
     def _initialize(self, key):
         """Set this attribute to an empty value or collection,
@@ -305,14 +285,19 @@ class InstanceState(interfaces._InspectionAttr):
         dict_.pop(key, None)
         self.callables[key] = self
 
-    def _set_callable(self, dict_, key, callable_):
-        """Remove the given attribute and set the given callable
-           as a loader."""
-
-        old = dict_.pop(key, None)
-        if old is not None and self.manager[key].impl.collection:
-            self.manager[key].impl._invalidate_collection(old)
-        self.callables[key] = callable_
+    @classmethod
+    def _row_processor(cls, manager, fn, key):
+        impl = manager[key].impl
+        if impl.collection:
+            def _set_callable(state, dict_, row):
+                old = dict_.pop(key, None)
+                if old is not None:
+                    impl._invalidate_collection(old)
+                state.callables[key] = fn
+        else:
+            def _set_callable(state, dict_, row):
+                state.callables[key] = fn
+        return _set_callable
 
     def _expire(self, dict_, modified_set):
         self.expired = True
@@ -359,7 +344,7 @@ class InstanceState(interfaces._InspectionAttr):
 
         self.manager.dispatch.expire(self, attribute_names)
 
-    def __call__(self, passive):
+    def __call__(self, state, passive):
         """__call__ allows the InstanceState to act as a deferred
         callable for loading expired attributes, which is also
         serializable (picklable).
@@ -408,6 +393,13 @@ class InstanceState(interfaces._InspectionAttr):
                     difference(self.dict)
 
     @property
+    def _unloaded_non_object(self):
+        return self.unloaded.intersection(
+                attr for attr in self.manager
+                    if self.manager[attr].impl.accepts_scalar_loader
+            )
+
+    @property
     def expired_attributes(self):
         """Return the set of keys which are 'expired' to be loaded by
            the manager's deferred scalar loader, assuming no pending
@@ -423,6 +415,8 @@ class InstanceState(interfaces._InspectionAttr):
         return None
 
     def _modified_event(self, dict_, attr, previous, collection=False):
+        if not attr.send_modified_events:
+            return
         if attr.key not in self.committed_state:
             if collection:
                 if previous is NEVER_SET:
@@ -456,7 +450,7 @@ class InstanceState(interfaces._InspectionAttr):
                         "collected."
                         % (
                             self.manager[attr.key],
-                            orm_util.state_class_str(self)
+                            base.state_class_str(self)
                         ))
             self.modified = True
 
@@ -522,13 +516,13 @@ class AttributeState(object):
     to a particular attribute on a particular mapped object.
 
     The :class:`.AttributeState` object is accessed
-    via the :attr:`.InstanceState.attr` collection
+    via the :attr:`.InstanceState.attrs` collection
     of a particular :class:`.InstanceState`::
 
         from sqlalchemy import inspect
 
         insp = inspect(some_mapped_object)
-        attr_state = insp.attr.some_attribute
+        attr_state = insp.attrs.some_attribute
 
     """
 
@@ -563,9 +557,39 @@ class AttributeState(object):
         """Return the current pre-flush change history for
         this attribute, via the :class:`.History` interface.
 
+        This method will **not** emit loader callables if the value of the
+        attribute is unloaded.
+
+        .. seealso::
+
+            :meth:`.AttributeState.load_history` - retrieve history
+            using loader callables if the value is not locally present.
+
+            :func:`.attributes.get_history` - underlying function
+
         """
         return self.state.get_history(self.key,
                     PASSIVE_NO_INITIALIZE)
+
+    def load_history(self):
+        """Return the current pre-flush change history for
+        this attribute, via the :class:`.History` interface.
+
+        This method **will** emit loader callables if the value of the
+        attribute is unloaded.
+
+        .. seealso::
+
+            :attr:`.AttributeState.history`
+
+            :func:`.attributes.get_history` - underlying function
+
+        .. versionadded:: 0.9.0
+
+        """
+        return self.state.get_history(self.key,
+                    PASSIVE_OFF ^ INIT_OK)
+
 
 
 class PendingCollection(object):

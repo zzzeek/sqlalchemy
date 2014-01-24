@@ -1,5 +1,5 @@
 # ext/declarative/__init__.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -897,11 +897,57 @@ reference a common target class via many-to-one::
         __tablename__ = 'target'
         id = Column(Integer, primary_key=True)
 
+Using Advanced Relationship Arguments (e.g. ``primaryjoin``, etc.)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 :func:`~sqlalchemy.orm.relationship` definitions which require explicit
-primaryjoin, order_by etc. expressions should use the string forms
-for these arguments, so that they are evaluated as late as possible.
-To reference the mixin class in these expressions, use the given ``cls``
-to get its name::
+primaryjoin, order_by etc. expressions should in all but the most
+simplistic cases use **late bound** forms
+for these arguments, meaning, using either the string form or a lambda.
+The reason for this is that the related :class:`.Column` objects which are to
+be configured using ``@declared_attr`` are not available to another
+``@declared_attr`` attribute; while the methods will work and return new
+:class:`.Column` objects, those are not the :class:`.Column` objects that
+Declarative will be using as it calls the methods on its own, thus using
+*different* :class:`.Column` objects.
+
+The canonical example is the primaryjoin condition that depends upon
+another mixed-in column::
+
+    class RefTargetMixin(object):
+        @declared_attr
+        def target_id(cls):
+            return Column('target_id', ForeignKey('target.id'))
+
+        @declared_attr
+        def target(cls):
+            return relationship(Target,
+                primaryjoin=Target.id==cls.target_id   # this is *incorrect*
+            )
+
+Mapping a class using the above mixin, we will get an error like::
+
+    sqlalchemy.exc.InvalidRequestError: this ForeignKey's parent column is not
+    yet associated with a Table.
+
+This is because the ``target_id`` :class:`.Column` we've called upon in our ``target()``
+method is not the same :class:`.Column` that declarative is actually going to map
+to our table.
+
+The condition above is resolved using a lambda::
+
+    class RefTargetMixin(object):
+        @declared_attr
+        def target_id(cls):
+            return Column('target_id', ForeignKey('target.id'))
+
+        @declared_attr
+        def target(cls):
+            return relationship(Target,
+                primaryjoin=lambda: Target.id==cls.target_id
+            )
+
+or alternatively, the string form (which ultmately generates a lambda)::
 
     class RefTargetMixin(object):
         @declared_attr
@@ -1238,7 +1284,7 @@ Sessions
 Note that ``declarative`` does nothing special with sessions, and is
 only intended as an easier way to configure mappers and
 :class:`~sqlalchemy.schema.Table` objects.  A typical application
-setup using :class:`~sqlalchemy.orm.scoped_session` might look like::
+setup using :class:`~sqlalchemy.orm.scoping.scoped_session` might look like::
 
     engine = create_engine('postgresql://scott:tiger@localhost/test')
     Session = scoped_session(sessionmaker(autocommit=False,
@@ -1254,7 +1300,7 @@ Mapped instances then make usage of
 from .api import declarative_base, synonym_for, comparable_using, \
     instrument_declarative, ConcreteBase, AbstractConcreteBase, \
     DeclarativeMeta, DeferredReflection, has_inherited_table,\
-    declared_attr
+    declared_attr, as_declarative
 
 
 __all__ = ['declarative_base', 'synonym_for', 'has_inherited_table',

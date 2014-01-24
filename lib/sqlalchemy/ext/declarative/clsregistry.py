@@ -1,5 +1,5 @@
 # ext/declarative/clsregistry.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -14,6 +14,7 @@ from ...orm.properties import ColumnProperty, RelationshipProperty, \
 from ...schema import _get_table_key
 from ...orm import class_mapper, interfaces
 from ... import util
+from ... import inspection
 from ... import exc
 import weakref
 
@@ -207,6 +208,9 @@ class _GetColumns(object):
                                 " directly to a Column)." % key)
         return getattr(self.cls, key)
 
+inspection._inspects(_GetColumns)(
+            lambda target: inspection.inspect(target.cls))
+
 
 class _GetTable(object):
     def __init__(self, key, metadata):
@@ -225,47 +229,62 @@ def _determine_container(key, value):
     return _GetColumns(value)
 
 
-def _resolver(cls, prop):
-    def resolve_arg(arg):
-        import sqlalchemy
-        from sqlalchemy.orm import foreign, remote
+class _class_resolver(object):
+    def __init__(self, cls, prop, fallback, arg):
+        self.cls = cls
+        self.prop = prop
+        self.arg = self._declarative_arg = arg
+        self.fallback = fallback
+        self._dict = util.PopulateDict(self._access_cls)
+        self._resolvers = ()
 
-        fallback = sqlalchemy.__dict__.copy()
-        fallback.update({'foreign': foreign, 'remote': remote})
+    def _access_cls(self, key):
+        cls = self.cls
+        if key in cls._decl_class_registry:
+            return _determine_container(key, cls._decl_class_registry[key])
+        elif key in cls.metadata.tables:
+            return cls.metadata.tables[key]
+        elif key in cls.metadata._schemas:
+            return _GetTable(key, cls.metadata)
+        elif '_sa_module_registry' in cls._decl_class_registry and \
+            key in cls._decl_class_registry['_sa_module_registry']:
+            registry = cls._decl_class_registry['_sa_module_registry']
+            return registry.resolve_attr(key)
+        elif self._resolvers:
+            for resolv in self._resolvers:
+                value = resolv(key)
+                if value is not None:
+                    return value
 
-        def access_cls(key):
-            if key in cls._decl_class_registry:
-                return _determine_container(key, cls._decl_class_registry[key])
-            elif key in cls.metadata.tables:
-                return cls.metadata.tables[key]
-            elif key in cls.metadata._schemas:
-                return _GetTable(key, cls.metadata)
-            elif '_sa_module_registry' in cls._decl_class_registry and \
-                key in cls._decl_class_registry['_sa_module_registry']:
-                registry = cls._decl_class_registry['_sa_module_registry']
-                return registry.resolve_attr(key)
+        return self.fallback[key]
+
+    def __call__(self):
+        try:
+            x = eval(self.arg, globals(), self._dict)
+
+            if isinstance(x, _GetColumns):
+                return x.cls
             else:
-                return fallback[key]
+                return x
+        except NameError as n:
+            raise exc.InvalidRequestError(
+                "When initializing mapper %s, expression %r failed to "
+                "locate a name (%r). If this is a class name, consider "
+                "adding this relationship() to the %r class after "
+                "both dependent classes have been defined." %
+                (self.prop.parent, self.arg, n.args[0], self.cls)
+            )
 
-        d = util.PopulateDict(access_cls)
 
-        def return_cls():
-            try:
-                x = eval(arg, globals(), d)
+def _resolver(cls, prop):
+    import sqlalchemy
+    from sqlalchemy.orm import foreign, remote
 
-                if isinstance(x, _GetColumns):
-                    return x.cls
-                else:
-                    return x
-            except NameError as n:
-                raise exc.InvalidRequestError(
-                    "When initializing mapper %s, expression %r failed to "
-                    "locate a name (%r). If this is a class name, consider "
-                    "adding this relationship() to the %r class after "
-                    "both dependent classes have been defined." %
-                    (prop.parent, arg, n.args[0], cls)
-                )
-        return return_cls
+    fallback = sqlalchemy.__dict__.copy()
+    fallback.update({'foreign': foreign, 'remote': remote})
+
+    def resolve_arg(arg):
+        return _class_resolver(cls, prop, fallback, arg)
     return resolve_arg
 
 
@@ -277,7 +296,7 @@ def _deferred_relationship(cls, prop):
         for attr in ('argument', 'order_by', 'primaryjoin', 'secondaryjoin',
                      'secondary', '_user_defined_foreign_keys', 'remote_side'):
             v = getattr(prop, attr)
-            if isinstance(v, str):
+            if isinstance(v, util.string_types):
                 setattr(prop, attr, resolve_arg(v))
 
         if prop.backref and isinstance(prop.backref, tuple):

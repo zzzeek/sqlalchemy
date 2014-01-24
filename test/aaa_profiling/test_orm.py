@@ -2,7 +2,7 @@ from sqlalchemy.testing import eq_, assert_raises, \
     assert_raises_message
 from sqlalchemy import exc as sa_exc, util, Integer, String, ForeignKey
 from sqlalchemy.orm import exc as orm_exc, mapper, relationship, \
-    sessionmaker, Session
+    sessionmaker, Session, defer
 from sqlalchemy import testing
 from sqlalchemy.testing import profiling
 from sqlalchemy.testing import fixtures
@@ -257,4 +257,116 @@ class MergeBackrefsTest(fixtures.MappedTest):
         ]:
             s.merge(a)
 
+class DeferOptionsTest(fixtures.MappedTest):
+    @classmethod
+    def define_tables(cls, metadata):
+        Table('a', metadata,
+            Column('id', Integer, primary_key=True),
+            Column('x', String(5)),
+            Column('y', String(5)),
+            Column('z', String(5)),
+            Column('q', String(5)),
+            Column('p', String(5)),
+            Column('r', String(5)),
+        )
+
+    @classmethod
+    def setup_classes(cls):
+        class A(cls.Basic):
+            pass
+
+    @classmethod
+    def setup_mappers(cls):
+        A = cls.classes.A
+        a = cls.tables.a
+        mapper(A, a)
+
+    @classmethod
+    def insert_data(cls):
+        A = cls.classes.A
+        s = Session()
+        s.add_all([
+            A(id=i,
+                **dict((letter, "%s%d" % (letter, i)) for letter in
+                        ['x', 'y', 'z', 'p', 'q', 'r'])
+            ) for i in range(1, 1001)
+        ])
+        s.commit()
+
+    @profiling.function_call_count(variance=.10)
+    def test_baseline(self):
+        # as of [ticket:2778], this is at 39025
+        A = self.classes.A
+        s = Session()
+        s.query(A).all()
+
+    @profiling.function_call_count(variance=.10)
+    def test_defer_many_cols(self):
+        # with [ticket:2778], this goes from 50805 to 32817,
+        # as it should be fewer function calls than the baseline
+        A = self.classes.A
+        s = Session()
+        s.query(A).options(
+            *[defer(letter) for letter in ['x', 'y', 'z', 'p', 'q', 'r']]).\
+            all()
+
+
+class AttributeOverheadTest(fixtures.MappedTest):
+    @classmethod
+    def define_tables(cls, metadata):
+        Table('parent', metadata, Column('id', Integer,
+                       primary_key=True,
+                       test_needs_autoincrement=True), Column('data',
+                       String(20)))
+        Table('child', metadata, Column('id', Integer,
+                      primary_key=True, test_needs_autoincrement=True),
+                      Column('data', String(20)), Column('parent_id',
+                      Integer, ForeignKey('parent.id'), nullable=False))
+
+    @classmethod
+    def setup_classes(cls):
+        class Parent(cls.Basic):
+            pass
+
+        class Child(cls.Basic):
+            pass
+
+    @classmethod
+    def setup_mappers(cls):
+        Child, Parent, parent, child = (cls.classes.Child,
+                                cls.classes.Parent,
+                                cls.tables.parent,
+                                cls.tables.child)
+
+        mapper(Parent, parent, properties={'children':
+                        relationship(Child, backref='parent')})
+        mapper(Child, child)
+
+
+    def test_attribute_set(self):
+        Parent, Child = self.classes.Parent, self.classes.Child
+        p1 = Parent()
+        c1 = Child()
+
+        @profiling.function_call_count()
+        def go():
+            for i in range(30):
+                c1.parent = p1
+                c1.parent = None
+                c1.parent = p1
+                del c1.parent
+        go()
+
+    def test_collection_append_remove(self):
+        Parent, Child = self.classes.Parent, self.classes.Child
+        p1 = Parent()
+        children = [Child() for i in range(100)]
+
+        @profiling.function_call_count()
+        def go():
+            for child in children:
+                p1.children.append(child)
+            for child in children:
+                p1.children.remove(child)
+        go()
 

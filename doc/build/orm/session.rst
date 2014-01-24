@@ -198,196 +198,319 @@ at the same time).
 
 .. _session_faq:
 
-.. _session_faq_whentocreate:
-
 Session Frequently Asked Questions
 -----------------------------------
 
-* When do I make a :class:`.sessionmaker` ?
 
-    Just one time, somewhere in your application's global scope. It should be
-    looked upon as part of your application's configuration. If your
-    application has three .py files in a package, you could, for example,
-    place the :class:`.sessionmaker` line in your ``__init__.py`` file; from
-    that point on your other modules say "from mypackage import Session". That
-    way, everyone else just uses :class:`.Session()`,
-    and the configuration of that session is controlled by that central point.
+When do I make a :class:`.sessionmaker`?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    If your application starts up, does imports, but does not know what
-    database it's going to be connecting to, you can bind the
-    :class:`.Session` at the "class" level to the
-    engine later on, using :meth:`.sessionmaker.configure`.
+Just one time, somewhere in your application's global scope. It should be
+looked upon as part of your application's configuration. If your
+application has three .py files in a package, you could, for example,
+place the :class:`.sessionmaker` line in your ``__init__.py`` file; from
+that point on your other modules say "from mypackage import Session". That
+way, everyone else just uses :class:`.Session()`,
+and the configuration of that session is controlled by that central point.
 
-    In the examples in this section, we will frequently show the
-    :class:`.sessionmaker` being created right above the line where we actually
-    invoke :class:`.Session`. But that's just for
-    example's sake!  In reality, the :class:`.sessionmaker` would be somewhere
-    at the module level.   The calls to instantiate :class:`.Session`
-    would then be placed at the point in the application where database
-    conversations begin.
+If your application starts up, does imports, but does not know what
+database it's going to be connecting to, you can bind the
+:class:`.Session` at the "class" level to the
+engine later on, using :meth:`.sessionmaker.configure`.
 
-* When do I construct a :class:`.Session`, when do I commit it, and when do I close it ?
+In the examples in this section, we will frequently show the
+:class:`.sessionmaker` being created right above the line where we actually
+invoke :class:`.Session`. But that's just for
+example's sake!  In reality, the :class:`.sessionmaker` would be somewhere
+at the module level.   The calls to instantiate :class:`.Session`
+would then be placed at the point in the application where database
+conversations begin.
 
-    A :class:`.Session` is typically constructed at the beginning of a logical
-    operation where database access is potentially anticipated.
+.. _session_faq_whentocreate:
 
-    The :class:`.Session`, whenever it is used to talk to the database,
-    begins a database transaction as soon as it starts communicating.
-    Assuming the ``autocommit`` flag is left at its recommended default
-    of ``False``, this transaction remains in progress until the :class:`.Session`
-    is rolled back, committed, or closed.   The :class:`.Session` will
-    begin a new transaction if it is used again, subsequent to the previous
-    transaction ending; from this it follows that the :class:`.Session`
-    is capable of having a lifespan across many transactions, though only
-    one at a time.   We refer to these two concepts as **transaction scope**
-    and **session scope**.
+When do I construct a :class:`.Session`, when do I commit it, and when do I close it?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    The implication here is that the SQLAlchemy ORM is encouraging the
-    developer to establish these two scopes in his or her application,
-    including not only when the scopes begin and end, but also the
-    expanse of those scopes, for example should a single
-    :class:`.Session` instance be local to the execution flow within a
-    function or method, should it be a global object used by the
-    entire application, or somewhere in between these two.
+.. topic:: tl;dr;
 
-    The burden placed on the developer to determine this scope is one
-    area where the SQLAlchemy ORM necessarily has a strong opinion
-    about how the database should be used.  The unit-of-work pattern
-    is specifically one of accumulating changes over time and flushing
-    them periodically, keeping in-memory state in sync with what's
-    known to be present in a local transaction. This pattern is only
-    effective when meaningful transaction scopes are in place.
+    As a general rule, keep the lifecycle of the session **separate and
+    external** from functions and objects that access and/or manipulate
+    database data.
 
-    It's usually not very hard to determine the best points at which
-    to begin and end the scope of a :class:`.Session`, though the wide
-    variety of application architectures possible can introduce
-    challenging situations.
+A :class:`.Session` is typically constructed at the beginning of a logical
+operation where database access is potentially anticipated.
 
-    A common choice is to tear down the :class:`.Session` at the same
-    time the transaction ends, meaning the transaction and session scopes
-    are the same.  This is a great choice to start out with as it
-    removes the need to consider session scope as separate from transaction
-    scope.
+The :class:`.Session`, whenever it is used to talk to the database,
+begins a database transaction as soon as it starts communicating.
+Assuming the ``autocommit`` flag is left at its recommended default
+of ``False``, this transaction remains in progress until the :class:`.Session`
+is rolled back, committed, or closed.   The :class:`.Session` will
+begin a new transaction if it is used again, subsequent to the previous
+transaction ending; from this it follows that the :class:`.Session`
+is capable of having a lifespan across many transactions, though only
+one at a time.   We refer to these two concepts as **transaction scope**
+and **session scope**.
 
-    While there's no one-size-fits-all recommendation for how transaction
-    scope should be determined, there are common patterns.   Especially
-    if one is writing a web application, the choice is pretty much established.
+The implication here is that the SQLAlchemy ORM is encouraging the
+developer to establish these two scopes in their application,
+including not only when the scopes begin and end, but also the
+expanse of those scopes, for example should a single
+:class:`.Session` instance be local to the execution flow within a
+function or method, should it be a global object used by the
+entire application, or somewhere in between these two.
 
-    A web application is the easiest case because such an appication is already
-    constructed around a single, consistent scope - this is the **request**,
-    which represents an incoming request from a browser, the processing
-    of that request to formulate a response, and finally the delivery of that
-    response back to the client.    Integrating web applications with the
-    :class:`.Session` is then the straightforward task of linking the
-    scope of the :class:`.Session` to that of the request.  The :class:`.Session`
-    can be established as the request begins, or using a **lazy initialization**
-    pattern which establishes one as soon as it is needed.  The request
-    then proceeds, with some system in place where application logic can access
-    the current :class:`.Session` in a manner associated with how the actual
-    request object is accessed.  As the request ends, the :class:`.Session`
-    is torn down as well, usually through the usage of event hooks provided
-    by the web framework.   The transaction used by the :class:`.Session`
-    may also be committed at this point, or alternatively the application may
-    opt for an explicit commit pattern, only committing for those requests
-    where one is warranted, but still always tearing down the :class:`.Session`
-    unconditionally at the end.
+The burden placed on the developer to determine this scope is one
+area where the SQLAlchemy ORM necessarily has a strong opinion
+about how the database should be used.  The :term:`unit of work` pattern
+is specifically one of accumulating changes over time and flushing
+them periodically, keeping in-memory state in sync with what's
+known to be present in a local transaction. This pattern is only
+effective when meaningful transaction scopes are in place.
 
-    Most web frameworks include infrastructure to establish a single
-    :class:`.Session`, associated with the request, which is correctly
-    constructed and torn down corresponding
-    torn down at the end of a request.   Such infrastructure pieces
-    include products such as `Flask-SQLAlchemy <http://packages.python.org/Flask-SQLAlchemy/>`_,
-    for usage in conjunction with the Flask web framework,
-    and `Zope-SQLAlchemy <http://pypi.python.org/pypi/zope.sqlalchemy>`_,
-    for usage in conjunction with the Pyramid and Zope frameworks.
-    SQLAlchemy strongly recommends that these products be used as
-    available.
+It's usually not very hard to determine the best points at which
+to begin and end the scope of a :class:`.Session`, though the wide
+variety of application architectures possible can introduce
+challenging situations.
 
-    In those situations where integration libraries are not available,
-    SQLAlchemy includes its own "helper" class known as
-    :class:`.scoped_session`.   A tutorial on the usage of this object
-    is at :ref:`unitofwork_contextual`.   It provides both a quick way
-    to associate a :class:`.Session` with the current thread, as well as
-    patterns to associate :class:`.Session` objects with other kinds of
-    scopes.
+A common choice is to tear down the :class:`.Session` at the same
+time the transaction ends, meaning the transaction and session scopes
+are the same.  This is a great choice to start out with as it
+removes the need to consider session scope as separate from transaction
+scope.
 
-    As mentioned before, for non-web applications there is no one clear
-    pattern, as applications themselves don't have just one pattern
-    of architecture.   The best strategy is to attempt to demarcate
-    "operations", points at which a particular thread begins to perform
-    a series of operations for some period of time, which can be committed
-    at the end.   Some examples:
+While there's no one-size-fits-all recommendation for how transaction
+scope should be determined, there are common patterns.   Especially
+if one is writing a web application, the choice is pretty much established.
 
-    * A background daemon which spawns off child forks
-      would want to create a :class:`.Session` local to each child
-      process work with that :class:`.Session` through the life of the "job"
-      that the fork is handling, then tear it down when the job is completed.
+A web application is the easiest case because such an appication is already
+constructed around a single, consistent scope - this is the **request**,
+which represents an incoming request from a browser, the processing
+of that request to formulate a response, and finally the delivery of that
+response back to the client.    Integrating web applications with the
+:class:`.Session` is then the straightforward task of linking the
+scope of the :class:`.Session` to that of the request.  The :class:`.Session`
+can be established as the request begins, or using a :term:`lazy initialization`
+pattern which establishes one as soon as it is needed.  The request
+then proceeds, with some system in place where application logic can access
+the current :class:`.Session` in a manner associated with how the actual
+request object is accessed.  As the request ends, the :class:`.Session`
+is torn down as well, usually through the usage of event hooks provided
+by the web framework.   The transaction used by the :class:`.Session`
+may also be committed at this point, or alternatively the application may
+opt for an explicit commit pattern, only committing for those requests
+where one is warranted, but still always tearing down the :class:`.Session`
+unconditionally at the end.
 
-    * For a command-line script, the application would create a single, global
-      :class:`.Session` that is established when the program begins to do its
-      work, and commits it right as the program is completing its task.
+Most web frameworks include infrastructure to establish a single
+:class:`.Session`, associated with the request, which is correctly
+constructed and torn down corresponding
+torn down at the end of a request.   Such infrastructure pieces
+include products such as `Flask-SQLAlchemy <http://packages.python.org/Flask-SQLAlchemy/>`_,
+for usage in conjunction with the Flask web framework,
+and `Zope-SQLAlchemy <http://pypi.python.org/pypi/zope.sqlalchemy>`_,
+for usage in conjunction with the Pyramid and Zope frameworks.
+SQLAlchemy strongly recommends that these products be used as
+available.
 
-    * For a GUI interface-driven application, the scope of the :class:`.Session`
-      may best be within the scope of a user-generated event, such as a button
-      push.  Or, the scope may correspond to explicit user interaction, such as
-      the user "opening" a series of records, then "saving" them.
+In those situations where integration libraries are not available,
+SQLAlchemy includes its own "helper" class known as
+:class:`.scoped_session`.   A tutorial on the usage of this object
+is at :ref:`unitofwork_contextual`.   It provides both a quick way
+to associate a :class:`.Session` with the current thread, as well as
+patterns to associate :class:`.Session` objects with other kinds of
+scopes.
 
-* Is the Session a cache ?
+As mentioned before, for non-web applications there is no one clear
+pattern, as applications themselves don't have just one pattern
+of architecture.   The best strategy is to attempt to demarcate
+"operations", points at which a particular thread begins to perform
+a series of operations for some period of time, which can be committed
+at the end.   Some examples:
 
-    Yeee...no. It's somewhat used as a cache, in that it implements the
-    identity map pattern, and stores objects keyed to their primary key.
-    However, it doesn't do any kind of query caching. This means, if you say
-    ``session.query(Foo).filter_by(name='bar')``, even if ``Foo(name='bar')``
-    is right there, in the identity map, the session has no idea about that.
-    It has to issue SQL to the database, get the rows back, and then when it
-    sees the primary key in the row, *then* it can look in the local identity
-    map and see that the object is already there. It's only when you say
-    ``query.get({some primary key})`` that the
-    :class:`~sqlalchemy.orm.session.Session` doesn't have to issue a query.
+* A background daemon which spawns off child forks
+  would want to create a :class:`.Session` local to each child
+  process, work with that :class:`.Session` through the life of the "job"
+  that the fork is handling, then tear it down when the job is completed.
 
-    Additionally, the Session stores object instances using a weak reference
-    by default. This also defeats the purpose of using the Session as a cache.
+* For a command-line script, the application would create a single, global
+  :class:`.Session` that is established when the program begins to do its
+  work, and commits it right as the program is completing its task.
 
-    The :class:`.Session` is not designed to be a
-    global object from which everyone consults as a "registry" of objects.
-    That's more the job of a **second level cache**.   SQLAlchemy provides
-    a pattern for implementing second level caching using `dogpile.cache <http://dogpilecache.readthedocs.org/>`_,
-    via the :ref:`examples_caching` example.
+* For a GUI interface-driven application, the scope of the :class:`.Session`
+  may best be within the scope of a user-generated event, such as a button
+  push.  Or, the scope may correspond to explicit user interaction, such as
+  the user "opening" a series of records, then "saving" them.
 
-* How can I get the :class:`~sqlalchemy.orm.session.Session` for a certain object ?
+As a general rule, the application should manage the lifecycle of the
+session *externally* to functions that deal with specific data.  This is a
+fundamental separation of concerns which keeps data-specific operations
+agnostic of the context in which they access and manipulate that data.
 
-    Use the :meth:`~.Session.object_session` classmethod
-    available on :class:`~sqlalchemy.orm.session.Session`::
+E.g. **don't do this**::
 
-        session = Session.object_session(someobject)
+    ### this is the **wrong way to do it** ###
 
-* Is the session thread-safe?
+    class ThingOne(object):
+        def go(self):
+            session = Session()
+            try:
+                session.query(FooBar).update({"x": 5})
+                session.commit()
+            except:
+                session.rollback()
+                raise
 
-    The :class:`.Session` is very much intended to be used in a
-    **non-concurrent** fashion, which usually means in only one thread at a
-    time.
+    class ThingTwo(object):
+        def go(self):
+            session = Session()
+            try:
+                session.query(Widget).update({"q": 18})
+                session.commit()
+            except:
+                session.rollback()
+                raise
 
-    The :class:`.Session` should be used in such a way that one
-    instance exists for a single series of operations within a single
-    transaction.   One expedient way to get this effect is by associating
-    a :class:`.Session` with the current thread (see :ref:`unitofwork_contextual`
-    for background).  Another is to use a pattern
-    where the :class:`.Session` is passed between functions and is otherwise
-    not shared with other threads.
+    def run_my_program():
+        ThingOne().go()
+        ThingTwo().go()
 
-    The bigger point is that you should not *want* to use the session
-    with multiple concurrent threads. That would be like having everyone at a
-    restaurant all eat from the same plate. The session is a local "workspace"
-    that you use for a specific set of tasks; you don't want to, or need to,
-    share that session with other threads who are doing some other task.
+Keep the lifecycle of the session (and usually the transaction)
+**separate and external**::
 
-    If there are in fact multiple threads participating
-    in the same task, then you may consider sharing the session between
-    those threads, though this would be an extremely unusual scenario.
-    In this case it would be necessary
-    to implement a proper locking scheme so that the :class:`.Session` is still not
-    exposed to concurrent access.
+    ### this is a **better** (but not the only) way to do it ###
 
+    class ThingOne(object):
+        def go(self, session):
+            session.query(FooBar).update({"x": 5})
+
+    class ThingTwo(object):
+        def go(self, session):
+            session.query(Widget).update({"q": 18})
+
+    def run_my_program():
+        session = Session()
+        try:
+            ThingOne().go(session)
+            ThingTwo().go(session)
+
+            session.commit()
+        except:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+The advanced developer will try to keep the details of session, transaction
+and exception management as far as possible from the details of the program
+doing its work.   For example, we can further separate concerns using a `context manager <http://docs.python.org/3/library/contextlib.html#contextlib.contextmanager>`_::
+
+    ### another way (but again *not the only way*) to do it ###
+
+    from contextlib import contextmanager
+
+    @contextmanager
+    def session_scope():
+        """Provide a transactional scope around a series of operations."""
+        session = Session()
+        try:
+            yield session
+            session.commit()
+        except:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+
+    def run_my_program():
+        with session_scope() as session:
+            ThingOne().go(session)
+            ThingTwo().go(session)
+
+
+Is the Session a cache?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Yeee...no. It's somewhat used as a cache, in that it implements the
+:term:`identity map` pattern, and stores objects keyed to their primary key.
+However, it doesn't do any kind of query caching. This means, if you say
+``session.query(Foo).filter_by(name='bar')``, even if ``Foo(name='bar')``
+is right there, in the identity map, the session has no idea about that.
+It has to issue SQL to the database, get the rows back, and then when it
+sees the primary key in the row, *then* it can look in the local identity
+map and see that the object is already there. It's only when you say
+``query.get({some primary key})`` that the
+:class:`~sqlalchemy.orm.session.Session` doesn't have to issue a query.
+
+Additionally, the Session stores object instances using a weak reference
+by default. This also defeats the purpose of using the Session as a cache.
+
+The :class:`.Session` is not designed to be a
+global object from which everyone consults as a "registry" of objects.
+That's more the job of a **second level cache**.   SQLAlchemy provides
+a pattern for implementing second level caching using `dogpile.cache <http://dogpilecache.readthedocs.org/>`_,
+via the :ref:`examples_caching` example.
+
+How can I get the :class:`~sqlalchemy.orm.session.Session` for a certain object?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Use the :meth:`~.Session.object_session` classmethod
+available on :class:`~sqlalchemy.orm.session.Session`::
+
+    session = Session.object_session(someobject)
+
+The newer :ref:`core_inspection_toplevel` system can also be used::
+
+    from sqlalchemy import inspect
+    session = inspect(someobject).session
+
+.. _session_faq_threadsafe:
+
+Is the session thread-safe?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The :class:`.Session` is very much intended to be used in a
+**non-concurrent** fashion, which usually means in only one thread at a
+time.
+
+The :class:`.Session` should be used in such a way that one
+instance exists for a single series of operations within a single
+transaction.   One expedient way to get this effect is by associating
+a :class:`.Session` with the current thread (see :ref:`unitofwork_contextual`
+for background).  Another is to use a pattern
+where the :class:`.Session` is passed between functions and is otherwise
+not shared with other threads.
+
+The bigger point is that you should not *want* to use the session
+with multiple concurrent threads. That would be like having everyone at a
+restaurant all eat from the same plate. The session is a local "workspace"
+that you use for a specific set of tasks; you don't want to, or need to,
+share that session with other threads who are doing some other task.
+
+Making sure the :class:`.Session` is only used in a single concurrent thread at a time
+is called a "share nothing" approach to concurrency.  But actually, not
+sharing the :class:`.Session` implies a more significant pattern; it
+means not just the :class:`.Session` object itself, but
+also **all objects that are associated with that Session**, must be kept within
+the scope of a single concurrent thread.   The set of mapped
+objects associated with a :class:`.Session` are essentially proxies for data
+within database rows accessed over a database connection, and so just like
+the :class:`.Session` itself, the whole
+set of objects is really just a large-scale proxy for a database connection
+(or connections).  Ultimately, it's mostly the DBAPI connection itself that
+we're keeping away from concurrent access; but since the :class:`.Session`
+and all the objects associated with it are all proxies for that DBAPI connection,
+the entire graph is essentially not safe for concurrent access.
+
+If there are in fact multiple threads participating
+in the same task, then you may consider sharing the session and its objects between
+those threads; however, in this extremely unusual scenario the application would
+need to ensure that a proper locking scheme is implemented so that there isn't
+*concurrent* access to the :class:`.Session` or its state.   A more common approach
+to this situation is to maintain a single :class:`.Session` per concurrent thread,
+but to instead *copy* objects from one :class:`.Session` to another, often
+using the :meth:`.Session.merge` method to copy the state of an object into
+a new object local to a different :class:`.Session`.
 
 Querying
 --------
@@ -678,6 +801,8 @@ into the Session's list of objects to be marked as deleted::
 
     # commit (or flush)
     session.commit()
+
+.. _session_deleting_from_collections:
 
 Deleting from Collections
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1472,6 +1597,8 @@ flush/commit operation, the ``value`` attribute on ``someobject`` above is
 expired, so that when next accessed the newly generated value will be loaded
 from the database.
 
+.. _session_sql_expressions:
+
 Using SQL Expressions with Sessions
 ====================================
 
@@ -1521,8 +1648,8 @@ proper context for the desired engine::
 
 .. _session_external_transaction:
 
-Joining a Session into an External Transaction
-===============================================
+Joining a Session into an External Transaction (such as for test suites)
+========================================================================
 
 If a :class:`.Connection` is being used which is already in a transactional
 state (i.e. has a :class:`.Transaction` established), a :class:`.Session` can
@@ -1559,11 +1686,12 @@ entire database interaction is rolled back::
             self.session.commit()
 
         def tearDown(self):
+            self.session.close()
+
             # rollback - everything that happened with the
             # Session above (including calls to commit())
             # is rolled back.
             self.trans.rollback()
-            self.session.close()
 
             # return connection to the Engine
             self.connection.close()
@@ -1574,6 +1702,42 @@ of the :class:`.Connection` object's ability to maintain *subtransactions*, or
 nested begin/commit-or-rollback pairs where only the outermost begin/commit
 pair actually commits the transaction, or if the outermost block rolls back,
 everything is rolled back.
+
+.. topic:: Supporting Tests with Rollbacks
+
+   The above recipe works well for any kind of database enabled test, except
+   for a test that needs to actually invoke :meth:`.Session.rollback` within
+   the scope of the test itself.   The above recipe can be expanded, such
+   that the :class:`.Session` always runs all operations within the scope
+   of a SAVEPOINT, which is established at the start of each transaction,
+   so that tests can also rollback the "transaction" as well while still
+   remaining in the scope of a larger "transaction" that's never committed,
+   using two extra events::
+
+      from sqlalchemy import event
+
+      class SomeTest(TestCase):
+          def setUp(self):
+              # connect to the database
+              self.connection = engine.connect()
+
+              # begin a non-ORM transaction
+              self.trans = connection.begin()
+
+              # bind an individual Session to the connection
+              self.session = Session(bind=self.connection)
+
+              # start the session in a SAVEPOINT...
+              self.session.begin_nested()
+
+              # then each time that SAVEPOINT ends, reopen it
+              @event.listens_for(self.session, "after_transaction_end")
+              def restart_savepoint(session, transaction):
+                  if transaction.nested and not transaction._parent.nested:
+                      session.begin_nested()
+
+
+          # ... the tearDown() method stays the same
 
 .. _unitofwork_contextual:
 
@@ -1636,7 +1800,7 @@ we call upon the registry a second time, we get back the **same** :class:`.Sessi
 This pattern allows disparate sections of the application to call upon a global
 :class:`.scoped_session`, so that all those areas may share the same session
 without the need to pass it explicitly.   The :class:`.Session` we've established
-in our registry will remain, until we explicitly tell our regsitry to dispose of it,
+in our registry will remain, until we explicitly tell our registry to dispose of it,
 by calling :meth:`.scoped_session.remove`::
 
     >>> Session.remove()
@@ -1928,12 +2092,10 @@ Session and sessionmaker()
 
 .. autoclass:: sessionmaker
     :members:
-    :show-inheritance:
     :inherited-members:
 
 .. autoclass:: sqlalchemy.orm.session.Session
    :members:
-   :show-inheritance:
    :inherited-members:
 
 .. autoclass:: sqlalchemy.orm.session.SessionTransaction

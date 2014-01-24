@@ -40,45 +40,20 @@ exactly one SQL statement against two tables will be emitted - the
 displayed result however will utilize dozens of lazyloads that all
 pull from cache.
 
-The demo scripts themselves, in order of complexity, are run as follows::
+The demo scripts themselves, in order of complexity, are run as Python
+modules so that relative imports work::
 
-   python examples/dogpile_caching/helloworld.py
+   python -m examples.dogpile_caching.helloworld
 
-   python examples/dogpile_caching/relationship_caching.py
+   python -m examples.dogpile_caching.relationship_caching
 
-   python examples/dogpile_caching/advanced.py
+   python -m examples.dogpile_caching.advanced
 
-   python examples/dogpile_caching/local_session_caching.py
+   python -m examples.dogpile_caching.local_session_caching
 
-
-Listing of files:
-
-    environment.py - Establish the Session, a dictionary
-    of "regions", a sample cache region against a .dbm
-    file, data / cache file paths, and configurations,
-    bootstrap fixture data if necessary.
-
-    caching_query.py - Represent functions and classes
-    which allow the usage of Dogpile caching with SQLAlchemy.
-    Introduces a query option called FromCache.
-
-    model.py - The datamodel, which represents Person that has multiple
-    Address objects, each with PostalCode, City, Country
-
-    fixture_data.py - creates demo PostalCode, Address, Person objects
-    in the database.
-
-    helloworld.py - the basic idea.
-
-    relationship_caching.py - Illustrates how to add cache options on
-    relationship endpoints, so that lazyloads load from cache.
-
-    advanced.py - Further examples of how to use FromCache.  Combines
-    techniques from the first two scripts.
-
-    local_session_caching.py - Grok everything so far ?   This example
-    creates a new dogpile.cache backend that will persist data in a dictionary
-    which is local to the current session.   remove() the session
-    and the cache is gone.
+.. autosource::
+    :files: environment.py, caching_query.py, model.py, fixture_data.py, \
+          helloworld.py, relationship_caching.py, advanced.py, \
+          local_session_caching.py
 
 """

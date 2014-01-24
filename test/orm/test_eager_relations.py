@@ -4,7 +4,8 @@ from sqlalchemy.testing import eq_, is_, is_not_
 import sqlalchemy as sa
 from sqlalchemy import testing
 from sqlalchemy.orm import joinedload, deferred, undefer, \
-    joinedload_all, backref, eagerload, Session, immediateload
+    joinedload_all, backref, eagerload, Session, immediateload,\
+    defaultload, Load
 from sqlalchemy import Integer, String, Date, ForeignKey, and_, select, \
     func
 from sqlalchemy.testing.schema import Table, Column
@@ -599,7 +600,6 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
         assert 'orders' not in noeagers[0].__dict__
         assert 'addresses' not in noeagers[0].__dict__
 
-    @testing.fails_on('maxdb', 'FIXME: unknown')
     def test_limit(self):
         """Limit operations combined with lazy-load relationships."""
 
@@ -654,7 +654,6 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
             eq_(self.static.user_address_result, l)
         self.assert_sql_count(testing.db, go, 1)
 
-    @testing.fails_on('maxdb', 'FIXME: unknown')
     def test_limit_2(self):
         keywords, items, item_keywords, Keyword, Item = (self.tables.keywords,
                                 self.tables.items,
@@ -676,7 +675,6 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
 
         eq_(self.static.item_keyword_result[1:3], l)
 
-    @testing.fails_on('maxdb', 'FIXME: unknown')
     def test_limit_3(self):
         """test that the ORDER BY is propagated from the inner
         select to the outer select, when using the
@@ -708,7 +706,7 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
 
         q = sess.query(User)
 
-        if not testing.against('maxdb', 'mssql'):
+        if not testing.against('mssql'):
             l = q.join('orders').order_by(Order.user_id.desc()).limit(2).offset(1)
             eq_([
                 User(id=9,
@@ -943,7 +941,6 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
             eq_([User(id=7, address=Address(id=1))], l)
         self.assert_sql_count(testing.db, go, 1)
 
-    @testing.fails_on('maxdb', 'FIXME: unknown')
     def test_many_to_one(self):
         users, Address, addresses, User = (self.tables.users,
                                 self.classes.Address,
@@ -1412,6 +1409,52 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
             "WHERE orders.description = :description_1"
         )
 
+    def test_propagated_lazyload_wildcard_unbound(self):
+        self._test_propagated_lazyload_wildcard(False)
+
+    def test_propagated_lazyload_wildcard_bound(self):
+        self._test_propagated_lazyload_wildcard(True)
+
+    def _test_propagated_lazyload_wildcard(self, use_load):
+        users, items, order_items, Order, Item, User, orders = (self.tables.users,
+                                self.tables.items,
+                                self.tables.order_items,
+                                self.classes.Order,
+                                self.classes.Item,
+                                self.classes.User,
+                                self.tables.orders)
+
+        mapper(User, users, properties=dict(
+            orders=relationship(Order, lazy="select")
+        ))
+        mapper(Order, orders, properties=dict(
+            items=relationship(Item, secondary=order_items, lazy="joined")
+        ))
+        mapper(Item, items)
+
+        sess = create_session()
+
+        if use_load:
+            opt = Load(User).defaultload("orders").lazyload("*")
+        else:
+            opt = defaultload("orders").lazyload("*")
+
+        q = sess.query(User).filter(User.id == 7).options(opt)
+
+        def go():
+            for u in q:
+                u.orders
+
+        self.sql_eq_(go, [
+            ("SELECT users.id AS users_id, users.name AS users_name "
+                "FROM users WHERE users.id = :id_1", {"id_1": 7}),
+            ("SELECT orders.id AS orders_id, orders.user_id AS orders_user_id, "
+            "orders.address_id AS orders_address_id, "
+            "orders.description AS orders_description, "
+            "orders.isopen AS orders_isopen FROM orders "
+            "WHERE :param_1 = orders.user_id", {"param_1": 7}),
+        ])
+
 
 
 class SubqueryAliasingTest(fixtures.MappedTest, testing.AssertsCompiledSQL):
@@ -1875,7 +1918,6 @@ class SelfReferentialEagerTest(fixtures.MappedTest):
             Column('parent_id', Integer, ForeignKey('nodes.id')),
             Column('data', String(30)))
 
-    @testing.fails_on('maxdb', 'FIXME: unknown')
     def test_basic(self):
         nodes = self.tables.nodes
 
@@ -2061,7 +2103,6 @@ class SelfReferentialEagerTest(fixtures.MappedTest):
             )
         )
 
-    @testing.fails_on('maxdb', 'FIXME: unknown')
     def test_no_depth(self):
         nodes = self.tables.nodes
 
@@ -2166,7 +2207,8 @@ class MixedSelfReferentialEagerTest(fixtures.MappedTest):
                     options(
                                 joinedload('parent_b1'),
                                 joinedload('parent_b2'),
-                                joinedload('parent_z')).
+                                joinedload('parent_z')
+                            ).
                             filter(B.id.in_([2, 8, 11])).order_by(B.id).all(),
                 [
                     B(id=2, parent_z=A(id=1), parent_b1=B(id=1), parent_b2=None),
@@ -2804,7 +2846,7 @@ class CyclicalInheritingEagerTestThree(fixtures.DeclarativeMappedTest,
         Director = self.classes.Director
         sess = create_session()
         self.assert_compile(
-            sess.query(PersistentObject).options(joinedload(Director.other, join_depth=1)),
+            sess.query(PersistentObject).options(joinedload(Director.other)),
             "SELECT persistent.id AS persistent_id, director.id AS director_id, "
             "director.other_id AS director_other_id, "
             "director.name AS director_name, persistent_1.id AS "

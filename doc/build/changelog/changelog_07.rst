@@ -7,8 +7,61 @@
     :version: 0.7.11
 
     .. change::
-      :tags: bug, orm
-      :tickets: 2699
+        :tags: bug, engine
+        :tickets: 2851
+        :versions: 0.8.3, 0.9.0b1
+
+        The regexp used by the :func:`~sqlalchemy.engine.url.make_url` function now parses
+        ipv6 addresses, e.g. surrounded by brackets.
+
+    .. change::
+        :tags: bug, orm
+        :tickets: 2807
+        :versions: 0.8.3, 0.9.0b1
+
+        Fixed bug where list instrumentation would fail to represent a
+        setslice of ``[0:0]`` correctly, which in particular could occur
+        when using ``insert(0, item)`` with the association proxy.  Due
+        to some quirk in Python collections, the issue was much more likely
+        with Python 3 rather than 2.
+
+    .. change::
+        :tags: bug, sql
+        :tickets: 2801
+        :versions: 0.8.3, 0.9.0b1
+
+        Fixed regression dating back to 0.7.9 whereby the name of a CTE might
+        not be properly quoted if it was referred to in multiple FROM clauses.
+
+    .. change::
+        :tags: mysql, bug
+        :tickets: 2791
+        :versions: 0.8.3, 0.9.0b1
+
+        Updates to MySQL reserved words for versions 5.5, 5.6, courtesy
+        Hanno Schlichting.
+
+    .. change::
+        :tags: sql, bug, cte
+        :tickets: 2783
+        :versions: 0.8.3, 0.9.0b1
+
+        Fixed bug in common table expression system where if the CTE were
+        used only as an ``alias()`` construct, it would not render using the
+        WITH keyword.
+
+    .. change::
+        :tags: bug, sql
+        :tickets: 2784
+        :versions: 0.8.3, 0.9.0b1
+
+        Fixed bug in :class:`.CheckConstraint` DDL where the "quote" flag from a
+        :class:`.Column` object would not be propagated.
+
+    .. change::
+        :tags: bug, orm
+        :tickets: 2699
+        :versions: 0.8.1
 
       Fixed bug when a query of the form:
       ``query(SubClass).options(subqueryload(Baseclass.attrname))``,
@@ -23,6 +76,7 @@
     .. change::
         :tags: bug, orm
         :tickets: 2689
+        :versions: 0.8.1
 
       Fixed bug in unit of work whereby a joined-inheritance
       subclass could insert the row for the "sub" table
@@ -32,6 +86,7 @@
     .. change::
         :tags: feature, postgresql
         :tickets: 2676
+        :versions: 0.8.0
 
       Added support for Postgresql's traditional SUBSTRING
       function syntax, renders as "SUBSTRING(x FROM y FOR z)"
@@ -72,6 +127,27 @@
 .. changelog::
     :version: 0.7.10
     :released: Thu Feb 7 2013
+
+    .. change::
+        :tags: engine, bug
+        :tickets: 2604
+        :versions: 0.8.0b2
+
+      Fixed :meth:`.MetaData.reflect` to correctly use
+      the given :class:`.Connection`, if given, without
+      opening a second connection from that connection's
+      :class:`.Engine`.
+
+    .. change::
+        :tags: mssql, bug
+        :tickets:2607
+        :versions: 0.8.0b2
+
+      Fixed bug whereby using "key" with Column
+      in conjunction with "schema" for the owning
+      Table would fail to locate result rows due
+      to the MSSQL dialect's "schema rendering"
+      logic's failure to take .key into account.
 
     .. change::
         :tags: sql, mysql, gae
@@ -131,6 +207,7 @@
     .. change::
         :tags: sqlite, bug
         :tickets: 2568
+        :versions: 0.8.0b2
 
       More adjustment to this SQLite related issue which was released in
       0.7.9, to intercept legacy SQLite quoting characters when reflecting
@@ -141,6 +218,7 @@
     .. change::
         :tags: sql, bug
         :tickets: 2631
+        :versions: 0.8.0b2
 
       Fixed bug where using server_onupdate=<FetchedValue|DefaultClause>
       without passing the "for_update=True" flag would apply the default
@@ -1131,12 +1209,12 @@
         :tickets:
 
       Added some decent context managers
-      to Engine, Connection:
+      to Engine, Connection::
 
           with engine.begin() as conn:
               <work with conn in a transaction>
 
-      and:
+      and::
 
           with engine.connect() as conn:
               <work with conn>
@@ -1387,10 +1465,10 @@
         :tickets: 2361
 
       Dialect-specific compilers now raise
-      CompileException for all type/statement compilation
+      CompileError for all type/statement compilation
       issues, instead of InvalidRequestError or ArgumentError.
       The DDL for CREATE TABLE will re-raise
-      CompileExceptions to include table/column information
+      CompileError to include table/column information
       for the problematic column.
 
     .. change::
@@ -1721,10 +1799,10 @@
       polymorphic_on now accepts many
       new kinds of values:
 
-        - standalone expressions that aren't
+        * standalone expressions that aren't
           otherwise mapped
-        - column_property() objects
-        - string names of any column_property()
+        * column_property() objects
+        * string names of any column_property()
           or attribute name of a mapped Column
 
       The docs include an example using
@@ -1890,7 +1968,7 @@
         :tickets: 1679
 
       a "has_schema" method has been implemented
-        on dialect, but only works on Postgresql so far.
+      on dialect, but only works on Postgresql so far.
       Courtesy Manlio Perillo.
 
     .. change::
@@ -2117,7 +2195,7 @@
 
       Enhanced the instrumentation in the ORM to support
       Py3K's new argument style of "required kw arguments",
-      i.e. fn(a, b, *, c, d), fn(a, b, *args, c, d).
+      i.e. fn(a, b, \*, c, d), fn(a, b, \*args, c, d).
       Argument signatures of mapped object's __init__
       method will be preserved, including required kw rules.
 
@@ -2139,8 +2217,9 @@
 
       Fixed a variety of synonym()-related regressions
       from 0.6:
-          - making a synonym against a synonym now works.
-          - synonyms made against a relationship() can
+
+          * making a synonym against a synonym now works.
+          * synonyms made against a relationship() can
             be passed to query.join(), options sent
             to query.options(), passed by name
             to query.with_parent().
@@ -2249,19 +2328,20 @@
         :tickets: 2239
 
       New declarative features:
-          - __declare_last__() method, establishes an event
-          listener for the class method that will be called
-          when mappers are completed with the final "configure"
-          step.
-          - __abstract__ flag.   The class will not be mapped
-          at all when this flag is present on the class.
-          - New helper classes ConcreteBase, AbstractConcreteBase.
-          Allow concrete mappings using declarative which automatically
-          set up the "polymorphic_union" when the "configure"
-          mapper step is invoked.
-          - The mapper itself has semi-private methods that allow
-          the "with_polymorphic" selectable to be assigned
-          to the mapper after it has already been configured.
+
+          * __declare_last__() method, establishes an event
+            listener for the class method that will be called
+            when mappers are completed with the final "configure"
+            step.
+          * __abstract__ flag.   The class will not be mapped
+            at all when this flag is present on the class.
+          * New helper classes ConcreteBase, AbstractConcreteBase.
+            Allow concrete mappings using declarative which automatically
+            set up the "polymorphic_union" when the "configure"
+            mapper step is invoked.
+          * The mapper itself has semi-private methods that allow
+            the "with_polymorphic" selectable to be assigned
+            to the mapper after it has already been configured.
 
     .. change::
         :tags: orm
@@ -2799,7 +2879,7 @@
         :tickets: 2206
 
       Fixed bug whereby adaptation of old append_ddl_listener()
-      function was passing unexpected **kw through
+      function was passing unexpected \**kw through
       to the Table event.   Table gets no kws, the MetaData
       event in 0.6 would get "tables=somecollection",
       this behavior is preserved.
@@ -4101,6 +4181,10 @@
 
       Mutation Event Extension, supercedes "mutable=True"
 
+      .. seealso::
+
+          :ref:`07_migration_mutation_extension`
+
     .. change::
         :tags: orm
         :tickets: 1980
@@ -4264,7 +4348,7 @@
         :tickets: 1069
 
       Query.distinct() now accepts column expressions
-      as *args, interpreted by the Postgresql dialect
+      as \*args, interpreted by the Postgresql dialect
       as DISTINCT ON (<expr>).
 
     .. change::
@@ -4364,7 +4448,7 @@
         :tickets: 1069
 
       select.distinct() now accepts column expressions
-      as *args, interpreted by the Postgresql dialect
+      as \*args, interpreted by the Postgresql dialect
       as DISTINCT ON (<expr>).  Note this was already
       available via passing a list to the `distinct`
       keyword argument to select().
@@ -4374,7 +4458,7 @@
         :tickets:
 
       select.prefix_with() accepts multiple expressions
-      (i.e. *expr), 'prefix' keyword argument to select()
+      (i.e. \*expr), 'prefix' keyword argument to select()
       accepts a list or tuple.
 
     .. change::

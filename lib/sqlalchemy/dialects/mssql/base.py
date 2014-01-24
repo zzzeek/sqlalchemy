@@ -1,5 +1,5 @@
 # mssql/base.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -103,21 +103,48 @@ for these types will be issued as DATETIME.
 
 .. _mssql_indexes:
 
-MSSQL-Specific Index Options
------------------------------
+Clustered Index Support
+-----------------------
 
-The MSSQL dialect supports special options for :class:`.Index`.
+The MSSQL dialect supports clustered indexes (and primary keys) via the
+``mssql_clustered`` option.  This option is available to :class:`.Index`,
+:class:`.UniqueConstraint`. and :class:`.PrimaryKeyConstraint`.
 
-CLUSTERED
-^^^^^^^^^^
-
-The ``mssql_clustered`` option  adds the CLUSTERED keyword to the index::
+To generate a clustered index::
 
     Index("my_index", table.c.x, mssql_clustered=True)
 
-would render the index as ``CREATE CLUSTERED INDEX my_index ON table (x)``
+which renders the index as ``CREATE CLUSTERED INDEX my_index ON table (x)``.
 
 .. versionadded:: 0.8
+
+To generate a clustered primary key use::
+
+    Table('my_table', metadata,
+          Column('x', ...),
+          Column('y', ...),
+          PrimaryKeyConstraint("x", "y", mssql_clustered=True))
+
+which will render the table, for example, as::
+
+  CREATE TABLE my_table (x INTEGER NOT NULL, y INTEGER NOT NULL, PRIMARY KEY CLUSTERED (x, y))
+
+Similarly, we can generate a clustered unique constraint using::
+
+    Table('my_table', metadata,
+          Column('x', ...),
+          Column('y', ...),
+          PrimaryKeyConstraint("x"),
+          UniqueConstraint("y", mssql_clustered=True),
+          )
+
+  .. versionadded:: 0.9.2
+
+MSSQL-Specific Index Options
+-----------------------------
+
+In addition to clustering, the MSSQL dialect supports other special options
+for :class:`.Index`.
 
 INCLUDE
 ^^^^^^^
@@ -991,7 +1018,7 @@ class MSDDLCompiler(compiler.DDLCompiler):
             text += "UNIQUE "
 
         # handle clustering option
-        if index.kwargs.get("mssql_clustered"):
+        if index.dialect_options['mssql']['clustered']:
             text += "CLUSTERED "
 
         text += "INDEX %s ON %s (%s)" \
@@ -1001,29 +1028,61 @@ class MSDDLCompiler(compiler.DDLCompiler):
                         preparer.format_table(index.table),
                        ', '.join(
                             self.sql_compiler.process(expr,
-                                include_table=False) for
+                                include_table=False, literal_binds=True) for
                                 expr in index.expressions)
                         )
 
         # handle other included columns
-        if index.kwargs.get("mssql_include"):
+        if index.dialect_options['mssql']['include']:
             inclusions = [index.table.c[col]
                             if isinstance(col, util.string_types) else col
-                          for col in index.kwargs["mssql_include"]]
+                          for col in index.dialect_options['mssql']['include']]
 
             text += " INCLUDE (%s)" \
-                % ', '.join([preparer.quote(c.name, c.quote)
+                % ', '.join([preparer.quote(c.name)
                              for c in inclusions])
 
         return text
 
     def visit_drop_index(self, drop):
-        return "\nDROP INDEX %s.%s" % (
-            self.preparer.quote_identifier(drop.element.table.name),
-            self._prepared_index_name(drop.element,
-                                        include_schema=True)
+        return "\nDROP INDEX %s ON %s" % (
+            self._prepared_index_name(drop.element, include_schema=False),
+            self.preparer.format_table(drop.element.table)
             )
 
+    def visit_primary_key_constraint(self, constraint):
+        if len(constraint) == 0:
+            return ''
+        text = ""
+        if constraint.name is not None:
+            text += "CONSTRAINT %s " % \
+                    self.preparer.format_constraint(constraint)
+        text += "PRIMARY KEY "
+
+        if constraint.dialect_options['mssql']['clustered']:
+            text += "CLUSTERED "
+
+        text += "(%s)" % ', '.join(self.preparer.quote(c.name)
+                                   for c in constraint)
+        text += self.define_constraint_deferrability(constraint)
+        return text
+
+    def visit_unique_constraint(self, constraint):
+        if len(constraint) == 0:
+            return ''
+        text = ""
+        if constraint.name is not None:
+            text += "CONSTRAINT %s " % \
+                    self.preparer.format_constraint(constraint)
+        text += "UNIQUE "
+
+        if constraint.dialect_options['mssql']['clustered']:
+            text += "CLUSTERED "
+
+        text += "(%s)" % ', '.join(self.preparer.quote(c.name)
+                                   for c in constraint)
+        text += self.define_constraint_deferrability(constraint)
+        return text
 
 class MSIdentifierPreparer(compiler.IdentifierPreparer):
     reserved_words = RESERVED_WORDS
@@ -1035,7 +1094,7 @@ class MSIdentifierPreparer(compiler.IdentifierPreparer):
     def _escape_identifier(self, value):
         return value
 
-    def quote_schema(self, schema, force=True):
+    def quote_schema(self, schema, force=None):
         """Prepare a quoted table and schema name."""
         result = '.'.join([self.quote(x, force) for x in schema.split('.')])
         return result
@@ -1104,6 +1163,19 @@ class MSDialect(default.DefaultDialect):
     ddl_compiler = MSDDLCompiler
     type_compiler = MSTypeCompiler
     preparer = MSIdentifierPreparer
+
+    construct_arguments = [
+        (sa_schema.PrimaryKeyConstraint, {
+            "clustered": False
+        }),
+        (sa_schema.UniqueConstraint, {
+            "clustered": False
+        }),
+        (sa_schema.Index, {
+            "clustered": False,
+            "include": None
+        })
+    ]
 
     def __init__(self,
                  query_timeout=None,

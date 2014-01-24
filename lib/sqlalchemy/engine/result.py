@@ -1,5 +1,5 @@
 # engine/result.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -9,8 +9,8 @@ and :class:`.RowProxy."""
 
 
 
-from .. import exc, types, util
-from ..sql import expression
+from .. import exc, util
+from ..sql import expression, sqltypes
 import collections
 
 # This reconstructor is necessary so that pickles with the C extension or
@@ -125,8 +125,11 @@ class RowProxy(BaseRowProxy):
 
     __hash__ = None
 
+    def __lt__(self, other):
+        return tuple(self) < tuple(other)
+
     def __eq__(self, other):
-        return other is self or other == tuple(self)
+        return other is self or tuple(other) == tuple(self)
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -205,10 +208,10 @@ class ResultMetaData(object):
                                                     else colname.lower()]
                 except KeyError:
                     name, obj, type_ = \
-                        colname, None, typemap.get(coltype, types.NULLTYPE)
+                        colname, None, typemap.get(coltype, sqltypes.NULLTYPE)
             else:
                 name, obj, type_ = \
-                        colname, None, typemap.get(coltype, types.NULLTYPE)
+                        colname, None, typemap.get(coltype, sqltypes.NULLTYPE)
 
             processor = context.get_result_processor(type_, colname, coltype)
 
@@ -620,6 +623,24 @@ class ResultProxy(object):
             return self.context.compiled_parameters
         else:
             return self.context.compiled_parameters[0]
+
+    @property
+    def returned_defaults(self):
+        """Return the values of default columns that were fetched using
+        the :meth:`.ValuesBase.return_defaults` feature.
+
+        The value is an instance of :class:`.RowProxy`, or ``None``
+        if :meth:`.ValuesBase.return_defaults` was not used or if the
+        backend does not support RETURNING.
+
+        .. versionadded:: 0.9.0
+
+        .. seealso::
+
+            :meth:`.ValuesBase.return_defaults`
+
+        """
+        return self.context.returned_defaults
 
     def lastrow_has_defaults(self):
         """Return ``lastrow_has_defaults()`` from the underlying

@@ -1,5 +1,5 @@
 # orm/scoping.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -163,7 +163,7 @@ def makeprop(name):
     return property(get, set)
 
 for prop in ('bind', 'dirty', 'deleted', 'new', 'identity_map',
-             'is_active', 'autoflush', 'no_autoflush'):
+             'is_active', 'autoflush', 'no_autoflush', 'info'):
     setattr(scoped_session, prop, makeprop(prop))
 
 

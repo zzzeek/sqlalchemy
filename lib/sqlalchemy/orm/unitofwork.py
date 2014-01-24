@@ -1,5 +1,5 @@
 # orm/unitofwork.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -16,8 +16,6 @@ from .. import util, event
 from ..util import topological
 from . import attributes, persistence, util as orm_util
 
-sessionlib = util.importlater("sqlalchemy.orm", "session")
-
 
 def track_cascade_events(descriptor, prop):
     """Establish event listeners on object attributes which handle
@@ -33,7 +31,7 @@ def track_cascade_events(descriptor, prop):
         if item is None:
             return
 
-        sess = sessionlib._state_session(state)
+        sess = state.session
         if sess:
             if sess._warn_on_events:
                 sess._flush_warning("collection append")
@@ -50,7 +48,7 @@ def track_cascade_events(descriptor, prop):
         if item is None:
             return
 
-        sess = sessionlib._state_session(state)
+        sess = state.session
         if sess:
 
             prop = state.manager.mapper._props[key]
@@ -74,7 +72,7 @@ def track_cascade_events(descriptor, prop):
         if oldvalue is newvalue:
             return newvalue
 
-        sess = sessionlib._state_session(state)
+        sess = state.session
         if sess:
 
             if sess._warn_on_events:

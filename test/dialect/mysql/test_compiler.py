@@ -6,6 +6,7 @@ from sqlalchemy import sql, exc, schema, types as sqltypes
 from sqlalchemy.dialects.mysql import base as mysql
 from sqlalchemy.testing import fixtures, AssertsCompiledSQL
 from sqlalchemy import testing
+from sqlalchemy.sql import table, column
 
 class CompileTest(fixtures.TestBase, AssertsCompiledSQL):
 
@@ -94,18 +95,56 @@ class CompileTest(fixtures.TestBase, AssertsCompiledSQL):
             "CREATE TABLE testtbl (data VARCHAR(255), "
             "PRIMARY KEY (data) USING btree)")
 
-    def test_skip_deferrable_kw(self):
+    def test_create_index_expr(self):
+        m = MetaData()
+        t1 = Table('foo', m,
+                Column('x', Integer)
+            )
+        self.assert_compile(
+            schema.CreateIndex(Index("bar", t1.c.x > 5)),
+            "CREATE INDEX bar ON foo (x > 5)"
+        )
+
+    def test_deferrable_initially_kw_not_ignored(self):
         m = MetaData()
         t1 = Table('t1', m, Column('id', Integer, primary_key=True))
         t2 = Table('t2', m, Column('id', Integer,
-                        ForeignKey('t1.id', deferrable=True),
+                        ForeignKey('t1.id', deferrable=True, initially="XYZ"),
                             primary_key=True))
 
         self.assert_compile(
             schema.CreateTable(t2),
             "CREATE TABLE t2 (id INTEGER NOT NULL, "
-            "PRIMARY KEY (id), FOREIGN KEY(id) REFERENCES t1 (id))"
+            "PRIMARY KEY (id), FOREIGN KEY(id) REFERENCES t1 (id) DEFERRABLE INITIALLY XYZ)"
         )
+
+    def test_match_kw_raises(self):
+        m = MetaData()
+        t1 = Table('t1', m, Column('id', Integer, primary_key=True))
+        t2 = Table('t2', m, Column('id', Integer,
+                        ForeignKey('t1.id', match="XYZ"),
+                            primary_key=True))
+
+        assert_raises_message(
+            exc.CompileError,
+            "MySQL ignores the 'MATCH' keyword while at the same time causes "
+            "ON UPDATE/ON DELETE clauses to be ignored.",
+            schema.CreateTable(t2).compile, dialect=mysql.dialect()
+        )
+
+    def test_for_update(self):
+        table1 = table('mytable',
+                    column('myid'), column('name'), column('description'))
+
+        self.assert_compile(
+            table1.select(table1.c.myid == 7).with_for_update(),
+            "SELECT mytable.myid, mytable.name, mytable.description "
+            "FROM mytable WHERE mytable.myid = %s FOR UPDATE")
+
+        self.assert_compile(
+            table1.select(table1.c.myid == 7).with_for_update(read=True),
+            "SELECT mytable.myid, mytable.name, mytable.description "
+            "FROM mytable WHERE mytable.myid = %s LOCK IN SHARE MODE")
 
 class SQLTest(fixtures.TestBase, AssertsCompiledSQL):
     """Tests MySQL-dialect specific compilation."""
@@ -302,8 +341,10 @@ class SQLTest(fixtures.TestBase, AssertsCompiledSQL):
             (VARCHAR, "CAST(t.col AS CHAR)"),
             (NCHAR, "CAST(t.col AS CHAR)"),
             (CHAR, "CAST(t.col AS CHAR)"),
+            (m.CHAR(charset='utf8'), "CAST(t.col AS CHAR CHARACTER SET utf8)"),
             (CLOB, "CAST(t.col AS CHAR)"),
             (TEXT, "CAST(t.col AS CHAR)"),
+            (m.TEXT(charset='utf8'), "CAST(t.col AS CHAR CHARACTER SET utf8)"),
             (String(32), "CAST(t.col AS CHAR(32))"),
             (Unicode(32), "CAST(t.col AS CHAR(32))"),
             (CHAR(32), "CAST(t.col AS CHAR(32))"),

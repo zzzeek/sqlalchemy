@@ -522,7 +522,7 @@ accepted as a FROM clause within the core::
     stmt = select([User]).where(User.id == 5)
 
 Above, the mapped ``User`` class will expand into
-:class:`.Table` to which :class:`.User` is mapped.
+the :class:`.Table` to which ``User`` is mapped.
 
 :ticket:`2245`
 
@@ -1235,7 +1235,7 @@ No more magic coercion of "=" to IN when comparing to subquery in MS-SQL
 ------------------------------------------------------------------------
 
 We found a very old behavior in the MSSQL dialect which
-would attempt to rescue the user from his or herself when
+would attempt to rescue users from themselves when
 doing something like this:
 
 ::

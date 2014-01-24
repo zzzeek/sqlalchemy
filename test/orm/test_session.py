@@ -395,6 +395,27 @@ class SessionStateTest(_fixtures.FixtureTest):
     run_inserts = None
 
 
+    def test_info(self):
+        s = Session()
+        eq_(s.info, {})
+
+        maker = sessionmaker(info={"global": True, "s1": 5})
+
+        s1 = maker()
+        s2 = maker(info={"s1": 6, "s2": True})
+
+        eq_(s1.info, {"global": True, "s1": 5})
+        eq_(s2.info, {"global": True, "s1": 6, "s2": True})
+        s2.info["global"] = False
+        s2.info["s1"] = 7
+
+        s3 = maker()
+        eq_(s3.info, {"global": True, "s1": 5})
+
+        maker2 = sessionmaker()
+        s4 = maker2(info={'s4': 8})
+        eq_(s4.info, {'s4': 8})
+
     @testing.requires.independent_connections
     @engines.close_open_connections
     def test_autoflush(self):
@@ -418,7 +439,6 @@ class SessionStateTest(_fixtures.FixtureTest):
         eq_(bind.connect().execute("select count(1) from users").scalar(), 1)
         sess.close()
 
-    @testing.requires.python26
     def test_with_no_autoflush(self):
         User, users = self.classes.User, self.tables.users
 

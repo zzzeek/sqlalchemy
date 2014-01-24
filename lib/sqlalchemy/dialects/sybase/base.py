@@ -1,5 +1,5 @@
 # sybase/base.py
-# Copyright (C) 2010-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2010-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 # get_select_precolumns(), limit_clause() implementation
 # copyright (C) 2007 Fisch Asset Management
 # AG http://www.fam.ch, with coding by Alexander Houben
@@ -439,6 +439,8 @@ class SybaseDialect(default.DefaultDialect):
     ddl_compiler = SybaseDDLCompiler
     preparer = SybaseIdentifierPreparer
     inspector = SybaseInspector
+
+    construct_arguments = []
 
     def _get_default_schema_name(self, connection):
         return connection.scalar(

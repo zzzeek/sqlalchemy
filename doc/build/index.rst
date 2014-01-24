@@ -1,3 +1,5 @@
+:orphan:
+
 .. _index_toplevel:
 
 ========================
@@ -11,6 +13,7 @@ A high level view and getting set up.
 
 :ref:`Overview <overview>` |
 :ref:`Installation Guide <installation>` |
+:doc:`Frequently Asked Questions <faq>` |
 :doc:`Migration from 0.8 <changelog/migration_09>` |
 :doc:`Glossary <glossary>` |
 :doc:`Changelog catalog <changelog/index>`
@@ -36,6 +39,7 @@ of Python objects, proceed first to the tutorial.
   :doc:`Declarative Extension <orm/extensions/declarative>` |
   :doc:`Association Proxy <orm/extensions/associationproxy>` |
   :doc:`Hybrid Attributes <orm/extensions/hybrid>` |
+  :doc:`Automap <orm/extensions/automap>` (**new**) |
   :doc:`Mutable Scalars <orm/extensions/mutable>` |
   :doc:`Ordered List <orm/extensions/orderinglist>`
 
@@ -74,11 +78,11 @@ are documented here.  In contrast to the ORM's domain-centric mode of usage, the
   :doc:`Connection Pooling <core/pooling>`
 
 * **Schema Definition:**
-  :ref:`Tables and Columns <metadata_describing>` |
-  :ref:`Database Introspection (Reflection) <metadata_reflection>` |
-  :ref:`Insert/Update Defaults <metadata_defaults>` |
-  :ref:`Constraints and Indexes <metadata_constraints>` |
-  :ref:`Using Data Definition Language (DDL) <metadata_ddl>`
+  :ref:`Tables and Columns <metadata_describing_toplevel>` |
+  :ref:`Database Introspection (Reflection) <metadata_reflection_toplevel>` |
+  :ref:`Insert/Update Defaults <metadata_defaults_toplevel>` |
+  :ref:`Constraints and Indexes <metadata_constraints_toplevel>` |
+  :ref:`Using Data Definition Language (DDL) <metadata_ddl_toplevel>`
 
 * **Datatypes:**
   :ref:`Overview <types_toplevel>` |

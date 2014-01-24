@@ -1,5 +1,5 @@
 # sqlalchemy/inspect.py
-# Copyright (C) 2005-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2005-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -39,11 +39,11 @@ def inspect(subject, raiseerr=True):
 
     The returned value in some cases may be the
     same object as the one given, such as if a
-    :class:`.orm.Mapper` object is passed.   In other
+    :class:`.Mapper` object is passed.   In other
     cases, it will be an instance of the registered
     inspection type for the given object, such as
-    if a :class:`.engine.Engine` is passed, an
-    :class:`.engine.Inspector` object is returned.
+    if an :class:`.engine.Engine` is passed, an
+    :class:`.Inspector` object is returned.
 
     :param subject: the subject to be inspected.
     :param raiseerr: When ``True``, if the given subject
@@ -87,5 +87,6 @@ def _inspects(*types):
     return decorate
 
 
-def _self_inspects(*types):
-    _inspects(*types)(True)
+def _self_inspects(cls):
+    _inspects(cls)(True)
+    return cls

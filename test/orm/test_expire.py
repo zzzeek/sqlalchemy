@@ -4,7 +4,7 @@ from sqlalchemy.testing import eq_, assert_raises, assert_raises_message
 from sqlalchemy.testing.util import gc_collect
 import sqlalchemy as sa
 from sqlalchemy import testing
-from sqlalchemy import Integer, String, ForeignKey, exc as sa_exc
+from sqlalchemy import Integer, String, ForeignKey, exc as sa_exc, FetchedValue
 from sqlalchemy.testing.schema import Table
 from sqlalchemy.testing.schema import Column
 from sqlalchemy.orm import mapper, relationship, create_session, \
@@ -12,7 +12,7 @@ from sqlalchemy.orm import mapper, relationship, create_session, \
                         strategies, state, lazyload, backref, Session
 from sqlalchemy.testing import fixtures
 from test.orm import _fixtures
-
+from sqlalchemy.sql import select
 
 class ExpireTest(_fixtures.FixtureTest):
 
@@ -375,7 +375,7 @@ class ExpireTest(_fixtures.FixtureTest):
         o = sess.query(Order).get(3)
         sess.expire(o)
 
-        orders.update(id=3).execute(description='order 3 modified')
+        orders.update().execute(description='order 3 modified')
         assert o.isopen == 1
         assert attributes.instance_state(o).dict['description'] == 'order 3 modified'
         def go():
@@ -850,11 +850,11 @@ class ExpireTest(_fixtures.FixtureTest):
         assert len(u.addresses) == 3
         sess.expire(u)
         assert 'addresses' not in u.__dict__
-        print("-------------------------------------------")
         sess.query(User).filter_by(id=8).all()
         assert 'addresses' in u.__dict__
         assert len(u.addresses) == 3
 
+    @testing.requires.predictable_gc
     def test_expire_all(self):
         users, Address, addresses, User = (self.tables.users,
                                 self.classes.Address,
@@ -869,16 +869,16 @@ class ExpireTest(_fixtures.FixtureTest):
 
         sess = create_session()
         userlist = sess.query(User).order_by(User.id).all()
-        assert self.static.user_address_result == userlist
-        assert len(list(sess)) == 9
+        eq_(self.static.user_address_result, userlist)
+        eq_(len(list(sess)), 9)
         sess.expire_all()
         gc_collect()
-        assert len(list(sess)) == 4 # since addresses were gc'ed
+        eq_(len(list(sess)), 4) # since addresses were gc'ed
 
         userlist = sess.query(User).order_by(User.id).all()
         u = userlist[1]
         eq_(self.static.user_address_result, userlist)
-        assert len(list(sess)) == 9
+        eq_(len(list(sess)), 9)
 
     def test_state_change_col_to_deferred(self):
         """Behavioral test to verify the current activity of loader callables."""
@@ -1184,6 +1184,152 @@ class ExpiredPendingTest(_fixtures.FixtureTest):
         assert len(u1.addresses) == 3
 
 
+class LifecycleTest(fixtures.MappedTest):
+    @classmethod
+    def define_tables(cls, metadata):
+        Table("data", metadata,
+            Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
+            Column('data', String(30)),
+        )
+        Table("data_fetched", metadata,
+            Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
+            Column('data', String(30), FetchedValue()),
+        )
+        Table("data_defer", metadata,
+            Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
+            Column('data', String(30)),
+            Column('data2', String(30)),
+        )
+
+    @classmethod
+    def setup_classes(cls):
+        class Data(cls.Comparable):
+            pass
+        class DataFetched(cls.Comparable):
+            pass
+        class DataDefer(cls.Comparable):
+            pass
+
+    @classmethod
+    def setup_mappers(cls):
+        mapper(cls.classes.Data, cls.tables.data)
+        mapper(cls.classes.DataFetched, cls.tables.data_fetched)
+        mapper(cls.classes.DataDefer, cls.tables.data_defer, properties={
+                "data": deferred(cls.tables.data_defer.c.data)
+            })
+
+    def test_attr_not_inserted(self):
+        Data = self.classes.Data
+
+        sess = create_session()
+
+        d1 = Data()
+        sess.add(d1)
+        sess.flush()
+
+        # we didn't insert a value for 'data',
+        # so its not in dict, but also when we hit it, it isn't
+        # expired because there's no column default on it or anyhting like that
+        assert 'data' not in d1.__dict__
+        def go():
+            eq_(d1.data, None)
+
+        self.assert_sql_count(
+            testing.db,
+            go,
+            0
+        )
+
+    def test_attr_not_inserted_expired(self):
+        Data = self.classes.Data
+
+        sess = create_session()
+
+        d1 = Data()
+        sess.add(d1)
+        sess.flush()
+
+        assert 'data' not in d1.__dict__
+
+        # with an expire, we emit
+        sess.expire(d1)
+
+        def go():
+            eq_(d1.data, None)
+
+        self.assert_sql_count(
+            testing.db,
+            go,
+            1
+        )
+
+    def test_attr_not_inserted_fetched(self):
+        Data = self.classes.DataFetched
+
+        sess = create_session()
+
+        d1 = Data()
+        sess.add(d1)
+        sess.flush()
+
+        assert 'data' not in d1.__dict__
+        def go():
+            eq_(d1.data, None)
+
+        # this one is marked as "fetch" so we emit SQL
+        self.assert_sql_count(
+            testing.db,
+            go,
+            1
+        )
+
+    def test_cols_missing_in_load(self):
+        Data = self.classes.Data
+
+        sess = create_session()
+
+        d1 = Data(data='d1')
+        sess.add(d1)
+        sess.flush()
+        sess.close()
+
+        sess = create_session()
+        d1 = sess.query(Data).from_statement(select([Data.id])).first()
+
+        # cols not present in the row are implicitly expired
+        def go():
+            eq_(d1.data, 'd1')
+
+        self.assert_sql_count(
+            testing.db, go, 1
+        )
+
+    def test_deferred_cols_missing_in_load_state_reset(self):
+        Data = self.classes.DataDefer
+
+        sess = create_session()
+
+        d1 = Data(data='d1')
+        sess.add(d1)
+        sess.flush()
+        sess.close()
+
+        sess = create_session()
+        d1 = sess.query(Data).from_statement(
+                        select([Data.id])).options(undefer(Data.data)).first()
+        d1.data = 'd2'
+
+        # the deferred loader has to clear out any state
+        # on the col, including that 'd2' here
+        d1 = sess.query(Data).populate_existing().first()
+
+        def go():
+            eq_(d1.data, 'd1')
+
+        self.assert_sql_count(
+            testing.db, go, 1
+        )
+
 class RefreshTest(_fixtures.FixtureTest):
 
     def test_refresh(self):
@@ -1290,7 +1436,6 @@ class RefreshTest(_fixtures.FixtureTest):
         s.expire(u)
         assert len(u.addresses) == 3
 
-    @testing.fails_on('maxdb', 'FIXME: unknown')
     def test_refresh2(self):
         """test a hang condition that was occurring on expire/refresh"""
 

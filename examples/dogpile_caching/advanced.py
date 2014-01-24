@@ -1,15 +1,13 @@
 """advanced.py
 
 Illustrate usage of Query combined with the FromCache option,
-including front-end loading, cache invalidation, namespace techniques
-and collection caching.
+including front-end loading, cache invalidation and collection caching.
 
 """
 
 from .environment import Session
-from .model import Person, Address, cache_address_bits
+from .model import Person, cache_address_bits
 from .caching_query import FromCache, RelationshipCache
-from sqlalchemy.orm import joinedload
 
 def load_name_range(start, end, invalidate=False):
     """Load Person objects on a range of names.
@@ -23,7 +21,7 @@ def load_name_range(start, end, invalidate=False):
     The `Person.addresses` collections are also cached.  Its basically
     another level of tuning here, as that particular cache option
     can be transparently replaced with joinedload(Person.addresses).
-    The effect is that each Person and his/her Address collection
+    The effect is that each Person and their Address collection
     is cached either together or separately, affecting the kind of
     SQL that emits for unloaded Person objects as well as the distribution
     of data within the cache.

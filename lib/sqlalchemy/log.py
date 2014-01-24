@@ -1,5 +1,5 @@
 # sqlalchemy/log.py
-# Copyright (C) 2006-2013 the SQLAlchemy authors and contributors <see AUTHORS file>
+# Copyright (C) 2006-2014 the SQLAlchemy authors and contributors <see AUTHORS file>
 # Includes alterations by Vinay Sajip vinay_sajip@yahoo.co.uk
 #
 # This module is part of SQLAlchemy and is released under
@@ -38,17 +38,13 @@ def _add_default_handler(logger):
 _logged_classes = set()
 
 
-def class_logger(cls, enable=False):
+def class_logger(cls):
     logger = logging.getLogger(cls.__module__ + "." + cls.__name__)
-    if enable == 'debug':
-        logger.setLevel(logging.DEBUG)
-    elif enable == 'info':
-        logger.setLevel(logging.INFO)
     cls._should_log_debug = lambda self: logger.isEnabledFor(logging.DEBUG)
     cls._should_log_info = lambda self: logger.isEnabledFor(logging.INFO)
     cls.logger = logger
     _logged_classes.add(cls)
-
+    return cls
 
 class Identified(object):
     logging_name = None
