@@ -1985,6 +1985,8 @@ class Enum(String, SchemaType):
 
         :param \*enums: string or unicode enumeration labels. If unicode
            labels are present, the `convert_unicode` flag is auto-enabled.
+           It is also possible to pass one list in case there are more than
+           255 labels, causing a syntax error.
 
         :param convert_unicode: Enable unicode-aware bind parameter and
            result-set processing for this Enum's data. This is set
@@ -2036,6 +2038,8 @@ class Enum(String, SchemaType):
            .. versionadded:: 0.8
 
         """
+        if len(enums) == 1 and isinstance(enums[0], (list, tuple)):
+            enums = enums[0]
         self.enums = enums
         self.native_enum = kw.pop('native_enum', True)
         convert_unicode = kw.pop('convert_unicode', None)
