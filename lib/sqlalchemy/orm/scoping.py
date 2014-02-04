@@ -73,6 +73,8 @@ class scoped_session(object):
     def __getattr__(self, attr):
         if attr in Session.public_methods:
             return getattr(self.registry(), attr)
+        else:
+            raise AttributeError(attr)
 
     def remove(self):
         """Dispose of the current :class:`.Session`, if present.
