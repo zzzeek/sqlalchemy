@@ -70,6 +70,10 @@ class scoped_session(object):
         else:
             return self.registry()
 
+    def __getattr__(self, attr):
+        if attr in Session.public_methods:
+            return getattr(self.registry(), attr)
+
     def remove(self):
         """Dispose of the current :class:`.Session`, if present.
 
@@ -143,15 +147,6 @@ class scoped_session(object):
 
 ScopedSession = scoped_session
 """Old name for backwards compatibility."""
-
-
-def instrument(name):
-    def do(self, *args, **kwargs):
-        return getattr(self.registry(), name)(*args, **kwargs)
-    return do
-
-for meth in Session.public_methods:
-    setattr(scoped_session, meth, instrument(meth))
 
 
 def makeprop(name):
