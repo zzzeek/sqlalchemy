@@ -886,6 +886,7 @@ class UnicodeTest(fixtures.TestBase):
                     ('mysql', 'mysqlconnector'),
                     ('sqlite', 'pysqlite'),
                     ('oracle', 'zxjdbc'),
+                    ('firebird', 'firebirdsql'),
                 )
 
             eq_(
