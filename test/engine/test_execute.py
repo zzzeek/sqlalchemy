@@ -59,6 +59,24 @@ class ExecuteTest(fixtures.TestBase):
                 scalar(stmt)
         eq_(result, '%')
 
+    @testing.fails_on_everything_except('mssql+pymssql')
+    def test_nextset(self):
+        conn = testing.db.connect()
+        test_data = ((1, 'jack'), (2, 'fred'), (3, 'ed'),
+                     (4, 'horse'), (5, 'barney'), (6, 'donkey'))
+        for user_id, user_name in test_data:
+            conn.execute('insert into users (user_id, user_name) '
+                         'values (%s, %s)', user_id, user_name)
+        res = conn.execute(
+            """select * from users where user_id in (1, 3, 5) order by user_id
+               select * from users where user_id in (2, 4, 6) order by user_id
+            """)
+        rows = res.fetchall(close=False)
+        assert rows == [(1, 'jack'), (3, 'ed'), (5, 'barney')]
+        res.nextset()
+        rows = res.fetchall()
+        assert rows == [(2, 'fred'), (4, 'horse'), (6, 'donkey')]
+
     @testing.fails_on_everything_except('firebird',
                                         'sqlite', '+pyodbc',
                                         '+mxodbc', '+zxjdbc', 'mysql+oursql')
