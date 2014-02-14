@@ -775,17 +775,26 @@ class ResultProxy(object):
             return [process_row(metadata, row, processors, keymap)
                     for row in rows]
 
-    def fetchall(self):
+    def fetchall(self, close=True):
         """Fetch all rows, just like DB-API ``cursor.fetchall()``."""
 
         try:
             l = self.process_rows(self._fetchall_impl())
-            self.close()
+            if close:
+                self.close()
             return l
         except Exception as e:
             self.connection._handle_dbapi_exception(
                                     e, None, None,
                                     self.cursor, self.context)
+
+    def nextset(self):
+        try:
+            return self.cursor.nextset()
+        except (AttributeError, self.dialect.dbapi.NotSupportedError):
+            raise exc.NotSupportedError(
+            "This dialect does not support nextset"
+            )
 
     def fetchmany(self, size=None):
         """Fetch many rows, just like DB-API
