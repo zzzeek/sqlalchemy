@@ -827,6 +827,9 @@ class SQLiteDialect(default.DefaultDialect):
             args = ''
         try:
             coltype = self.ischema_names[coltype]
+            if coltype == INTEGER:
+                # INTEGER type does not take arguments
+                args = ''
             if args is not None:
                 args = re.findall(r'(\d+)', args)
                 coltype = coltype(*[int(a) for a in args])
