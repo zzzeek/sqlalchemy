@@ -837,9 +837,10 @@ class SingletonThreadPool(Pool):
             pass
         c = self._create_connection()
         self._conn.current = weakref.ref(c)
-        self._all_conns.add(c)
-        if len(self._all_conns) > self.size:
-            self._cleanup()
+        if c not in self._all_conns:
+            if len(self._all_conns) >= self.size:
+                self._cleanup()
+            self._all_conns.add(c)
         return c
 
 
