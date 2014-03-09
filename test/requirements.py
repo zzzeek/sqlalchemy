@@ -727,7 +727,7 @@ class DefaultRequirements(SuiteRequirements):
 
     def _has_cextensions(self):
         try:
-            from sqlalchemy import cresultproxy, cprocessors
+            import sqlalchemy_speedups
             return True
         except ImportError:
             return False

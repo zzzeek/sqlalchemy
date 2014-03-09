@@ -7,16 +7,12 @@ Please see README for basic installation instructions.
 import os
 import re
 import sys
-from distutils.command.build_ext import build_ext
-from distutils.errors import (CCompilerError, DistutilsExecError,
-                              DistutilsPlatformError)
 try:
-    from setuptools import setup, Extension, Feature
+    from setuptools import setup
     has_setuptools = True
 except ImportError:
     has_setuptools = False
-    from distutils.core import setup, Extension
-    Feature = None
+    from distutils.core import setup
 
 cmdclass = {}
 pypy = hasattr(sys, 'pypy_version_info')
@@ -27,48 +23,6 @@ if sys.version_info < (2, 6):
     raise Exception("SQLAlchemy requires Python 2.6 or higher.")
 elif sys.version_info >= (3, 0):
     py3k = True
-
-ext_modules = [
-    Extension('sqlalchemy.cprocessors',
-           sources=['lib/sqlalchemy/cextension/processors.c']),
-    Extension('sqlalchemy.cresultproxy',
-           sources=['lib/sqlalchemy/cextension/resultproxy.c']),
-    Extension('sqlalchemy.cutils',
-           sources=['lib/sqlalchemy/cextension/utils.c'])
-    ]
-
-ext_errors = (CCompilerError, DistutilsExecError, DistutilsPlatformError)
-if sys.platform == 'win32':
-    # 2.6's distutils.msvc9compiler can raise an IOError when failing to
-    # find the compiler
-    ext_errors += (IOError,)
-
-class BuildFailed(Exception):
-
-    def __init__(self):
-        self.cause = sys.exc_info()[1]  # work around py 2/3 different syntax
-
-class ve_build_ext(build_ext):
-    # This class allows C extension building to fail.
-
-    def run(self):
-        try:
-            build_ext.run(self)
-        except DistutilsPlatformError:
-            raise BuildFailed()
-
-    def build_extension(self, ext):
-        try:
-            build_ext.build_extension(self, ext)
-        except ext_errors:
-            raise BuildFailed()
-        except ValueError:
-            # this can happen on Windows 64 bit, see Python issue 7511
-            if "'path'" in str(sys.exc_info()[1]):  # works with both py 2/3
-                raise BuildFailed()
-            raise
-
-cmdclass['build_ext'] = ve_build_ext
 
 def status_msgs(*msgs):
     print('*' * 75)
@@ -97,17 +51,8 @@ readme = r_file.read()
 r_file.close()
 
 
-def run_setup(with_cext):
+def run_setup():
     kwargs = extra.copy()
-    if with_cext:
-        if Feature:
-            kwargs['features'] = {'cextensions': Feature(
-                    "optional C speed-enhancements",
-                    standard=True,
-                    ext_modules=ext_modules
-                    )}
-        else:
-            kwargs['ext_modules'] = ext_modules
 
     setup(name="SQLAlchemy",
         version=VERSION,
@@ -122,6 +67,9 @@ def run_setup(with_cext):
         tests_require=['pytest >= 2.5.2', 'mock'],
         test_suite="pytest.main",
         long_description=readme,
+        extras_require=dict(
+            speedups=['sqlalchemy-speedups>=1.0,<2.0'],
+        ),
         classifiers=[
             "Development Status :: 5 - Production/Stable",
             "Intended Audience :: Developers",
@@ -137,29 +85,4 @@ def run_setup(with_cext):
             **kwargs
           )
 
-if pypy or jython:
-    run_setup(False)
-    status_msgs(
-        "WARNING: C extensions are not supported on " +
-            "this Python platform, speedups are not enabled.",
-        "Plain-Python build succeeded."
-    )
-else:
-    try:
-        run_setup(True)
-    except BuildFailed as exc:
-        status_msgs(
-            exc.cause,
-            "WARNING: The C extension could not be compiled, " +
-                "speedups are not enabled.",
-            "Failure information, if any, is above.",
-            "Retrying the build without the C extension now."
-        )
-
-        run_setup(False)
-
-        status_msgs(
-            "WARNING: The C extension could not be compiled, " +
-                "speedups are not enabled.",
-            "Plain-Python build succeeded."
-        )
+run_setup()

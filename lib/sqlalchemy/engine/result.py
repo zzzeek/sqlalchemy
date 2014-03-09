@@ -20,7 +20,7 @@ try:
     # We need a different reconstructor on the C extension so that we can
     # add extra checks that fields have correctly been initialized by
     # __setstate__.
-    from sqlalchemy.cresultproxy import safe_rowproxy_reconstructor
+    from sqlalchemy_speedups.cresultproxy import safe_rowproxy_reconstructor
 
     # The extra function embedding is needed so that the
     # reconstructor function has the same signature whether or not
@@ -34,7 +34,7 @@ except ImportError:
         return obj
 
 try:
-    from sqlalchemy.cresultproxy import BaseRowProxy
+    from sqlalchemy_speedups.cresultproxy import BaseRowProxy
 except ImportError:
     class BaseRowProxy(object):
         __slots__ = ('_parent', '_row', '_processors', '_keymap')

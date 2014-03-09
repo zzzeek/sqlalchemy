@@ -61,7 +61,7 @@ class CDateProcessorTest(_DateProcessorTest):
     __requires__ = ('cextensions',)
     @classmethod
     def setup_class(cls):
-        from sqlalchemy import cprocessors
+        from sqlalchemy_speedups import cprocessors
         cls.module = cprocessors
 
 
@@ -164,5 +164,5 @@ class CDistillArgsTest(_DistillArgsTest):
     __requires__ = ('cextensions', )
     @classmethod
     def setup_class(cls):
-        from sqlalchemy import cutils as util
+        from sqlalchemy_speedups import cutils as util
         cls.module = util
