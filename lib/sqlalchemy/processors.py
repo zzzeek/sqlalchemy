@@ -122,7 +122,7 @@ def py_fallback():
     return locals()
 
 try:
-    from sqlalchemy.cprocessors import UnicodeResultProcessor, \
+    from sqlalchemy_speedups.cprocessors import UnicodeResultProcessor, \
                                        DecimalResultProcessor, \
                                        to_float, to_str, int_to_boolean, \
                                        str_to_datetime, str_to_time, \

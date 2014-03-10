@@ -67,6 +67,6 @@ def py_fallback():
 
     return locals()
 try:
-    from sqlalchemy.cutils import _distill_params
+    from sqlalchemy_speedups.cutils import _distill_params
 except ImportError:
     globals().update(py_fallback())
