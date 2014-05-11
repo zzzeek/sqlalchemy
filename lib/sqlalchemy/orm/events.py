@@ -236,8 +236,9 @@ class InstanceEvents(event.Events):
         ``__new__``, and after initial attribute population has
         occurred.
 
-        This typically occurs when the instance is created based on
-        incoming result rows, and is only called once for that
+        This typically occurs when the instance is created, either
+        based on incoming result rows or by adding a new instance
+        object to the database. It is only called once for that
         instance's lifetime.
 
         Note that during a result-row load, this method is called upon
