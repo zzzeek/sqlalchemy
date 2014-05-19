@@ -18,6 +18,9 @@ from ..sql import expression
 from . import properties
 from . import query
 
+class ProxyImpl(object):
+	"""A helper class for detecting whether an attribute is a proxy"""
+	pass
 
 class DescriptorProperty(MapperProperty):
     """:class:`.MapperProperty` which proxies access to a
@@ -28,7 +31,7 @@ class DescriptorProperty(MapperProperty):
     def instrument_class(self, mapper):
         prop = self
 
-        class _ProxyImpl(object):
+        class _ProxyImpl(ProxyImpl):
             accepts_scalar_loader = False
             expire_missing = True
             collection = False
