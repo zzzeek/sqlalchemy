@@ -28,6 +28,7 @@ from .interfaces import MANYTOMANY, MANYTOONE, ONETOMANY, StrategizedProperty, P
 from ..inspection import inspect
 from . import mapper as mapperlib
 import collections
+import weakref
 
 def remote(expr):
     """Annotate a portion of a primaryjoin expression
@@ -1804,8 +1805,10 @@ def _annotate_columns(element, annotations):
     def clone(elem):
         if isinstance(elem, expression.ColumnClause):
             elem = elem._annotate(annotations.copy())
-        elem._copy_internals(clone=clone)
+        elem._copy_internals(clone=weak_clone)
         return elem
+
+    weak_clone = weakref.proxy(clone)
 
     if element is not None:
         element = clone(element)
