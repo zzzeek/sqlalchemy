@@ -1000,6 +1000,7 @@ class Session(_SessionClassMethods):
         if self.transaction is not None:
             for transaction in self.transaction._iterate_parents():
                 transaction.close()
+            self.transaction = None
 
     def expunge_all(self):
         """Remove all object instances from this ``Session``.
