@@ -26,6 +26,7 @@ http://techspot.zzzeek.org/2008/01/23/expression-transformations/
 from collections import deque
 from .. import util
 import operator
+import weakref
 from .. import exc
 
 __all__ = ['VisitableType', 'Visitable', 'ClauseVisitor',
@@ -306,8 +307,9 @@ def replacement_traverse(obj, opts, replace):
             else:
                 if elem not in cloned:
                     cloned[elem] = newelem = elem._clone()
-                    newelem._copy_internals(clone=clone, **kw)
+                    newelem._copy_internals(clone=weak_clone, **kw)
                 return cloned[elem]
+    weak_clone = weakref.proxy(clone)
 
     if obj is not None:
         obj = clone(obj, **opts)
