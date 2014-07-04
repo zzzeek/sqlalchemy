@@ -1991,6 +1991,13 @@ class MySQLTypeCompiler(compiler.GenericTypeCompiler):
                     "VARCHAR requires a length on dialect %s" %
                     self.dialect.name)
 
+    def visit_unicode(self, type_):
+        return self.visit_NVARCHAR(type_)
+
+    def visit_unicode_text(self, type_):
+        spec = "TEXT(%d)" % type_.length if type_.length else "TEXT"
+        return self._extend_string(type_, {"unicode": True}, spec)
+
     def visit_CHAR(self, type_):
         if type_.length:
             return self._extend_string(type_, {}, "CHAR(%(length)s)" %
@@ -2590,8 +2597,6 @@ class MySQLDialect(default.DefaultDialect):
         if not row:
             raise exc.NoSuchTableError(full_name)
         return row[1].strip()
-
-        return sql
 
     def _describe_table(self, connection, table, charset=None,
                              full_name=None):
