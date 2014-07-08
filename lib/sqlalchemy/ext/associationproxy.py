@@ -93,7 +93,7 @@ class AssociationProxy(interfaces._InspectionAttr):
 
     def __init__(self, target_collection, attr, creator=None,
                  getset_factory=None, proxy_factory=None,
-                 proxy_bulk_set=None):
+                 proxy_bulk_set=None, reflective=False):
         """Construct a new :class:`.AssociationProxy`.
 
         The :func:`.association_proxy` function is provided as the usual
@@ -137,6 +137,11 @@ class AssociationProxy(interfaces._InspectionAttr):
         :param proxy_bulk_set: Optional, use with proxy_factory.  See
           the _set() method for details.
 
+        :param reflective: Optional. When set to ``True`` the object which owns
+          this proxy will be passed to `creator`. For list and set collections,
+          the `creator` will be called with object and value. For dict types,
+          three arguments are passed: object, key and value.
+
         """
         self.target_collection = target_collection
         self.value_attr = attr
@@ -144,6 +149,7 @@ class AssociationProxy(interfaces._InspectionAttr):
         self.getset_factory = getset_factory
         self.proxy_factory = proxy_factory
         self.proxy_bulk_set = proxy_bulk_set
+        self.reflective = reflective
 
         self.owning_class = None
         self.key = '_%s_%s_%s' % (
@@ -447,12 +453,16 @@ class _lazy_collection(object):
         self.target = target
 
     def __call__(self):
+        return getattr(self.obj, self.target)
+
+    @property
+    def obj(self):
         obj = self.ref()
         if obj is None:
             raise exc.InvalidRequestError(
                "stale association proxy, parent object has gone out of "
                "scope")
-        return getattr(obj, self.target)
+        return obj
 
     def __getstate__(self):
         return {'obj': self.ref(), 'target': self.target}
@@ -489,6 +499,8 @@ class _AssociationCollection(object):
 
         """
         self.lazy_collection = lazy_collection
+        if parent.reflective:
+            creator = lambda *args: creator(self.lazy_collection.obj, *args)
         self.creator = creator
         self.getter = getter
         self.setter = setter
