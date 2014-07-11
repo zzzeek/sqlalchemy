@@ -359,7 +359,7 @@ class OrderingList(list):
 
     for func_name, func in list(locals().items()):
         if (util.callable(func) and func.__name__ == func_name and
-            not func.__doc__ and hasattr(list, func_name)):
+                not func.__doc__ and hasattr(list, func_name)):
             func.__doc__ = getattr(list, func_name).__doc__
     del func_name, func
 

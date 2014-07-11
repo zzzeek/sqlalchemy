@@ -408,7 +408,7 @@ def compiles(class_, *specs):
 
             # TODO: why is the lambda needed ?
             setattr(class_, '_compiler_dispatch',
-                lambda *arg, **kw: existing(*arg, **kw))
+                    lambda *arg, **kw: existing(*arg, **kw))
             setattr(class_, '_compiler_dispatcher', existing)
 
         if specs:
@@ -444,6 +444,6 @@ class _dispatcher(object):
                 fn = self.specs['default']
             except KeyError:
                 raise exc.CompileError(
-                        "%s construct has no default "
-                        "compilation handler." % type(element))
+                    "%s construct has no default "
+                    "compilation handler." % type(element))
         return fn(element, compiler, **kw)
