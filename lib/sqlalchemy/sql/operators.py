@@ -16,13 +16,12 @@ from .. import util
 from operator import (
     and_, or_, inv, add, mul, sub, mod, truediv, lt, le, ne, gt, ge, eq, neg,
     getitem, lshift, rshift
-    )
+)
 
 if util.py2k:
     from operator import div
 else:
     div = truediv
-
 
 
 class Operators(object):
@@ -38,6 +37,7 @@ class Operators(object):
     :class:`.ColumnOperators`.
 
     """
+
     def __and__(self, other):
         """Implement the ``&`` operator.
 
@@ -681,8 +681,10 @@ def exists():
 def istrue(a):
     raise NotImplementedError()
 
+
 def isfalse(a):
     raise NotImplementedError()
+
 
 def is_(a, b):
     return a.is_(b)
@@ -718,6 +720,7 @@ def notilike_op(a, b, escape=None):
 
 def between_op(a, b, c, symmetric=False):
     return a.between(b, c, symmetric=symmetric)
+
 
 def notbetween_op(a, b, c, symmetric=False):
     return a.notbetween(b, c, symmetric=symmetric)
@@ -803,7 +806,7 @@ def is_commutative(op):
 
 def is_ordering_modifier(op):
     return op in (asc_op, desc_op,
-                    nullsfirst_op, nullslast_op)
+                  nullsfirst_op, nullslast_op)
 
 _associative = _commutative.union([concat_op, and_, or_])
 
@@ -875,6 +878,6 @@ def is_precedent(operator, against):
         return False
     else:
         return (_PRECEDENCE.get(operator,
-                getattr(operator, 'precedence', _smallest)) <=
-            _PRECEDENCE.get(against,
-                getattr(against, 'precedence', _largest)))
+                                getattr(operator, 'precedence', _smallest)) <=
+                _PRECEDENCE.get(against,
+                                getattr(against, 'precedence', _largest)))

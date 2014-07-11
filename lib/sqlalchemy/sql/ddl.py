@@ -18,6 +18,7 @@ from ..util import topological
 from .. import event
 from .. import exc
 
+
 class _DDLCompiles(ClauseElement):
     def _compiler(self, dialect, **kw):
         """Return a compiler appropriate for this ClauseElement, given a
@@ -57,7 +58,7 @@ class DDLElement(Executable, _DDLCompiles):
     """
 
     _execution_options = Executable.\
-                            _execution_options.union({'autocommit': True})
+        _execution_options.union({'autocommit': True})
 
     target = None
     on = None
@@ -96,10 +97,10 @@ class DDLElement(Executable, _DDLCompiles):
             return bind.execute(self.against(target))
         else:
             bind.engine.logger.info(
-                        "DDL execution skipped, criteria not met.")
+                "DDL execution skipped, criteria not met.")
 
     @util.deprecated("0.7", "See :class:`.DDLEvents`, as well as "
-        ":meth:`.DDLElement.execute_if`.")
+                     ":meth:`.DDLElement.execute_if`.")
     def execute_at(self, event_name, target):
         """Link execution of this DDL to the DDL lifecycle of a SchemaItem.
 
@@ -130,7 +131,7 @@ class DDLElement(Executable, _DDLCompiles):
 
         def call_event(target, connection, **kw):
             if self._should_execute_deprecated(event_name,
-                                    target, connection, **kw):
+                                               target, connection, **kw):
                 return connection.execute(self.against(target))
 
         event.listen(target, "" + event_name.replace('-', '_'), call_event)
@@ -212,7 +213,7 @@ class DDLElement(Executable, _DDLCompiles):
 
     def _should_execute(self, target, bind, **kw):
         if self.on is not None and \
-            not self._should_execute_deprecated(None, target, bind, **kw):
+                not self._should_execute_deprecated(None, target, bind, **kw):
             return False
 
         if isinstance(self.dialect, util.string_types):
@@ -222,7 +223,7 @@ class DDLElement(Executable, _DDLCompiles):
             if bind.engine.name not in self.dialect:
                 return False
         if self.callable_ is not None and \
-            not self.callable_(self, target, bind, state=self.state, **kw):
+                not self.callable_(self, target, bind, state=self.state, **kw):
             return False
 
         return True
@@ -246,7 +247,7 @@ class DDLElement(Executable, _DDLCompiles):
     def _check_ddl_on(self, on):
         if (on is not None and
             (not isinstance(on, util.string_types + (tuple, list, set)) and
-                    not util.callable(on))):
+             not util.callable(on))):
             raise exc.ArgumentError(
                 "Expected the name of a database dialect, a tuple "
                 "of names, or a callable for "
@@ -393,7 +394,6 @@ class DDL(DDLElement):
                        if getattr(self, key)]))
 
 
-
 class _CreateDropBase(DDLElement):
     """Base class for DDL constructs that represent CREATE and DROP or
     equivalents.
@@ -474,8 +474,8 @@ class CreateTable(_CreateDropBase):
         """
         super(CreateTable, self).__init__(element, on=on, bind=bind)
         self.columns = [CreateColumn(column)
-            for column in element.columns
-        ]
+                        for column in element.columns
+                        ]
 
 
 class _DropView(_CreateDropBase):
@@ -635,7 +635,7 @@ class AddConstraint(_CreateDropBase):
     def __init__(self, element, *args, **kw):
         super(AddConstraint, self).__init__(element, *args, **kw)
         element._create_rule = util.portable_instancemethod(
-                                            self._create_rule_disable)
+            self._create_rule_disable)
 
 
 class DropConstraint(_CreateDropBase):
@@ -647,7 +647,7 @@ class DropConstraint(_CreateDropBase):
         self.cascade = cascade
         super(DropConstraint, self).__init__(element, **kw)
         element._create_rule = util.portable_instancemethod(
-                                            self._create_rule_disable)
+            self._create_rule_disable)
 
 
 class DDLBase(SchemaVisitor):
@@ -671,21 +671,21 @@ class SchemaGenerator(DDLBase):
         if table.schema:
             self.dialect.validate_identifier(table.schema)
         return not self.checkfirst or \
-                not self.dialect.has_table(self.connection,
-                                    table.name, schema=table.schema)
+            not self.dialect.has_table(self.connection,
+                                       table.name, schema=table.schema)
 
     def _can_create_sequence(self, sequence):
         return self.dialect.supports_sequences and \
             (
                 (not self.dialect.sequences_optional or
                  not sequence.optional) and
-                    (
-                        not self.checkfirst or
-                        not self.dialect.has_sequence(
-                                self.connection,
-                                sequence.name,
-                                schema=sequence.schema)
-                     )
+                (
+                    not self.checkfirst or
+                    not self.dialect.has_sequence(
+                        self.connection,
+                        sequence.name,
+                        schema=sequence.schema)
+                )
             )
 
     def visit_metadata(self, metadata):
@@ -694,14 +694,14 @@ class SchemaGenerator(DDLBase):
         else:
             tables = list(metadata.tables.values())
         collection = [t for t in sort_tables(tables)
-                        if self._can_create_table(t)]
+                      if self._can_create_table(t)]
         seq_coll = [s for s in metadata._sequences.values()
-                        if s.column is None and self._can_create_sequence(s)]
+                    if s.column is None and self._can_create_sequence(s)]
 
         metadata.dispatch.before_create(metadata, self.connection,
-                                    tables=collection,
-                                    checkfirst=self.checkfirst,
-                                            _ddl_runner=self)
+                                        tables=collection,
+                                        checkfirst=self.checkfirst,
+                                        _ddl_runner=self)
 
         for seq in seq_coll:
             self.traverse_single(seq, create_ok=True)
@@ -710,17 +710,17 @@ class SchemaGenerator(DDLBase):
             self.traverse_single(table, create_ok=True)
 
         metadata.dispatch.after_create(metadata, self.connection,
-                                    tables=collection,
-                                    checkfirst=self.checkfirst,
-                                            _ddl_runner=self)
+                                       tables=collection,
+                                       checkfirst=self.checkfirst,
+                                       _ddl_runner=self)
 
     def visit_table(self, table, create_ok=False):
         if not create_ok and not self._can_create_table(table):
             return
 
         table.dispatch.before_create(table, self.connection,
-                                        checkfirst=self.checkfirst,
-                                            _ddl_runner=self)
+                                     checkfirst=self.checkfirst,
+                                     _ddl_runner=self)
 
         for column in table.columns:
             if column.default is not None:
@@ -733,8 +733,8 @@ class SchemaGenerator(DDLBase):
                 self.traverse_single(index)
 
         table.dispatch.after_create(table, self.connection,
-                                        checkfirst=self.checkfirst,
-                                            _ddl_runner=self)
+                                    checkfirst=self.checkfirst,
+                                    _ddl_runner=self)
 
     def visit_sequence(self, sequence, create_ok=False):
         if not create_ok and not self._can_create_sequence(sequence):
@@ -793,18 +793,18 @@ class SchemaDropper(DDLBase):
         if table.schema:
             self.dialect.validate_identifier(table.schema)
         return not self.checkfirst or self.dialect.has_table(self.connection,
-                                            table.name, schema=table.schema)
+                                                             table.name, schema=table.schema)
 
     def _can_drop_sequence(self, sequence):
         return self.dialect.supports_sequences and \
             ((not self.dialect.sequences_optional or
-                 not sequence.optional) and
+              not sequence.optional) and
                 (not self.checkfirst or
-                self.dialect.has_sequence(
-                                self.connection,
-                                sequence.name,
-                                schema=sequence.schema))
-            )
+                 self.dialect.has_sequence(
+                     self.connection,
+                     sequence.name,
+                     schema=sequence.schema))
+             )
 
     def visit_index(self, index):
         self.connection.execute(DropIndex(index))
@@ -814,8 +814,8 @@ class SchemaDropper(DDLBase):
             return
 
         table.dispatch.before_drop(table, self.connection,
-                                    checkfirst=self.checkfirst,
-                                            _ddl_runner=self)
+                                   checkfirst=self.checkfirst,
+                                   _ddl_runner=self)
 
         for column in table.columns:
             if column.default is not None:
@@ -824,13 +824,14 @@ class SchemaDropper(DDLBase):
         self.connection.execute(DropTable(table))
 
         table.dispatch.after_drop(table, self.connection,
-                                        checkfirst=self.checkfirst,
-                                            _ddl_runner=self)
+                                  checkfirst=self.checkfirst,
+                                  _ddl_runner=self)
 
     def visit_sequence(self, sequence, drop_ok=False):
         if not drop_ok and not self._can_drop_sequence(sequence):
             return
         self.connection.execute(DropSequence(sequence))
+
 
 def sort_tables(tables, skip_fn=None, extra_dependencies=None):
     """sort a collection of Table objects in order of
@@ -854,12 +855,11 @@ def sort_tables(tables, skip_fn=None, extra_dependencies=None):
 
     for table in tables:
         traverse(table,
-                            {'schema_visitor': True},
-                            {'foreign_key': visit_foreign_key})
+                 {'schema_visitor': True},
+                 {'foreign_key': visit_foreign_key})
 
         tuples.extend(
             [parent, table] for parent in table._extra_dependencies
         )
 
     return list(topological.sort(tuples, tables))
-

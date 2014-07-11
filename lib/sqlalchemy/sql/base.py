@@ -19,6 +19,7 @@ import collections
 PARSE_AUTOCOMMIT = util.symbol('PARSE_AUTOCOMMIT')
 NO_ARG = util.symbol('NO_ARG')
 
+
 class Immutable(object):
     """mark a ClauseElement as 'immutable' when expressions are cloned."""
 
@@ -32,9 +33,9 @@ class Immutable(object):
         return self
 
 
-
 def _from_objects(*elements):
     return itertools.chain(*[element._from_objects for element in elements])
+
 
 @util.decorator
 def _generative(fn, *args, **kw):
@@ -50,6 +51,7 @@ class _DialectArgView(collections.MutableMapping):
     <dialectname>_<argument_name>.
 
     """
+
     def __init__(self, obj):
         self.obj = obj
 
@@ -76,7 +78,7 @@ class _DialectArgView(collections.MutableMapping):
             dialect, value_key = self._key(key)
         except KeyError:
             raise exc.ArgumentError(
-                            "Keys must be of the form <dialectname>_<argname>")
+                "Keys must be of the form <dialectname>_<argname>")
         else:
             self.obj.dialect_options[dialect][value_key] = value
 
@@ -86,7 +88,7 @@ class _DialectArgView(collections.MutableMapping):
 
     def __len__(self):
         return sum(len(args._non_defaults) for args in
-                            self.obj.dialect_options.values())
+                   self.obj.dialect_options.values())
 
     def __iter__(self):
         return (
@@ -94,6 +96,7 @@ class _DialectArgView(collections.MutableMapping):
             for dialect_name in self.obj.dialect_options
             for value_name in self.obj.dialect_options[dialect_name]._non_defaults
         )
+
 
 class _DialectArgDict(collections.MutableMapping):
     """A dictionary view of dialect-level arguments for a specific
@@ -103,6 +106,7 @@ class _DialectArgDict(collections.MutableMapping):
     and dialect-specified default arguments.
 
     """
+
     def __init__(self):
         self._non_defaults = {}
         self._defaults = {}
@@ -180,8 +184,8 @@ class DialectKWArgs(object):
         construct_arg_dictionary = DialectKWArgs._kw_registry[dialect_name]
         if construct_arg_dictionary is None:
             raise exc.ArgumentError("Dialect '%s' does have keyword-argument "
-                        "validation and defaults enabled configured" %
-                        dialect_name)
+                                    "validation and defaults enabled configured" %
+                                    dialect_name)
         if cls not in construct_arg_dictionary:
             construct_arg_dictionary[cls] = {}
         construct_arg_dictionary[cls][argument_name] = default
@@ -257,8 +261,8 @@ class DialectKWArgs(object):
         """
 
         return util.PopulateDict(
-                    util.portable_instancemethod(self._kw_reg_for_dialect_cls)
-                    )
+            util.portable_instancemethod(self._kw_reg_for_dialect_cls)
+        )
 
     def _validate_dialect_kwargs(self, kwargs):
         # validate remaining kwargs that they all specify DB prefixes
@@ -270,28 +274,28 @@ class DialectKWArgs(object):
             m = re.match('^(.+?)_(.+)$', k)
             if not m:
                 raise TypeError("Additional arguments should be "
-                        "named <dialectname>_<argument>, got '%s'" % k)
+                                "named <dialectname>_<argument>, got '%s'" % k)
             dialect_name, arg_name = m.group(1, 2)
 
             try:
                 construct_arg_dictionary = self.dialect_options[dialect_name]
             except exc.NoSuchModuleError:
                 util.warn(
-                        "Can't validate argument %r; can't "
-                        "locate any SQLAlchemy dialect named %r" %
-                        (k, dialect_name))
+                    "Can't validate argument %r; can't "
+                    "locate any SQLAlchemy dialect named %r" %
+                    (k, dialect_name))
                 self.dialect_options[dialect_name] = d = _DialectArgDict()
                 d._defaults.update({"*": None})
                 d._non_defaults[arg_name] = kwargs[k]
             else:
                 if "*" not in construct_arg_dictionary and \
-                    arg_name not in construct_arg_dictionary:
+                        arg_name not in construct_arg_dictionary:
                     raise exc.ArgumentError(
-                            "Argument %r is not accepted by "
-                            "dialect %r on behalf of %r" % (
-                                k,
-                                dialect_name, self.__class__
-                            ))
+                        "Argument %r is not accepted by "
+                        "dialect %r on behalf of %r" % (
+                            k,
+                            dialect_name, self.__class__
+                        ))
                 else:
                     construct_arg_dictionary[arg_name] = kwargs[k]
 
@@ -424,10 +428,12 @@ class SchemaEventTarget(object):
         self._set_parent(parent)
         self.dispatch.after_parent_attach(self, parent)
 
+
 class SchemaVisitor(ClauseVisitor):
     """Define the visiting for ``SchemaItem`` objects."""
 
     __traverse_options__ = {'schema_visitor': True}
+
 
 class ColumnCollection(util.OrderedProperties):
     """An ordered dictionary that stores a list of ColumnElement
@@ -478,10 +484,9 @@ class ColumnCollection(util.OrderedProperties):
         self._data[column.key] = column
         if remove_col is not None:
             self._all_columns[:] = [column if c is remove_col
-                                            else c for c in self._all_columns]
+                                    else c for c in self._all_columns]
         else:
             self._all_columns.append(column)
-
 
     def add(self, column):
         """Add a column to this collection.
@@ -492,7 +497,7 @@ class ColumnCollection(util.OrderedProperties):
         """
         if not column.key:
             raise exc.ArgumentError(
-                        "Can't add unnamed column to column collection")
+                "Can't add unnamed column to column collection")
         self[column.key] = column
 
     def __delitem__(self, key):
@@ -513,7 +518,7 @@ class ColumnCollection(util.OrderedProperties):
                 util.warn('Column %r on table %r being replaced by '
                           '%r, which has the same key.  Consider '
                           'use_labels for select() statements.' % (key,
-                          getattr(existing, 'table', None), value))
+                                                                   getattr(existing, 'table', None), value))
 
             # pop out memoized proxy_set as this
             # operation may very well be occurring
@@ -530,11 +535,13 @@ class ColumnCollection(util.OrderedProperties):
     def remove(self, column):
         del self._data[column.key]
         self._all_col_set.remove(column)
-        self._all_columns[:] = [c for c in self._all_columns if c is not column]
+        self._all_columns[:] = [
+            c for c in self._all_columns if c is not column]
 
     def update(self, iter):
         cols = list(iter)
-        self._all_columns.extend(c for label, c in cols if c not in self._all_col_set)
+        self._all_columns.extend(
+            c for label, c in cols if c not in self._all_col_set)
         self._all_col_set.update(c for label, c in cols)
         self._data.update((label, c) for label, c in cols)
 
@@ -574,7 +581,8 @@ class ColumnCollection(util.OrderedProperties):
         return col in self._all_col_set
 
     def as_immutable(self):
-        return ImmutableColumnCollection(self._data, self._all_col_set, self._all_columns)
+        return ImmutableColumnCollection(
+            self._data, self._all_col_set, self._all_columns)
 
 
 class ImmutableColumnCollection(util.ImmutableProperties, ColumnCollection):
@@ -609,6 +617,7 @@ class ColumnSet(util.ordered_column_set):
     def __hash__(self):
         return hash(tuple(x for x in self))
 
+
 def _bind_or_error(schemaitem, msg=None):
     bind = schemaitem.bind
     if not bind:
@@ -621,7 +630,7 @@ def _bind_or_error(schemaitem, msg=None):
             item = '%s object' % name
         if msg is None:
             msg = "%s is not bound to an Engine or Connection.  "\
-                   "Execution can not proceed without a database to execute "\
-                   "against." % item
+                "Execution can not proceed without a database to execute "\
+                "against." % item
         raise exc.UnboundExecutionError(msg)
     return bind

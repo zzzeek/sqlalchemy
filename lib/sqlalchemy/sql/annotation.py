@@ -13,6 +13,7 @@ copies of SQL constructs which contain context-specific markers and associations
 from .. import util
 from . import operators
 
+
 class Annotated(object):
     """clones a ClauseElement and applies an 'annotations' dictionary.
 
@@ -93,12 +94,10 @@ class Annotated(object):
             return hash(other) == hash(self)
 
 
-
 # hard-generate Annotated subclasses.  this technique
 # is used instead of on-the-fly types (i.e. type.__new__())
 # so that the resulting objects are pickleable.
 annotated_classes = {}
-
 
 
 def _deep_annotate(element, annotations, exclude=None):
@@ -110,8 +109,8 @@ def _deep_annotate(element, annotations, exclude=None):
     """
     def clone(elem):
         if exclude and \
-                    hasattr(elem, 'proxy_set') and \
-                    elem.proxy_set.intersection(exclude):
+                hasattr(elem, 'proxy_set') and \
+                elem.proxy_set.intersection(exclude):
             newelem = elem._clone()
         elif annotations != elem._annotations:
             newelem = elem._annotate(annotations)
@@ -163,6 +162,7 @@ def _shallow_annotate(element, annotations):
     element._copy_internals()
     return element
 
+
 def _new_annotation_type(cls, base_cls):
     if issubclass(cls, Annotated):
         return cls
@@ -178,10 +178,11 @@ def _new_annotation_type(cls, base_cls):
             break
 
     annotated_classes[cls] = anno_cls = type(
-                            "Annotated%s" % cls.__name__,
-                            (base_cls, cls), {})
+        "Annotated%s" % cls.__name__,
+        (base_cls, cls), {})
     globals()["Annotated%s" % cls.__name__] = anno_cls
     return anno_cls
+
 
 def _prepare_annotations(target_hierarchy, base_cls):
     stack = [target_hierarchy]

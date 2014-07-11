@@ -24,8 +24,10 @@ from .base import _generative, Generative
 import re
 import operator
 
+
 def _clone(element, **kw):
     return element._clone()
+
 
 def collate(expression, collation):
     """Return the clause ``expression COLLATE collation``.
@@ -45,6 +47,7 @@ def collate(expression, collation):
         expr,
         _literal_as_text(collation),
         operators.collate, type_=expr.type)
+
 
 def between(expr, lower_bound, upper_bound, symmetric=False):
     """Produce a ``BETWEEN`` predicate clause.
@@ -99,6 +102,7 @@ def between(expr, lower_bound, upper_bound, symmetric=False):
     expr = _literal_as_binds(expr)
     return expr.between(lower_bound, upper_bound, symmetric=symmetric)
 
+
 def literal(value, type_=None):
     """Return a literal clause, bound to a bind parameter.
 
@@ -118,7 +122,6 @@ def literal(value, type_=None):
 
     """
     return BindParameter(None, value, type_=type_, unique=True)
-
 
 
 def type_coerce(expression, type_):
@@ -183,9 +186,6 @@ def type_coerce(expression, type_):
         return Label(None, expression, type_=type_)
 
 
-
-
-
 def outparam(key, type_=None):
     """Create an 'OUT' parameter for usage in functions (stored procedures),
     for databases which support them.
@@ -197,9 +197,7 @@ def outparam(key, type_=None):
 
     """
     return BindParameter(
-                key, None, type_=type_, unique=False, isoutparam=True)
-
-
+        key, None, type_=type_, unique=False, isoutparam=True)
 
 
 def not_(clause):
@@ -211,7 +209,6 @@ def not_(clause):
 
     """
     return operators.inv(_literal_as_binds(clause))
-
 
 
 @inspection._self_inspects
@@ -531,15 +528,14 @@ class ClauseElement(Visitable):
 
     def _negate(self):
         return UnaryExpression(
-                    self.self_group(against=operators.inv),
-                    operator=operators.inv,
-                    negate=None)
+            self.self_group(against=operators.inv),
+            operator=operators.inv,
+            negate=None)
 
     def __bool__(self):
         raise TypeError("Boolean value of this clause is not defined")
 
     __nonzero__ = __bool__
-
 
     def __repr__(self):
         friendly = getattr(self, 'description', None)
@@ -631,7 +627,7 @@ class ColumnElement(operators.ColumnOperators, ClauseElement):
 
     def self_group(self, against=None):
         if against in (operators.and_, operators.or_, operators._asbool) and \
-            self.type._type_affinity is type_api.BOOLEANTYPE._type_affinity:
+                self.type._type_affinity is type_api.BOOLEANTYPE._type_affinity:
             return AsBoolean(self, operators.istrue, operators.isfalse)
         else:
             return self
@@ -655,7 +651,7 @@ class ColumnElement(operators.ColumnOperators, ClauseElement):
             return getattr(self.comparator, key)
         except AttributeError:
             raise AttributeError(
-                    'Neither %r object nor %r object has an attribute %r' % (
+                'Neither %r object nor %r object has an attribute %r' % (
                     type(self).__name__,
                     type(self.comparator).__name__,
                     key)
@@ -669,8 +665,8 @@ class ColumnElement(operators.ColumnOperators, ClauseElement):
 
     def _bind_param(self, operator, obj):
         return BindParameter(None, obj,
-                                    _compared_to_operator=operator,
-                                    _compared_to_type=self.type, unique=True)
+                             _compared_to_operator=operator,
+                             _compared_to_type=self.type, unique=True)
 
     @property
     def expression(self):
@@ -688,7 +684,7 @@ class ColumnElement(operators.ColumnOperators, ClauseElement):
     @util.memoized_property
     def base_columns(self):
         return util.column_set(c for c in self.proxy_set
-                                     if not hasattr(c, '_proxies'))
+                               if not hasattr(c, '_proxies'))
 
     @util.memoized_property
     def proxy_set(self):
@@ -709,9 +705,10 @@ class ColumnElement(operators.ColumnOperators, ClauseElement):
         when targeting within a result row."""
 
         return hasattr(other, 'name') and hasattr(self, 'name') and \
-                other.name == self.name
+            other.name == self.name
 
-    def _make_proxy(self, selectable, name=None, name_is_truncatable=False, **kw):
+    def _make_proxy(
+            self, selectable, name=None, name_is_truncatable=False, **kw):
         """Create a new :class:`.ColumnElement` representing this
         :class:`.ColumnElement` as it appears in the select list of a
         descending selectable.
@@ -730,10 +727,10 @@ class ColumnElement(operators.ColumnOperators, ClauseElement):
         else:
             key = name
         co = ColumnClause(
-                _as_truncated(name) if name_is_truncatable else name,
-                type_=getattr(self, 'type', None),
-                _selectable=selectable
-            )
+            _as_truncated(name) if name_is_truncatable else name,
+            type_=getattr(self, 'type', None),
+            _selectable=selectable
+        )
         co._proxies = [self]
         if selectable._is_clone_of is not None:
             co._is_clone_of = \
@@ -794,7 +791,7 @@ class ColumnElement(operators.ColumnOperators, ClauseElement):
 
         """
         return _anonymous_label('%%(%d %s)s' % (id(self), getattr(self,
-                                'name', 'anon')))
+                                                                  'name', 'anon')))
 
 
 class BindParameter(ColumnElement):
@@ -822,11 +819,11 @@ class BindParameter(ColumnElement):
     _is_crud = False
 
     def __init__(self, key, value=NO_ARG, type_=None,
-                            unique=False, required=NO_ARG,
-                            quote=None, callable_=None,
-                            isoutparam=False,
-                            _compared_to_operator=None,
-                            _compared_to_type=None):
+                 unique=False, required=NO_ARG,
+                 quote=None, callable_=None,
+                 isoutparam=False,
+                 _compared_to_operator=None,
+                 _compared_to_type=None):
         """Produce a "bound expression".
 
         The return value is an instance of :class:`.BindParameter`; this
@@ -1029,10 +1026,10 @@ class BindParameter(ColumnElement):
 
         if unique:
             self.key = _anonymous_label('%%(%d %s)s' % (id(self), key
-                    or 'param'))
+                                                        or 'param'))
         else:
             self.key = key or _anonymous_label('%%(%d param)s'
-                    % id(self))
+                                               % id(self))
 
         # identifying key that won't change across
         # clones, used to identify the bind's logical
@@ -1055,7 +1052,7 @@ class BindParameter(ColumnElement):
                         _compared_to_operator, value)
             else:
                 self.type = type_api._type_map.get(type(value),
-                        type_api.NULLTYPE)
+                                                   type_api.NULLTYPE)
         elif isinstance(type_, type):
             self.type = type_()
         else:
@@ -1069,7 +1066,7 @@ class BindParameter(ColumnElement):
         cloned.required = False
         if cloned.type is type_api.NULLTYPE:
             cloned.type = type_api._type_map.get(type(value),
-                        type_api.NULLTYPE)
+                                                 type_api.NULLTYPE)
         return cloned
 
     @property
@@ -1091,14 +1088,14 @@ class BindParameter(ColumnElement):
         c = ClauseElement._clone(self)
         if self.unique:
             c.key = _anonymous_label('%%(%d %s)s' % (id(c), c._orig_key
-                    or 'param'))
+                                                     or 'param'))
         return c
 
     def _convert_to_unique(self):
         if not self.unique:
             self.unique = True
             self.key = _anonymous_label('%%(%d %s)s' % (id(self),
-                    self._orig_key or 'param'))
+                                                        self._orig_key or 'param'))
 
     def compare(self, other, **kw):
         """Compare this :class:`BindParameter` to the given
@@ -1121,7 +1118,7 @@ class BindParameter(ColumnElement):
 
     def __repr__(self):
         return 'BindParameter(%r, %r, type_=%r)' % (self.key,
-                self.value, self.type)
+                                                    self.value, self.type)
 
 
 class TypeClause(ClauseElement):
@@ -1175,9 +1172,9 @@ class TextClause(Executable, ClauseElement):
     _hide_froms = []
 
     def __init__(
-                    self,
-                    text,
-                    bind=None):
+            self,
+            text,
+            bind=None):
         self._bind = bind
         self._bindparams = {}
 
@@ -1191,7 +1188,7 @@ class TextClause(Executable, ClauseElement):
 
     @classmethod
     def _create_text(self, text, bind=None, bindparams=None,
-                                    typemap=None, autocommit=None):
+                     typemap=None, autocommit=None):
         """Construct a new :class:`.TextClause` clause, representing
         a textual SQL string directly.
 
@@ -1409,8 +1406,8 @@ class TextClause(Executable, ClauseElement):
                 existing = new_params[bind.key]
             except KeyError:
                 raise exc.ArgumentError(
-                            "This text() construct doesn't define a "
-                            "bound parameter named %r" % bind.key)
+                    "This text() construct doesn't define a "
+                    "bound parameter named %r" % bind.key)
             else:
                 new_params[existing.key] = bind
 
@@ -1419,12 +1416,10 @@ class TextClause(Executable, ClauseElement):
                 existing = new_params[key]
             except KeyError:
                 raise exc.ArgumentError(
-                            "This text() construct doesn't define a "
-                            "bound parameter named %r" % key)
+                    "This text() construct doesn't define a "
+                    "bound parameter named %r" % key)
             else:
                 new_params[key] = existing._with_value(value)
-
-
 
     @util.dependencies('sqlalchemy.sql.selectable')
     def columns(self, selectable, *cols, **types):
@@ -1489,8 +1484,8 @@ class TextClause(Executable, ClauseElement):
 
         input_cols = [
             ColumnClause(col.key, types.pop(col.key))
-                if col.key in types
-                else col
+            if col.key in types
+            else col
             for col in cols
         ] + [ColumnClause(key, type_) for key, type_ in types.items()]
         return selectable.TextAsFrom(self, input_cols)
@@ -1511,13 +1506,14 @@ class TextClause(Executable, ClauseElement):
 
     def _copy_internals(self, clone=_clone, **kw):
         self._bindparams = dict((b.key, clone(b, **kw))
-                               for b in self._bindparams.values())
+                                for b in self._bindparams.values())
 
     def get_children(self, **kwargs):
         return list(self._bindparams.values())
 
     def compare(self, other):
         return isinstance(other, TextClause) and other.text == self.text
+
 
 class Null(ColumnElement):
     """Represent the NULL keyword in a SQL statement.
@@ -1601,6 +1597,7 @@ class False_(ColumnElement):
     def compare(self, other):
         return isinstance(other, False_)
 
+
 class True_(ColumnElement):
     """Represent the ``true`` keyword, or equivalent, in a SQL statement.
 
@@ -1670,6 +1667,7 @@ NULL = Null()
 FALSE = False_()
 TRUE = True_()
 
+
 class ClauseList(ClauseElement):
     """Describe a list of clauses, separated by an operator.
 
@@ -1703,7 +1701,7 @@ class ClauseList(ClauseElement):
 
     def append(self, clause):
         if self.group_contents:
-            self.clauses.append(_literal_as_text(clause).\
+            self.clauses.append(_literal_as_text(clause).
                                 self_group(against=self.operator))
         else:
             self.clauses.append(_literal_as_text(clause))
@@ -1742,13 +1740,12 @@ class ClauseList(ClauseElement):
             return False
 
 
-
 class BooleanClauseList(ClauseList, ColumnElement):
     __visit_name__ = 'clauselist'
 
     def __init__(self, *arg, **kw):
         raise NotImplementedError(
-                "BooleanClauseList has a private constructor")
+            "BooleanClauseList has a private constructor")
 
     @classmethod
     def _construct(cls, operator, continue_on, skip_on, *clauses, **kw):
@@ -1771,7 +1768,7 @@ class BooleanClauseList(ClauseList, ColumnElement):
             return clauses[0].self_group(against=operators._asbool)
 
         convert_clauses = [c.self_group(against=operator)
-                                for c in convert_clauses]
+                           for c in convert_clauses]
 
         self = cls.__new__(cls)
         self.clauses = convert_clauses
@@ -1871,6 +1868,7 @@ class BooleanClauseList(ClauseList, ColumnElement):
 and_ = BooleanClauseList.and_
 or_ = BooleanClauseList.or_
 
+
 class Tuple(ClauseList, ColumnElement):
     """Represent a SQL tuple."""
 
@@ -1898,7 +1896,7 @@ class Tuple(ClauseList, ColumnElement):
         clauses = [_literal_as_binds(c) for c in clauses]
         self._type_tuple = [arg.type for arg in clauses]
         self.type = kw.pop('type_', self._type_tuple[0]
-                            if self._type_tuple else type_api.NULLTYPE)
+                           if self._type_tuple else type_api.NULLTYPE)
 
         super(Tuple, self).__init__(*clauses, **kw)
 
@@ -1909,7 +1907,7 @@ class Tuple(ClauseList, ColumnElement):
     def _bind_param(self, operator, obj):
         return Tuple(*[
             BindParameter(None, o, _compared_to_operator=operator,
-                             _compared_to_type=type_, unique=True)
+                          _compared_to_type=type_, unique=True)
             for o, type_ in zip(obj, self._type_tuple)
         ]).self_group()
 
@@ -2071,12 +2069,12 @@ class Case(ColumnElement):
         if value is not None:
             whenlist = [
                 (_literal_as_binds(c).self_group(),
-                _literal_as_binds(r)) for (c, r) in whens
+                 _literal_as_binds(r)) for (c, r) in whens
             ]
         else:
             whenlist = [
                 (_no_literals(c).self_group(),
-                _literal_as_binds(r)) for (c, r) in whens
+                 _literal_as_binds(r)) for (c, r) in whens
             ]
 
         if whenlist:
@@ -2100,7 +2098,7 @@ class Case(ColumnElement):
         if self.value is not None:
             self.value = clone(self.value, **kw)
         self.whens = [(clone(x, **kw), clone(y, **kw))
-                            for x, y in self.whens]
+                      for x, y in self.whens]
         if self.else_ is not None:
             self.else_ = clone(self.else_, **kw)
 
@@ -2116,7 +2114,7 @@ class Case(ColumnElement):
     @property
     def _from_objects(self):
         return list(itertools.chain(*[x._from_objects for x in
-                    self.get_children()]))
+                                      self.get_children()]))
 
 
 def literal_column(text, type_=None):
@@ -2141,7 +2139,6 @@ def literal_column(text, type_=None):
 
     """
     return ColumnClause(text, type_=type_, is_literal=True)
-
 
 
 class Cast(ColumnElement):
@@ -2275,10 +2272,11 @@ class UnaryExpression(ColumnElement):
     __visit_name__ = 'unary'
 
     def __init__(self, element, operator=None, modifier=None,
-                            type_=None, negate=None):
+                 type_=None, negate=None):
         self.operator = operator
         self.modifier = modifier
-        self.element = element.self_group(against=self.operator or self.modifier)
+        self.element = element.self_group(
+            against=self.operator or self.modifier)
         self.type = type_api.to_instance(type_)
         self.negate = negate
 
@@ -2319,8 +2317,7 @@ class UnaryExpression(ColumnElement):
 
         """
         return UnaryExpression(
-                _literal_as_text(column), modifier=operators.nullsfirst_op)
-
+            _literal_as_text(column), modifier=operators.nullsfirst_op)
 
     @classmethod
     def _create_nullslast(cls, column):
@@ -2360,7 +2357,6 @@ class UnaryExpression(ColumnElement):
         """
         return UnaryExpression(
             _literal_as_text(column), modifier=operators.nullslast_op)
-
 
     @classmethod
     def _create_desc(cls, column):
@@ -2475,7 +2471,7 @@ class UnaryExpression(ColumnElement):
         """
         expr = _literal_as_binds(expr)
         return UnaryExpression(expr,
-                    operator=operators.distinct_op, type_=expr.type)
+                               operator=operators.distinct_op, type_=expr.type)
 
     @util.memoized_property
     def _order_by_label_element(self):
@@ -2556,7 +2552,7 @@ class BinaryExpression(ColumnElement):
     __visit_name__ = 'binary'
 
     def __init__(self, left, right, operator, type_=None,
-                    negate=None, modifiers=None):
+                 negate=None, modifiers=None):
         # allow compatibility with libraries that
         # refer to BinaryExpression directly and pass strings
         if isinstance(operator, util.string_types):
@@ -2631,8 +2627,6 @@ class BinaryExpression(ColumnElement):
                 modifiers=self.modifiers)
         else:
             return super(BinaryExpression, self)._negate()
-
-
 
 
 class Grouping(ColumnElement):
@@ -2746,7 +2740,7 @@ class Over(ColumnElement):
         return list(itertools.chain(
             *[c._from_objects for c in
                 (self.func, self.partition_by, self.order_by)
-            if c is not None]
+              if c is not None]
         ))
 
 
@@ -2781,7 +2775,7 @@ class Label(ColumnElement):
             self.name = name
         else:
             self.name = _anonymous_label('%%(%d %s)s' % (id(self),
-                                getattr(element, 'name', 'anon')))
+                                                         getattr(element, 'name', 'anon')))
         self.key = self._label = self._key_label = self.name
         self._element = element
         self._type = type_
@@ -2797,8 +2791,8 @@ class Label(ColumnElement):
     @util.memoized_property
     def type(self):
         return type_api.to_instance(
-                    self._type or getattr(self._element, 'type', None)
-                )
+            self._type or getattr(self._element, 'type', None)
+        )
 
     @util.memoized_property
     def element(self):
@@ -2808,8 +2802,8 @@ class Label(ColumnElement):
         sub_element = self._element.self_group(against=against)
         if sub_element is not self._element:
             return Label(self.name,
-                        sub_element,
-                        type_=self._type)
+                         sub_element,
+                         type_=self._type)
         else:
             return self
 
@@ -2833,7 +2827,7 @@ class Label(ColumnElement):
 
     def _make_proxy(self, selectable, name=None, **kw):
         e = self.element._make_proxy(selectable,
-                                name=name if name else self.name)
+                                     name=name if name else self.name)
         e._proxies.append(self)
         if self._type is not None:
             e.type = self._type
@@ -2964,13 +2958,13 @@ class ColumnClause(Immutable, ColumnElement):
 
     def _compare_name_for_result(self, other):
         if self.is_literal or \
-            self.table is None or self.table._textual or \
-            not hasattr(other, 'proxy_set') or (
-            isinstance(other, ColumnClause) and
-                (other.is_literal or
-                        other.table is None or
-                        other.table._textual)
-        ):
+                self.table is None or self.table._textual or \
+                not hasattr(other, 'proxy_set') or (
+                    isinstance(other, ColumnClause) and
+                    (other.is_literal or
+                     other.table is None or
+                     other.table._textual)
+                ):
             return (hasattr(other, 'name') and self.name == other.name) or \
                 (hasattr(other, '_label') and self._label == other._label)
         else:
@@ -3019,7 +3013,7 @@ class ColumnClause(Immutable, ColumnElement):
         elif t is not None and t.named_with_column:
             if getattr(t, 'schema', None):
                 label = t.schema.replace('.', '_') + "_" + \
-                            t.name + "_" + name
+                    t.name + "_" + name
             else:
                 label = t.name + "_" + name
 
@@ -3052,23 +3046,23 @@ class ColumnClause(Immutable, ColumnElement):
 
     def _bind_param(self, operator, obj):
         return BindParameter(self.name, obj,
-                                _compared_to_operator=operator,
-                                _compared_to_type=self.type,
-                                unique=True)
+                             _compared_to_operator=operator,
+                             _compared_to_type=self.type,
+                             unique=True)
 
     def _make_proxy(self, selectable, name=None, attach=True,
-                            name_is_truncatable=False, **kw):
+                    name_is_truncatable=False, **kw):
         # propagate the "is_literal" flag only if we are keeping our name,
         # otherwise its considered to be a label
         is_literal = self.is_literal and (name is None or name == self.name)
         c = self._constructor(
-                    _as_truncated(name or self.name) if \
-                                    name_is_truncatable else \
-                                    (name or self.name),
-                    type_=self.type,
-                    _selectable=selectable,
-                    is_literal=is_literal
-                )
+            _as_truncated(name or self.name) if
+            name_is_truncatable else
+            (name or self.name),
+            type_=self.type,
+            _selectable=selectable,
+            is_literal=is_literal
+        )
         if name is None:
             c.key = self.key
         c._proxies = [self]
@@ -3156,8 +3150,8 @@ class quoted_name(util.text_type):
         # elif not sprcls and quote is None:
         #   return value
         elif isinstance(value, cls) and (
-                quote is None or value.quote == quote
-            ):
+            quote is None or value.quote == quote
+        ):
             return value
         self = super(quoted_name, cls).__new__(cls, value)
         self.quote = quote
@@ -3186,13 +3180,14 @@ class quoted_name(util.text_type):
             backslashed = backslashed.decode('ascii')
         return "'%s'" % backslashed
 
+
 class _truncated_label(quoted_name):
     """A unicode subclass used to identify symbolic "
     "names that may require truncation."""
 
     def __new__(cls, value, quote=None):
         quote = getattr(value, "quote", quote)
-        #return super(_truncated_label, cls).__new__(cls, value, quote, True)
+        # return super(_truncated_label, cls).__new__(cls, value, quote, True)
         return super(_truncated_label, cls).__new__(cls, value, quote)
 
     def __reduce__(self):
@@ -3214,17 +3209,17 @@ class _anonymous_label(_truncated_label):
 
     def __add__(self, other):
         return _anonymous_label(
-                    quoted_name(
-                        util.text_type.__add__(self, util.text_type(other)),
-                        self.quote)
-                )
+            quoted_name(
+                util.text_type.__add__(self, util.text_type(other)),
+                self.quote)
+        )
 
     def __radd__(self, other):
         return _anonymous_label(
-                    quoted_name(
-                        util.text_type.__add__(util.text_type(other), self),
-                        self.quote)
-                    )
+            quoted_name(
+                util.text_type.__add__(util.text_type(other), self),
+                self.quote)
+        )
 
     def apply_map(self, map_):
         if self.quote is not None:
@@ -3286,10 +3281,11 @@ def _cloned_intersection(a, b):
     return set(elem for elem in a
                if all_overlap.intersection(elem._cloned_set))
 
+
 def _cloned_difference(a, b):
     all_overlap = set(_expand_cloned(a)).intersection(_expand_cloned(b))
     return set(elem for elem in a
-                if not all_overlap.intersection(elem._cloned_set))
+               if not all_overlap.intersection(elem._cloned_set))
 
 
 def _labeled(element):
@@ -3371,7 +3367,7 @@ def _no_literals(element):
 
 def _is_literal(element):
     return not isinstance(element, Visitable) and \
-            not hasattr(element, '__clause_element__')
+        not hasattr(element, '__clause_element__')
 
 
 def _only_column_elements_or_none(element, name):
@@ -3386,9 +3382,10 @@ def _only_column_elements(element, name):
         element = element.__clause_element__()
     if not isinstance(element, ColumnElement):
         raise exc.ArgumentError(
-                "Column-based expression object expected for argument "
-                "'%s'; got: '%s', type %s" % (name, element, type(element)))
+            "Column-based expression object expected for argument "
+            "'%s'; got: '%s', type %s" % (name, element, type(element)))
     return element
+
 
 def _literal_as_binds(element, name=None, type_=None):
     if hasattr(element, '__clause_element__'):
@@ -3442,18 +3439,18 @@ def _type_from_args(args):
 
 
 def _corresponding_column_or_error(fromclause, column,
-                                        require_embedded=False):
+                                   require_embedded=False):
     c = fromclause.corresponding_column(column,
-            require_embedded=require_embedded)
+                                        require_embedded=require_embedded)
     if c is None:
         raise exc.InvalidRequestError(
-                "Given column '%s', attached to table '%s', "
-                "failed to locate a corresponding column from table '%s'"
-                %
-                (column,
-                    getattr(column, 'table', None),
-                    fromclause.description)
-                )
+            "Given column '%s', attached to table '%s', "
+            "failed to locate a corresponding column from table '%s'"
+            %
+            (column,
+             getattr(column, 'table', None),
+             fromclause.description)
+        )
     return c
 
 

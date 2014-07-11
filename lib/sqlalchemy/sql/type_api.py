@@ -20,6 +20,7 @@ INTEGERTYPE = None
 NULLTYPE = None
 STRINGTYPE = None
 
+
 class TypeEngine(Visitable):
     """The ultimate base class for all SQL datatypes.
 
@@ -49,7 +50,6 @@ class TypeEngine(Visitable):
 
         def __reduce__(self):
             return _reconstitute_comparator, (self.expr, )
-
 
     hashable = True
     """Flag, if False, means values from this type aren't hashable.
@@ -265,7 +265,6 @@ class TypeEngine(Visitable):
         """
         return Variant(self, {dialect_name: to_instance(type_)})
 
-
     @util.memoized_property
     def _type_affinity(self):
         """Return a rudimental 'affinity' value expressing the general class
@@ -289,7 +288,6 @@ class TypeEngine(Visitable):
             return dialect._type_memos[self]['impl']
         except KeyError:
             return self._dialect_info(dialect)['impl']
-
 
     def _cached_literal_processor(self, dialect):
         """Return a dialect-specific literal processor for this type."""
@@ -352,7 +350,6 @@ class TypeEngine(Visitable):
         """
         return util.constructor_copy(self, cls, **kw)
 
-
     def coerce_compared_value(self, op, value):
         """Suggest a type for a 'coerced' Python value in an expression.
 
@@ -374,7 +371,7 @@ class TypeEngine(Visitable):
         """
         _coerced_type = _type_map.get(type(value), NULLTYPE)
         if _coerced_type is NULLTYPE or _coerced_type._type_affinity \
-            is self._type_affinity:
+                is self._type_affinity:
             return self
         else:
             return _coerced_type
@@ -411,12 +408,13 @@ class TypeEngine(Visitable):
     def __str__(self):
         if util.py2k:
             return unicode(self.compile()).\
-                        encode('ascii', 'backslashreplace')
+                encode('ascii', 'backslashreplace')
         else:
             return str(self.compile())
 
     def __repr__(self):
         return util.generic_repr(self)
+
 
 class UserDefinedType(TypeEngine):
     """Base for user defined types.
@@ -454,16 +452,15 @@ class UserDefinedType(TypeEngine):
     """
     __visit_name__ = "user_defined"
 
-
     class Comparator(TypeEngine.Comparator):
         def _adapt_expression(self, op, other_comparator):
             if hasattr(self.type, 'adapt_operator'):
                 util.warn_deprecated(
                     "UserDefinedType.adapt_operator is deprecated.  Create "
-                     "a UserDefinedType.Comparator subclass instead which "
-                     "generates the desired expression constructs, given a "
-                     "particular operator."
-                    )
+                    "a UserDefinedType.Comparator subclass instead which "
+                    "generates the desired expression constructs, given a "
+                    "particular operator."
+                )
                 return self.type.adapt_operator(op), self.type
             else:
                 return op, self.type
@@ -622,18 +619,18 @@ class TypeDecorator(TypeEngine):
         def operate(self, op, *other, **kwargs):
             kwargs['_python_is_types'] = self.expr.type.coerce_to_is_types
             return super(TypeDecorator.Comparator, self).operate(
-                                                        op, *other, **kwargs)
+                op, *other, **kwargs)
 
         def reverse_operate(self, op, other, **kwargs):
             kwargs['_python_is_types'] = self.expr.type.coerce_to_is_types
             return super(TypeDecorator.Comparator, self).reverse_operate(
-                                                        op, other, **kwargs)
+                op, other, **kwargs)
 
     @property
     def comparator_factory(self):
         return type("TDComparator",
-                (TypeDecorator.Comparator, self.impl.comparator_factory),
-                {})
+                    (TypeDecorator.Comparator, self.impl.comparator_factory),
+                    {})
 
     def _gen_dialect_impl(self, dialect):
         """
@@ -652,7 +649,7 @@ class TypeDecorator(TypeEngine):
             raise AssertionError('Type object %s does not properly '
                                  'implement the copy() method, it must '
                                  'return an object of type %s' % (self,
-                                 self.__class__))
+                                                                  self.__class__))
         tt.impl = typedesc
         return tt
 
@@ -676,7 +673,7 @@ class TypeDecorator(TypeEngine):
 
         """
         adapted = dialect.type_descriptor(self)
-        if type(adapted) is not type(self):
+        if not isinstance(adapted, type(self)):
             return adapted
         elif isinstance(self.impl, TypeDecorator):
             return self.impl.type_engine(dialect)
@@ -903,7 +900,7 @@ class TypeDecorator(TypeEngine):
         if self._has_result_processor:
             process_value = self.process_result_value
             impl_processor = self.impl.result_processor(dialect,
-                    coltype)
+                                                        coltype)
             if impl_processor:
                 def process(value):
                     return process_value(impl_processor(value), dialect)
@@ -1032,6 +1029,7 @@ class Variant(TypeDecorator):
         """express comparison behavior in terms of the base type"""
         return self.impl.comparator_factory
 
+
 def _reconstitute_comparator(expression):
     return expression.comparator
 
@@ -1066,5 +1064,3 @@ def adapt_type(typeobj, colspecs):
     if (issubclass(typeobj.__class__, impltype)):
         return typeobj
     return typeobj.adapt(impltype)
-
-

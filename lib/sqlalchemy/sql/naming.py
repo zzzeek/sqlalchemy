@@ -11,11 +11,12 @@
 """
 
 from .schema import Constraint, ForeignKeyConstraint, PrimaryKeyConstraint, \
-                UniqueConstraint, CheckConstraint, Index, Table, Column
+    UniqueConstraint, CheckConstraint, Index, Table, Column
 from .. import event, events
 from .. import exc
 from .elements import _truncated_label
 import re
+
 
 class conv(_truncated_label):
     """Mark a string indicating that a name has already been converted
@@ -58,6 +59,7 @@ class conv(_truncated_label):
 
     """
 
+
 class ConventionDict(object):
     def __init__(self, const, table, convention):
         self.const = const
@@ -79,10 +81,10 @@ class ConventionDict(object):
     def _key_constraint_name(self):
         if not self._const_name:
             raise exc.InvalidRequestError(
-                    "Naming convention including "
-                    "%(constraint_name)s token requires that "
-                    "constraint is explicitly named."
-                )
+                "Naming convention including "
+                "%(constraint_name)s token requires that "
+                "constraint is explicitly named."
+            )
         if not isinstance(self._const_name, conv):
             self.const.name = None
         return self._const_name
@@ -134,6 +136,7 @@ _prefix_dict = {
     ForeignKeyConstraint: "fk"
 }
 
+
 def _get_convention(dict_, key):
 
     for super_ in key.__mro__:
@@ -153,15 +156,16 @@ def _constraint_name(const, table):
         # to link the column attached to the table as this constraint
         # associated with the table.
         event.listen(table, "after_parent_attach",
-                    lambda col, table: _constraint_name(const, table)
-                )
+                     lambda col, table: _constraint_name(const, table)
+                     )
     elif isinstance(table, Table):
         metadata = table.metadata
         convention = _get_convention(metadata.naming_convention, type(const))
         if convention is not None:
             if const.name is None or "constraint_name" in convention:
                 newname = conv(
-                            convention % ConventionDict(const, table, metadata.naming_convention)
-                            )
+                    convention % ConventionDict(
+                        const, table, metadata.naming_convention)
+                )
                 if const.name is None:
                     const.name = newname

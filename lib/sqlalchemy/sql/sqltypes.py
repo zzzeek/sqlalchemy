@@ -25,6 +25,7 @@ import decimal
 if util.jython:
     import array
 
+
 class _DateAffinity(object):
     """Mixin date/time specific expression adaptations.
 
@@ -44,9 +45,10 @@ class _DateAffinity(object):
         def _adapt_expression(self, op, other_comparator):
             othertype = other_comparator.type._type_affinity
             return op, \
-                    to_instance(self.type._expression_adaptations.get(op, self._blank_dict).\
-                    get(othertype, NULLTYPE))
+                to_instance(self.type._expression_adaptations.get(op, self._blank_dict).
+                            get(othertype, NULLTYPE))
     comparator_factory = Comparator
+
 
 class Concatenable(object):
     """A mixin that marks a type as supporting 'concatenation',
@@ -55,7 +57,7 @@ class Concatenable(object):
     class Comparator(TypeEngine.Comparator):
         def _adapt_expression(self, op, other_comparator):
             if op is operators.add and isinstance(other_comparator,
-                    (Concatenable.Comparator, NullType.Comparator)):
+                                                  (Concatenable.Comparator, NullType.Comparator)):
                 return operators.concat_op, self.expr.type
             else:
                 return op, self.expr.type
@@ -79,10 +81,10 @@ class String(Concatenable, TypeEngine):
     __visit_name__ = 'string'
 
     def __init__(self, length=None, collation=None,
-                        convert_unicode=False,
-                        unicode_error=None,
-                        _warn_on_bytestring=False
-                        ):
+                 convert_unicode=False,
+                 unicode_error=None,
+                 _warn_on_bytestring=False
+                 ):
         """
         Create a string-holding type.
 
@@ -147,7 +149,7 @@ class String(Concatenable, TypeEngine):
         """
         if unicode_error is not None and convert_unicode != 'force':
             raise exc.ArgumentError("convert_unicode must be 'force' "
-                                        "when unicode_error is set.")
+                                    "when unicode_error is set.")
 
         self.length = length
         self.collation = collation
@@ -164,7 +166,7 @@ class String(Concatenable, TypeEngine):
     def bind_processor(self, dialect):
         if self.convert_unicode or dialect.convert_unicode:
             if dialect.supports_unicode_binds and \
-                self.convert_unicode != 'force':
+                    self.convert_unicode != 'force':
                 if self._warn_on_bytestring:
                     def process(value):
                         if isinstance(value, util.binary_type):
@@ -192,23 +194,23 @@ class String(Concatenable, TypeEngine):
     def result_processor(self, dialect, coltype):
         wants_unicode = self.convert_unicode or dialect.convert_unicode
         needs_convert = wants_unicode and \
-                        (dialect.returns_unicode_strings is not True or
-                        self.convert_unicode in ('force', 'force_nocheck'))
+            (dialect.returns_unicode_strings is not True or
+             self.convert_unicode in ('force', 'force_nocheck'))
         needs_isinstance = (
-                                needs_convert and
-                                dialect.returns_unicode_strings and
-                                self.convert_unicode != 'force_nocheck'
-                            )
+            needs_convert and
+            dialect.returns_unicode_strings and
+            self.convert_unicode != 'force_nocheck'
+        )
         if needs_convert:
             to_unicode = processors.to_unicode_processor_factory(
-                                    dialect.encoding, self.unicode_error)
+                dialect.encoding, self.unicode_error)
 
             if needs_isinstance:
                 return processors.to_conditional_unicode_processor_factory(
-                                    dialect.encoding, self.unicode_error)
+                    dialect.encoding, self.unicode_error)
             else:
                 return processors.to_unicode_processor_factory(
-                                    dialect.encoding, self.unicode_error)
+                    dialect.encoding, self.unicode_error)
         else:
             return None
 
@@ -382,7 +384,6 @@ class Integer(_DateAffinity, TypeEngine):
         }
 
 
-
 class SmallInteger(Integer):
     """A type for smaller ``int`` integers.
 
@@ -403,7 +404,6 @@ class BigInteger(Integer):
     """
 
     __visit_name__ = 'big_integer'
-
 
 
 class Numeric(_DateAffinity, TypeEngine):
@@ -450,7 +450,7 @@ class Numeric(_DateAffinity, TypeEngine):
     _default_decimal_return_scale = 10
 
     def __init__(self, precision=None, scale=None,
-                  decimal_return_scale=None, asdecimal=True):
+                 decimal_return_scale=None, asdecimal=True):
         """
         Construct a Numeric.
 
@@ -545,9 +545,9 @@ class Numeric(_DateAffinity, TypeEngine):
 
                 # we're a "numeric", DBAPI returns floats, convert.
                 return processors.to_decimal_processor_factory(
-                            decimal.Decimal,
-                            self.scale if self.scale is not None
-                            else self._default_decimal_return_scale)
+                    decimal.Decimal,
+                    self.scale if self.scale is not None
+                    else self._default_decimal_return_scale)
         else:
             if dialect.supports_native_decimal:
                 return processors.to_float
@@ -606,7 +606,7 @@ class Float(Numeric):
     scale = None
 
     def __init__(self, precision=None, asdecimal=False,
-                        decimal_return_scale=None, **kwargs):
+                 decimal_return_scale=None, **kwargs):
         """
         Construct a Float.
 
@@ -640,13 +640,13 @@ class Float(Numeric):
         self.decimal_return_scale = decimal_return_scale
         if kwargs:
             util.warn_deprecated("Additional keyword arguments "
-                                "passed to Float ignored.")
+                                 "passed to Float ignored.")
 
     def result_processor(self, dialect, coltype):
         if self.asdecimal:
             return processors.to_decimal_processor_factory(
-                                    decimal.Decimal,
-                                    self._effective_decimal_return_scale)
+                decimal.Decimal,
+                self._effective_decimal_return_scale)
         else:
             return None
 
@@ -886,7 +886,6 @@ class Binary(LargeBinary):
         LargeBinary.__init__(self, *arg, **kw)
 
 
-
 class SchemaType(SchemaEventTarget):
     """Mark a type as possibly requiring schema-level DDL for usage.
 
@@ -910,7 +909,7 @@ class SchemaType(SchemaEventTarget):
     """
 
     def __init__(self, name=None, schema=None, metadata=None,
-                inherit_schema=False, quote=None):
+                 inherit_schema=False, quote=None):
         if name is not None:
             self.name = quoted_name(name, quote)
         else:
@@ -940,8 +939,8 @@ class SchemaType(SchemaEventTarget):
         event.listen(
             table,
             "before_create",
-              util.portable_instancemethod(
-                    self._on_table_create)
+            util.portable_instancemethod(
+                self._on_table_create)
         )
         event.listen(
             table,
@@ -969,11 +968,11 @@ class SchemaType(SchemaEventTarget):
         schema = kw.pop('schema', self.schema)
         metadata = kw.pop('metadata', self.metadata)
         return impltype(name=self.name,
-                    schema=schema,
-                    metadata=metadata,
-                    inherit_schema=self.inherit_schema,
-                    **kw
-                    )
+                        schema=schema,
+                        metadata=metadata,
+                        inherit_schema=self.inherit_schema,
+                        **kw
+                        )
 
     @property
     def bind(self):
@@ -1016,6 +1015,7 @@ class SchemaType(SchemaEventTarget):
         t = self.dialect_impl(bind.dialect)
         if t.__class__ is not self.__class__ and isinstance(t, SchemaType):
             t._on_metadata_drop(target, bind, **kw)
+
 
 class Enum(String, SchemaType):
     """Generic Enum Type.
@@ -1114,12 +1114,12 @@ class Enum(String, SchemaType):
 
     def __repr__(self):
         return util.generic_repr(self,
-              to_inspect=[Enum, SchemaType],
-          )
+                                 to_inspect=[Enum, SchemaType],
+                                 )
 
     def _should_create_constraint(self, compiler):
         return not self.native_enum or \
-                    not compiler.dialect.supports_native_enum
+            not compiler.dialect.supports_native_enum
 
     @util.dependencies("sqlalchemy.sql.schema")
     def _set_table(self, schema, column, table):
@@ -1127,11 +1127,11 @@ class Enum(String, SchemaType):
             SchemaType._set_table(self, column, table)
 
         e = schema.CheckConstraint(
-                        type_coerce(column, self).in_(self.enums),
-                        name=self.name,
-                        _create_rule=util.portable_instancemethod(
-                                        self._should_create_constraint)
-                    )
+            type_coerce(column, self).in_(self.enums),
+            name=self.name,
+            _create_rule=util.portable_instancemethod(
+                self._should_create_constraint)
+        )
         assert e.table is table
 
     def adapt(self, impltype, **kw):
@@ -1139,14 +1139,14 @@ class Enum(String, SchemaType):
         metadata = kw.pop('metadata', self.metadata)
         if issubclass(impltype, Enum):
             return impltype(name=self.name,
-                        schema=schema,
-                        metadata=metadata,
-                        convert_unicode=self.convert_unicode,
-                        native_enum=self.native_enum,
-                        inherit_schema=self.inherit_schema,
-                        *self.enums,
-                        **kw
-                        )
+                            schema=schema,
+                            metadata=metadata,
+                            convert_unicode=self.convert_unicode,
+                            native_enum=self.native_enum,
+                            inherit_schema=self.inherit_schema,
+                            *self.enums,
+                            **kw
+                            )
         else:
             return super(Enum, self).adapt(impltype, **kw)
 
@@ -1167,7 +1167,7 @@ class PickleType(TypeDecorator):
     impl = LargeBinary
 
     def __init__(self, protocol=pickle.HIGHEST_PROTOCOL,
-                    pickler=None, comparator=None):
+                 pickler=None, comparator=None):
         """
         Construct a PickleType.
 
@@ -1264,11 +1264,11 @@ class Boolean(TypeEngine, SchemaType):
             return
 
         e = schema.CheckConstraint(
-                        type_coerce(column, self).in_([0, 1]),
-                        name=self.name,
-                        _create_rule=util.portable_instancemethod(
-                                    self._should_create_constraint)
-                    )
+            type_coerce(column, self).in_([0, 1]),
+            name=self.name,
+            _create_rule=util.portable_instancemethod(
+                self._should_create_constraint)
+        )
         assert e.table is table
 
     @property
@@ -1318,8 +1318,8 @@ class Interval(_DateAffinity, TypeDecorator):
     epoch = dt.datetime.utcfromtimestamp(0)
 
     def __init__(self, native=True,
-                        second_precision=None,
-                        day_precision=None):
+                 second_precision=None,
+                 day_precision=None):
         """Construct an Interval object.
 
         :param native: when True, use the actual
@@ -1346,10 +1346,10 @@ class Interval(_DateAffinity, TypeDecorator):
             return cls._adapt_from_generic_interval(self, **kw)
         else:
             return self.__class__(
-                        native=self.native,
-                        second_precision=self.second_precision,
-                        day_precision=self.day_precision,
-                        **kw)
+                native=self.native,
+                second_precision=self.second_precision,
+                day_precision=self.day_precision,
+                **kw)
 
     @property
     def python_type(self):
@@ -1551,6 +1551,7 @@ class BOOLEAN(Boolean):
 
     __visit_name__ = 'BOOLEAN'
 
+
 class NullType(TypeEngine):
     """An unknown type.
 
@@ -1585,7 +1586,7 @@ class NullType(TypeEngine):
     class Comparator(TypeEngine.Comparator):
         def _adapt_expression(self, op, other_comparator):
             if isinstance(other_comparator, NullType.Comparator) or \
-                not operators.is_commutative(op):
+                    not operators.is_commutative(op):
                 return op, self.expr.type
             else:
                 return other_comparator._adapt_expression(op, self)
@@ -1633,8 +1634,10 @@ type_api._type_map = _type_map
 # _DefaultColumnComparator implementation into the TypeEngine.Comparator interface.
 # Alternatively TypeEngine.Comparator could have an "impl" injected, though
 # just injecting the base is simpler, error free, and more performant.
+
+
 class Comparator(_DefaultColumnComparator):
     BOOLEANTYPE = BOOLEANTYPE
 
-TypeEngine.Comparator.__bases__ = (Comparator, ) + TypeEngine.Comparator.__bases__
-
+TypeEngine.Comparator.__bases__ = (
+    Comparator, ) + TypeEngine.Comparator.__bases__

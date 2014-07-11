@@ -15,6 +15,7 @@ from .selectable import _interpret_as_from, _interpret_as_select, HasPrefixes
 from .. import util
 from .. import exc
 
+
 class UpdateBase(DialectKWArgs, HasPrefixes, Executable, ClauseElement):
     """Form the base for ``INSERT``, ``UPDATE``, and ``DELETE`` statements.
 
@@ -39,7 +40,7 @@ class UpdateBase(DialectKWArgs, HasPrefixes, Executable, ClauseElement):
 
         if isinstance(parameters, (list, tuple)) and \
                 parameters and \
-              isinstance(parameters[0], (list, tuple, dict)):
+            isinstance(parameters[0], (list, tuple, dict)):
 
             if not self._supports_multi_parameters:
                 raise exc.InvalidRequestError(
@@ -129,7 +130,6 @@ class UpdateBase(DialectKWArgs, HasPrefixes, Executable, ClauseElement):
         """
         self._returning = cols
 
-
     @_generative
     def with_hint(self, text, selectable=None, dialect_name="*"):
         """Add a table hint for a single table to this
@@ -167,7 +167,7 @@ class UpdateBase(DialectKWArgs, HasPrefixes, Executable, ClauseElement):
             selectable = self.table
 
         self._hints = self._hints.union(
-                        {(selectable, dialect_name): text})
+            {(selectable, dialect_name): text})
 
 
 class ValuesBase(UpdateBase):
@@ -183,7 +183,7 @@ class ValuesBase(UpdateBase):
     def __init__(self, table, values, prefixes):
         self.table = _interpret_as_from(table)
         self.parameters, self._has_multi_parameters = \
-                            self._process_colparams(values)
+            self._process_colparams(values)
         if prefixes:
             self._setup_prefixes(prefixes)
 
@@ -282,23 +282,23 @@ class ValuesBase(UpdateBase):
         """
         if self.select is not None:
             raise exc.InvalidRequestError(
-                        "This construct already inserts from a SELECT")
+                "This construct already inserts from a SELECT")
         if self._has_multi_parameters and kwargs:
             raise exc.InvalidRequestError(
-                        "This construct already has multiple parameter sets.")
+                "This construct already has multiple parameter sets.")
 
         if args:
             if len(args) > 1:
                 raise exc.ArgumentError(
-                            "Only a single dictionary/tuple or list of "
-                            "dictionaries/tuples is accepted positionally.")
+                    "Only a single dictionary/tuple or list of "
+                    "dictionaries/tuples is accepted positionally.")
             v = args[0]
         else:
             v = {}
 
         if self.parameters is None:
             self.parameters, self._has_multi_parameters = \
-                    self._process_colparams(v)
+                self._process_colparams(v)
         else:
             if self._has_multi_parameters:
                 self.parameters = list(self.parameters)
@@ -321,8 +321,8 @@ class ValuesBase(UpdateBase):
         if kwargs:
             if self._has_multi_parameters:
                 raise exc.ArgumentError(
-                            "Can't pass kwargs and multiple parameter sets "
-                            "simultaenously")
+                    "Can't pass kwargs and multiple parameter sets "
+                    "simultaenously")
             else:
                 self.parameters.update(kwargs)
 
@@ -411,14 +411,14 @@ class Insert(ValuesBase):
     _supports_multi_parameters = True
 
     def __init__(self,
-                table,
-                values=None,
-                inline=False,
-                bind=None,
-                prefixes=None,
-                returning=None,
-                return_defaults=False,
-                **dialect_kw):
+                 table,
+                 values=None,
+                 inline=False,
+                 bind=None,
+                 prefixes=None,
+                 returning=None,
+                 return_defaults=False,
+                 **dialect_kw):
         """Construct an :class:`.Insert` object.
 
         Similar functionality is available via the
@@ -516,10 +516,10 @@ class Insert(ValuesBase):
         """
         if self.parameters:
             raise exc.InvalidRequestError(
-                        "This construct already inserts value expressions")
+                "This construct already inserts value expressions")
 
         self.parameters, self._has_multi_parameters = \
-                self._process_colparams(dict((n, Null()) for n in names))
+            self._process_colparams(dict((n, Null()) for n in names))
 
         self.select_names = names
         self.select = _interpret_as_select(select)
@@ -540,15 +540,15 @@ class Update(ValuesBase):
     __visit_name__ = 'update'
 
     def __init__(self,
-                table,
-                whereclause=None,
-                values=None,
-                inline=False,
-                bind=None,
-                prefixes=None,
-                returning=None,
-                return_defaults=False,
-                **dialect_kw):
+                 table,
+                 whereclause=None,
+                 values=None,
+                 inline=False,
+                 bind=None,
+                 prefixes=None,
+                 returning=None,
+                 return_defaults=False,
+                 **dialect_kw):
         """Construct an :class:`.Update` object.
 
         E.g.::
@@ -662,7 +662,6 @@ class Update(ValuesBase):
         self._validate_dialect_kwargs(dialect_kw)
         self._return_defaults = return_defaults
 
-
     def get_children(self, **kwargs):
         if self._whereclause is not None:
             return self._whereclause,
@@ -682,7 +681,7 @@ class Update(ValuesBase):
         """
         if self._whereclause is not None:
             self._whereclause = and_(self._whereclause,
-                    _literal_as_text(whereclause))
+                                     _literal_as_text(whereclause))
         else:
             self._whereclause = _literal_as_text(whereclause)
 
@@ -712,12 +711,12 @@ class Delete(UpdateBase):
     __visit_name__ = 'delete'
 
     def __init__(self,
-            table,
-            whereclause=None,
-            bind=None,
-            returning=None,
-            prefixes=None,
-            **dialect_kw):
+                 table,
+                 whereclause=None,
+                 bind=None,
+                 returning=None,
+                 prefixes=None,
+                 **dialect_kw):
         """Construct :class:`.Delete` object.
 
         Similar functionality is available via the
@@ -761,11 +760,10 @@ class Delete(UpdateBase):
 
         if self._whereclause is not None:
             self._whereclause = and_(self._whereclause,
-                    _literal_as_text(whereclause))
+                                     _literal_as_text(whereclause))
         else:
             self._whereclause = _literal_as_text(whereclause)
 
     def _copy_internals(self, clone=_clone, **kw):
         # TODO: coverage
         self._whereclause = clone(self._whereclause, **kw)
-
