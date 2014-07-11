@@ -47,8 +47,8 @@ from ... import types as sqltypes
 from ...connectors.mxodbc import MxODBCConnector
 from .pyodbc import MSExecutionContext_pyodbc, _MSNumeric_pyodbc
 from .base import (MSDialect,
-                                            MSSQLStrictCompiler,
-                                            _MSDateTime, _MSDate, _MSTime)
+                   MSSQLStrictCompiler,
+                   _MSDateTime, _MSDate, _MSTime)
 
 
 class _MSNumeric_mxodbc(_MSNumeric_pyodbc):
@@ -82,7 +82,7 @@ class MSExecutionContext_mxodbc(MSExecutionContext_pyodbc):
     SELECT SCOPE_IDENTITY in cases where OUTPUT clause
     does not work (tables with insert triggers).
     """
-    #todo - investigate whether the pyodbc execution context
+    # todo - investigate whether the pyodbc execution context
     #       is really only being used in cases where OUTPUT
     #       won't work.
 

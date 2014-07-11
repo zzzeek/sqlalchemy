@@ -34,7 +34,7 @@ Currently *not* supported are::
 """
 
 from sqlalchemy.dialects.sybase.base import SybaseDialect,\
-                                            SybaseExecutionContext
+    SybaseExecutionContext
 from sqlalchemy.connectors.pyodbc import PyODBCConnector
 from sqlalchemy import types as sqltypes, processors
 import decimal
@@ -51,7 +51,7 @@ class _SybNumeric_pyodbc(sqltypes.Numeric):
 
     def bind_processor(self, dialect):
         super_process = super(_SybNumeric_pyodbc, self).\
-                                    bind_processor(dialect)
+            bind_processor(dialect)
 
         def process(value):
             if self.asdecimal and \

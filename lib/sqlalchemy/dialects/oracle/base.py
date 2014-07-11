@@ -205,21 +205,21 @@ from sqlalchemy.sql import compiler, visitors, expression
 from sqlalchemy.sql import operators as sql_operators, functions as sql_functions
 from sqlalchemy import types as sqltypes, schema as sa_schema
 from sqlalchemy.types import VARCHAR, NVARCHAR, CHAR, \
-                BLOB, CLOB, TIMESTAMP, FLOAT
+    BLOB, CLOB, TIMESTAMP, FLOAT
 
 RESERVED_WORDS = \
-    set('SHARE RAW DROP BETWEEN FROM DESC OPTION PRIOR LONG THEN '\
-        'DEFAULT ALTER IS INTO MINUS INTEGER NUMBER GRANT IDENTIFIED '\
-        'ALL TO ORDER ON FLOAT DATE HAVING CLUSTER NOWAIT RESOURCE '\
-        'ANY TABLE INDEX FOR UPDATE WHERE CHECK SMALLINT WITH DELETE '\
-        'BY ASC REVOKE LIKE SIZE RENAME NOCOMPRESS NULL GROUP VALUES '\
-        'AS IN VIEW EXCLUSIVE COMPRESS SYNONYM SELECT INSERT EXISTS '\
-        'NOT TRIGGER ELSE CREATE INTERSECT PCTFREE DISTINCT USER '\
-        'CONNECT SET MODE OF UNIQUE VARCHAR2 VARCHAR LOCK OR CHAR '\
+    set('SHARE RAW DROP BETWEEN FROM DESC OPTION PRIOR LONG THEN '
+        'DEFAULT ALTER IS INTO MINUS INTEGER NUMBER GRANT IDENTIFIED '
+        'ALL TO ORDER ON FLOAT DATE HAVING CLUSTER NOWAIT RESOURCE '
+        'ANY TABLE INDEX FOR UPDATE WHERE CHECK SMALLINT WITH DELETE '
+        'BY ASC REVOKE LIKE SIZE RENAME NOCOMPRESS NULL GROUP VALUES '
+        'AS IN VIEW EXCLUSIVE COMPRESS SYNONYM SELECT INSERT EXISTS '
+        'NOT TRIGGER ELSE CREATE INTERSECT PCTFREE DISTINCT USER '
+        'CONNECT SET MODE OF UNIQUE VARCHAR2 VARCHAR LOCK OR CHAR '
         'DECIMAL UNION PUBLIC AND START UID COMMENT CURRENT LEVEL'.split())
 
 NO_ARG_FNS = set('UID CURRENT_DATE SYSDATE USER '
-                'CURRENT_TIME CURRENT_TIMESTAMP'.split())
+                 'CURRENT_TIME CURRENT_TIMESTAMP'.split())
 
 
 class RAW(sqltypes._Binary):
@@ -244,7 +244,8 @@ class NUMBER(sqltypes.Numeric, sqltypes.Integer):
         if asdecimal is None:
             asdecimal = bool(scale and scale > 0)
 
-        super(NUMBER, self).__init__(precision=precision, scale=scale, asdecimal=asdecimal)
+        super(NUMBER, self).__init__(
+            precision=precision, scale=scale, asdecimal=asdecimal)
 
     def adapt(self, impltype):
         ret = super(NUMBER, self).adapt(impltype)
@@ -267,7 +268,8 @@ class DOUBLE_PRECISION(sqltypes.Numeric):
         if asdecimal is None:
             asdecimal = False
 
-        super(DOUBLE_PRECISION, self).__init__(precision=precision, scale=scale, asdecimal=asdecimal)
+        super(DOUBLE_PRECISION, self).__init__(
+            precision=precision, scale=scale, asdecimal=asdecimal)
 
 
 class BFILE(sqltypes.LargeBinary):
@@ -276,6 +278,7 @@ class BFILE(sqltypes.LargeBinary):
 
 class LONG(sqltypes.Text):
     __visit_name__ = 'LONG'
+
 
 class DATE(sqltypes.DateTime):
     """Provide the oracle DATE type.
@@ -289,7 +292,6 @@ class DATE(sqltypes.DateTime):
     """
     __visit_name__ = 'DATE'
 
-
     def _compare_type_affinity(self, other):
         return other._type_affinity in (sqltypes.DateTime, sqltypes.Date)
 
@@ -298,8 +300,8 @@ class INTERVAL(sqltypes.TypeEngine):
     __visit_name__ = 'INTERVAL'
 
     def __init__(self,
-                    day_precision=None,
-                    second_precision=None):
+                 day_precision=None,
+                 second_precision=None):
         """Construct an INTERVAL.
 
         Note that only DAY TO SECOND intervals are currently supported.
@@ -385,11 +387,11 @@ class OracleTypeCompiler(compiler.GenericTypeCompiler):
     def visit_INTERVAL(self, type_):
         return "INTERVAL DAY%s TO SECOND%s" % (
             type_.day_precision is not None and
-                "(%d)" % type_.day_precision or
-                "",
+            "(%d)" % type_.day_precision or
+            "",
             type_.second_precision is not None and
-                "(%d)" % type_.second_precision or
-                "",
+            "(%d)" % type_.second_precision or
+            "",
         )
 
     def visit_LONG(self, type_):
@@ -483,7 +485,7 @@ class OracleCompiler(compiler.SQLCompiler):
     compound_keywords = util.update_copy(
         compiler.SQLCompiler.compound_keywords,
         {
-        expression.CompoundSelect.EXCEPT: 'MINUS'
+            expression.CompoundSelect.EXCEPT: 'MINUS'
         }
     )
 
@@ -504,7 +506,7 @@ class OracleCompiler(compiler.SQLCompiler):
 
     def visit_match_op_binary(self, binary, operator, **kw):
         return "CONTAINS (%s, %s)" % (self.process(binary.left),
-                                        self.process(binary.right))
+                                      self.process(binary.right))
 
     def visit_true(self, expr, **kw):
         return '1'
@@ -542,8 +544,7 @@ class OracleCompiler(compiler.SQLCompiler):
             else:
                 right = join.right
             return self.process(join.left, **kwargs) + \
-                        ", " + self.process(right, **kwargs)
-
+                ", " + self.process(right, **kwargs)
 
     def _get_nonansi_join_whereclause(self, froms):
         clauses = []
@@ -557,7 +558,7 @@ class OracleCompiler(compiler.SQLCompiler):
                         elif join.right.is_derived_from(binary.right.table):
                             binary.right = _OuterJoinColumn(binary.right)
                 clauses.append(visitors.cloned_traverse(join.onclause, {},
-                                {'binary': visit_binary}))
+                                                        {'binary': visit_binary}))
             else:
                 clauses.append(join.onclause)
 
@@ -587,13 +588,13 @@ class OracleCompiler(compiler.SQLCompiler):
 
         if asfrom or ashint:
             alias_name = isinstance(alias.name, expression._truncated_label) and \
-                            self._truncated_identifier("alias", alias.name) or alias.name
+                self._truncated_identifier("alias", alias.name) or alias.name
 
         if ashint:
             return alias_name
         elif asfrom:
             return self.process(alias.original, asfrom=asfrom, **kwargs) + \
-                            " " + self.preparer.format_alias(alias, alias_name)
+                " " + self.preparer.format_alias(alias, alias_name)
         else:
             return self.process(alias.original, **kwargs)
 
@@ -607,12 +608,13 @@ class OracleCompiler(compiler.SQLCompiler):
                 col_expr = column
             outparam = sql.outparam("ret_%d" % i, type_=column.type)
             self.binds[outparam.key] = outparam
-            binds.append(self.bindparam_string(self._truncate_bindparam(outparam)))
+            binds.append(
+                self.bindparam_string(self._truncate_bindparam(outparam)))
             columns.append(self.process(col_expr, within_columns_clause=False))
             self.result_map[outparam.key] = (
                 outparam.key,
                 (column, getattr(column, 'name', None),
-                                        getattr(column, 'key', None)),
+                 getattr(column, 'key', None)),
                 column.type
             )
 
@@ -630,7 +632,7 @@ class OracleCompiler(compiler.SQLCompiler):
         if not getattr(select, '_oracle_visit', None):
             if not self.dialect.use_ansi:
                 froms = self._display_froms_for_select(
-                                    select, kwargs.get('asfrom', False))
+                    select, kwargs.get('asfrom', False))
                 whereclause = self._get_nonansi_join_whereclause(froms)
                 if whereclause is not None:
                     select = select.where(whereclause)
@@ -659,8 +661,8 @@ class OracleCompiler(compiler.SQLCompiler):
                     self.dialect.optimize_limits and \
                         select._simple_int_limit:
                     limitselect = limitselect.prefix_with(
-                                            "/*+ FIRST_ROWS(%d) */" %
-                                            select._limit)
+                        "/*+ FIRST_ROWS(%d) */" %
+                        select._limit)
 
                 limitselect._oracle_visit = True
                 limitselect._is_wrapper = True
@@ -680,7 +682,7 @@ class OracleCompiler(compiler.SQLCompiler):
                         if offset_clause is not None:
                             max_row = max_row + offset_clause
                     limitselect.append_whereclause(
-                            sql.literal_column("ROWNUM") <= max_row)
+                        sql.literal_column("ROWNUM") <= max_row)
 
                 # If needed, add the ora_rn, and wrap again with offset.
                 if offset_clause is None:
@@ -688,20 +690,20 @@ class OracleCompiler(compiler.SQLCompiler):
                     select = limitselect
                 else:
                     limitselect = limitselect.column(
-                            sql.literal_column("ROWNUM").label("ora_rn"))
+                        sql.literal_column("ROWNUM").label("ora_rn"))
                     limitselect._oracle_visit = True
                     limitselect._is_wrapper = True
 
                     offsetselect = sql.select(
-                            [c for c in limitselect.c if c.key != 'ora_rn'])
+                        [c for c in limitselect.c if c.key != 'ora_rn'])
                     offsetselect._oracle_visit = True
                     offsetselect._is_wrapper = True
 
                     if not self.dialect.use_binds_for_limits:
                         offset_clause = sql.literal_column(
-                                                "%d" % select._offset)
+                            "%d" % select._offset)
                     offsetselect.append_whereclause(
-                            sql.literal_column("ora_rn") > offset_clause)
+                        sql.literal_column("ora_rn") > offset_clause)
 
                     offsetselect._for_update_arg = select._for_update_arg
                     select = offsetselect
@@ -720,9 +722,9 @@ class OracleCompiler(compiler.SQLCompiler):
 
         if select._for_update_arg.of:
             tmp += ' OF ' + ', '.join(
-                                    self.process(elem) for elem in
-                                    select._for_update_arg.of
-                                )
+                self.process(elem) for elem in
+                select._for_update_arg.of
+            )
 
         if select._for_update_arg.nowait:
             tmp += " NOWAIT"
@@ -738,18 +740,19 @@ class OracleDDLCompiler(compiler.DDLCompiler):
             text += " ON DELETE %s" % constraint.ondelete
 
         # oracle has no ON UPDATE CASCADE -
-        # its only available via triggers http://asktom.oracle.com/tkyte/update_cascade/index.html
+        # its only available via triggers
+        # http://asktom.oracle.com/tkyte/update_cascade/index.html
         if constraint.onupdate is not None:
             util.warn(
                 "Oracle does not contain native UPDATE CASCADE "
-                 "functionality - onupdates will not be rendered for foreign keys. "
-                 "Consider using deferrable=True, initially='deferred' or triggers.")
+                "functionality - onupdates will not be rendered for foreign keys. "
+                "Consider using deferrable=True, initially='deferred' or triggers.")
 
         return text
 
     def visit_create_index(self, create, **kw):
         return super(OracleDDLCompiler, self).\
-                    visit_create_index(create, include_schema=True)
+            visit_create_index(create, include_schema=True)
 
 
 class OracleIdentifierPreparer(compiler.IdentifierPreparer):
@@ -773,8 +776,8 @@ class OracleIdentifierPreparer(compiler.IdentifierPreparer):
 class OracleExecutionContext(default.DefaultExecutionContext):
     def fire_sequence(self, seq, type_):
         return self._execute_scalar("SELECT " +
-                    self.dialect.identifier_preparer.format_sequence(seq) +
-                    ".nextval FROM DUAL", type_)
+                                    self.dialect.identifier_preparer.format_sequence(seq) +
+                                    ".nextval FROM DUAL", type_)
 
 
 class OracleDialect(default.DefaultDialect):
@@ -811,10 +814,10 @@ class OracleDialect(default.DefaultDialect):
     ]
 
     def __init__(self,
-                use_ansi=True,
-                optimize_limits=False,
-                use_binds_for_limits=True,
-                **kwargs):
+                 use_ansi=True,
+                 optimize_limits=False,
+                 use_binds_for_limits=True,
+                 **kwargs):
         default.DefaultDialect.__init__(self, **kwargs)
         self.use_ansi = use_ansi
         self.optimize_limits = optimize_limits
@@ -823,9 +826,9 @@ class OracleDialect(default.DefaultDialect):
     def initialize(self, connection):
         super(OracleDialect, self).initialize(connection)
         self.implicit_returning = self.__dict__.get(
-                                    'implicit_returning',
-                                    self.server_version_info > (10, )
-                                    )
+            'implicit_returning',
+            self.server_version_info > (10, )
+        )
 
         if self._is_oracle_8:
             self.colspecs = self.colspecs.copy()
@@ -835,7 +838,7 @@ class OracleDialect(default.DefaultDialect):
     @property
     def _is_oracle_8(self):
         return self.server_version_info and \
-                    self.server_version_info < (9, )
+            self.server_version_info < (9, )
 
     @property
     def _supports_char_length(self):
@@ -874,7 +877,7 @@ class OracleDialect(default.DefaultDialect):
             if isinstance(name, str):
                 name = name.decode(self.encoding)
         if name.upper() == name and \
-              not self.identifier_preparer._requires_quotes(name.lower()):
+                not self.identifier_preparer._requires_quotes(name.lower()):
             return name.lower()
         else:
             return name
@@ -903,7 +906,7 @@ class OracleDialect(default.DefaultDialect):
         """
 
         q = "SELECT owner, table_owner, table_name, db_link, "\
-                    "synonym_name FROM all_synonyms WHERE "
+            "synonym_name FROM all_synonyms WHERE "
         clauses = []
         params = {}
         if desired_synonym:
@@ -928,7 +931,8 @@ class OracleDialect(default.DefaultDialect):
         else:
             rows = result.fetchall()
             if len(rows) > 1:
-                raise AssertionError("There are multiple tables visible to the schema, you must specify owner")
+                raise AssertionError(
+                    "There are multiple tables visible to the schema, you must specify owner")
             elif len(rows) == 1:
                 row = rows[0]
                 return row['table_name'], row['table_owner'], row['db_link'], row['synonym_name']
@@ -941,10 +945,10 @@ class OracleDialect(default.DefaultDialect):
 
         if resolve_synonyms:
             actual_name, owner, dblink, synonym = self._resolve_synonym(
-                        connection,
-                         desired_owner=self.denormalize_name(schema),
-                         desired_synonym=self.denormalize_name(table_name)
-                       )
+                connection,
+                desired_owner=self.denormalize_name(schema),
+                desired_synonym=self.denormalize_name(table_name)
+            )
         else:
             actual_name, owner, dblink, synonym = None, None, None, None
         if not actual_name:
@@ -957,8 +961,8 @@ class OracleDialect(default.DefaultDialect):
             # will need to hear from more users if we are doing
             # the right thing here.  See [ticket:2619]
             owner = connection.scalar(
-                            sql.text("SELECT username FROM user_db_links "
-                                    "WHERE db_link=:link"), link=dblink)
+                sql.text("SELECT username FROM user_db_links "
+                         "WHERE db_link=:link"), link=dblink)
             dblink = "@" + dblink
         elif not owner:
             owner = self.denormalize_name(schema or self.default_schema_name)
@@ -1021,9 +1025,9 @@ class OracleDialect(default.DefaultDialect):
 
         params = {"table_name": table_name}
         text = "SELECT column_name, data_type, %(char_length_col)s, "\
-                "data_precision, data_scale, "\
-                "nullable, data_default FROM ALL_TAB_COLUMNS%(dblink)s "\
-                "WHERE table_name = :table_name"
+            "data_precision, data_scale, "\
+            "nullable, data_default FROM ALL_TAB_COLUMNS%(dblink)s "\
+            "WHERE table_name = :table_name"
         if schema is not None:
             params['owner'] = schema
             text += " AND owner = :owner "
@@ -1034,7 +1038,8 @@ class OracleDialect(default.DefaultDialect):
 
         for row in c:
             (colname, orig_colname, coltype, length, precision, scale, nullable, default) = \
-                (self.normalize_name(row[0]), row[0], row[1], row[2], row[3], row[4], row[5] == 'Y', row[6])
+                (self.normalize_name(row[0]), row[0], row[1], row[
+                 2], row[3], row[4], row[5] == 'Y', row[6])
 
             if coltype == 'NUMBER':
                 coltype = NUMBER(precision, scale)
@@ -1121,21 +1126,23 @@ class OracleDialect(default.DefaultDialect):
         for rset in rp:
             if rset.index_name != last_index_name:
                 remove_if_primary_key(index)
-                index = dict(name=self.normalize_name(rset.index_name), column_names=[])
+                index = dict(
+                    name=self.normalize_name(rset.index_name), column_names=[])
                 indexes.append(index)
             index['unique'] = uniqueness.get(rset.uniqueness, False)
 
             # filter out Oracle SYS_NC names.  could also do an outer join
             # to the all_tab_columns table and check for real col names there.
             if not oracle_sys_col.match(rset.column_name):
-                index['column_names'].append(self.normalize_name(rset.column_name))
+                index['column_names'].append(
+                    self.normalize_name(rset.column_name))
             last_index_name = rset.index_name
         remove_if_primary_key(index)
         return indexes
 
     @reflection.cache
     def _get_constraint_data(self, connection, table_name, schema=None,
-                            dblink='', **kw):
+                             dblink='', **kw):
 
         params = {'table_name': table_name}
 
@@ -1185,8 +1192,8 @@ class OracleDialect(default.DefaultDialect):
         pkeys = []
         constraint_name = None
         constraint_data = self._get_constraint_data(connection, table_name,
-                                        schema, dblink,
-                                        info_cache=kw.get('info_cache'))
+                                                    schema, dblink,
+                                                    info_cache=kw.get('info_cache'))
 
         for row in constraint_data:
             (cons_name, cons_type, local_column, remote_table, remote_column, remote_owner) = \
@@ -1220,8 +1227,8 @@ class OracleDialect(default.DefaultDialect):
                                           info_cache=info_cache)
 
         constraint_data = self._get_constraint_data(connection, table_name,
-                                                schema, dblink,
-                                                info_cache=kw.get('info_cache'))
+                                                    schema, dblink,
+                                                    info_cache=kw.get('info_cache'))
 
         def fkey_rec():
             return {
@@ -1236,7 +1243,7 @@ class OracleDialect(default.DefaultDialect):
 
         for row in constraint_data:
             (cons_name, cons_type, local_column, remote_table, remote_column, remote_owner) = \
-                    row[0:2] + tuple([self.normalize_name(x) for x in row[2:6]])
+                row[0:2] + tuple([self.normalize_name(x) for x in row[2:6]])
 
             if cons_type == 'R':
                 if remote_table is None:
@@ -1249,19 +1256,23 @@ class OracleDialect(default.DefaultDialect):
 
                 rec = fkeys[cons_name]
                 rec['name'] = cons_name
-                local_cols, remote_cols = rec['constrained_columns'], rec['referred_columns']
+                local_cols, remote_cols = rec[
+                    'constrained_columns'], rec['referred_columns']
 
                 if not rec['referred_table']:
                     if resolve_synonyms:
                         ref_remote_name, ref_remote_owner, ref_dblink, ref_synonym = \
-                                self._resolve_synonym(
-                                    connection,
-                                    desired_owner=self.denormalize_name(remote_owner),
-                                    desired_table=self.denormalize_name(remote_table)
-                                )
+                            self._resolve_synonym(
+                                connection,
+                                desired_owner=self.denormalize_name(
+                                    remote_owner),
+                                desired_table=self.denormalize_name(
+                                    remote_table)
+                            )
                         if ref_synonym:
                             remote_table = self.normalize_name(ref_synonym)
-                            remote_owner = self.normalize_name(ref_remote_owner)
+                            remote_owner = self.normalize_name(
+                                ref_remote_owner)
 
                     rec['referred_table'] = remote_table
 

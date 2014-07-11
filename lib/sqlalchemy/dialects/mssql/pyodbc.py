@@ -117,6 +117,7 @@ from ...connectors.pyodbc import PyODBCConnector
 from ... import types as sqltypes, util
 import decimal
 
+
 class _ms_numeric_pyodbc(object):
 
     """Turns Decimals with adjusted() < 0 or > 7 into strings.
@@ -129,7 +130,7 @@ class _ms_numeric_pyodbc(object):
     def bind_processor(self, dialect):
 
         super_process = super(_ms_numeric_pyodbc, self).\
-                        bind_processor(dialect)
+            bind_processor(dialect)
 
         if not dialect._need_decimal_fix:
             return super_process
@@ -155,37 +156,40 @@ class _ms_numeric_pyodbc(object):
 
     def _small_dec_to_string(self, value):
         return "%s0.%s%s" % (
-                    (value < 0 and '-' or ''),
-                    '0' * (abs(value.adjusted()) - 1),
-                    "".join([str(nint) for nint in value.as_tuple()[1]]))
+            (value < 0 and '-' or ''),
+            '0' * (abs(value.adjusted()) - 1),
+            "".join([str(nint) for nint in value.as_tuple()[1]]))
 
     def _large_dec_to_string(self, value):
         _int = value.as_tuple()[1]
         if 'E' in str(value):
             result = "%s%s%s" % (
-                    (value < 0 and '-' or ''),
-                    "".join([str(s) for s in _int]),
-                    "0" * (value.adjusted() - (len(_int) - 1)))
+                (value < 0 and '-' or ''),
+                "".join([str(s) for s in _int]),
+                "0" * (value.adjusted() - (len(_int) - 1)))
         else:
             if (len(_int) - 1) > value.adjusted():
                 result = "%s%s.%s" % (
-                (value < 0 and '-' or ''),
-                "".join(
-                    [str(s) for s in _int][0:value.adjusted() + 1]),
-                "".join(
-                    [str(s) for s in _int][value.adjusted() + 1:]))
+                    (value < 0 and '-' or ''),
+                    "".join(
+                        [str(s) for s in _int][0:value.adjusted() + 1]),
+                    "".join(
+                        [str(s) for s in _int][value.adjusted() + 1:]))
             else:
                 result = "%s%s" % (
-                (value < 0 and '-' or ''),
-                "".join(
-                    [str(s) for s in _int][0:value.adjusted() + 1]))
+                    (value < 0 and '-' or ''),
+                    "".join(
+                        [str(s) for s in _int][0:value.adjusted() + 1]))
         return result
+
 
 class _MSNumeric_pyodbc(_ms_numeric_pyodbc, sqltypes.Numeric):
     pass
 
+
 class _MSFloat_pyodbc(_ms_numeric_pyodbc, sqltypes.Float):
     pass
+
 
 class MSExecutionContext_pyodbc(MSExecutionContext):
     _embedded_scope_identity = False
@@ -253,9 +257,9 @@ class MSDialect_pyodbc(PyODBCConnector, MSDialect):
         super(MSDialect_pyodbc, self).__init__(**params)
         self.description_encoding = description_encoding
         self.use_scope_identity = self.use_scope_identity and \
-                        self.dbapi and \
-                        hasattr(self.dbapi.Cursor, 'nextset')
+            self.dbapi and \
+            hasattr(self.dbapi.Cursor, 'nextset')
         self._need_decimal_fix = self.dbapi and \
-                            self._dbapi_version() < (2, 1, 8)
+            self._dbapi_version() < (2, 1, 8)
 
 dialect = MSDialect_pyodbc

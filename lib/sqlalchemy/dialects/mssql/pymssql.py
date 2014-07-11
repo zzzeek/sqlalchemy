@@ -52,7 +52,7 @@ class MSDialect_pymssql(MSDialect):
         client_ver = tuple(int(x) for x in module.__version__.split("."))
         if client_ver < (1, ):
             util.warn("The pymssql dialect expects at least "
-                            "the 1.0 series of the pymssql DBAPI.")
+                      "the 1.0 series of the pymssql DBAPI.")
         return module
 
     def __init__(self, **params):

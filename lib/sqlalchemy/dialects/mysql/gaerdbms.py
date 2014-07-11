@@ -45,7 +45,7 @@ class MySQLDialect_gaerdbms(MySQLDialect_mysqldb):
         # from django:
         # http://code.google.com/p/googleappengine/source/
         #     browse/trunk/python/google/storage/speckle/
-        #     python/django/backend/base.py#118
+        # python/django/backend/base.py#118
         # see also [ticket:2649]
         # see also http://stackoverflow.com/q/14224679/34549
         from google.appengine.api import apiproxy_stub_map

@@ -25,13 +25,13 @@ the pymysql driver as well.
 from .mysqldb import MySQLDialect_mysqldb
 from ...util import py3k
 
+
 class MySQLDialect_pymysql(MySQLDialect_mysqldb):
     driver = 'pymysql'
 
     description_encoding = None
     if py3k:
         supports_unicode_statements = True
-
 
     @classmethod
     def dbapi(cls):

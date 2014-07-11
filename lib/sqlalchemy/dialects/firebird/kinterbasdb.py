@@ -52,8 +52,10 @@ class _kinterbasdb_numeric(object):
                 return value
         return process
 
+
 class _FBNumeric_kinterbasdb(_kinterbasdb_numeric, sqltypes.Numeric):
     pass
+
 
 class _FBFloat_kinterbasdb(_kinterbasdb_numeric, sqltypes.Float):
     pass
@@ -63,7 +65,7 @@ class FBExecutionContext_kinterbasdb(FBExecutionContext):
     @property
     def rowcount(self):
         if self.execution_options.get('enable_rowcount',
-                                        self.dialect.enable_rowcount):
+                                      self.dialect.enable_rowcount):
             return self.cursor.rowcount
         else:
             return -1
@@ -87,8 +89,8 @@ class FBDialect_kinterbasdb(FBDialect):
     )
 
     def __init__(self, type_conv=200, concurrency_level=1,
-                            enable_rowcount=True,
-                            retaining=False, **kwargs):
+                 enable_rowcount=True,
+                 retaining=False, **kwargs):
         super(FBDialect_kinterbasdb, self).__init__(**kwargs)
         self.enable_rowcount = enable_rowcount
         self.type_conv = type_conv
@@ -123,7 +125,7 @@ class FBDialect_kinterbasdb(FBDialect):
 
         type_conv = opts.pop('type_conv', self.type_conv)
         concurrency_level = opts.pop('concurrency_level',
-                                    self.concurrency_level)
+                                     self.concurrency_level)
 
         if self.dbapi is not None:
             initialized = getattr(self.dbapi, 'initialized', None)
@@ -134,7 +136,7 @@ class FBDialect_kinterbasdb(FBDialect):
                 initialized = getattr(self.dbapi, '_initialized', False)
             if not initialized:
                 self.dbapi.init(type_conv=type_conv,
-                                    concurrency_level=concurrency_level)
+                                concurrency_level=concurrency_level)
         return ([], opts)
 
     def _get_server_version_info(self, connection):
@@ -156,10 +158,11 @@ class FBDialect_kinterbasdb(FBDialect):
         return self._parse_version_info(version)
 
     def _parse_version_info(self, version):
-        m = match('\w+-V(\d+)\.(\d+)\.(\d+)\.(\d+)( \w+ (\d+)\.(\d+))?', version)
+        m = match(
+            '\w+-V(\d+)\.(\d+)\.(\d+)\.(\d+)( \w+ (\d+)\.(\d+))?', version)
         if not m:
             raise AssertionError(
-                    "Could not determine version from string '%s'" % version)
+                "Could not determine version from string '%s'" % version)
 
         if m.group(5) != None:
             return tuple([int(x) for x in m.group(6, 7, 4)] + ['firebird'])
@@ -168,7 +171,7 @@ class FBDialect_kinterbasdb(FBDialect):
 
     def is_disconnect(self, e, connection, cursor):
         if isinstance(e, (self.dbapi.OperationalError,
-                            self.dbapi.ProgrammingError)):
+                          self.dbapi.ProgrammingError)):
             msg = str(e)
             return ('Unable to complete network request to host' in msg or
                     'Invalid connection state' in msg or

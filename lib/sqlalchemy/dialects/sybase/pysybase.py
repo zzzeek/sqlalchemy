@@ -22,7 +22,7 @@ kind at this time.
 
 from sqlalchemy import types as sqltypes, processors
 from sqlalchemy.dialects.sybase.base import SybaseDialect, \
-                            SybaseExecutionContext, SybaseSQLCompiler
+    SybaseExecutionContext, SybaseSQLCompiler
 
 
 class _SybNumeric(sqltypes.Numeric):
@@ -62,8 +62,8 @@ class SybaseDialect_pysybase(SybaseDialect):
     statement_compiler = SybaseSQLCompiler_pysybase
 
     colspecs = {
-       sqltypes.Numeric: _SybNumeric,
-       sqltypes.Float: sqltypes.Float
+        sqltypes.Numeric: _SybNumeric,
+        sqltypes.Float: sqltypes.Float
     }
 
     @classmethod
@@ -90,7 +90,7 @@ class SybaseDialect_pysybase(SybaseDialect):
 
     def is_disconnect(self, e, connection, cursor):
         if isinstance(e, (self.dbapi.OperationalError,
-                            self.dbapi.ProgrammingError)):
+                          self.dbapi.ProgrammingError)):
             msg = str(e)
             return ('Unable to complete network request to host' in msg or
                     'Invalid connection state' in msg or

@@ -83,7 +83,8 @@ class MySQLDialect_zxjdbc(ZxJDBCConnector, MySQLDialect):
             if opts.get(key, None):
                 return opts[key]
 
-        util.warn("Could not detect the connection character set.  Assuming latin1.")
+        util.warn(
+            "Could not detect the connection character set.  Assuming latin1.")
         return 'latin1'
 
     def _driver_kwargs(self):

@@ -73,14 +73,14 @@ from ... import util
 class FBDialect_fdb(FBDialect_kinterbasdb):
 
     def __init__(self, enable_rowcount=True,
-                            retaining=False, **kwargs):
+                 retaining=False, **kwargs):
         super(FBDialect_fdb, self).__init__(
-                            enable_rowcount=enable_rowcount,
-                            retaining=retaining, **kwargs)
+            enable_rowcount=enable_rowcount,
+            retaining=retaining, **kwargs)
 
     @classmethod
     def dbapi(cls):
-        return  __import__('fdb')
+        return __import__('fdb')
 
     def create_connect_args(self, url):
         opts = url.translate_connect_args(username='user')

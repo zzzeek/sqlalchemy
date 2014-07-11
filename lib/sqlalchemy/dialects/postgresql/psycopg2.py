@@ -209,9 +209,9 @@ from ...engine import result as _result
 from ...sql import expression
 from ... import types as sqltypes
 from .base import PGDialect, PGCompiler, \
-                                PGIdentifierPreparer, PGExecutionContext, \
-                                ENUM, ARRAY, _DECIMAL_TYPES, _FLOAT_TYPES,\
-                                _INT_TYPES
+    PGIdentifierPreparer, PGExecutionContext, \
+    ENUM, ARRAY, _DECIMAL_TYPES, _FLOAT_TYPES,\
+    _INT_TYPES
 from .hstore import HSTORE
 from .json import JSON
 
@@ -227,14 +227,14 @@ class _PGNumeric(sqltypes.Numeric):
         if self.asdecimal:
             if coltype in _FLOAT_TYPES:
                 return processors.to_decimal_processor_factory(
-                                decimal.Decimal,
-                                self._effective_decimal_return_scale)
+                    decimal.Decimal,
+                    self._effective_decimal_return_scale)
             elif coltype in _DECIMAL_TYPES or coltype in _INT_TYPES:
                 # pg8000 returns Decimal natively for 1700
                 return None
             else:
                 raise exc.InvalidRequestError(
-                            "Unknown PG numeric type: %d" % coltype)
+                    "Unknown PG numeric type: %d" % coltype)
         else:
             if coltype in _FLOAT_TYPES:
                 # pg8000 returns float natively for 701
@@ -243,7 +243,7 @@ class _PGNumeric(sqltypes.Numeric):
                 return processors.to_float
             else:
                 raise exc.InvalidRequestError(
-                            "Unknown PG numeric type: %d" % coltype)
+                    "Unknown PG numeric type: %d" % coltype)
 
 
 class _PGEnum(ENUM):
@@ -254,6 +254,7 @@ class _PGEnum(ENUM):
             # function anyway - not really worth it.
             self.convert_unicode = "force_nocheck"
         return super(_PGEnum, self).result_processor(dialect, coltype)
+
 
 class _PGHStore(HSTORE):
     def bind_processor(self, dialect):
@@ -293,13 +294,13 @@ class PGExecutionContext_psycopg2(PGExecutionContext):
         if self.dialect.server_side_cursors:
             is_server_side = \
                 self.execution_options.get('stream_results', True) and (
-                    (self.compiled and isinstance(self.compiled.statement, expression.Selectable) \
-                    or \
-                    (
+                    (self.compiled and isinstance(self.compiled.statement, expression.Selectable)
+                     or
+                     (
                         (not self.compiled or
-                        isinstance(self.compiled.statement, expression.TextClause))
+                         isinstance(self.compiled.statement, expression.TextClause))
                         and self.statement and SERVER_SIDE_CURSOR_RE.match(self.statement))
-                    )
+                     )
                 )
         else:
             is_server_side = \
@@ -336,7 +337,7 @@ class PGExecutionContext_psycopg2(PGExecutionContext):
 class PGCompiler_psycopg2(PGCompiler):
     def visit_mod_binary(self, binary, operator, **kw):
         return self.process(binary.left, **kw) + " %% " + \
-                self.process(binary.right, **kw)
+            self.process(binary.right, **kw)
 
     def post_process_text(self, text):
         return text.replace('%', '%%')
@@ -354,7 +355,8 @@ class PGDialect_psycopg2(PGDialect):
         supports_unicode_statements = False
 
     default_paramstyle = 'pyformat'
-    supports_sane_multi_rowcount = False  # set to true based on psycopg2 version
+    # set to true based on psycopg2 version
+    supports_sane_multi_rowcount = False
     execution_ctx_cls = PGExecutionContext_psycopg2
     statement_compiler = PGCompiler_psycopg2
     preparer = PGIdentifierPreparer_psycopg2
@@ -375,9 +377,9 @@ class PGDialect_psycopg2(PGDialect):
     )
 
     def __init__(self, server_side_cursors=False, use_native_unicode=True,
-                        client_encoding=None,
-                        use_native_hstore=True,
-                        **kwargs):
+                 client_encoding=None,
+                 use_native_hstore=True,
+                 **kwargs):
         PGDialect.__init__(self, **kwargs)
         self.server_side_cursors = server_side_cursors
         self.use_native_unicode = use_native_unicode
@@ -386,18 +388,18 @@ class PGDialect_psycopg2(PGDialect):
         self.client_encoding = client_encoding
         if self.dbapi and hasattr(self.dbapi, '__version__'):
             m = re.match(r'(\d+)\.(\d+)(?:\.(\d+))?',
-                                self.dbapi.__version__)
+                         self.dbapi.__version__)
             if m:
                 self.psycopg2_version = tuple(
-                                            int(x)
-                                            for x in m.group(1, 2, 3)
-                                            if x is not None)
+                    int(x)
+                    for x in m.group(1, 2, 3)
+                    if x is not None)
 
     def initialize(self, connection):
         super(PGDialect_psycopg2, self).initialize(connection)
         self._has_native_hstore = self.use_native_hstore and \
-                        self._hstore_oids(connection.connection) \
-                            is not None
+            self._hstore_oids(connection.connection) \
+            is not None
         self._has_native_json = self.psycopg2_version >= (2, 5)
 
         # http://initd.org/psycopg/docs/news.html#what-s-new-in-psycopg-2-0-9
@@ -427,7 +429,7 @@ class PGDialect_psycopg2(PGDialect):
                 "Invalid value '%s' for isolation_level. "
                 "Valid isolation levels for %s are %s" %
                 (level, self.name, ", ".join(self._isolation_lookup))
-                )
+            )
 
         connection.set_isolation_level(level)
 
@@ -458,16 +460,17 @@ class PGDialect_psycopg2(PGDialect):
                     oid, array_oid = hstore_oids
                     if util.py2k:
                         extras.register_hstore(conn, oid=oid,
-                                        array_oid=array_oid,
-                                           unicode=True)
+                                               array_oid=array_oid,
+                                               unicode=True)
                     else:
                         extras.register_hstore(conn, oid=oid,
-                                        array_oid=array_oid)
+                                               array_oid=array_oid)
             fns.append(on_connect)
 
         if self.dbapi and self._json_deserializer:
             def on_connect(conn):
-                extras.register_default_json(conn, loads=self._json_deserializer)
+                extras.register_default_json(
+                    conn, loads=self._json_deserializer)
             fns.append(on_connect)
 
         if fns:

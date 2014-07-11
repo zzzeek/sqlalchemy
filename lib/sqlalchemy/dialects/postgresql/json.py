@@ -31,20 +31,23 @@ class JSONElement(elements.BinaryExpression):
     and :attr:`.JSONElement.astext`.
 
     """
+
     def __init__(self, left, right, astext=False, opstring=None, result_type=None):
         self._astext = astext
         if opstring is None:
             if hasattr(right, '__iter__') and \
-                not isinstance(right, util.string_types):
+                    not isinstance(right, util.string_types):
                 opstring = "#>"
-                right = "{%s}" % (", ".join(util.text_type(elem) for elem in right))
+                right = "{%s}" % (
+                    ", ".join(util.text_type(elem) for elem in right))
             else:
                 opstring = "->"
 
         self._json_opstring = opstring
         operator = custom_op(opstring, precedence=5)
         right = left._check_literal(left, operator, right)
-        super(JSONElement, self).__init__(left, right, operator, type_=result_type)
+        super(JSONElement, self).__init__(
+            left, right, operator, type_=result_type)
 
     @property
     def astext(self):
@@ -64,12 +67,12 @@ class JSONElement(elements.BinaryExpression):
             return self
         else:
             return JSONElement(
-                    self.left,
-                    self.right,
-                    astext=True,
-                    opstring=self._json_opstring + ">",
-                    result_type=sqltypes.String(convert_unicode=True)
-                )
+                self.left,
+                self.right,
+                astext=True,
+                opstring=self._json_opstring + ">",
+                result_type=sqltypes.String(convert_unicode=True)
+            )
 
     def cast(self, type_):
         """Convert this :class:`.JSONElement` to apply both the 'astext' operator
@@ -178,6 +181,7 @@ class JSON(sqltypes.TypeEngine):
         json_serializer = dialect._json_serializer or json.dumps
         if util.py2k:
             encoding = dialect.encoding
+
             def process(value):
                 return json_serializer(value).encode(encoding)
         else:
@@ -189,6 +193,7 @@ class JSON(sqltypes.TypeEngine):
         json_deserializer = dialect._json_deserializer or json.loads
         if util.py2k:
             encoding = dialect.encoding
+
             def process(value):
                 return json_deserializer(value.decode(encoding))
         else:
@@ -198,7 +203,6 @@ class JSON(sqltypes.TypeEngine):
 
 
 ischema_names['json'] = JSON
-
 
 
 class JSONB(JSON):
@@ -280,7 +284,8 @@ class JSONB(JSON):
             return JSONElement(self.expr, other)
 
         def _adapt_expression(self, op, other_comparator):
-            # How does one do equality?? jsonb also has "=" eg. '[1,2,3]'::jsonb = '[1,2,3]'::jsonb
+            # How does one do equality?? jsonb also has "=" eg.
+            # '[1,2,3]'::jsonb = '[1,2,3]'::jsonb
             if isinstance(op, custom_op):
                 if op.opstring in ['?', '?&', '?|', '@>', '<@']:
                     return op, sqltypes.Boolean

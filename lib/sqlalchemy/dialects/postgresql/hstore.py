@@ -73,7 +73,8 @@ def _parse_hstore(hstore_str):
         if pair_match.group('value_null'):
             value = None
         else:
-            value = pair_match.group('value').replace(r'\"', '"').replace("\\\\", "\\")
+            value = pair_match.group('value').replace(
+                r'\"', '"').replace("\\\\", "\\")
         result[key] = value
 
         pos += pair_match.end()
@@ -272,6 +273,7 @@ class HSTORE(sqltypes.Concatenable, sqltypes.TypeEngine):
     def bind_processor(self, dialect):
         if util.py2k:
             encoding = dialect.encoding
+
             def process(value):
                 if isinstance(value, dict):
                     return _serialize_hstore(value).encode(encoding)
@@ -288,6 +290,7 @@ class HSTORE(sqltypes.Concatenable, sqltypes.TypeEngine):
     def result_processor(self, dialect, coltype):
         if util.py2k:
             encoding = dialect.encoding
+
             def process(value):
                 if value is not None:
                     return _parse_hstore(value.decode(encoding))

@@ -214,6 +214,7 @@ class _DateTimeMixin(object):
 
     def literal_processor(self, dialect):
         bp = self.bind_processor(dialect)
+
         def process(value):
             return "'%s'" % bp(value)
         return process
@@ -619,7 +620,7 @@ class SQLiteIdentifierPreparer(compiler.IdentifierPreparer):
         'temporary', 'then', 'to', 'transaction', 'trigger', 'true', 'union',
         'unique', 'update', 'using', 'vacuum', 'values', 'view', 'virtual',
         'when', 'where',
-        ])
+    ])
 
     def format_index(self, index, use_schema=True, name=None):
         """Prepare a quoted index and schema name."""
@@ -716,7 +717,7 @@ class SQLiteDialect(default.DefaultDialect):
                 "Invalid value '%s' for isolation_level. "
                 "Valid isolation levels for %s are %s" %
                 (level, self.name, ", ".join(self._isolation_lookup))
-                )
+            )
         cursor = connection.cursor()
         cursor.execute("PRAGMA read_uncommitted = %d" % isolation_level)
         cursor.close()
@@ -918,9 +919,9 @@ class SQLiteDialect(default.DefaultDialect):
                 coltype = coltype(*[int(a) for a in args])
             except TypeError:
                 util.warn(
-                        "Could not instantiate type %s with "
-                        "reflected arguments %s; using no arguments." %
-                        (coltype, args))
+                    "Could not instantiate type %s with "
+                    "reflected arguments %s; using no arguments." %
+                    (coltype, args))
                 coltype = coltype()
         else:
             coltype = coltype()
