@@ -78,7 +78,7 @@ class ExactSQL(SQLMatchRule):
             return
         _received_statement = \
             _process_engine_statement(context.unicode_statement,
-                context)
+                                      context)
         _received_parameters = context.compiled_parameters
 
         # TODO: remove this step once all unit tests are migrated, as
@@ -102,7 +102,7 @@ class ExactSQL(SQLMatchRule):
             self._errmsg = \
                 'Testing for exact statement %r exact params %r, '\
                 'received %r with params %r' % (sql, params,
-                    _received_statement, _received_parameters)
+                                                _received_statement, _received_parameters)
 
 
 class RegexSQL(SQLMatchRule):
@@ -119,7 +119,7 @@ class RegexSQL(SQLMatchRule):
             return
         _received_statement = \
             _process_engine_statement(context.unicode_statement,
-                context)
+                                      context)
         _received_parameters = context.compiled_parameters
         equivalent = bool(self.regex.match(_received_statement))
         if self.params:
@@ -170,7 +170,7 @@ class CompiledSQL(SQLMatchRule):
         else:
             compiled = \
                 context.compiled.statement.compile(dialect=DefaultDialect(),
-                column_keys=context.compiled.column_keys)
+                                                   column_keys=context.compiled.column_keys)
         _received_statement = re.sub(r'[\n\t]', '', str(compiled))
         equivalent = self.statement == _received_statement
         if self.params:
@@ -201,16 +201,16 @@ class CompiledSQL(SQLMatchRule):
             all_received = []
         self._result = equivalent
         if not self._result:
-            print('Testing for compiled statement %r partial params '\
-                '%r, received %r with params %r' % (self.statement,
-                    all_params, _received_statement, all_received))
+            print('Testing for compiled statement %r partial params '
+                  '%r, received %r with params %r' % (self.statement,
+                                                      all_params, _received_statement, all_received))
             self._errmsg = \
                 'Testing for compiled statement %r partial params %r, '\
                 'received %r with params %r' % (self.statement,
-                    all_params, _received_statement, all_received)
-
+                                                all_params, _received_statement, all_received)
 
             # print self._errmsg
+
 
 class CountStatements(AssertRule):
 
@@ -248,7 +248,7 @@ class AllOf(AssertRule):
                                executemany):
         for rule in self.rules:
             rule.process_cursor_execute(statement, parameters, context,
-                    executemany)
+                                        executemany)
 
     def is_consumed(self):
         if not self.rules:
@@ -264,6 +264,7 @@ class AllOf(AssertRule):
 
     def consume_final(self):
         return len(self.rules) == 0
+
 
 class Or(AllOf):
     def __init__(self, *rules):
@@ -282,6 +283,7 @@ class Or(AllOf):
     def consume_final(self):
         assert self._consume_final, "Unsatisified rules remain"
 
+
 def _process_engine_statement(query, context):
     if util.jython:
 
@@ -289,7 +291,7 @@ def _process_engine_statement(query, context):
 
         query = str(query)
     if context.engine.name == 'mssql' \
-        and query.endswith('; select scope_identity()'):
+            and query.endswith('; select scope_identity()'):
         query = query[:-25]
     query = re.sub(r'\n', '', query)
     return query
@@ -348,6 +350,6 @@ class SQLAssert(object):
         if self.rules:
             rule = self.rules[0]
             rule.process_cursor_execute(statement, parameters, context,
-                    executemany)
+                                        executemany)
 
 asserter = SQLAssert()
