@@ -22,7 +22,8 @@ Usage is nearly the same as that of the standard Python pickle module::
 
     # ... define mappers
 
-    query = Session.query(MyClass).filter(MyClass.somedata=='foo').order_by(MyClass.sortkey)
+    query = Session.query(MyClass).
+        filter(MyClass.somedata=='foo').order_by(MyClass.sortkey)
 
     # pickle the query
     serialized = dumps(query)

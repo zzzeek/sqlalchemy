@@ -58,7 +58,8 @@ invoked for the dialect in use::
 
     @compiles(AlterColumn, 'postgresql')
     def visit_alter_column(element, compiler, **kw):
-        return "ALTER TABLE %s ALTER COLUMN %s ..." % (element.table.name, element.column.name)
+        return "ALTER TABLE %s ALTER COLUMN %s ..." % (element.table.name,
+                                                       element.column.name)
 
 The second ``visit_alter_table`` will be invoked when any ``postgresql``
 dialect is used.
@@ -93,7 +94,8 @@ method which can be used for compilation of embedded attributes::
 
 Produces::
 
-    "INSERT INTO mytable (SELECT mytable.x, mytable.y, mytable.z FROM mytable WHERE mytable.x > :x_1)"
+    "INSERT INTO mytable (SELECT mytable.x, mytable.y, mytable.z
+                          FROM mytable WHERE mytable.x > :x_1)"
 
 .. note::
 

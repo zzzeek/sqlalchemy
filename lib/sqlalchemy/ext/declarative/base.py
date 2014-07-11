@@ -60,8 +60,7 @@ def _as_declarative(cls, classname, dict_):
                 cls.__declare_first__()
         if '__abstract__' in base.__dict__ and base.__abstract__:
             if (base is cls or
-                    (base in cls.__bases__ and not _is_declarative_inherits)
-                    ):
+                    (base in cls.__bases__ and not _is_declarative_inherits)):
                 return
 
         class_mapped = _declared_mapping_info(base) is not None

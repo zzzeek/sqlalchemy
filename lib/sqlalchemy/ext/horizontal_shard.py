@@ -115,9 +115,11 @@ class ShardedSession(Session):
         if self.transaction is not None:
             return self.transaction.connection(mapper, shard_id=shard_id)
         else:
-            return self.get_bind(mapper,
-                                 shard_id=shard_id,
-                                 instance=instance).contextual_connect(**kwargs)
+            return self.get_bind(
+                mapper,
+                shard_id=shard_id,
+                instance=instance
+                ).contextual_connect(**kwargs)
 
     def get_bind(self, mapper, shard_id=None,
                  instance=None, clause=None, **kw):

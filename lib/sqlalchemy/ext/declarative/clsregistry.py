@@ -183,7 +183,8 @@ class _ModNS(object):
                     assert isinstance(value, _MultipleClassMarker)
                     return value.attempt_get(self.__parent.path, key)
         raise AttributeError("Module %r has no mapped classes "
-                             "registered under the name %r" % (self.__parent.name, key))
+                             "registered under the name %r" % (
+                                 self.__parent.name, key))
 
 
 class _GetColumns(object):
