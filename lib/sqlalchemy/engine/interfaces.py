@@ -12,6 +12,7 @@ from .. import util, event
 # backwards compat
 from ..sql.compiler import Compiled, TypeCompiler
 
+
 class Dialect(object):
     """Define the behavior of a specific database and DB-API combination.
 
@@ -153,7 +154,6 @@ class Dialect(object):
 
     _has_events = False
 
-
     def create_connect_args(self, url):
         """Build DB-API compatible connection arguments.
 
@@ -197,7 +197,8 @@ class Dialect(object):
 
         pass
 
-    def reflecttable(self, connection, table, include_columns, exclude_columns):
+    def reflecttable(
+            self, connection, table, include_columns, exclude_columns):
         """Load table description from the database.
 
         Given a :class:`.Connection` and a
@@ -346,7 +347,8 @@ class Dialect(object):
 
         raise NotImplementedError()
 
-    def get_unique_constraints(self, connection, table_name, schema=None, **kw):
+    def get_unique_constraints(
+            self, connection, table_name, schema=None, **kw):
         """Return information about unique constraints in `table_name`.
 
         Given a string `table_name` and an optional string `schema`, return
@@ -465,7 +467,6 @@ class Dialect(object):
 
         raise NotImplementedError()
 
-
     def do_commit(self, dbapi_connection):
         """Provide an implementation of ``connection.commit()``, given a
         DB-API connection.
@@ -551,7 +552,7 @@ class Dialect(object):
         raise NotImplementedError()
 
     def do_rollback_twophase(self, connection, xid, is_prepared=True,
-                            recover=False):
+                             recover=False):
         """Rollback a two phase transaction on the given connection.
 
         :param connection: a :class:`.Connection`.
@@ -565,7 +566,7 @@ class Dialect(object):
         raise NotImplementedError()
 
     def do_commit_twophase(self, connection, xid, is_prepared=True,
-                            recover=False):
+                           recover=False):
         """Commit a two phase transaction on the given connection.
 
 
@@ -742,7 +743,6 @@ class ExecutionContext(object):
 
     """
 
-
     def create_cursor(self):
         """Return a new cursor generated from this ExecutionContext's
         connection.
@@ -878,11 +878,12 @@ class Connectable(object):
         raise NotImplementedError()
 
     def _run_visitor(self, visitorcallable, element,
-                                    **kwargs):
+                     **kwargs):
         raise NotImplementedError()
 
     def _execute_clauseelement(self, elem, multiparams=None, params=None):
         raise NotImplementedError()
+
 
 class ExceptionContext(object):
     """Encapsulate information about an error condition in progress.

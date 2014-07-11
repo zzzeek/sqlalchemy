@@ -81,8 +81,7 @@ class URL(object):
         if self.database is not None:
             s += '/' + self.database
         if self.query:
-            keys = list(self.query)
-            keys.sort()
+            keys = sorted(self.query)
             s += '?' + "&".join("%s=%s" % (k, self.query[k]) for k in keys)
         return s
 
@@ -119,8 +118,8 @@ class URL(object):
         # would return a module with 'dialect' as the
         # actual class
         if hasattr(cls, 'dialect') and \
-            isinstance(cls.dialect, type) and \
-            issubclass(cls.dialect, Dialect):
+                isinstance(cls.dialect, type) and \
+                issubclass(cls.dialect, Dialect):
             return cls.dialect
         else:
             return cls
@@ -189,7 +188,8 @@ def _parse_rfc1738_args(name):
         if components['database'] is not None:
             tokens = components['database'].split('?', 2)
             components['database'] = tokens[0]
-            query = (len(tokens) > 1 and dict(util.parse_qsl(tokens[1]))) or None
+            query = (
+                len(tokens) > 1 and dict(util.parse_qsl(tokens[1]))) or None
             if util.py2k and query is not None:
                 query = dict((k.encode('ascii'), query[k]) for k in query)
         else:
@@ -215,8 +215,10 @@ def _parse_rfc1738_args(name):
 def _rfc_1738_quote(text):
     return re.sub(r'[:@/]', lambda m: "%%%X" % ord(m.group(0)), text)
 
+
 def _rfc_1738_unquote(text):
     return util.unquote(text)
+
 
 def _parse_keyvalue_args(name):
     m = re.match(r'(\w+)://(.*)', name)
