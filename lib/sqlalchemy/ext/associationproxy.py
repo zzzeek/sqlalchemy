@@ -430,7 +430,7 @@ class AssociationProxy(interfaces._InspectionAttr):
         if obj is None:
             return or_(
                 self._comparator.has(**{self.value_attr: obj}),
-                self._comparator is None
+                self._comparator == None
             )
         else:
             return self._comparator.has(**{self.value_attr: obj})
