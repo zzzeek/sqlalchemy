@@ -7,20 +7,19 @@
 """Provides the Session class and related utilities."""
 
 
-
 import weakref
 from .. import util, sql, engine, exc as sa_exc
 from ..sql import util as sql_util, expression
 from . import (
     SessionExtension, attributes, exc, query,
     loading, identity
-    )
+)
 from ..inspection import inspect
 from .base import (
     object_mapper, class_mapper,
     _class_to_mapper, _state_mapper, object_state,
     _none_set, state_str, instance_str
-    )
+)
 from .unitofwork import UOWTransaction
 from . import state as statelib
 import sys
@@ -30,6 +29,7 @@ __all__ = ['Session', 'SessionTransaction', 'SessionExtension', 'sessionmaker']
 _sessions = weakref.WeakValueDictionary()
 """Weak-referencing dictionary of :class:`.Session` objects.
 """
+
 
 def _state_session(state):
     """Given an :class:`.InstanceState`, return the :class:`.Session`
@@ -41,7 +41,6 @@ def _state_session(state):
         except KeyError:
             pass
     return None
-
 
 
 class _SessionClassMethods(object):
@@ -80,6 +79,7 @@ PREPARED = util.symbol('PREPARED')
 COMMITTED = util.symbol('COMMITTED')
 DEACTIVE = util.symbol('DEACTIVE')
 CLOSED = util.symbol('CLOSED')
+
 
 class SessionTransaction(object):
     """A :class:`.Session`-level transaction.
@@ -185,20 +185,20 @@ class SessionTransaction(object):
         return self.session is not None and self._state is ACTIVE
 
     def _assert_active(self, prepared_ok=False,
-                        rollback_ok=False,
-                        deactive_ok=False,
-                        closed_msg="This transaction is closed"):
+                       rollback_ok=False,
+                       deactive_ok=False,
+                       closed_msg="This transaction is closed"):
         if self._state is COMMITTED:
             raise sa_exc.InvalidRequestError(
-                    "This session is in 'committed' state; no further "
-                    "SQL can be emitted within this transaction."
-                )
+                "This session is in 'committed' state; no further "
+                "SQL can be emitted within this transaction."
+            )
         elif self._state is PREPARED:
             if not prepared_ok:
                 raise sa_exc.InvalidRequestError(
-                        "This session is in 'prepared' state; no further "
-                        "SQL can be emitted within this transaction."
-                    )
+                    "This session is in 'prepared' state; no further "
+                    "SQL can be emitted within this transaction."
+                )
         elif self._state is DEACTIVE:
             if not deactive_ok and not rollback_ok:
                 if self._rollback_exception:
@@ -215,7 +215,7 @@ class SessionTransaction(object):
                         "This Session's transaction has been rolled back "
                         "by a nested rollback() call.  To begin a new "
                         "transaction, issue Session.rollback() first."
-                        )
+                    )
         elif self._state is CLOSED:
             raise sa_exc.ResourceClosedError(closed_msg)
 
@@ -240,7 +240,7 @@ class SessionTransaction(object):
             if self._parent is None:
                 raise sa_exc.InvalidRequestError(
                     "Transaction %s is not on the active transaction list" % (
-                    upto))
+                        upto))
             return (self,) + self._parent._iterate_parents(upto)
 
     def _take_snapshot(self):
@@ -326,7 +326,7 @@ class SessionTransaction(object):
             transaction = conn.begin()
 
         self._connections[conn] = self._connections[conn.engine] = \
-          (conn, transaction, conn is not bind)
+            (conn, transaction, conn is not bind)
         self.session.dispatch.after_begin(self.session, self, conn)
         return conn
 
@@ -354,9 +354,9 @@ class SessionTransaction(object):
                 self.session.flush()
             else:
                 raise exc.FlushError(
-                        "Over 100 subsequent flushes have occurred within "
-                        "session.commit() - is an after_flush() hook "
-                        "creating new objects?")
+                    "Over 100 subsequent flushes have occurred within "
+                    "session.commit() - is an after_flush() hook "
+                    "creating new objects?")
 
         if self._parent is None and self.session.twophase:
             try:
@@ -410,9 +410,9 @@ class SessionTransaction(object):
             # if items were added, deleted, or mutated
             # here, we need to re-restore the snapshot
             util.warn(
-                    "Session's state has been changed on "
-                    "a non-active transaction - this state "
-                    "will be discarded.")
+                "Session's state has been changed on "
+                "a non-active transaction - this state "
+                "will be discarded.")
             self._restore_snapshot(dirty_only=self.nested)
 
         self.close()
@@ -486,7 +486,7 @@ class Session(_SessionClassMethods):
         'scalar')
 
     def __init__(self, bind=None, autoflush=True, expire_on_commit=True,
-                _enable_transaction_accounting=True,
+                 _enable_transaction_accounting=True,
                  autocommit=False, twophase=False,
                  weak_identity_map=True, binds=None, extension=None,
                  info=None,
@@ -613,7 +613,7 @@ class Session(_SessionClassMethods):
             self._identity_cls = identity.WeakInstanceDict
         else:
             util.warn_deprecated("weak_identity_map=False is deprecated.  "
-                                    "This feature is not needed.")
+                                 "This feature is not needed.")
             self._identity_cls = identity.StrongInstanceDict
         self.identity_map = self._identity_cls()
 
@@ -647,7 +647,6 @@ class Session(_SessionClassMethods):
                     self.bind_mapper(mapperortable, bind)
                 else:
                     assert False
-
 
         if not self.autocommit:
             self.begin()
@@ -693,7 +692,7 @@ class Session(_SessionClassMethods):
         if self.transaction is not None:
             if subtransactions or nested:
                 self.transaction = self.transaction._begin(
-                                        nested=nested)
+                    nested=nested)
             else:
                 raise sa_exc.InvalidRequestError(
                     "A transaction is already begun.  Use "
@@ -791,9 +790,9 @@ class Session(_SessionClassMethods):
         self.transaction.prepare()
 
     def connection(self, mapper=None, clause=None,
-                        bind=None,
-                        close_with_result=False,
-                        **kw):
+                   bind=None,
+                   close_with_result=False,
+                   **kw):
         """Return a :class:`.Connection` object corresponding to this
         :class:`.Session` object's transactional state.
 
@@ -847,7 +846,7 @@ class Session(_SessionClassMethods):
             bind = self.get_bind(mapper, clause=clause, **kw)
 
         return self._connection_for_bind(bind,
-                                        close_with_result=close_with_result)
+                                         close_with_result=close_with_result)
 
     def _connection_for_bind(self, engine, **kwargs):
         if self.transaction is not None:
@@ -1150,7 +1149,7 @@ class Session(_SessionClassMethods):
 
         raise sa_exc.UnboundExecutionError(
             "Could not locate a bind configured on %s or this Session" % (
-            ', '.join(context)))
+                ', '.join(context)))
 
     def query(self, *entities, **kwargs):
         """Return a new :class:`.Query` object corresponding to this
@@ -1196,9 +1195,9 @@ class Session(_SessionClassMethods):
                 # with code that catches StatementError, IntegrityError,
                 # etc.
                 e.add_detail(
-                        "raised as a result of Query-invoked autoflush; "
-                        "consider using a session.no_autoflush block if this "
-                        "flush is occurring prematurely")
+                    "raised as a result of Query-invoked autoflush; "
+                    "consider using a session.no_autoflush block if this "
+                    "flush is occurring prematurely")
                 util.raise_from_cause(e)
 
     def refresh(self, instance, attribute_names=None, lockmode=None):
@@ -1335,7 +1334,7 @@ class Session(_SessionClassMethods):
             # pre-fetch the full cascade since the expire is going to
             # remove associations
             cascaded = list(state.manager.mapper.cascade_iterator(
-                                            'refresh-expire', state))
+                'refresh-expire', state))
             self._conditional_expire(state)
             for o, m, st_, dct_ in cascaded:
                 self._conditional_expire(st_)
@@ -1350,7 +1349,7 @@ class Session(_SessionClassMethods):
             state._detach()
 
     @util.deprecated("0.7", "The non-weak-referencing identity map "
-                        "feature is no longer needed.")
+                     "feature is no longer needed.")
     def prune(self):
         """Remove unreferenced instances cached in the identity map.
 
@@ -1381,7 +1380,7 @@ class Session(_SessionClassMethods):
                 state_str(state))
 
         cascaded = list(state.manager.mapper.cascade_iterator(
-                                    'expunge', state))
+            'expunge', state))
         self._expunge_state(state)
         for o, m, st_, dct_ in cascaded:
             self._expunge_state(st_)
@@ -1408,8 +1407,8 @@ class Session(_SessionClassMethods):
                 instance_key = mapper._identity_key_from_state(state)
 
                 if _none_set.intersection(instance_key[1]) and \
-                    not mapper.allow_partial_pks or \
-                    _none_set.issuperset(instance_key[1]):
+                        not mapper.allow_partial_pks or \
+                        _none_set.issuperset(instance_key[1]):
                     raise exc.FlushError(
                         "Instance %s has a NULL identity key.  If this is an "
                         "auto-generated value, check that the database table "
@@ -1499,9 +1498,9 @@ class Session(_SessionClassMethods):
 
         mapper = _state_mapper(state)
         for o, m, st_, dct_ in mapper.cascade_iterator(
-                                    'save-update',
-                                    state,
-                                    halt_on=self._contains_state):
+                'save-update',
+                state,
+                halt_on=self._contains_state):
             self._save_or_update_impl(st_)
 
     def delete(self, instance):
@@ -1535,7 +1534,7 @@ class Session(_SessionClassMethods):
         # so that autoflush does not delete the item
         # the strong reference to the instance itself is significant here
         cascade_states = list(state.manager.mapper.cascade_iterator(
-                                            'delete', state))
+            'delete', state))
 
         self._deleted[state] = state.obj()
         self.identity_map.add(state)
@@ -1601,9 +1600,9 @@ class Session(_SessionClassMethods):
         try:
             self.autoflush = False
             return self._merge(
-                            attributes.instance_state(instance),
-                            attributes.instance_dict(instance),
-                            load=load, _recursive=_recursive)
+                attributes.instance_state(instance),
+                attributes.instance_dict(instance),
+                load=load, _recursive=_recursive)
         finally:
             self.autoflush = autoflush
 
@@ -1640,8 +1639,8 @@ class Session(_SessionClassMethods):
             new_instance = True
 
         elif not _none_set.intersection(key[1]) or \
-                    (mapper.allow_partial_pks and
-                    not _none_set.issuperset(key[1])):
+            (mapper.allow_partial_pks and
+             not _none_set.issuperset(key[1])):
             merged = self.query(mapper.class_).get(key[1])
         else:
             merged = None
@@ -1664,38 +1663,38 @@ class Session(_SessionClassMethods):
             # version check if applicable
             if mapper.version_id_col is not None:
                 existing_version = mapper._get_state_attr_by_column(
-                            state,
-                            state_dict,
-                            mapper.version_id_col,
-                            passive=attributes.PASSIVE_NO_INITIALIZE)
+                    state,
+                    state_dict,
+                    mapper.version_id_col,
+                    passive=attributes.PASSIVE_NO_INITIALIZE)
 
                 merged_version = mapper._get_state_attr_by_column(
-                            merged_state,
-                            merged_dict,
-                            mapper.version_id_col,
-                            passive=attributes.PASSIVE_NO_INITIALIZE)
+                    merged_state,
+                    merged_dict,
+                    mapper.version_id_col,
+                    passive=attributes.PASSIVE_NO_INITIALIZE)
 
                 if existing_version is not attributes.PASSIVE_NO_RESULT and \
-                    merged_version is not attributes.PASSIVE_NO_RESULT and \
-                    existing_version != merged_version:
+                        merged_version is not attributes.PASSIVE_NO_RESULT and \
+                        existing_version != merged_version:
                     raise exc.StaleDataError(
-                            "Version id '%s' on merged state %s "
-                            "does not match existing version '%s'. "
-                            "Leave the version attribute unset when "
-                            "merging to update the most recent version."
-                            % (
-                                existing_version,
-                                state_str(merged_state),
-                                merged_version
-                            ))
+                        "Version id '%s' on merged state %s "
+                        "does not match existing version '%s'. "
+                        "Leave the version attribute unset when "
+                        "merging to update the most recent version."
+                        % (
+                            existing_version,
+                            state_str(merged_state),
+                            merged_version
+                        ))
 
             merged_state.load_path = state.load_path
             merged_state.load_options = state.load_options
 
             for prop in mapper.iterate_properties:
                 prop.merge(self, state, state_dict,
-                                merged_state, merged_dict,
-                                load, _recursive)
+                           merged_state, merged_dict,
+                           load, _recursive)
 
         if not load:
             # remove any history
@@ -1725,7 +1724,7 @@ class Session(_SessionClassMethods):
 
     def _update_impl(self, state, discard_existing=False):
         if (self.identity_map.contains_state(state) and
-            state not in self._deleted):
+                state not in self._deleted):
             return
 
         if state.key is None:
@@ -1829,9 +1828,9 @@ class Session(_SessionClassMethods):
             state.key in self.identity_map and \
                 not self.identity_map.contains_state(state):
             raise sa_exc.InvalidRequestError("Can't attach instance "
-                    "%s; another instance with key %s is already "
-                    "present in this session."
-                    % (state_str(state), state.key))
+                                             "%s; another instance with key %s is already "
+                                             "present in this session."
+                                             % (state_str(state), state.key))
 
         if state.session_id and \
                 state.session_id is not self.hash_key and \
@@ -1869,7 +1868,8 @@ class Session(_SessionClassMethods):
         Session.
 
         """
-        return iter(list(self._new.values()) + list(self.identity_map.values()))
+        return iter(
+            list(self._new.values()) + list(self.identity_map.values()))
 
     def _contains_state(self, state):
         return state in self._new or self.identity_map.contains_state(state)
@@ -1922,8 +1922,8 @@ class Session(_SessionClassMethods):
 
     def _is_clean(self):
         return not self.identity_map.check_modified() and \
-                not self._deleted and \
-                not self._new
+            not self._deleted and \
+            not self._new
 
     def _flush(self, objects=None):
 
@@ -2002,21 +2002,21 @@ class Session(_SessionClassMethods):
                 len_ = len(self.identity_map._modified)
 
                 statelib.InstanceState._commit_all_states(
-                                [(state, state.dict) for state in
-                                        self.identity_map._modified],
-                                instance_dict=self.identity_map)
+                    [(state, state.dict) for state in
+                     self.identity_map._modified],
+                    instance_dict=self.identity_map)
                 util.warn("Attribute history events accumulated on %d "
-                        "previously clean instances "
-                        "within inner-flush event handlers have been reset, "
-                        "and will not result in database updates. "
-                        "Consider using set_committed_value() within "
-                        "inner-flush event handlers to avoid this warning."
-                                    % len_)
+                          "previously clean instances "
+                          "within inner-flush event handlers have been reset, "
+                          "and will not result in database updates. "
+                          "Consider using set_committed_value() within "
+                          "inner-flush event handlers to avoid this warning."
+                          % len_)
 
             # useful assertions:
-            #if not objects:
+            # if not objects:
             #    assert not self.identity_map._modified
-            #else:
+            # else:
             #    assert self.identity_map._modified == \
             #            self.identity_map._modified.difference(objects)
 
@@ -2029,7 +2029,7 @@ class Session(_SessionClassMethods):
                 transaction.rollback(_capture_exception=True)
 
     def is_modified(self, instance, include_collections=True,
-                            passive=True):
+                    passive=True):
         """Return ``True`` if the given instance has locally
         modified attributes.
 
@@ -2103,15 +2103,15 @@ class Session(_SessionClassMethods):
 
         for attr in state.manager.attributes:
             if \
-                (
-                    not include_collections and
-                    hasattr(attr.impl, 'get_collection')
-                ) or not hasattr(attr.impl, 'get_history'):
+                    (
+                        not include_collections and
+                        hasattr(attr.impl, 'get_collection')
+                    ) or not hasattr(attr.impl, 'get_history'):
                 continue
 
             (added, unchanged, deleted) = \
-                    attr.impl.get_history(state, dict_,
-                            passive=attributes.NO_CHANGE)
+                attr.impl.get_history(state, dict_,
+                                      passive=attributes.NO_CHANGE)
 
             if added or deleted:
                 return True
@@ -2289,9 +2289,9 @@ class sessionmaker(_SessionClassMethods):
     """
 
     def __init__(self, bind=None, class_=Session, autoflush=True,
-                        autocommit=False,
-                        expire_on_commit=True,
-                        info=None, **kw):
+                 autocommit=False,
+                 expire_on_commit=True,
+                 info=None, **kw):
         """Construct a new :class:`.sessionmaker`.
 
         All arguments here except for ``class_`` correspond to arguments
@@ -2363,10 +2363,10 @@ class sessionmaker(_SessionClassMethods):
 
     def __repr__(self):
         return "%s(class_=%r,%s)" % (
-                    self.__class__.__name__,
-                    self.class_.__name__,
-                    ", ".join("%s=%r" % (k, v) for k, v in self.kw.items())
-                )
+            self.__class__.__name__,
+            self.class_.__name__,
+            ", ".join("%s=%r" % (k, v) for k, v in self.kw.items())
+        )
 
 
 def make_transient(instance):
@@ -2397,6 +2397,7 @@ def make_transient(instance):
     if state.deleted:
         del state.deleted
 
+
 def make_transient_to_detached(instance):
     """Make the given transient instance 'detached'.
 
@@ -2424,13 +2425,12 @@ def make_transient_to_detached(instance):
     state = attributes.instance_state(instance)
     if state.session_id or state.key:
         raise sa_exc.InvalidRequestError(
-                    "Given object must be transient")
+            "Given object must be transient")
     state.key = state.mapper._identity_key_from_state(state)
     if state.deleted:
         del state.deleted
     state._commit_all(state.dict)
     state._expire_attributes(state.dict, state.unloaded)
-
 
 
 def object_session(instance):

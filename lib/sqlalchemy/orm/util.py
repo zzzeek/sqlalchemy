@@ -13,7 +13,7 @@ from . import attributes
 import re
 
 from .base import instance_str, state_str, state_class_str, attribute_str, \
-        state_attribute_str, object_mapper, object_state, _none_set
+    state_attribute_str, object_mapper, object_state, _none_set
 from .base import class_mapper, _class_to_mapper
 from .base import _InspectionAttr
 from .path_registry import PathRegistry
@@ -27,23 +27,23 @@ class CascadeOptions(frozenset):
     """Keeps track of the options sent to relationship().cascade"""
 
     _add_w_all_cascades = all_cascades.difference([
-                            'all', 'none', 'delete-orphan'])
+        'all', 'none', 'delete-orphan'])
     _allowed_cascades = all_cascades
 
     def __new__(cls, arg):
         values = set([
-                    c for c
-                    in re.split('\s*,\s*', arg or "")
-                    if c
-                ])
+            c for c
+            in re.split('\s*,\s*', arg or "")
+            if c
+        ])
 
         if values.difference(cls._allowed_cascades):
             raise sa_exc.ArgumentError(
-                    "Invalid cascade option(s): %s" %
-                    ", ".join([repr(x) for x in
-                        sorted(
-                            values.difference(cls._allowed_cascades)
-                    )])
+                "Invalid cascade option(s): %s" %
+                ", ".join([repr(x) for x in
+                           sorted(
+                    values.difference(cls._allowed_cascades)
+                )])
             )
 
         if "all" in values:
@@ -62,7 +62,7 @@ class CascadeOptions(frozenset):
 
         if self.delete_orphan and not self.delete:
             util.warn("The 'delete-orphan' cascade "
-                        "option requires 'delete'.")
+                      "option requires 'delete'.")
         return self
 
     def __repr__(self):
@@ -116,7 +116,7 @@ def _validator_events(desc, key, validator, include_removes, include_backrefs):
 
 
 def polymorphic_union(table_map, typecolname,
-                        aliasname='p_union', cast_nulls=True):
+                      aliasname='p_union', cast_nulls=True):
     """Create a ``UNION`` statement used by a polymorphic mapper.
 
     See  :ref:`concrete_inheritance` for an example of how
@@ -168,10 +168,10 @@ def polymorphic_union(table_map, typecolname,
     for type, table in table_map.items():
         if typecolname is not None:
             result.append(
-                    sql.select([col(name, table) for name in colnames] +
-                    [sql.literal_column(sql_util._quote_ddl_expr(type)).
+                sql.select([col(name, table) for name in colnames] +
+                           [sql.literal_column(sql_util._quote_ddl_expr(type)).
                             label(typecolname)],
-                             from_obj=[table]))
+                           from_obj=[table]))
         else:
             result.append(sql.select([col(name, table) for name in colnames],
                                      from_obj=[table]))
@@ -247,10 +247,10 @@ def identity_key(*args, **kwargs):
             class_, ident = args
         else:
             raise sa_exc.ArgumentError("expected up to three "
-                "positional arguments, got %s" % len(args))
+                                       "positional arguments, got %s" % len(args))
         if kwargs:
             raise sa_exc.ArgumentError("unknown keyword arguments: %s"
-                % ", ".join(kwargs))
+                                       % ", ".join(kwargs))
         mapper = class_mapper(class_)
         if "ident" in locals():
             return mapper.identity_key_from_primary_key(util.to_list(ident))
@@ -258,7 +258,7 @@ def identity_key(*args, **kwargs):
     instance = kwargs.pop("instance")
     if kwargs:
         raise sa_exc.ArgumentError("unknown keyword arguments: %s"
-            % ", ".join(kwargs.keys))
+                                   % ", ".join(kwargs.keys))
     mapper = object_mapper(instance)
     return mapper.identity_key_from_instance(instance)
 
@@ -270,8 +270,9 @@ class ORMAdapter(sql_util.ColumnAdapter):
     and the AliasedClass if any is referenced.
 
     """
+
     def __init__(self, entity, equivalents=None, adapt_required=False,
-                            chain_to=None):
+                 chain_to=None):
         info = inspection.inspect(entity)
 
         self.mapper = info.mapper
@@ -291,6 +292,7 @@ class ORMAdapter(sql_util.ColumnAdapter):
             return sql_util.ColumnAdapter.replace(self, elem)
         else:
             return None
+
 
 class AliasedClass(object):
     """Represents an "aliased" form of a mapped class for usage with Query.
@@ -332,30 +334,31 @@ class AliasedClass(object):
     argument descriptions.
 
     """
+
     def __init__(self, cls, alias=None,
-                            name=None,
-                            flat=False,
-                            adapt_on_names=False,
-                            #  TODO: None for default here?
-                            with_polymorphic_mappers=(),
-                            with_polymorphic_discriminator=None,
-                            base_alias=None,
-                            use_mapper_path=False):
+                 name=None,
+                 flat=False,
+                 adapt_on_names=False,
+                 #  TODO: None for default here?
+                 with_polymorphic_mappers=(),
+                 with_polymorphic_discriminator=None,
+                 base_alias=None,
+                 use_mapper_path=False):
         mapper = _class_to_mapper(cls)
         if alias is None:
             alias = mapper._with_polymorphic_selectable.alias(
-                                            name=name, flat=flat)
+                name=name, flat=flat)
         self._aliased_insp = AliasedInsp(
             self,
             mapper,
             alias,
             name,
             with_polymorphic_mappers
-                if with_polymorphic_mappers
-                else mapper.with_polymorphic_mappers,
+            if with_polymorphic_mappers
+            else mapper.with_polymorphic_mappers,
             with_polymorphic_discriminator
-                if with_polymorphic_discriminator is not None
-                else mapper.polymorphic_on,
+            if with_polymorphic_discriminator is not None
+            else mapper.polymorphic_on,
             base_alias,
             use_mapper_path,
             adapt_on_names
@@ -440,8 +443,8 @@ class AliasedInsp(_InspectionAttr):
     """
 
     def __init__(self, entity, mapper, selectable, name,
-                    with_polymorphic_mappers, polymorphic_on,
-                    _base_alias, _use_mapper_path, adapt_on_names):
+                 with_polymorphic_mappers, polymorphic_on,
+                 _base_alias, _use_mapper_path, adapt_on_names):
         self.entity = entity
         self.mapper = mapper
         self.selectable = selectable
@@ -452,8 +455,8 @@ class AliasedInsp(_InspectionAttr):
         self._use_mapper_path = _use_mapper_path
 
         self._adapter = sql_util.ClauseAdapter(selectable,
-                            equivalents=mapper._equivalent_columns,
-                            adapt_on_names=adapt_on_names)
+                                               equivalents=mapper._equivalent_columns,
+                                               adapt_on_names=adapt_on_names)
 
         self._adapt_on_names = adapt_on_names
         self._target = mapper.class_
@@ -461,9 +464,9 @@ class AliasedInsp(_InspectionAttr):
         for poly in self.with_polymorphic_mappers:
             if poly is not mapper:
                 setattr(self.entity, poly.class_.__name__,
-                    AliasedClass(poly.class_, selectable, base_alias=self,
-                            adapt_on_names=adapt_on_names,
-                            use_mapper_path=_use_mapper_path))
+                        AliasedClass(poly.class_, selectable, base_alias=self,
+                                     adapt_on_names=adapt_on_names,
+                                     use_mapper_path=_use_mapper_path))
 
     is_aliased_class = True
     "always returns True"
@@ -511,10 +514,10 @@ class AliasedInsp(_InspectionAttr):
 
     def _adapt_element(self, elem):
         return self._adapter.traverse(elem).\
-                    _annotate({
-                        'parententity': self.entity,
-                        'parentmapper': self.mapper}
-                    )
+            _annotate({
+                'parententity': self.entity,
+                'parentmapper': self.mapper}
+        )
 
     def _entity_for_mapper(self, mapper):
         self_poly = self.with_polymorphic_mappers
@@ -624,13 +627,13 @@ def aliased(element, alias=None, name=None, flat=False, adapt_on_names=False):
         return element.alias(name, flat=flat)
     else:
         return AliasedClass(element, alias=alias, flat=flat,
-                    name=name, adapt_on_names=adapt_on_names)
+                            name=name, adapt_on_names=adapt_on_names)
 
 
 def with_polymorphic(base, classes, selectable=False,
-                        flat=False,
-                        polymorphic_on=None, aliased=False,
-                        innerjoin=False, _use_mapper_path=False):
+                     flat=False,
+                     polymorphic_on=None, aliased=False,
+                     innerjoin=False, _use_mapper_path=False):
     """Produce an :class:`.AliasedClass` construct which specifies
     columns for descendant mappers of the given base.
 
@@ -695,15 +698,15 @@ def with_polymorphic(base, classes, selectable=False,
     """
     primary_mapper = _class_to_mapper(base)
     mappers, selectable = primary_mapper.\
-                    _with_polymorphic_args(classes, selectable,
-                                innerjoin=innerjoin)
+        _with_polymorphic_args(classes, selectable,
+                               innerjoin=innerjoin)
     if aliased or flat:
         selectable = selectable.alias(flat=flat)
     return AliasedClass(base,
-                selectable,
-                with_polymorphic_mappers=mappers,
-                with_polymorphic_discriminator=polymorphic_on,
-                use_mapper_path=_use_mapper_path)
+                        selectable,
+                        with_polymorphic_mappers=mappers,
+                        with_polymorphic_discriminator=polymorphic_on,
+                        use_mapper_path=_use_mapper_path)
 
 
 def _orm_annotate(element, exclude=None):
@@ -726,8 +729,8 @@ def _orm_deannotate(element):
     """
 
     return sql_util._deep_deannotate(element,
-                values=("_orm_adapt", "parententity")
-            )
+                                     values=("_orm_adapt", "parententity")
+                                     )
 
 
 def _orm_full_deannotate(element):
@@ -769,11 +772,11 @@ class _ORMJoin(expression.Join):
 
             pj, sj, source, dest, \
                 secondary, target_adapter = prop._create_joins(
-                            source_selectable=adapt_from,
-                            dest_selectable=adapt_to,
-                            source_polymorphic=True,
-                            dest_polymorphic=True,
-                            of_type=right_info.mapper)
+                    source_selectable=adapt_from,
+                    dest_selectable=adapt_to,
+                    source_polymorphic=True,
+                    dest_polymorphic=True,
+                    of_type=right_info.mapper)
 
             if sj is not None:
                 if isouter:
@@ -886,7 +889,6 @@ def with_parent(instance, prop):
                         value_is_parent=True)
 
 
-
 def has_identity(object):
     """Return True if the given object has a database
     identity.
@@ -902,6 +904,7 @@ def has_identity(object):
     state = attributes.instance_state(object)
     return state.has_identity
 
+
 def was_deleted(object):
     """Return True if the given object was deleted
     within a session flush.
@@ -912,8 +915,6 @@ def was_deleted(object):
 
     state = attributes.instance_state(object)
     return state.deleted
-
-
 
 
 def randomize_unitofwork():
@@ -950,5 +951,4 @@ def randomize_unitofwork():
     from sqlalchemy.util import topological
     from sqlalchemy.testing.util import RandomSet
     topological.set = unitofwork.set = session.set = mapper.set = \
-            dependency.set = RandomSet
-
+        dependency.set = RandomSet

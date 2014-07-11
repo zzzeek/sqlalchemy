@@ -18,6 +18,7 @@ from .session import Session, sessionmaker
 from .scoping import scoped_session
 from .attributes import QueryableAttribute
 
+
 class InstrumentationEvents(event.Events):
     """Events related to class instrumentation events.
 
@@ -50,7 +51,6 @@ class InstrumentationEvents(event.Events):
     _target_class_doc = "SomeBaseClass"
     _dispatch_target = instrumentation.InstrumentationFactory
 
-
     @classmethod
     def _accept_with(cls, target):
         if isinstance(target, type):
@@ -72,9 +72,9 @@ class InstrumentationEvents(event.Events):
 
         def remove(ref):
             key = event.registry._EventKey(None, identifier, listen,
-                        instrumentation._instrumentation_factory)
+                                           instrumentation._instrumentation_factory)
             getattr(instrumentation._instrumentation_factory.dispatch,
-                        identifier).remove(key)
+                    identifier).remove(key)
 
         target = weakref.ref(target.class_, remove)
 
@@ -107,16 +107,17 @@ class InstrumentationEvents(event.Events):
         """Called when an attribute is instrumented."""
 
 
-
 class _InstrumentationEventsHold(object):
     """temporary marker object used to transfer from _accept_with() to
     _listen() on the InstrumentationEvents class.
 
     """
+
     def __init__(self, class_):
         self.class_ = class_
 
     dispatch = event.dispatcher(InstrumentationEvents)
+
 
 class InstanceEvents(event.Events):
     """Define events specific to object lifecycle.
@@ -330,6 +331,7 @@ class InstanceEvents(event.Events):
 
         """
 
+
 class _EventsHold(event.RefCollection):
     """Hold onto listeners against unmapped, uninstrumented classes.
 
@@ -337,6 +339,7 @@ class _EventsHold(event.RefCollection):
     those objects are created for that class.
 
     """
+
     def __init__(self, class_):
         self.class_ = class_
 
@@ -502,16 +505,17 @@ class MapperEvents(event.Events):
             return target
 
     @classmethod
-    def _listen(cls, event_key, raw=False, retval=False, propagate=False, **kw):
+    def _listen(
+            cls, event_key, raw=False, retval=False, propagate=False, **kw):
         target, identifier, fn = \
             event_key.dispatch_target, event_key.identifier, event_key.fn
 
         if identifier in ("before_configured", "after_configured") and \
-            target is not mapperlib.Mapper:
+                target is not mapperlib.Mapper:
             util.warn(
-                    "'before_configured' and 'after_configured' ORM events "
-                    "only invoke with the mapper() function or Mapper class "
-                    "as the target.")
+                "'before_configured' and 'after_configured' ORM events "
+                "only invoke with the mapper() function or Mapper class "
+                "as the target.")
 
         if not raw or not retval:
             if not raw:
@@ -536,7 +540,7 @@ class MapperEvents(event.Events):
         if propagate:
             for mapper in target.self_and_descendants:
                 event_key.with_dispatch_target(mapper).base_listen(
-                                                propagate=True, **kw)
+                    propagate=True, **kw)
         else:
             event_key.base_listen(**kw)
 
@@ -722,7 +726,7 @@ class MapperEvents(event.Events):
         """
 
     def append_result(self, mapper, context, row, target,
-                        result, **flags):
+                      result, **flags):
         """Receive an object instance before that instance is appended
         to a result list.
 
@@ -759,7 +763,7 @@ class MapperEvents(event.Events):
         """
 
     def populate_instance(self, mapper, context, row,
-                            target, **flags):
+                          target, **flags):
         """Receive an instance before that instance has
         its attributes populated.
 
@@ -1165,6 +1169,7 @@ class MapperEvents(event.Events):
 
         """
 
+
 class _MapperEventsHold(_EventsHold):
     all_holds = weakref.WeakKeyDictionary()
 
@@ -1215,11 +1220,11 @@ class SessionEvents(event.Events):
                 (
                     not isinstance(target, type) or
                     not issubclass(target, Session)
-                ):
+            ):
                 raise exc.ArgumentError(
-                            "Session event listen on a scoped_session "
-                            "requires that its creation callable "
-                            "is associated with the Session class.")
+                    "Session event listen on a scoped_session "
+                    "requires that its creation callable "
+                    "is associated with the Session class.")
 
         if isinstance(target, sessionmaker):
             return target.class_
@@ -1501,12 +1506,12 @@ class SessionEvents(event.Events):
         """
 
     @event._legacy_signature("0.9",
-                    ["session", "query", "query_context", "result"],
-                    lambda update_context: (
-                            update_context.session,
-                            update_context.query,
-                            update_context.context,
-                            update_context.result))
+                             ["session", "query", "query_context", "result"],
+                             lambda update_context: (
+                                 update_context.session,
+                                 update_context.query,
+                                 update_context.context,
+                                 update_context.result))
     def after_bulk_update(self, update_context):
         """Execute after a bulk update operation to the session.
 
@@ -1527,12 +1532,12 @@ class SessionEvents(event.Events):
         """
 
     @event._legacy_signature("0.9",
-                    ["session", "query", "query_context", "result"],
-                    lambda delete_context: (
-                            delete_context.session,
-                            delete_context.query,
-                            delete_context.context,
-                            delete_context.result))
+                             ["session", "query", "query_context", "result"],
+                             lambda delete_context: (
+                                 delete_context.session,
+                                 delete_context.query,
+                                 delete_context.context,
+                                 delete_context.result))
     def after_bulk_delete(self, delete_context):
         """Execute after a bulk delete operation to the session.
 
@@ -1628,8 +1633,8 @@ class AttributeEvents(event.Events):
 
     @classmethod
     def _listen(cls, event_key, active_history=False,
-                                        raw=False, retval=False,
-                                        propagate=False):
+                raw=False, retval=False,
+                propagate=False):
 
         target, identifier, fn = \
             event_key.dispatch_target, event_key.identifier, event_key.fn
@@ -1654,7 +1659,8 @@ class AttributeEvents(event.Events):
             manager = instrumentation.manager_of_class(target.class_)
 
             for mgr in manager.subclass_managers(True):
-                event_key.with_dispatch_target(mgr[target.key]).base_listen(propagate=True)
+                event_key.with_dispatch_target(
+                    mgr[target.key]).base_listen(propagate=True)
 
     def append(self, target, value, initiator):
         """Receive a collection append event.
@@ -1728,4 +1734,3 @@ class AttributeEvents(event.Events):
          the given value, or a new effective value, should be returned.
 
         """
-

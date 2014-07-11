@@ -111,12 +111,12 @@ class ColumnProperty(StrategizedProperty):
         """
         self._orig_columns = [expression._labeled(c) for c in columns]
         self.columns = [expression._labeled(_orm_full_deannotate(c))
-                            for c in columns]
+                        for c in columns]
         self.group = kwargs.pop('group', None)
         self.deferred = kwargs.pop('deferred', False)
         self.instrument = kwargs.pop('_instrument', True)
         self.comparator_factory = kwargs.pop('comparator_factory',
-                                            self.__class__.Comparator)
+                                             self.__class__.Comparator)
         self.descriptor = kwargs.pop('descriptor', None)
         self.extension = kwargs.pop('extension', None)
         self.active_history = kwargs.pop('active_history', False)
@@ -145,9 +145,9 @@ class ColumnProperty(StrategizedProperty):
         util.set_creation_order(self)
 
         self.strategy_class = self._strategy_lookup(
-                                    ("deferred", self.deferred),
-                                    ("instrument", self.instrument)
-                                    )
+            ("deferred", self.deferred),
+            ("instrument", self.instrument)
+        )
 
     @property
     def expression(self):
@@ -166,7 +166,7 @@ class ColumnProperty(StrategizedProperty):
             comparator=self.comparator_factory(self, mapper),
             parententity=mapper,
             doc=self.doc
-            )
+        )
 
     def do_init(self):
         super(ColumnProperty, self).do_init()
@@ -181,18 +181,18 @@ class ColumnProperty(StrategizedProperty):
 
     def copy(self):
         return ColumnProperty(
-                        deferred=self.deferred,
-                        group=self.group,
-                        active_history=self.active_history,
-                        *self.columns)
+            deferred=self.deferred,
+            group=self.group,
+            active_history=self.active_history,
+            *self.columns)
 
     def _getcommitted(self, state, dict_, column,
-                    passive=attributes.PASSIVE_OFF):
+                      passive=attributes.PASSIVE_OFF):
         return state.get_impl(self.key).\
-                    get_committed_value(state, dict_, passive=passive)
+            get_committed_value(state, dict_, passive=passive)
 
     def merge(self, session, source_state, source_dict, dest_state,
-                                dest_dict, load, _recursive):
+              dest_dict, load, _recursive):
         if not self.instrument:
             return
         elif self.key in source_dict:
@@ -257,4 +257,3 @@ class ColumnProperty(StrategizedProperty):
 
     def __str__(self):
         return str(self.parent.class_.__name__) + "." + self.key
-

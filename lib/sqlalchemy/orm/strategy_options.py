@@ -16,7 +16,8 @@ from .. import exc as sa_exc, inspect
 from .base import _is_aliased_class, _class_to_mapper
 from . import util as orm_util
 from .path_registry import PathRegistry, TokenRegistry, \
-        _WILDCARD_TOKEN, _DEFAULT_TOKEN
+    _WILDCARD_TOKEN, _DEFAULT_TOKEN
+
 
 class Load(Generative, MapperOption):
     """Represents loader options which modify the state of a
@@ -72,6 +73,7 @@ class Load(Generative, MapperOption):
 
 
     """
+
     def __init__(self, entity):
         insp = inspect(entity)
         self.path = insp._path_registry
@@ -106,7 +108,7 @@ class Load(Generative, MapperOption):
         if raiseerr and not path.has_entity:
             if isinstance(path, TokenRegistry):
                 raise sa_exc.ArgumentError(
-                        "Wildcard token cannot be followed by another entity")
+                    "Wildcard token cannot be followed by another entity")
             else:
                 raise sa_exc.ArgumentError(
                     "Attribute '%s' of entity '%s' does not "
@@ -146,7 +148,7 @@ class Load(Generative, MapperOption):
             if not prop.parent.common_parent(path.mapper):
                 if raiseerr:
                     raise sa_exc.ArgumentError("Attribute '%s' does not "
-                            "link from element '%s'" % (attr, path.entity))
+                                               "link from element '%s'" % (attr, path.entity))
                 else:
                     return None
 
@@ -157,11 +159,11 @@ class Load(Generative, MapperOption):
                 path_element = ext_info.mapper
                 if not ext_info.is_aliased_class:
                     ac = orm_util.with_polymorphic(
-                                ext_info.mapper.base_mapper,
-                                ext_info.mapper, aliased=True,
-                                _use_mapper_path=True)
+                        ext_info.mapper.base_mapper,
+                        ext_info.mapper, aliased=True,
+                        _use_mapper_path=True)
                 path.entity_path[prop].set(self.context,
-                                    "path_with_polymorphic", inspect(ac))
+                                           "path_with_polymorphic", inspect(ac))
                 path = path[prop][path_element]
             else:
                 path = path[prop]
@@ -176,7 +178,8 @@ class Load(Generative, MapperOption):
         return strategy
 
     @_generative
-    def set_relationship_strategy(self, attr, strategy, propagate_to_loaders=True):
+    def set_relationship_strategy(
+            self, attr, strategy, propagate_to_loaders=True):
         strategy = self._coerce_strat(strategy)
 
         self.propagate_to_loaders = propagate_to_loaders
@@ -232,7 +235,7 @@ class Load(Generative, MapperOption):
                 continue
             else:
                 return None
-        return to_chop[i+1:]
+        return to_chop[i + 1:]
 
 
 class _UnboundLoad(Load):
@@ -245,6 +248,7 @@ class _UnboundLoad(Load):
     of freestanding options, e.g. ``joinedload('x.y.z')``.
 
     """
+
     def __init__(self):
         self.path = ()
         self._to_bind = set()
@@ -318,7 +322,6 @@ class _UnboundLoad(Load):
 
         return opt
 
-
     def _chop_path(self, to_chop, path):
         i = -1
         for i, (c_token, (p_mapper, p_prop)) in enumerate(zip(to_chop, path.pairs())):
@@ -334,7 +337,6 @@ class _UnboundLoad(Load):
             i += 1
 
         return to_chop[i:]
-
 
     def _bind_loader(self, query, context, raiseerr):
         start_path = self.path
@@ -354,15 +356,15 @@ class _UnboundLoad(Load):
         elif isinstance(token, PropComparator):
             prop = token.property
             entity = self._find_entity_prop_comparator(
-                                    query,
-                                    prop.key,
-                                    token._parententity,
-                                    raiseerr)
+                query,
+                prop.key,
+                token._parententity,
+                raiseerr)
 
         else:
             raise sa_exc.ArgumentError(
-                    "mapper option expects "
-                    "string key or list of attributes")
+                "mapper option expects "
+                "string key or list of attributes")
 
         if not entity:
             return
@@ -378,7 +380,7 @@ class _UnboundLoad(Load):
         path = loader.path
         for token in start_path:
             loader.path = path = loader._generate_path(
-                                        loader.path, token, None, raiseerr)
+                loader.path, token, None, raiseerr)
             if path is None:
                 return
 
@@ -411,7 +413,7 @@ class _UnboundLoad(Load):
                     raise sa_exc.ArgumentError(
                         "Query has only expression-based entities - "
                         "can't find property named '%s'."
-                         % (token, )
+                        % (token, )
                     )
                 else:
                     raise sa_exc.ArgumentError(
@@ -419,7 +421,7 @@ class _UnboundLoad(Load):
                         "specified in this Query.  Note the full path "
                         "from root (%s) to target entity must be specified."
                         % (token, ",".join(str(x) for
-                            x in query._mapper_entities))
+                                           x in query._mapper_entities))
                     )
             else:
                 return None
@@ -429,9 +431,9 @@ class _UnboundLoad(Load):
             if len(list(query._mapper_entities)) != 1:
                 if raiseerr:
                     raise sa_exc.ArgumentError(
-                            "Wildcard loader can only be used with exactly "
-                            "one entity.  Use Load(ent) to specify "
-                            "specific entities.")
+                        "Wildcard loader can only be used with exactly "
+                        "one entity.  Use Load(ent) to specify "
+                        "specific entities.")
         elif token.endswith(_DEFAULT_TOKEN):
             raiseerr = False
 
@@ -445,11 +447,10 @@ class _UnboundLoad(Load):
                 raise sa_exc.ArgumentError(
                     "Query has only expression-based entities - "
                     "can't find property named '%s'."
-                     % (token, )
+                    % (token, )
                 )
             else:
                 return None
-
 
 
 class loader_option(object):
@@ -493,6 +494,7 @@ See :func:`.orm.%(name)s` for usage examples.
 """ % {"name": self.name}
         return self
 
+
 @loader_option()
 def contains_eager(loadopt, attr, alias=None):
     """Indicate that the given attribute should be eagerly loaded from
@@ -533,16 +535,19 @@ def contains_eager(loadopt, attr, alias=None):
             alias = info.selectable
 
     cloned = loadopt.set_relationship_strategy(
-            attr,
-            {"lazy": "joined"},
-            propagate_to_loaders=False
-        )
+        attr,
+        {"lazy": "joined"},
+        propagate_to_loaders=False
+    )
     cloned.local_opts['eager_from_alias'] = alias
     return cloned
 
+
 @contains_eager._add_unbound_fn
 def contains_eager(*keys, **kw):
-    return _UnboundLoad()._from_keys(_UnboundLoad.contains_eager, keys, True, kw)
+    return _UnboundLoad()._from_keys(
+        _UnboundLoad.contains_eager, keys, True, kw)
+
 
 @loader_option()
 def load_only(loadopt, *attrs):
@@ -579,17 +584,19 @@ def load_only(loadopt, *attrs):
 
     """
     cloned = loadopt.set_column_strategy(
-                attrs,
-                {"deferred": False, "instrument": True}
-            )
+        attrs,
+        {"deferred": False, "instrument": True}
+    )
     cloned.set_column_strategy("*",
-                    {"deferred": True, "instrument": True},
-                    {"undefer_pks": True})
+                               {"deferred": True, "instrument": True},
+                               {"undefer_pks": True})
     return cloned
+
 
 @load_only._add_unbound_fn
 def load_only(*attrs):
     return _UnboundLoad().load_only(*attrs)
+
 
 @loader_option()
 def joinedload(loadopt, attr, innerjoin=None):
@@ -656,15 +663,17 @@ def joinedload(loadopt, attr, innerjoin=None):
         loader.local_opts['innerjoin'] = innerjoin
     return loader
 
+
 @joinedload._add_unbound_fn
 def joinedload(*keys, **kw):
     return _UnboundLoad._from_keys(
-            _UnboundLoad.joinedload, keys, False, kw)
+        _UnboundLoad.joinedload, keys, False, kw)
+
 
 @joinedload._add_unbound_all_fn
 def joinedload_all(*keys, **kw):
     return _UnboundLoad._from_keys(
-            _UnboundLoad.joinedload, keys, True, kw)
+        _UnboundLoad.joinedload, keys, True, kw)
 
 
 @loader_option()
@@ -701,13 +710,16 @@ def subqueryload(loadopt, attr):
     """
     return loadopt.set_relationship_strategy(attr, {"lazy": "subquery"})
 
+
 @subqueryload._add_unbound_fn
 def subqueryload(*keys):
     return _UnboundLoad._from_keys(_UnboundLoad.subqueryload, keys, False, {})
 
+
 @subqueryload._add_unbound_all_fn
 def subqueryload_all(*keys):
     return _UnboundLoad._from_keys(_UnboundLoad.subqueryload, keys, True, {})
+
 
 @loader_option()
 def lazyload(loadopt, attr):
@@ -724,13 +736,16 @@ def lazyload(loadopt, attr):
     """
     return loadopt.set_relationship_strategy(attr, {"lazy": "select"})
 
+
 @lazyload._add_unbound_fn
 def lazyload(*keys):
     return _UnboundLoad._from_keys(_UnboundLoad.lazyload, keys, False, {})
 
+
 @lazyload._add_unbound_all_fn
 def lazyload_all(*keys):
     return _UnboundLoad._from_keys(_UnboundLoad.lazyload, keys, True, {})
+
 
 @loader_option()
 def immediateload(loadopt, attr):
@@ -754,6 +769,7 @@ def immediateload(loadopt, attr):
     loader = loadopt.set_relationship_strategy(attr, {"lazy": "immediate"})
     return loader
 
+
 @immediateload._add_unbound_fn
 def immediateload(*keys):
     return _UnboundLoad._from_keys(_UnboundLoad.immediateload, keys, False, {})
@@ -773,9 +789,11 @@ def noload(loadopt, attr):
 
     return loadopt.set_relationship_strategy(attr, {"lazy": "noload"})
 
+
 @noload._add_unbound_fn
 def noload(*keys):
     return _UnboundLoad._from_keys(_UnboundLoad.noload, keys, False, {})
+
 
 @loader_option()
 def defaultload(loadopt, attr):
@@ -797,13 +815,15 @@ def defaultload(loadopt, attr):
 
     """
     return loadopt.set_relationship_strategy(
-                attr,
-                None
-            )
+        attr,
+        None
+    )
+
 
 @defaultload._add_unbound_fn
 def defaultload(*keys):
     return _UnboundLoad._from_keys(_UnboundLoad.defaultload, keys, False, {})
+
 
 @loader_option()
 def defer(loadopt, key):
@@ -858,14 +878,16 @@ def defer(loadopt, key):
 
     """
     return loadopt.set_column_strategy(
-                (key, ),
-                {"deferred": True, "instrument": True}
-            )
+        (key, ),
+        {"deferred": True, "instrument": True}
+    )
 
 
 @defer._add_unbound_fn
 def defer(key, *addl_attrs):
-    return _UnboundLoad._from_keys(_UnboundLoad.defer, (key, ) + addl_attrs, False, {})
+    return _UnboundLoad._from_keys(
+        _UnboundLoad.defer, (key, ) + addl_attrs, False, {})
+
 
 @loader_option()
 def undefer(loadopt, key):
@@ -902,13 +924,16 @@ def undefer(loadopt, key):
 
     """
     return loadopt.set_column_strategy(
-                (key, ),
-                {"deferred": False, "instrument": True}
-            )
+        (key, ),
+        {"deferred": False, "instrument": True}
+    )
+
 
 @undefer._add_unbound_fn
 def undefer(key, *addl_attrs):
-    return _UnboundLoad._from_keys(_UnboundLoad.undefer, (key, ) + addl_attrs, False, {})
+    return _UnboundLoad._from_keys(
+        _UnboundLoad.undefer, (key, ) + addl_attrs, False, {})
+
 
 @loader_option()
 def undefer_group(loadopt, name):
@@ -939,12 +964,12 @@ def undefer_group(loadopt, name):
 
     """
     return loadopt.set_column_strategy(
-                            "*",
-                            None,
-                            {"undefer_group": name}
-                    )
+        "*",
+        None,
+        {"undefer_group": name}
+    )
+
 
 @undefer_group._add_unbound_fn
 def undefer_group(name):
     return _UnboundLoad().undefer_group(name)
-
