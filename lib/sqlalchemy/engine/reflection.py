@@ -188,8 +188,8 @@ class Inspector(object):
         """
 
         if hasattr(self.dialect, 'get_table_names'):
-            tnames = self.dialect.get_table_names(self.bind,
-                                                  schema, info_cache=self.info_cache)
+            tnames = self.dialect.get_table_names(
+                self.bind, schema, info_cache=self.info_cache)
         else:
             tnames = self.engine.table_names(schema)
         if order_by == 'foreign_key':
@@ -462,7 +462,8 @@ class Inspector(object):
         found_table = False
         cols_by_orig_name = {}
 
-        for col_d in self.get_columns(table_name, schema, **table.dialect_kwargs):
+        for col_d in self.get_columns(
+                table_name, schema, **table.dialect_kwargs):
             found_table = True
             orig_name = col_d['name']
 

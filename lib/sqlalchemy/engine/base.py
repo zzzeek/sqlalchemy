@@ -324,10 +324,10 @@ class Connection(Connectable):
         :meth:`.Connection.invalidate` method is called, at the DBAPI
         level all state associated with this transaction is lost, as
         the DBAPI connection is closed.  The :class:`.Connection`
-        will not allow a reconnection to proceed until the :class:`.Transaction`
-        object is ended, by calling the :meth:`.Transaction.rollback`
-        method; until that point, any attempt at continuing to use the
-        :class:`.Connection` will raise an
+        will not allow a reconnection to proceed until the
+        :class:`.Transaction` object is ended, by calling the
+        :meth:`.Transaction.rollback` method; until that point, any attempt at
+        continuing to use the :class:`.Connection` will raise an
         :class:`~sqlalchemy.exc.InvalidRequestError`.
         This is to prevent applications from accidentally
         continuing an ongoing transactional operations despite the
@@ -335,8 +335,8 @@ class Connection(Connectable):
         invalidation.
 
         The :meth:`.Connection.invalidate` method, just like auto-invalidation,
-        will at the connection pool level invoke the :meth:`.PoolEvents.invalidate`
-        event.
+        will at the connection pool level invoke the
+        :meth:`.PoolEvents.invalidate` event.
 
         .. seealso::
 
@@ -910,8 +910,10 @@ class Connection(Connectable):
 
         if self._echo:
             self.engine.logger.info(statement)
-            self.engine.logger.info("%r",
-                                    sql_util._repr_params(parameters, batches=10))
+            self.engine.logger.info(
+                "%r",
+                sql_util._repr_params(parameters, batches=10)
+            )
         try:
             if context.executemany:
                 for fn in () if not self.dialect._has_events \
@@ -1529,7 +1531,8 @@ class Engine(Connectable, log.Identified):
             shards = {"default": "base", shard_1: "db1", "shard_2": "db2"}
 
             @event.listens_for(Engine, "before_cursor_execute")
-            def _switch_shard(conn, cursor, stmt, params, context, executemany):
+            def _switch_shard(conn, cursor, stmt,
+                    params, context, executemany):
                 shard_id = conn._execution_options.get('shard_id', "default")
                 current_shard = conn.info.get("current_shard", None)
 
@@ -1816,8 +1819,8 @@ class Engine(Connectable, log.Identified):
 
         .. seealso::
 
-            :ref:`metadata_reflection_inspector` - detailed schema inspection using
-            the :class:`.Inspector` interface.
+            :ref:`metadata_reflection_inspector` - detailed schema inspection
+            using the :class:`.Inspector` interface.
 
             :class:`.quoted_name` - used to pass quoting information along
             with a schema identifier.

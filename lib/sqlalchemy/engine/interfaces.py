@@ -255,7 +255,8 @@ class Dialect(object):
 
         Deprecated.  This method is only called by the default
         implementation of :meth:`.Dialect.get_pk_constraint`.  Dialects should
-        instead implement the :meth:`.Dialect.get_pk_constraint` method directly.
+        instead implement the :meth:`.Dialect.get_pk_constraint` method
+        directly.
 
         """
 
@@ -361,7 +362,8 @@ class Dialect(object):
           list of column names in order
 
         \**kw
-          other options passed to the dialect's get_unique_constraints() method.
+          other options passed to the dialect's get_unique_constraints()
+          method.
 
         .. versionadded:: 0.9.0
 

@@ -218,9 +218,8 @@ class ResultMetaData(object):
 
             if context.result_map:
                 try:
-                    name, obj, type_ = context.result_map[colname
-                                                          if self.case_sensitive
-                                                          else colname.lower()]
+                    name, obj, type_ = context.result_map[
+                        colname if self.case_sensitive else colname.lower()]
                 except KeyError:
                     name, obj, type_ = \
                         colname, None, typemap.get(coltype, sqltypes.NULLTYPE)

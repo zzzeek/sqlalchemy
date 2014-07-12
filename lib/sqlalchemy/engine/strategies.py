@@ -91,10 +91,10 @@ class DefaultEngineStrategy(EngineStrategy):
                 except dialect.dbapi.Error as e:
                     invalidated = dialect.is_disconnect(e, None, None)
                     util.raise_from_cause(
-                        exc.DBAPIError.instance(None, None,
-                                                e, dialect.dbapi.Error,
-                                                connection_invalidated=invalidated
-                                                )
+                        exc.DBAPIError.instance(
+                            None, None, e, dialect.dbapi.Error,
+                            connection_invalidated=invalidated
+                        )
                     )
 
             creator = pop_kwarg('creator', connect)
