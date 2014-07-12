@@ -1212,7 +1212,7 @@ class RelationshipProperty(StrategizedProperty):
                     return sql.and_(*[
                         sql.or_(
                             adapt(x) != state_bindparam(adapt(x), state, y),
-                            adapt(x) is None)
+                            adapt(x) == None)
                         for (x, y) in self.property.local_remote_pairs])
 
             criterion = sql.and_(*[x == y for (x, y) in
@@ -1265,7 +1265,7 @@ class RelationshipProperty(StrategizedProperty):
             """
             if isinstance(other, (util.NoneType, expression.Null)):
                 if self.property.direction == MANYTOONE:
-                    return sql.or_(*[x is not None for x in
+                    return sql.or_(*[x != None for x in
                                      self.property._calculated_foreign_keys])
                 else:
                     return self._criterion_exists()
