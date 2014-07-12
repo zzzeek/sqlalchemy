@@ -81,7 +81,8 @@ class URL(object):
         if self.database is not None:
             s += '/' + self.database
         if self.query:
-            keys = sorted(self.query)
+            keys = list(self.query)
+            keys.sort()
             s += '?' + "&".join("%s=%s" % (k, self.query[k]) for k in keys)
         return s
 
