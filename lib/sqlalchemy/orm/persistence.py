@@ -331,9 +331,10 @@ def _collect_update_commands(base_mapper, uowtransaction,
                         # in a different table than the one
                         # where the version_id_col is.
                         for prop in mapper._columntoproperty.values():
-                            history = state.manager[prop.key].impl.get_history(
-                                state, state_dict,
-                                attributes.PASSIVE_NO_INITIALIZE)
+                            history = (
+                                state.manager[prop.key].impl.get_history(
+                                    state, state_dict,
+                                    attributes.PASSIVE_NO_INITIALIZE))
                             if history.added:
                                 hasdata = True
             else:
@@ -484,9 +485,10 @@ def _emit_update_statements(base_mapper, uowtransaction,
                                                        type_=col.type))
 
         if needs_version_id:
-            clause.clauses.append(mapper.version_id_col ==
-                                  sql.bindparam(mapper.version_id_col._label,
-                                                type_=mapper.version_id_col.type))
+            clause.clauses.append(
+                mapper.version_id_col == sql.bindparam(
+                    mapper.version_id_col._label,
+                    type_=mapper.version_id_col.type))
 
         stmt = table.update(clause)
         if mapper.base_mapper.eager_defaults:
@@ -603,7 +605,7 @@ def _emit_insert_statements(base_mapper, uowtransaction,
                         prop = mapper_rec._columntoproperty[col]
                         if state_dict.get(prop.key) is None:
                             # TODO: would rather say:
-                            #state_dict[prop.key] = pk
+                            # state_dict[prop.key] = pk
                             mapper_rec._set_state_attr_by_column(
                                 state,
                                 state_dict,

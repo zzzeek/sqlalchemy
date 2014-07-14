@@ -210,7 +210,8 @@ class PropRegistry(PathRegistry):
     def _default_path_loader_key(self):
         return ("loader",
                 self.parent.token(
-                    "%s:%s" % (self.prop.strategy_wildcard_key, _DEFAULT_TOKEN)
+                    "%s:%s" % (self.prop.strategy_wildcard_key,
+                               _DEFAULT_TOKEN)
                 ).path
                 )
 

@@ -31,16 +31,17 @@ class DynaLoader(strategies.AbstractRelationshipLoader):
                 "On relationship %s, 'dynamic' loaders cannot be used with "
                 "many-to-one/one-to-one relationships and/or "
                 "uselist=False." % self.parent_property)
-        strategies._register_attribute(self,
-                                       mapper,
-                                       useobject=True,
-                                       uselist=True,
-                                       impl_class=DynamicAttributeImpl,
-                                       target_mapper=self.parent_property.mapper,
-                                       order_by=self.parent_property.order_by,
-                                       query_class=self.parent_property.query_class,
-                                       backref=self.parent_property.back_populates,
-                                       )
+        strategies._register_attribute(
+            self,
+            mapper,
+            useobject=True,
+            uselist=True,
+            impl_class=DynamicAttributeImpl,
+            target_mapper=self.parent_property.mapper,
+            order_by=self.parent_property.order_by,
+            query_class=self.parent_property.query_class,
+            backref=self.parent_property.back_populates,
+        )
 
 
 class DynamicAttributeImpl(attributes.AttributeImpl):
@@ -65,8 +66,8 @@ class DynamicAttributeImpl(attributes.AttributeImpl):
 
     def get(self, state, dict_, passive=attributes.PASSIVE_OFF):
         if not passive & attributes.SQL_OK:
-            return self._get_collection_history(state,
-                                                attributes.PASSIVE_NO_INITIALIZE).added_items
+            return self._get_collection_history(
+                state, attributes.PASSIVE_NO_INITIALIZE).added_items
         else:
             return self.query_class(self, state)
 

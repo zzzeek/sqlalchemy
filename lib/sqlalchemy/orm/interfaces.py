@@ -22,7 +22,8 @@ from __future__ import absolute_import
 from .. import exc as sa_exc, util, inspect
 from ..sql import operators
 from collections import deque
-from .base import ONETOMANY, MANYTOONE, MANYTOMANY, EXT_CONTINUE, EXT_STOP, NOT_EXTENSION
+from .base import (ONETOMANY, MANYTOONE, MANYTOMANY,
+                   EXT_CONTINUE, EXT_STOP, NOT_EXTENSION)
 from .base import _InspectionAttr, _MappedAttribute
 from .path_registry import PathRegistry
 import collections

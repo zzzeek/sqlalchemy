@@ -256,8 +256,8 @@ class DependencyProcessor(object):
                 "Can't flush None value found in "
                 "collection %s" % (self.prop, ))
         elif state is not None and \
-            not self.mapper._canload(state,
-                                     allow_subtypes=not self.enable_typechecks):
+            not self.mapper._canload(
+                state, allow_subtypes=not self.enable_typechecks):
             if self.mapper._canload(state, allow_subtypes=True):
                 raise exc.FlushError('Attempting to flush an item of type '
                                      '%(x)s as a member of collection '
@@ -439,8 +439,8 @@ class OneToManyDP(DependencyProcessor):
                 if should_null_fks:
                     for child in history.unchanged:
                         if child is not None:
-                            uowcommit.register_object(child,
-                                                      operation="delete", prop=self.prop)
+                            uowcommit.register_object(
+                                child, operation="delete", prop=self.prop)
 
     def presort_saves(self, uowcommit, states):
         children_added = uowcommit.memo(('children_added', self), set)
@@ -472,8 +472,9 @@ class OneToManyDP(DependencyProcessor):
                                                   operation='delete',
                                                   prop=self.prop)
                     elif self.hasparent(child) is False:
-                        uowcommit.register_object(child, isdelete=True,
-                                                  operation="delete", prop=self.prop)
+                        uowcommit.register_object(
+                            child, isdelete=True,
+                            operation="delete", prop=self.prop)
                         for c, m, st_, dct_ in self.mapper.cascade_iterator(
                                 'delete', child):
                             uowcommit.register_object(
@@ -696,8 +697,9 @@ class ManyToOneDP(DependencyProcessor):
                     for child in todelete:
                         if child is None:
                             continue
-                        uowcommit.register_object(child, isdelete=True,
-                                                  operation="delete", prop=self.prop)
+                        uowcommit.register_object(
+                            child, isdelete=True,
+                            operation="delete", prop=self.prop)
                         t = self.mapper.cascade_iterator('delete', child)
                         for c, m, st_, dct_ in t:
                             uowcommit.register_object(
@@ -714,8 +716,9 @@ class ManyToOneDP(DependencyProcessor):
                 if history:
                     for child in history.deleted:
                         if self.hasparent(child) is False:
-                            uowcommit.register_object(child, isdelete=True,
-                                                      operation="delete", prop=self.prop)
+                            uowcommit.register_object(
+                                child, isdelete=True,
+                                operation="delete", prop=self.prop)
 
                             t = self.mapper.cascade_iterator('delete', child)
                             for c, m, st_, dct_ in t:
@@ -865,8 +868,8 @@ class DetectKeySwitch(DependencyProcessor):
                 if not issubclass(state.class_, self.parent.class_):
                     continue
                 dict_ = state.dict
-                related = state.get_impl(self.key).get(state, dict_,
-                                                       passive=self._passive_update_flag)
+                related = state.get_impl(self.key).get(
+                    state, dict_, passive=self._passive_update_flag)
                 if related is not attributes.PASSIVE_NO_RESULT and \
                         related is not None:
                     related_state = attributes.instance_state(dict_[self.key])
@@ -881,10 +884,8 @@ class DetectKeySwitch(DependencyProcessor):
                             uowcommit, self.passive_updates)
 
     def _pks_changed(self, uowcommit, state):
-        return bool(state.key) and sync.source_modified(uowcommit,
-                                                        state,
-                                                        self.mapper,
-                                                        self.prop.synchronize_pairs)
+        return bool(state.key) and sync.source_modified(
+            uowcommit, state, self.mapper, self.prop.synchronize_pairs)
 
 
 class ManyToManyDP(DependencyProcessor):
@@ -975,8 +976,9 @@ class ManyToManyDP(DependencyProcessor):
             if history:
                 for child in history.deleted:
                     if self.hasparent(child) is False:
-                        uowcommit.register_object(child, isdelete=True,
-                                                  operation="delete", prop=self.prop)
+                        uowcommit.register_object(
+                            child, isdelete=True,
+                            operation="delete", prop=self.prop)
                         for c, m, st_, dct_ in self.mapper.cascade_iterator(
                                 'delete',
                                 child):

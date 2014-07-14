@@ -383,7 +383,7 @@ def instance_processor(mapper, context, path, adapter,
                         state,
                         dict_,
                         mapper.version_id_col) != \
-                row[version_id_col]:
+                    row[version_id_col]:
 
                 raise orm_exc.StaleDataError(
                     "Instance '%s' has version id '%s' which "
@@ -460,7 +460,8 @@ def instance_processor(mapper, context, path, adapter,
             if loaded_instance and load_evt:
                 state.manager.dispatch.load(state, context)
             elif isnew and refresh_evt:
-                state.manager.dispatch.refresh(state, context, only_load_props)
+                state.manager.dispatch.refresh(
+                    state, context, only_load_props)
 
         elif state in context.partials or state.unloaded or eager_populators:
             # state is having a partial set of its attributes
@@ -557,7 +558,7 @@ def _configure_subclass_mapper(mapper, context, path, adapter):
 def load_scalar_attributes(mapper, state, attribute_names):
     """initiate a column-based attribute refresh operation."""
 
-    #assert mapper is _state_mapper(state)
+    # assert mapper is _state_mapper(state)
     session = state.session
     if not session:
         raise orm_exc.DetachedInstanceError(

@@ -97,22 +97,23 @@ class QueryableAttribute(interfaces._MappedAttribute,
 
         * If the attribute is a :class:`.ColumnProperty` but is mapped to
           any other kind of SQL expression other than a :class:`.Column`,
-          the attribute will refer to the :attr:`.MapperProperty.info` dictionary
-          associated directly with the :class:`.ColumnProperty`, assuming the SQL
-          expression itself does not have its own ``.info`` attribute
-          (which should be the case, unless a user-defined SQL construct
-          has defined one).
+          the attribute will refer to the :attr:`.MapperProperty.info`
+          dictionary associated directly with the :class:`.ColumnProperty`,
+          assuming the SQL expression itself does not have its own ``.info``
+          attribute (which should be the case, unless a user-defined SQL
+          construct has defined one).
 
-        * If the attribute refers to any other kind of :class:`.MapperProperty`,
-          including :class:`.RelationshipProperty`, the attribute will refer
-          to the :attr:`.MapperProperty.info` dictionary associated with
-          that :class:`.MapperProperty`.
+        * If the attribute refers to any other kind of
+          :class:`.MapperProperty`, including :class:`.RelationshipProperty`,
+          the attribute will refer to the :attr:`.MapperProperty.info`
+          dictionary associated with that :class:`.MapperProperty`.
 
-        * To access the :attr:`.MapperProperty.info` dictionary of the :class:`.MapperProperty`
-          unconditionally, including for a :class:`.ColumnProperty` that's
-          associated directly with a :class:`.schema.Column`, the attribute
-          can be referred to using :attr:`.QueryableAttribute.property`
-          attribute, as ``MyClass.someattribute.property.info``.
+        * To access the :attr:`.MapperProperty.info` dictionary of the
+          :class:`.MapperProperty` unconditionally, including for a
+          :class:`.ColumnProperty` that's associated directly with a
+          :class:`.schema.Column`, the attribute can be referred to using
+          :attr:`.QueryableAttribute.property` attribute, as
+          ``MyClass.someattribute.property.info``.
 
         .. versionadded:: 0.8.0
 
@@ -152,7 +153,8 @@ class QueryableAttribute(interfaces._MappedAttribute,
 
     def adapt_to_entity(self, adapt_to_entity):
         assert not self._of_type
-        return self.__class__(adapt_to_entity.entity, self.key, impl=self.impl,
+        return self.__class__(adapt_to_entity.entity,
+                              self.key, impl=self.impl,
                               comparator=self.comparator.adapt_to_entity(
                                   adapt_to_entity),
                               parententity=adapt_to_entity)
@@ -278,7 +280,9 @@ def create_proxied_attribute(descriptor):
             return self._comparator
 
         def adapt_to_entity(self, adapt_to_entity):
-            return self.__class__(adapt_to_entity.entity, self.key, self.descriptor,
+            return self.__class__(adapt_to_entity.entity,
+                                  self.key,
+                                  self.descriptor,
                                   self._comparator,
                                   adapt_to_entity)
 
@@ -423,8 +427,8 @@ class AttributeImpl(object):
           for this key.
 
         send_modified_events
-          if False, the InstanceState._modified_event method will have no effect;
-          this means the attribute will never show up as changed in a
+          if False, the InstanceState._modified_event method will have no
+          effect; this means the attribute will never show up as changed in a
           history entry.
         """
         self.class_ = class_

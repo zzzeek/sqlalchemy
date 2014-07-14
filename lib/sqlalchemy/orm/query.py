@@ -717,10 +717,11 @@ class Query(object):
 
         Also note that while :meth:`~sqlalchemy.orm.query.Query.yield_per`
         will set the ``stream_results`` execution option to True, currently
-        this is only understood by :mod:`~sqlalchemy.dialects.postgresql.psycopg2` dialect
-        which will stream results using server side cursors instead of pre-buffer
-        all rows for this query. Other DBAPIs pre-buffer all rows before
-        making them available.
+        this is only understood by
+        :mod:`~sqlalchemy.dialects.postgresql.psycopg2` dialect which will
+        stream results using server side cursors instead of pre-buffer all
+        rows for this query. Other DBAPIs pre-buffer all rows before making
+        them available.
 
         """
         self._yield_per = count
@@ -1039,7 +1040,8 @@ class Query(object):
         self._set_entity_selectables(self._entities[l:])
 
     @util.pending_deprecation("0.7",
-                              ":meth:`.add_column` is superseded by :meth:`.add_columns`",
+                              ":meth:`.add_column` is superseded "
+                              "by :meth:`.add_columns`",
                               False)
     def add_column(self, column):
         """Add a column expression to the list of result columns to be
@@ -1323,7 +1325,8 @@ class Query(object):
         """apply a HAVING criterion to the query and return the
         newly resulting :class:`.Query`.
 
-        :meth:`~.Query.having` is used in conjunction with :meth:`~.Query.group_by`.
+        :meth:`~.Query.having` is used in conjunction with
+        :meth:`~.Query.group_by`.
 
         HAVING criterion makes it possible to use filters on aggregate
         functions like COUNT, SUM, AVG, MAX, and MIN, eg.::
@@ -1455,8 +1458,8 @@ class Query(object):
 
         Consider a mapping between two classes ``User`` and ``Address``,
         with a relationship ``User.addresses`` representing a collection
-        of ``Address`` objects associated with each ``User``.   The most common
-        usage of :meth:`~.Query.join` is to create a JOIN along this
+        of ``Address`` objects associated with each ``User``.   The most
+        common usage of :meth:`~.Query.join` is to create a JOIN along this
         relationship, using the ``User.addresses`` attribute as an indicator
         for how this should occur::
 
@@ -1682,8 +1685,8 @@ class Query(object):
 
             :ref:`ormtutorial_joins` in the ORM tutorial.
 
-            :ref:`inheritance_toplevel` for details on how :meth:`~.Query.join`
-            is used for inheritance relationships.
+            :ref:`inheritance_toplevel` for details on how
+            :meth:`~.Query.join` is used for inheritance relationships.
 
             :func:`.orm.join` - a standalone ORM-level join function,
             used internally by :meth:`.Query.join`, which in previous
@@ -1871,11 +1874,14 @@ class Query(object):
                 isinstance(right_mapper.mapped_table, expression.Join)
             ):
                 for from_obj in self._from_obj or [l_info.selectable]:
-                    if sql_util.selectables_overlap(l_info.selectable, from_obj) and \
-                            sql_util.selectables_overlap(from_obj, r_info.selectable):
+                    if sql_util.selectables_overlap(
+                            l_info.selectable, from_obj) and \
+                            sql_util.selectables_overlap(
+                                from_obj, r_info.selectable):
                         overlap = True
                         break
-            elif sql_util.selectables_overlap(l_info.selectable, r_info.selectable):
+            elif sql_util.selectables_overlap(l_info.selectable,
+                                              r_info.selectable):
                 overlap = True
 
         if overlap and l_info.selectable is r_info.selectable:
@@ -1959,10 +1965,11 @@ class Query(object):
         # apply an adapter to all subsequent filter() calls
         # until reset_joinpoint() is called.
         if need_adapter:
-            self._filter_aliases = ORMAdapter(right,
-                                              equivalents=right_mapper and
-                                              right_mapper._equivalent_columns or {},
-                                              chain_to=self._filter_aliases)
+            self._filter_aliases = ORMAdapter(
+                right,
+                equivalents=right_mapper and
+                right_mapper._equivalent_columns or {},
+                chain_to=self._filter_aliases)
 
         # if the onclause is a ClauseElement, adapt it with any
         # adapters that are in place right now
@@ -2626,10 +2633,11 @@ class Query(object):
 
         This method has several key caveats:
 
-        * The method does **not** offer in-Python cascading of relationships - it
-          is assumed that ON DELETE CASCADE/SET NULL/etc. is configured for any foreign key
-          references which require it, otherwise the database may emit an
-          integrity violation if foreign key references are being enforced.
+        * The method does **not** offer in-Python cascading of relationships
+          - it is assumed that ON DELETE CASCADE/SET NULL/etc. is configured
+          for any foreign key references which require it, otherwise the
+          database may emit an integrity violation if foreign key references
+          are being enforced.
 
           After the DELETE, dependent objects in the :class:`.Session` which
           were impacted by an ON DELETE may not contain the current
@@ -2638,8 +2646,8 @@ class Query(object):
           which normally occurs upon :meth:`.Session.commit` or can be forced
           by using :meth:`.Session.expire_all`.  Accessing an expired object
           whose row has been deleted will invoke a SELECT to locate the
-          row; when the row is not found, an :class:`~sqlalchemy.orm.exc.ObjectDeletedError`
-          is raised.
+          row; when the row is not found, an
+          :class:`~sqlalchemy.orm.exc.ObjectDeletedError` is raised.
 
         * The :meth:`.MapperEvents.before_delete` and
           :meth:`.MapperEvents.after_delete`
@@ -2695,9 +2703,9 @@ class Query(object):
 
         This method has several key caveats:
 
-        * The method does **not** offer in-Python cascading of relationships - it
-          is assumed that ON UPDATE CASCADE is configured for any foreign key
-          references which require it, otherwise the database may emit an
+        * The method does **not** offer in-Python cascading of relationships
+          - it is assumed that ON UPDATE CASCADE is configured for any foreign
+          key references which require it, otherwise the database may emit an
           integrity violation if foreign key references are being enforced.
 
           After the UPDATE, dependent objects in the :class:`.Session` which
@@ -2706,16 +2714,16 @@ class Query(object):
           which normally occurs upon :meth:`.Session.commit` or can be forced
           by using :meth:`.Session.expire_all`.
 
-        * As of 0.8, this method will support multiple table updates, as detailed
-          in :ref:`multi_table_updates`, and this behavior does extend to support
-          updates of joined-inheritance and other multiple table mappings.  However,
-          the **join condition of an inheritance mapper is currently not
-          automatically rendered**.
-          Care must be taken in any multiple-table update to explicitly include
-          the joining condition between those tables, even in mappings where
-          this is normally automatic.
-          E.g. if a class ``Engineer`` subclasses ``Employee``, an UPDATE of the
-          ``Engineer`` local table using criteria against the ``Employee``
+        * As of 0.8, this method will support multiple table updates, as
+          detailed in :ref:`multi_table_updates`, and this behavior does
+          extend to support updates of joined-inheritance and other multiple
+          table mappings.  However, the **join condition of an inheritance
+          mapper is currently not automatically rendered**.
+          Care must be taken in any multiple-table update to explicitly
+          include the joining condition between those tables, even in mappings
+          where this is normally automatic.
+          E.g. if a class ``Engineer`` subclasses ``Employee``, an UPDATE of
+          the ``Engineer`` local table using criteria against the ``Employee``
           local table might look like::
 
                 session.query(Engineer).\\
@@ -3022,9 +3030,9 @@ class _MapperEntity(_QueryEntity):
         self._polymorphic_discriminator = polymorphic_on
 
         self.selectable = from_obj
-        query._mapper_loads_polymorphically_with(self.mapper,
-                                                 sql_util.ColumnAdapter(from_obj,
-                                                                        self.mapper._equivalent_columns))
+        query._mapper_loads_polymorphically_with(
+            self.mapper, sql_util.ColumnAdapter(
+                from_obj, self.mapper._equivalent_columns))
 
     filter_fn = id
 
@@ -3191,7 +3199,8 @@ class Bundle(object):
 
             bn = Bundle("mybundle", MyClass.x, MyClass.y)
 
-            for row in session.query(bn).filter(bn.c.x == 5).filter(bn.c.y == 4):
+            for row in session.query(bn).filter(
+                    bn.c.x == 5).filter(bn.c.y == 4):
                 print(row.mybundle.x, row.mybundle.y)
 
         :param name: name of the bundle.
@@ -3224,7 +3233,8 @@ class Bundle(object):
                     Bundle('b3', MyClass.x, MyClass.y)
                 )
 
-            q = sess.query(b1).filter(b1.c.b2.c.a == 5).filter(b1.c.b3.c.y == 9)
+            q = sess.query(b1).filter(
+                b1.c.b2.c.a == 5).filter(b1.c.b3.c.y == 9)
 
     .. seealso::
 
@@ -3265,7 +3275,8 @@ class Bundle(object):
 
         """
         def proc(row, result):
-            return util.KeyedTuple([proc(row, None) for proc in procs], labels)
+            return util.KeyedTuple(
+                [proc(row, None) for proc in procs], labels)
         return proc
 
 
@@ -3317,9 +3328,9 @@ class _BundleEntity(_QueryEntity):
 
     def adapt_to_selectable(self, query, sel):
         c = _BundleEntity(query, self.bundle, setup_entities=False)
-        #c._label_name = self._label_name
-        #c.entity_zero = self.entity_zero
-        #c.entities = self.entities
+        # c._label_name = self._label_name
+        # c.entity_zero = self.entity_zero
+        # c.entities = self.entities
 
         for ent in self._entities:
             ent.adapt_to_selectable(c, sel)

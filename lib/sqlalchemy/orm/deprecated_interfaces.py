@@ -107,9 +107,10 @@ class MapperExtension(object):
                 elif meth == 'init_failed':
                     def go(ls_meth):
                         def init_failed(instance, args, kwargs):
-                            util.warn_exception(ls_meth, self, self.class_,
-                                                self.class_manager.original_init,
-                                                instance, args, kwargs)
+                            util.warn_exception(
+                                ls_meth, self, self.class_,
+                                self.class_manager.original_init,
+                                instance, args, kwargs)
 
                         return init_failed
                     event.listen(self.class_manager, 'init_failure',

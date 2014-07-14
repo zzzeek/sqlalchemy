@@ -49,8 +49,8 @@ def _register_attribute(strategy, mapper, useobject,
     if prop.key in prop.parent.validators:
         fn, opts = prop.parent.validators[prop.key]
         listen_hooks.append(
-            lambda desc, prop: orm_util._validator_events(desc,
-                                                          prop.key, fn, **opts)
+            lambda desc, prop: orm_util._validator_events(
+                desc, prop.key, fn, **opts)
         )
 
     if useobject:
@@ -77,8 +77,9 @@ def _register_attribute(strategy, mapper, useobject,
                 compare_function=compare_function,
                 useobject=useobject,
                 extension=attribute_ext,
-                trackparent=useobject and (prop.single_parent
-                                           or prop.direction is interfaces.ONETOMANY),
+                trackparent=useobject and (
+                    prop.single_parent or
+                    prop.direction is interfaces.ONETOMANY),
                 typecallable=typecallable,
                 callable_=callable_,
                 active_history=active_history,
@@ -268,8 +269,9 @@ class DeferredColumnLoader(LoaderStrategy):
             )
 
         query = session.query(localparent)
-        if loading.load_on_ident(query, state.key,
-                                 only_load_props=group, refresh_state=state) is None:
+        if loading.load_on_ident(
+                query, state.key, only_load_props=group,
+                refresh_state=state) is None:
             raise orm_exc.ObjectDeletedError(state)
 
         return attributes.ATTR_WAS_SET
@@ -312,11 +314,12 @@ class NoLoader(AbstractRelationshipLoader):
     def init_class_attribute(self, mapper):
         self.is_class_level = True
 
-        _register_attribute(self, mapper,
-                            useobject=True,
-                            uselist=self.parent_property.uselist,
-                            typecallable=self.parent_property.collection_class,
-                            )
+        _register_attribute(
+            self, mapper,
+            useobject=True,
+            uselist=self.parent_property.uselist,
+            typecallable=self.parent_property.collection_class,
+        )
 
     def create_row_processor(
             self, context, path, loadopt, mapper, row, adapter):
@@ -381,15 +384,15 @@ class LazyLoader(AbstractRelationshipLoader):
         # will enable active_history
         # in that case.  otherwise we don't need the
         # "old" value during backref operations.
-        _register_attribute(self,
-                            mapper,
-                            useobject=True,
-                            callable_=self._load_for_state,
-                            uselist=self.parent_property.uselist,
-                            backref=self.parent_property.back_populates,
-                            typecallable=self.parent_property.collection_class,
-                            active_history=active_history
-                            )
+        _register_attribute(
+            self, mapper,
+            useobject=True,
+            callable_=self._load_for_state,
+            uselist=self.parent_property.uselist,
+            backref=self.parent_property.back_populates,
+            typecallable=self.parent_property.collection_class,
+            active_history=active_history
+        )
 
     def lazy_clause(self, state, reverse_direction=False,
                     alias_secondary=False,
@@ -1135,16 +1138,16 @@ class JoinedLoader(AbstractRelationshipLoader):
 
         root_mapper, prop = path[-2:]
 
-        #from .mapper import Mapper
-        #from .interfaces import MapperProperty
-        #assert isinstance(root_mapper, Mapper)
-        #assert isinstance(prop, MapperProperty)
+        # from .mapper import Mapper
+        # from .interfaces import MapperProperty
+        # assert isinstance(root_mapper, Mapper)
+        # assert isinstance(prop, MapperProperty)
 
         if alias is not None:
             if isinstance(alias, str):
                 alias = prop.target.alias(alias)
-            adapter = sql_util.ColumnAdapter(alias,
-                                             equivalents=prop.mapper._equivalent_columns)
+            adapter = sql_util.ColumnAdapter(
+                alias, equivalents=prop.mapper._equivalent_columns)
         else:
             if path.contains(context.attributes, "path_with_polymorphic"):
                 with_poly_info = path.get(context.attributes,
@@ -1161,8 +1164,8 @@ class JoinedLoader(AbstractRelationshipLoader):
 
         return adapter
 
-    def _setup_query_on_user_defined_adapter(self, context, entity,
-                                             path, adapter, user_defined_adapter):
+    def _setup_query_on_user_defined_adapter(
+            self, context, entity, path, adapter, user_defined_adapter):
 
         # apply some more wrapping to the "user defined adapter"
         # if we are setting up the query for SQL render.

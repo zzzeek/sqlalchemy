@@ -71,8 +71,11 @@ class CascadeOptions(frozenset):
         )
 
 
-def _validator_events(desc, key, validator, include_removes, include_backrefs):
-    """Runs a validation method on an attribute value to be set or appended."""
+def _validator_events(
+        desc, key, validator, include_removes, include_backrefs):
+    """Runs a validation method on an attribute value to be set or
+    appended.
+    """
 
     if not include_backrefs:
         def detect_is_backref(state, initiator):
@@ -169,8 +172,9 @@ def polymorphic_union(table_map, typecolname,
         if typecolname is not None:
             result.append(
                 sql.select([col(name, table) for name in colnames] +
-                           [sql.literal_column(sql_util._quote_ddl_expr(type)).
-                            label(typecolname)],
+                           [sql.literal_column(
+                               sql_util._quote_ddl_expr(type)).
+                               label(typecolname)],
                            from_obj=[table]))
         else:
             result.append(sql.select([col(name, table) for name in colnames],
@@ -225,7 +229,8 @@ def identity_key(*args, **kwargs):
 
       E.g.::
 
-        >>> row = engine.execute("select * from table where a=1 and b=2").first()
+        >>> row = engine.execute("select * from table where a=1 and b=2").\
+first()
         >>> identity_key(MyClass, row=row)
         (<class '__main__.MyClass'>, (1, 2))
 
@@ -246,8 +251,9 @@ def identity_key(*args, **kwargs):
         elif len(args) == 3:
             class_, ident = args
         else:
-            raise sa_exc.ArgumentError("expected up to three "
-                                       "positional arguments, got %s" % len(args))
+            raise sa_exc.ArgumentError(
+                "expected up to three positional arguments, "
+                "got %s" % len(args))
         if kwargs:
             raise sa_exc.ArgumentError("unknown keyword arguments: %s"
                                        % ", ".join(kwargs))
@@ -454,9 +460,9 @@ class AliasedInsp(_InspectionAttr):
         self._base_alias = _base_alias or self
         self._use_mapper_path = _use_mapper_path
 
-        self._adapter = sql_util.ClauseAdapter(selectable,
-                                               equivalents=mapper._equivalent_columns,
-                                               adapt_on_names=adapt_on_names)
+        self._adapter = sql_util.ClauseAdapter(
+            selectable, equivalents=mapper._equivalent_columns,
+            adapt_on_names=adapt_on_names)
 
         self._adapt_on_names = adapt_on_names
         self._target = mapper.class_
@@ -526,7 +532,8 @@ class AliasedInsp(_InspectionAttr):
         elif mapper.isa(self.mapper):
             return self
         else:
-            assert False, "mapper %s doesn't correspond to %s" % (mapper, self)
+            assert False, "mapper %s doesn't correspond to %s" % (
+                mapper, self)
 
     def __repr__(self):
         return '<AliasedInsp at 0x%x; %s>' % (
@@ -577,11 +584,12 @@ def aliased(element, alias=None, name=None, flat=False, adapt_on_names=False):
      attribute name that will be accessible via tuples returned by a
      :class:`.Query` object.
 
-    :param flat: Boolean, will be passed through to the :meth:`.FromClause.alias`
-     call so that aliases of :class:`.Join` objects don't include an enclosing
-     SELECT.  This can lead to more efficient queries in many circumstances.
-     A JOIN against a nested JOIN will be rewritten as a JOIN against an aliased
-     SELECT subquery on backends that don't support this syntax.
+    :param flat: Boolean, will be passed through to the
+     :meth:`.FromClause.alias` call so that aliases of :class:`.Join` objects
+     don't include an enclosing SELECT.  This can lead to more efficient
+     queries in many circumstances.  A JOIN against a nested JOIN will be
+     rewritten as a JOIN against an aliased SELECT subquery on backends that
+     don't support this syntax.
 
      .. versionadded:: 0.9.0
 
@@ -664,11 +672,12 @@ def with_polymorphic(base, classes, selectable=False,
         support parenthesized joins, such as SQLite and older
         versions of MySQL.
 
-    :param flat: Boolean, will be passed through to the :meth:`.FromClause.alias`
-     call so that aliases of :class:`.Join` objects don't include an enclosing
-     SELECT.  This can lead to more efficient queries in many circumstances.
-     A JOIN against a nested JOIN will be rewritten as a JOIN against an aliased
-     SELECT subquery on backends that don't support this syntax.
+    :param flat: Boolean, will be passed through to the
+        :meth:`.FromClause.alias` call so that aliases of :class:`.Join`
+        objects don't include an enclosing SELECT.  This can lead to more
+        efficient queries in many circumstances.  A JOIN against a nested JOIN
+        will be rewritten as a JOIN against an aliased SELECT subquery on
+        backends that don't support this syntax.
 
      Setting ``flat`` to ``True`` implies the ``aliased`` flag is
      also ``True``.
@@ -765,7 +774,8 @@ class _ORMJoin(expression.Join):
             prop = None
 
         if prop:
-            if sql_util.clause_is_present(on_selectable, left_info.selectable):
+            if sql_util.clause_is_present(
+                    on_selectable, left_info.selectable):
                 adapt_from = on_selectable
             else:
                 adapt_from = left_info.selectable
@@ -936,9 +946,9 @@ def randomize_unitofwork():
 
     By calling ``randomize_unitofwork()`` when a script first runs, the
     ordering of a key series of sets within the unit of work implementation
-    are randomized, so that the script can be minimized down to the fundamental
-    mapping and operation that's failing, while still reproducing the issue
-    on at least some runs.
+    are randomized, so that the script can be minimized down to the
+    fundamental mapping and operation that's failing, while still reproducing
+    the issue on at least some runs.
 
     This utility is also available when running the test suite via the
     ``--reversetop`` flag.

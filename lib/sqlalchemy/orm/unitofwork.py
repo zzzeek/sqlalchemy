@@ -350,7 +350,7 @@ class UOWTransaction(object):
     def execute(self):
         postsort_actions = self._generate_actions()
 
-        #sort = topological.sort(self.dependencies, postsort_actions)
+        # sort = topological.sort(self.dependencies, postsort_actions)
         # print "--------------"
         # print "\ndependencies:", self.dependencies
         # print "\ncycles:", self.cycles
@@ -430,9 +430,9 @@ class Preprocess(IterateMappersMixin):
 
         if (delete_states or save_states):
             if not self.setup_flush_actions and (
-                self.dependency_processor.
+                    self.dependency_processor.
                     prop_has_changes(uow, delete_states, True) or
-                self.dependency_processor.
+                    self.dependency_processor.
                     prop_has_changes(uow, save_states, False)
             ):
                 self.dependency_processor.per_property_flush_actions(uow)

@@ -63,9 +63,8 @@ class DescriptorProperty(MapperProperty):
                 fdel=fdel,
             )
 
-        proxy_attr = attributes.\
-            create_proxied_attribute(self.descriptor)\
-            (
+        proxy_attr = attributes.create_proxied_attribute(
+            self.descriptor)(
                 self.parent.class_,
                 self.key,
                 self.descriptor,
@@ -94,8 +93,8 @@ class CompositeProperty(DescriptorProperty):
     def __init__(self, class_, *attrs, **kwargs):
         """Return a composite column-based property for use with a Mapper.
 
-        See the mapping documentation section :ref:`mapper_composite` for a full
-        usage example.
+        See the mapping documentation section :ref:`mapper_composite` for a
+        full usage example.
 
         The :class:`.MapperProperty` returned by :func:`.composite`
         is the :class:`.CompositeProperty`.
@@ -119,13 +118,14 @@ class CompositeProperty(DescriptorProperty):
           A group name for this property when marked as deferred.
 
         :param deferred:
-          When True, the column property is "deferred", meaning that it does not
-          load immediately, and is instead loaded when the attribute is first
-          accessed on an instance.  See also :func:`~sqlalchemy.orm.deferred`.
+          When True, the column property is "deferred", meaning that it does
+          not load immediately, and is instead loaded when the attribute is
+          first accessed on an instance.  See also
+          :func:`~sqlalchemy.orm.deferred`.
 
         :param comparator_factory:  a class which extends
-          :class:`.CompositeProperty.Comparator` which provides custom SQL clause
-          generation for comparison operations.
+          :class:`.CompositeProperty.Comparator` which provides custom SQL
+          clause generation for comparison operations.
 
         :param doc:
           optional string that will be applied as the doc on the
@@ -139,8 +139,8 @@ class CompositeProperty(DescriptorProperty):
         :param extension:
           an :class:`.AttributeExtension` instance,
           or list of extensions, which will be prepended to the list of
-          attribute listeners for the resulting descriptor placed on the class.
-          **Deprecated.**  Please see :class:`.AttributeEvents`.
+          attribute listeners for the resulting descriptor placed on the
+          class.  **Deprecated.**  Please see :class:`.AttributeEvents`.
 
         """
 
@@ -241,7 +241,8 @@ class CompositeProperty(DescriptorProperty):
         props = []
         for attr in self.attrs:
             if isinstance(attr, str):
-                prop = self.parent.get_property(attr, _configure_mappers=False)
+                prop = self.parent.get_property(
+                    attr, _configure_mappers=False)
             elif isinstance(attr, schema.Column):
                 prop = self.parent._columntoproperty[attr]
             elif isinstance(attr, attributes.InstrumentedAttribute):
@@ -288,7 +289,7 @@ class CompositeProperty(DescriptorProperty):
                 if k not in dict_:
                     return
 
-            #assert self.key not in dict_
+            # assert self.key not in dict_
             dict_[self.key] = self.composite_class(
                 *[state.dict[key] for key in
                   self._attribute_keys]
@@ -472,8 +473,8 @@ class ConcreteInheritedProperty(DescriptorProperty):
     def __init__(self):
         def warn():
             raise AttributeError("Concrete %s does not implement "
-                                 "attribute %r at the instance level.  Add this "
-                                 "property explicitly to %s." %
+                                 "attribute %r at the instance level.  Add "
+                                 "this property explicitly to %s." %
                                  (self.parent, self.key, self.parent))
 
         class NoninheritedConcreteProp(object):
@@ -524,11 +525,11 @@ class SynonymProperty(DescriptorProperty):
                     job_status = synonym("_job_status", map_column=True)
 
           The above class ``MyClass`` will now have the ``job_status``
-          :class:`.Column` object mapped to the attribute named ``_job_status``,
-          and the attribute named ``job_status`` will refer to the synonym
-          itself.  This feature is typically used in conjunction with the
-          ``descriptor`` argument in order to link a user-defined descriptor
-          as a "wrapper" for an existing column.
+          :class:`.Column` object mapped to the attribute named
+          ``_job_status``, and the attribute named ``job_status`` will refer
+          to the synonym itself.  This feature is typically used in
+          conjunction with the ``descriptor`` argument in order to link a
+          user-defined descriptor as a "wrapper" for an existing column.
 
         :param comparator_factory: A subclass of :class:`.PropComparator`
           that will provide custom comparison behavior at the SQL expression
@@ -647,7 +648,8 @@ class ComparableProperty(DescriptorProperty):
                 id = Column(Integer, primary_key=True)
                 word = Column(String)
                 word_insensitive = comparable_property(lambda prop, mapper:
-                                CaseInsensitiveComparator(mapper.c.word, mapper)
+                                CaseInsensitiveComparator(
+                                    mapper.c.word, mapper)
                             )
 
 

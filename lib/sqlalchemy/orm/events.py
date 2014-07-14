@@ -71,8 +71,9 @@ class InstrumentationEvents(event.Events):
                 return fn(target_cls, *arg)
 
         def remove(ref):
-            key = event.registry._EventKey(None, identifier, listen,
-                                           instrumentation._instrumentation_factory)
+            key = event.registry._EventKey(
+                None, identifier, listen,
+                instrumentation._instrumentation_factory)
             getattr(instrumentation._instrumentation_factory.dispatch,
                     identifier).remove(key)
 
@@ -202,7 +203,8 @@ class InstanceEvents(event.Events):
 
         if propagate:
             for mgr in target.subclass_managers(True):
-                event_key.with_dispatch_target(mgr).base_listen(propagate=True)
+                event_key.with_dispatch_target(mgr).base_listen(
+                    propagate=True)
 
     @classmethod
     def _clear(cls):
@@ -390,9 +392,9 @@ class _EventsHold(event.RefCollection):
                 collection = cls.all_holds[subclass]
                 for event_key, raw, propagate in collection.values():
                     if propagate or subclass is class_:
-                        # since we can't be sure in what order different classes
-                        # in a hierarchy are triggered with populate(),
-                        # we rely upon _EventsHold for all event
+                        # since we can't be sure in what order different
+                        # classes in a hierarchy are triggered with
+                        # populate(), we rely upon _EventsHold for all event
                         # assignment, instead of using the generic propagate
                         # flag.
                         event_key.with_dispatch_target(subject).\
@@ -1289,8 +1291,10 @@ class SessionEvents(event.Events):
             The :meth:`~.SessionEvents.before_commit` hook is *not* per-flush,
             that is, the :class:`.Session` can emit SQL to the database
             many times within the scope of a transaction.
-            For interception of these events, use the :meth:`~.SessionEvents.before_flush`,
-            :meth:`~.SessionEvents.after_flush`, or :meth:`~.SessionEvents.after_flush_postexec`
+            For interception of these events, use the
+            :meth:`~.SessionEvents.before_flush`,
+            :meth:`~.SessionEvents.after_flush`, or
+            :meth:`~.SessionEvents.after_flush_postexec`
             events.
 
         :param session: The target :class:`.Session`.
@@ -1315,16 +1319,19 @@ class SessionEvents(event.Events):
             The :meth:`~.SessionEvents.after_commit` hook is *not* per-flush,
             that is, the :class:`.Session` can emit SQL to the database
             many times within the scope of a transaction.
-            For interception of these events, use the :meth:`~.SessionEvents.before_flush`,
-            :meth:`~.SessionEvents.after_flush`, or :meth:`~.SessionEvents.after_flush_postexec`
+            For interception of these events, use the
+            :meth:`~.SessionEvents.before_flush`,
+            :meth:`~.SessionEvents.after_flush`, or
+            :meth:`~.SessionEvents.after_flush_postexec`
             events.
 
         .. note::
 
             The :class:`.Session` is not in an active transaction
-            when the :meth:`~.SessionEvents.after_commit` event is invoked, and therefore
-            can not emit SQL.  To emit SQL corresponding to every transaction,
-            use the :meth:`~.SessionEvents.before_commit` event.
+            when the :meth:`~.SessionEvents.after_commit` event is invoked,
+            and therefore can not emit SQL.  To emit SQL corresponding to
+            every transaction, use the :meth:`~.SessionEvents.before_commit`
+            event.
 
         :param session: The target :class:`.Session`.
 
@@ -1472,8 +1479,8 @@ class SessionEvents(event.Events):
         This is called before an add, delete or merge causes
         the object to be part of the session.
 
-        .. versionadded:: 0.8.  Note that :meth:`~.SessionEvents.after_attach` now
-           fires off after the item is part of the session.
+        .. versionadded:: 0.8.  Note that :meth:`~.SessionEvents.after_attach`
+           now fires off after the item is part of the session.
            :meth:`.before_attach` is provided for those cases where
            the item should not yet be part of the session state.
 
@@ -1521,8 +1528,8 @@ class SessionEvents(event.Events):
          details about the update, including these attributes:
 
             * ``session`` - the :class:`.Session` involved
-            * ``query`` -the :class:`.Query` object that this update operation was
-              called upon.
+            * ``query`` -the :class:`.Query` object that this update operation
+              was called upon.
             * ``context`` The :class:`.QueryContext` object, corresponding
               to the invocation of an ORM query.
             * ``result`` the :class:`.ResultProxy` returned as a result of the
@@ -1547,8 +1554,8 @@ class SessionEvents(event.Events):
          details about the update, including these attributes:
 
             * ``session`` - the :class:`.Session` involved
-            * ``query`` -the :class:`.Query` object that this update operation was
-              called upon.
+            * ``query`` -the :class:`.Query` object that this update operation
+              was called upon.
             * ``context`` The :class:`.QueryContext` object, corresponding
               to the invocation of an ORM query.
             * ``result`` the :class:`.ResultProxy` returned as a result of the
@@ -1678,8 +1685,9 @@ class AttributeEvents(event.Events):
           chained event propagation.
 
           .. versionchanged:: 0.9.0 the ``initiator`` argument is now
-             passed as a :class:`.attributes.Event` object, and may be modified
-             by backref handlers within a chain of backref-linked events.
+             passed as a :class:`.attributes.Event` object, and may be
+             modified by backref handlers within a chain of backref-linked
+             events.
 
         :return: if the event was registered with ``retval=True``,
          the given value, or a new effective value, should be returned.
@@ -1699,8 +1707,9 @@ class AttributeEvents(event.Events):
           chained event propagation.
 
           .. versionchanged:: 0.9.0 the ``initiator`` argument is now
-             passed as a :class:`.attributes.Event` object, and may be modified
-             by backref handlers within a chain of backref-linked events.
+             passed as a :class:`.attributes.Event` object, and may be
+             modified by backref handlers within a chain of backref-linked
+             events.
 
         :return: No return value is defined for this event.
         """
@@ -1727,8 +1736,9 @@ class AttributeEvents(event.Events):
           chained event propagation.
 
           .. versionchanged:: 0.9.0 the ``initiator`` argument is now
-             passed as a :class:`.attributes.Event` object, and may be modified
-             by backref handlers within a chain of backref-linked events.
+             passed as a :class:`.attributes.Event` object, and may be
+             modified by backref handlers within a chain of backref-linked
+             events.
 
         :return: if the event was registered with ``retval=True``,
          the given value, or a new effective value, should be returned.

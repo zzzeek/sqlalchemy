@@ -14,103 +14,128 @@ from ..sql import expression
 from . import exc
 import operator
 
-PASSIVE_NO_RESULT = util.symbol('PASSIVE_NO_RESULT',
-                                """Symbol returned by a loader callable or other attribute/history
-retrieval operation when a value could not be determined, based
-on loader callable flags.
-"""
-                                )
+PASSIVE_NO_RESULT = util.symbol(
+    'PASSIVE_NO_RESULT',
+    """Symbol returned by a loader callable or other attribute/history
+    retrieval operation when a value could not be determined, based
+    on loader callable flags.
+    """
+)
 
-ATTR_WAS_SET = util.symbol('ATTR_WAS_SET',
-                           """Symbol returned by a loader callable to indicate the
-retrieved value, or values, were assigned to their attributes
-on the target object.
-""")
+ATTR_WAS_SET = util.symbol(
+    'ATTR_WAS_SET',
+    """Symbol returned by a loader callable to indicate the
+    retrieved value, or values, were assigned to their attributes
+    on the target object.
+    """
+)
 
-ATTR_EMPTY = util.symbol('ATTR_EMPTY',
-                         """Symbol used internally to indicate an attribute had no callable.
-""")
+ATTR_EMPTY = util.symbol(
+    'ATTR_EMPTY',
+    """Symbol used internally to indicate an attribute had no callable."""
+)
 
-NO_VALUE = util.symbol('NO_VALUE',
-                       """Symbol which may be placed as the 'previous' value of an attribute,
-indicating no value was loaded for an attribute when it was modified,
-and flags indicated we were not to load it.
-"""
-                       )
+NO_VALUE = util.symbol(
+    'NO_VALUE',
+    """Symbol which may be placed as the 'previous' value of an attribute,
+    indicating no value was loaded for an attribute when it was modified,
+    and flags indicated we were not to load it.
+    """
+)
 
-NEVER_SET = util.symbol('NEVER_SET',
-                        """Symbol which may be placed as the 'previous' value of an attribute
-indicating that the attribute had not been assigned to previously.
-"""
-                        )
+NEVER_SET = util.symbol(
+    'NEVER_SET',
+    """Symbol which may be placed as the 'previous' value of an attribute
+    indicating that the attribute had not been assigned to previously.
+    """
+)
 
-NO_CHANGE = util.symbol("NO_CHANGE",
-                        """No callables or SQL should be emitted on attribute access
-and no state should change""", canonical=0
-                        )
+NO_CHANGE = util.symbol(
+    "NO_CHANGE",
+    """No callables or SQL should be emitted on attribute access
+    and no state should change
+    """, canonical=0
+)
 
-CALLABLES_OK = util.symbol("CALLABLES_OK",
-                           """Loader callables can be fired off if a value
-is not present.""", canonical=1
-                           )
+CALLABLES_OK = util.symbol(
+    "CALLABLES_OK",
+    """Loader callables can be fired off if a value
+    is not present.
+    """, canonical=1
+)
 
-SQL_OK = util.symbol("SQL_OK",
-                     """Loader callables can emit SQL at least on scalar value
-attributes.""", canonical=2)
+SQL_OK = util.symbol(
+    "SQL_OK",
+    """Loader callables can emit SQL at least on scalar value attributes.""",
+    canonical=2
+)
 
-RELATED_OBJECT_OK = util.symbol("RELATED_OBJECT_OK",
-                                """callables can use SQL to load related objects as well
-as scalar value attributes.
-""", canonical=4
-                                )
+RELATED_OBJECT_OK = util.symbol(
+    "RELATED_OBJECT_OK",
+    """Callables can use SQL to load related objects as well
+    as scalar value attributes.
+    """, canonical=4
+)
 
-INIT_OK = util.symbol("INIT_OK",
-                      """Attributes should be initialized with a blank
-value (None or an empty collection) upon get, if no other
-value can be obtained.
-""", canonical=8
-                      )
+INIT_OK = util.symbol(
+    "INIT_OK",
+    """Attributes should be initialized with a blank
+    value (None or an empty collection) upon get, if no other
+    value can be obtained.
+    """, canonical=8
+)
 
-NON_PERSISTENT_OK = util.symbol("NON_PERSISTENT_OK",
-                                """callables can be emitted if the parent is not persistent.""",
-                                canonical=16
-                                )
+NON_PERSISTENT_OK = util.symbol(
+    "NON_PERSISTENT_OK",
+    """Callables can be emitted if the parent is not persistent.""",
+    canonical=16
+)
 
-LOAD_AGAINST_COMMITTED = util.symbol("LOAD_AGAINST_COMMITTED",
-                                     """callables should use committed values as primary/foreign keys during a load
-""", canonical=32
-                                     )
+LOAD_AGAINST_COMMITTED = util.symbol(
+    "LOAD_AGAINST_COMMITTED",
+    """Callables should use committed values as primary/foreign keys during a
+    load.
+    """, canonical=32
+)
 
-NO_AUTOFLUSH = util.symbol("NO_AUTOFLUSH",
-                           """loader callables should disable autoflush.
-""", canonical=64)
+NO_AUTOFLUSH = util.symbol(
+    "NO_AUTOFLUSH",
+    """Loader callables should disable autoflush.""",
+    canonical=64
+)
 
 # pre-packaged sets of flags used as inputs
-PASSIVE_OFF = util.symbol("PASSIVE_OFF",
-                          "Callables can be emitted in all cases.",
-                          canonical=(RELATED_OBJECT_OK | NON_PERSISTENT_OK |
-                                     INIT_OK | CALLABLES_OK | SQL_OK)
-                          )
-PASSIVE_RETURN_NEVER_SET = util.symbol("PASSIVE_RETURN_NEVER_SET",
-                                       """PASSIVE_OFF ^ INIT_OK""",
-                                       canonical=PASSIVE_OFF ^ INIT_OK
-                                       )
-PASSIVE_NO_INITIALIZE = util.symbol("PASSIVE_NO_INITIALIZE",
-                                    "PASSIVE_RETURN_NEVER_SET ^ CALLABLES_OK",
-                                    canonical=PASSIVE_RETURN_NEVER_SET ^ CALLABLES_OK
-                                    )
-PASSIVE_NO_FETCH = util.symbol("PASSIVE_NO_FETCH",
-                               "PASSIVE_OFF ^ SQL_OK",
-                               canonical=PASSIVE_OFF ^ SQL_OK
-                               )
-PASSIVE_NO_FETCH_RELATED = util.symbol("PASSIVE_NO_FETCH_RELATED",
-                                       "PASSIVE_OFF ^ RELATED_OBJECT_OK",
-                                       canonical=PASSIVE_OFF ^ RELATED_OBJECT_OK
-                                       )
-PASSIVE_ONLY_PERSISTENT = util.symbol("PASSIVE_ONLY_PERSISTENT",
-                                      "PASSIVE_OFF ^ NON_PERSISTENT_OK",
-                                      canonical=PASSIVE_OFF ^ NON_PERSISTENT_OK
-                                      )
+PASSIVE_OFF = util.symbol(
+    "PASSIVE_OFF",
+    "Callables can be emitted in all cases.",
+    canonical=(RELATED_OBJECT_OK | NON_PERSISTENT_OK |
+               INIT_OK | CALLABLES_OK | SQL_OK)
+)
+PASSIVE_RETURN_NEVER_SET = util.symbol(
+    "PASSIVE_RETURN_NEVER_SET",
+    """PASSIVE_OFF ^ INIT_OK""",
+    canonical=PASSIVE_OFF ^ INIT_OK
+)
+PASSIVE_NO_INITIALIZE = util.symbol(
+    "PASSIVE_NO_INITIALIZE",
+    "PASSIVE_RETURN_NEVER_SET ^ CALLABLES_OK",
+    canonical=PASSIVE_RETURN_NEVER_SET ^ CALLABLES_OK
+)
+PASSIVE_NO_FETCH = util.symbol(
+    "PASSIVE_NO_FETCH",
+    "PASSIVE_OFF ^ SQL_OK",
+    canonical=PASSIVE_OFF ^ SQL_OK
+)
+PASSIVE_NO_FETCH_RELATED = util.symbol(
+    "PASSIVE_NO_FETCH_RELATED",
+    "PASSIVE_OFF ^ RELATED_OBJECT_OK",
+    canonical=PASSIVE_OFF ^ RELATED_OBJECT_OK
+)
+PASSIVE_ONLY_PERSISTENT = util.symbol(
+    "PASSIVE_ONLY_PERSISTENT",
+    "PASSIVE_OFF ^ NON_PERSISTENT_OK",
+    canonical=PASSIVE_OFF ^ NON_PERSISTENT_OK
+)
 
 DEFAULT_MANAGER_ATTR = '_sa_class_manager'
 DEFAULT_STATE_ATTR = '_sa_instance_state'
@@ -194,7 +219,9 @@ def state_str(state):
 
 
 def state_class_str(state):
-    """Return a string describing an instance's class via its InstanceState."""
+    """Return a string describing an instance's class via its
+    InstanceState.
+    """
 
     if state is None:
         return "None"
@@ -275,7 +302,8 @@ def _class_to_mapper(class_or_mapper):
 
 def _mapper_or_none(entity):
     """Return the :class:`.Mapper` for the given class or None if the
-    class is not mapped."""
+    class is not mapped.
+    """
 
     insp = inspection.inspect(entity, False)
     if insp is not None:
@@ -286,7 +314,8 @@ def _mapper_or_none(entity):
 
 def _is_mapped_class(entity):
     """Return True if the given object is a mapped class,
-    :class:`.Mapper`, or :class:`.AliasedClass`."""
+    :class:`.Mapper`, or :class:`.AliasedClass`.
+    """
 
     insp = inspection.inspect(entity, False)
     return insp is not None and \

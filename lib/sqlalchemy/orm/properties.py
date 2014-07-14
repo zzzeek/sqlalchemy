@@ -39,12 +39,12 @@ class ColumnProperty(StrategizedProperty):
 
         Column-based properties can normally be applied to the mapper's
         ``properties`` dictionary using the :class:`.Column` element directly.
-        Use this function when the given column is not directly present within the
-        mapper's selectable; examples include SQL expressions, functions, and
-        scalar SELECT queries.
+        Use this function when the given column is not directly present within
+        the mapper's selectable; examples include SQL expressions, functions,
+        and scalar SELECT queries.
 
-        Columns that aren't present in the mapper's selectable won't be persisted
-        by the mapper and are effectively "read-only" attributes.
+        Columns that aren't present in the mapper's selectable won't be
+        persisted by the mapper and are effectively "read-only" attributes.
 
         :param \*cols:
               list of Column objects to be mapped.
@@ -63,8 +63,8 @@ class ColumnProperty(StrategizedProperty):
           .. versionadded:: 0.6.6
 
         :param comparator_factory: a class which extends
-           :class:`.ColumnProperty.Comparator` which provides custom SQL clause
-           generation for comparison operations.
+           :class:`.ColumnProperty.Comparator` which provides custom SQL
+           clause generation for comparison operations.
 
         :param group:
             a group name for this property when marked as deferred.

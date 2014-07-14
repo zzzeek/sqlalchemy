@@ -277,8 +277,8 @@ class InstanceState(interfaces._InspectionAttr):
         state_dict = {'instance': self.obj()}
         state_dict.update(
             (k, self.__dict__[k]) for k in (
-                'committed_state', '_pending_mutations', 'modified', 'expired',
-                'callables', 'key', 'parents', 'load_options',
+                'committed_state', '_pending_mutations', 'modified',
+                'expired', 'callables', 'key', 'parents', 'load_options',
                 'class_',
             ) if k in self.__dict__
         )

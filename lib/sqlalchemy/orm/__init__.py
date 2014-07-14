@@ -146,7 +146,8 @@ def backref(name, **kwargs):
     Used with the ``backref`` keyword argument to :func:`relationship` in
     place of a string argument, e.g.::
 
-        'items':relationship(SomeItem, backref=backref('parent', lazy='subquery'))
+        'items':relationship(
+            SomeItem, backref=backref('parent', lazy='subquery'))
 
     """
     return (name, kwargs)
@@ -160,7 +161,8 @@ def deferred(*columns, **kw):
      :class:`.Column` object, however a collection is supported in order
      to support multiple columns mapped under the same attribute.
 
-    :param \**kw: additional keyword arguments passed to :class:`.ColumnProperty`.
+    :param \**kw: additional keyword arguments passed to
+     :class:`.ColumnProperty`.
 
     .. seealso::
 
@@ -198,14 +200,14 @@ def clear_mappers():
     :func:`.clear_mappers` is *not* for normal use, as there is literally no
     valid usage for it outside of very specific testing scenarios. Normally,
     mappers are permanent structural components of user-defined classes, and
-    are never discarded independently of their class.  If a mapped class itself
-    is garbage collected, its mapper is automatically disposed of as well. As
-    such, :func:`.clear_mappers` is only for usage in test suites that re-use
-    the same classes with different mappings, which is itself an extremely rare
-    use case - the only such use case is in fact SQLAlchemy's own test suite,
-    and possibly the test suites of other ORM extension libraries which
-    intend to test various combinations of mapper construction upon a fixed
-    set of classes.
+    are never discarded independently of their class.  If a mapped class
+    itself is garbage collected, its mapper is automatically disposed of as
+    well. As such, :func:`.clear_mappers` is only for usage in test suites
+    that re-use the same classes with different mappings, which is itself an
+    extremely rare use case - the only such use case is in fact SQLAlchemy's
+    own test suite, and possibly the test suites of other ORM extension
+    libraries which intend to test various combinations of mapper construction
+    upon a fixed set of classes.
 
     """
     mapperlib._CONFIGURE_MUTEX.acquire()

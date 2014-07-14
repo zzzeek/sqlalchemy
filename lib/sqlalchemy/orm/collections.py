@@ -536,9 +536,9 @@ class collection(object):
     def removes_return():
         """Mark the method as removing an entity in the collection.
 
-        Adds "remove from collection" handling to the method.  The return value
-        of the method, if any, is considered the value to remove.  The method
-        arguments are not inspected::
+        Adds "remove from collection" handling to the method.  The return
+        value of the method, if any, is considered the value to remove.  The
+        method arguments are not inspected::
 
             @collection.removes_return()
             def pop(self): ...
@@ -953,7 +953,8 @@ def _instrument_class(cls):
 
 
 def _instrument_membership_mutator(method, before, argument, after):
-    """Route method args and/or return value through the collection adapter."""
+    """Route method args and/or return value through the collection
+    adapter."""
     # This isn't smart enough to handle @adds(1) for 'def fn(self, (a, b))'
     if before:
         fn_args = list(util.flatten_iterator(inspect.getargspec(method)[0]))
@@ -1147,8 +1148,8 @@ def _list_decorators():
 
     def __iadd__(fn):
         def __iadd__(self, iterable):
-            # list.__iadd__ takes any iterable and seems to let TypeError raise
-            # as-is instead of returning NotImplemented
+            # list.__iadd__ takes any iterable and seems to let TypeError
+            # raise as-is instead of returning NotImplemented
             for value in iterable:
                 self.append(value)
             return self

@@ -64,7 +64,7 @@ class ClassManager(dict):
             self.update(base)
 
         self.dispatch._events._new_classmanager_instance(class_, self)
-        #events._InstanceEventsHold.populate(class_, self)
+        # events._InstanceEventsHold.populate(class_, self)
 
         for basecls in class_.__mro__:
             mgr = manager_of_class(basecls)
@@ -100,7 +100,8 @@ class ClassManager(dict):
         implement :class:`._InspectionAttr`.
 
         This includes :class:`.QueryableAttribute` as well as extension
-        types such as :class:`.hybrid_property` and :class:`.AssociationProxy`.
+        types such as :class:`.hybrid_property` and
+        :class:`.AssociationProxy`.
 
         """
         if exclude is None:
