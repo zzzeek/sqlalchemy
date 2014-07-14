@@ -222,8 +222,9 @@ class DDLElement(Executable, _DDLCompiles):
         elif isinstance(self.dialect, (tuple, list, set)):
             if bind.engine.name not in self.dialect:
                 return False
-        if self.callable_ is not None and \
-                not self.callable_(self, target, bind, state=self.state, **kw):
+        if (self.callable_ is not None and
+                not self.callable_(self, target, bind,
+                                   state=self.state, **kw)):
             return False
 
         return True
@@ -561,9 +562,10 @@ class CreateColumn(_DDLCompiles):
     as an implicitly-present "system" column.
 
     For example, suppose we wish to produce a :class:`.Table` which skips
-    rendering of the Postgresql ``xmin`` column against the Postgresql backend,
-    but on other backends does render it, in anticipation of a triggered rule.
-    A conditional compilation rule could skip this name only on Postgresql::
+    rendering of the Postgresql ``xmin`` column against the Postgresql
+    backend, but on other backends does render it, in anticipation of a
+    triggered rule.  A conditional compilation rule could skip this name only
+    on Postgresql::
 
         from sqlalchemy.schema import CreateColumn
 
@@ -585,7 +587,8 @@ class CreateColumn(_DDLCompiles):
     will be omitted, but only against the Postgresql backend.
 
     .. versionadded:: 0.8.3 The :class:`.CreateColumn` construct supports
-       skipping of columns by returning ``None`` from a custom compilation rule.
+       skipping of columns by returning ``None`` from a custom compilation
+       rule.
 
     .. versionadded:: 0.8 The :class:`.CreateColumn` construct was added
        to support custom column creation styles.
@@ -792,8 +795,8 @@ class SchemaDropper(DDLBase):
         self.dialect.validate_identifier(table.name)
         if table.schema:
             self.dialect.validate_identifier(table.schema)
-        return not self.checkfirst or self.dialect.has_table(self.connection,
-                                                             table.name, schema=table.schema)
+        return not self.checkfirst or self.dialect.has_table(
+            self.connection, table.name, schema=table.schema)
 
     def _can_drop_sequence(self, sequence):
         return self.dialect.supports_sequences and \

@@ -38,9 +38,8 @@ class UpdateBase(DialectKWArgs, HasPrefixes, Executable, ClauseElement):
             else:
                 return p
 
-        if isinstance(parameters, (list, tuple)) and \
-                parameters and \
-            isinstance(parameters[0], (list, tuple, dict)):
+        if (isinstance(parameters, (list, tuple)) and parameters and
+                isinstance(parameters[0], (list, tuple, dict))):
 
             if not self._supports_multi_parameters:
                 raise exc.InvalidRequestError(
@@ -84,7 +83,8 @@ class UpdateBase(DialectKWArgs, HasPrefixes, Executable, ClauseElement):
             stmt = table.update().\\
                       where(table.c.data == 'value').\\
                       values(status='X').\\
-                      returning(table.c.server_flag, table.c.updated_timestamp)
+                      returning(table.c.server_flag,
+                                table.c.updated_timestamp)
 
             for server_flag, updated_timestamp in connection.execute(stmt):
                 print(server_flag, updated_timestamp)
@@ -95,21 +95,20 @@ class UpdateBase(DialectKWArgs, HasPrefixes, Executable, ClauseElement):
         objects are typical, the elements can also be expressions::
 
             stmt = table.insert().returning(
-                      (table.c.first_name + " " + table.c.last_name).label('fullname')
-                    )
+                (table.c.first_name + " " + table.c.last_name).
+                label('fullname'))
 
         Upon compilation, a RETURNING clause, or database equivalent,
         will be rendered within the statement.   For INSERT and UPDATE,
         the values are the newly inserted/updated values.  For DELETE,
         the values are those of the rows which were deleted.
 
-        Upon execution, the values of the columns to be returned
-        are made available via the result set and can be iterated
-        using :meth:`.ResultProxy.fetchone` and similar.   For DBAPIs which do not
-        natively support returning values (i.e. cx_oracle),
-        SQLAlchemy will approximate this behavior at the result level
-        so that a reasonable amount of behavioral neutrality is
-        provided.
+        Upon execution, the values of the columns to be returned are made
+        available via the result set and can be iterated using
+        :meth:`.ResultProxy.fetchone` and similar.   For DBAPIs which do not
+        natively support returning values (i.e. cx_oracle), SQLAlchemy will
+        approximate this behavior at the result level so that a reasonable
+        amount of behavioral neutrality is provided.
 
         Note that not all databases/DBAPIs
         support RETURNING.   For those backends with no support,
@@ -194,9 +193,9 @@ class ValuesBase(UpdateBase):
 
         Note that the :class:`.Insert` and :class:`.Update` constructs support
         per-execution time formatting of the VALUES and/or SET clauses,
-        based on the arguments passed to :meth:`.Connection.execute`.  However,
-        the :meth:`.ValuesBase.values` method can be used to "fix" a particular
-        set of parameters into the statement.
+        based on the arguments passed to :meth:`.Connection.execute`.
+        However, the :meth:`.ValuesBase.values` method can be used to "fix" a
+        particular set of parameters into the statement.
 
         Multiple calls to :meth:`.ValuesBase.values` will produce a new
         construct, each one with the parameter list modified to include
@@ -229,8 +228,8 @@ class ValuesBase(UpdateBase):
 
          The :class:`.Insert` construct also supports multiply-rendered VALUES
          construct, for those backends which support this SQL syntax
-         (SQLite, Postgresql, MySQL).  This mode is indicated by passing a list
-         of one or more dictionaries/tuples::
+         (SQLite, Postgresql, MySQL).  This mode is indicated by passing a
+         list of one or more dictionaries/tuples::
 
             users.insert().values([
                                 {"name": "some name"},
@@ -248,9 +247,10 @@ class ValuesBase(UpdateBase):
          .. note::
 
              Passing a multiple values list is *not* the same
-             as passing a multiple values list to the :meth:`.Connection.execute`
-             method.  Passing a list of parameter sets to :meth:`.ValuesBase.values`
-             produces a construct of this form::
+             as passing a multiple values list to the
+             :meth:`.Connection.execute` method.  Passing a list of parameter
+             sets to :meth:`.ValuesBase.values` produces a construct of this
+             form::
 
                 INSERT INTO table (col1, col2, col3) VALUES
                                 (col1_0, col2_0, col3_0),
@@ -340,40 +340,40 @@ class ValuesBase(UpdateBase):
             server_created_at = result.returned_defaults['created_at']
 
         When used against a backend that supports RETURNING, all column
-        values generated by SQL expression or server-side-default will be added
-        to any existing RETURNING clause, provided that
-        :meth:`.UpdateBase.returning` is not used simultaneously.   The column values
-        will then be available on the result using the
-        :attr:`.ResultProxy.returned_defaults` accessor as a
-        dictionary, referring to values keyed to the :class:`.Column` object
-        as well as its ``.key``.
+        values generated by SQL expression or server-side-default will be
+        added to any existing RETURNING clause, provided that
+        :meth:`.UpdateBase.returning` is not used simultaneously.  The column
+        values will then be available on the result using the
+        :attr:`.ResultProxy.returned_defaults` accessor as a dictionary,
+        referring to values keyed to the :class:`.Column` object as well as
+        its ``.key``.
 
         This method differs from :meth:`.UpdateBase.returning` in these ways:
 
         1. :meth:`.ValuesBase.return_defaults` is only intended for use with
            an INSERT or an UPDATE statement that matches exactly one row.
-           While the RETURNING construct in the general sense supports multiple
-           rows for a multi-row UPDATE or DELETE statement, or for special
-           cases of INSERT that return multiple rows (e.g. INSERT from SELECT,
-           multi-valued VALUES clause), :meth:`.ValuesBase.return_defaults`
-           is intended only
-           for an "ORM-style" single-row INSERT/UPDATE statement.  The row
-           returned by the statement is also consumed implcitly when
+           While the RETURNING construct in the general sense supports
+           multiple rows for a multi-row UPDATE or DELETE statement, or for
+           special cases of INSERT that return multiple rows (e.g. INSERT from
+           SELECT, multi-valued VALUES clause),
+           :meth:`.ValuesBase.return_defaults` is intended only for an
+           "ORM-style" single-row INSERT/UPDATE statement.  The row returned
+           by the statement is also consumed implcitly when
            :meth:`.ValuesBase.return_defaults` is used.  By contrast,
-           :meth:`.UpdateBase.returning` leaves the RETURNING result-set intact
-           with a collection of any number of rows.
+           :meth:`.UpdateBase.returning` leaves the RETURNING result-set
+           intact with a collection of any number of rows.
 
         2. It is compatible with the existing logic to fetch auto-generated
-           primary key values, also known as "implicit returning".  Backends that
-           support RETURNING will automatically make use of RETURNING in order
-           to fetch the value of newly generated primary keys; while the
+           primary key values, also known as "implicit returning".  Backends
+           that support RETURNING will automatically make use of RETURNING in
+           order to fetch the value of newly generated primary keys; while the
            :meth:`.UpdateBase.returning` method circumvents this behavior,
            :meth:`.ValuesBase.return_defaults` leaves it intact.
 
         3. It can be called against any backend.  Backends that don't support
            RETURNING will skip the usage of the feature, rather than raising
-           an exception.  The return value of :attr:`.ResultProxy.returned_defaults`
-           will be ``None``
+           an exception.  The return value of
+           :attr:`.ResultProxy.returned_defaults` will be ``None``
 
         :meth:`.ValuesBase.return_defaults` is used by the ORM to provide
         an efficient implementation for the ``eager_defaults`` feature of
@@ -425,7 +425,8 @@ class Insert(ValuesBase):
         :meth:`~.TableClause.insert` method on
         :class:`~.schema.Table`.
 
-        :param table: :class:`.TableClause` which is the subject of the insert.
+        :param table: :class:`.TableClause` which is the subject of the
+         insert.
 
         :param values: collection of values to be inserted; see
          :meth:`.Insert.values` for a description of allowed formats here.
@@ -433,15 +434,16 @@ class Insert(ValuesBase):
          dynamically render the VALUES clause at execution time based on
          the parameters passed to :meth:`.Connection.execute`.
 
-        :param inline: if True, SQL defaults will be compiled 'inline' into the
-          statement and not pre-executed.
+        :param inline: if True, SQL defaults will be compiled 'inline' into
+         the statement and not pre-executed.
 
         If both `values` and compile-time bind parameters are present, the
         compile-time bind parameters override the information specified
         within `values` on a per-key basis.
 
-        The keys within `values` can be either :class:`~sqlalchemy.schema.Column`
-        objects or their string identifiers. Each key may reference one of:
+        The keys within `values` can be either
+        :class:`~sqlalchemy.schema.Column` objects or their string
+        identifiers. Each key may reference one of:
 
         * a literal data value (i.e. string, number, etc.);
         * a Column object;
@@ -498,8 +500,9 @@ class Insert(ValuesBase):
            Depending on backend, it may be necessary for the :class:`.Insert`
            statement to be constructed using the ``inline=True`` flag; this
            flag will prevent the implicit usage of ``RETURNING`` when the
-           ``INSERT`` statement is rendered, which isn't supported on a backend
-           such as Oracle in conjunction with an ``INSERT..SELECT`` combination::
+           ``INSERT`` statement is rendered, which isn't supported on a
+           backend such as Oracle in conjunction with an ``INSERT..SELECT``
+           combination::
 
              sel = select([table1.c.a, table1.c.b]).where(table1.c.c > 5)
              ins = table2.insert(inline=True).from_select(['a', 'b'], sel)
@@ -534,7 +537,8 @@ class Insert(ValuesBase):
 class Update(ValuesBase):
     """Represent an Update construct.
 
-    The :class:`.Update` object is created using the :func:`update()` function.
+    The :class:`.Update` object is created using the :func:`update()`
+    function.
 
     """
     __visit_name__ = 'update'
@@ -704,7 +708,8 @@ class Update(ValuesBase):
 class Delete(UpdateBase):
     """Represent a DELETE construct.
 
-    The :class:`.Delete` object is created using the :func:`delete()` function.
+    The :class:`.Delete` object is created using the :func:`delete()`
+    function.
 
     """
 

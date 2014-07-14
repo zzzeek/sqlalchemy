@@ -28,13 +28,14 @@ class conv(_truncated_label):
     E.g. when we create a :class:`.Constraint` using a naming convention
     as follows::
 
-        m = MetaData(naming_convention={"ck": "ck_%(table_name)s_%(constraint_name)s"})
+        m = MetaData(
+            naming_convention={"ck": "ck_%(table_name)s_%(constraint_name)s"})
         t = Table('t', m, Column('x', Integer),
-                        CheckConstraint('x > 5', name='x5'))
+                  CheckConstraint('x > 5', name='x5'))
 
-    The name of the above constraint will be rendered as ``"ck_t_x5"``.  That is,
-    the existing name ``x5`` is used in the naming convention as the ``constraint_name``
-    token.
+    The name of the above constraint will be rendered as ``"ck_t_x5"``.  That
+    is, the existing name ``x5`` is used in the naming convention as the
+    ``constraint_name`` token.
 
     In some situations, such as in migration scripts, we may be rendering
     the above :class:`.CheckConstraint` with a name that's already been
@@ -43,9 +44,10 @@ class conv(_truncated_label):
     use this explicitly as follows::
 
 
-        m = MetaData(naming_convention={"ck": "ck_%(table_name)s_%(constraint_name)s"})
+        m = MetaData(
+            naming_convention={"ck": "ck_%(table_name)s_%(constraint_name)s"})
         t = Table('t', m, Column('x', Integer),
-                        CheckConstraint('x > 5', name=conv('ck_t_x5')))
+                  CheckConstraint('x > 5', name=conv('ck_t_x5')))
 
     Where above, the :func:`.schema.conv` marker indicates that the constraint
     name here is final, and the name will render as ``"ck_t_x5"`` and not

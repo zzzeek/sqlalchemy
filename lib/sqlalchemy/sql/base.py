@@ -94,7 +94,8 @@ class _DialectArgView(collections.MutableMapping):
         return (
             "%s_%s" % (dialect_name, value_name)
             for dialect_name in self.obj.dialect_options
-            for value_name in self.obj.dialect_options[dialect_name]._non_defaults
+            for value_name in
+            self.obj.dialect_options[dialect_name]._non_defaults
         )
 
 
@@ -154,24 +155,26 @@ class DialectKWArgs(object):
             some_index = Index('a', 'b', mydialect_length=5)
 
         The :meth:`.DialectKWArgs.argument_for` method is a per-argument
-        way adding extra arguments to the :attr:`.DefaultDialect.construct_arguments`
-        dictionary. This dictionary provides a list of argument names accepted by
-        various schema-level constructs on behalf of a dialect.
+        way adding extra arguments to the
+        :attr:`.DefaultDialect.construct_arguments` dictionary. This
+        dictionary provides a list of argument names accepted by various
+        schema-level constructs on behalf of a dialect.
 
-        New dialects should typically specify this dictionary all at once as a data
-        member of the dialect class.  The use case for ad-hoc addition of
+        New dialects should typically specify this dictionary all at once as a
+        data member of the dialect class.  The use case for ad-hoc addition of
         argument names is typically for end-user code that is also using
         a custom compilation scheme which consumes the additional arguments.
 
-        :param dialect_name: name of a dialect.  The dialect must be locatable,
-         else a :class:`.NoSuchModuleError` is raised.   The dialect must
-         also include an existing :attr:`.DefaultDialect.construct_arguments` collection,
-         indicating that it participates in the keyword-argument validation and
-         default system, else :class:`.ArgumentError` is raised.
-         If the dialect does not include this collection, then any keyword argument
-         can be specified on behalf of this dialect already.  All dialects
-         packaged within SQLAlchemy include this collection, however for third
-         party dialects, support may vary.
+        :param dialect_name: name of a dialect.  The dialect must be
+         locatable, else a :class:`.NoSuchModuleError` is raised.   The
+         dialect must also include an existing
+         :attr:`.DefaultDialect.construct_arguments` collection, indicating
+         that it participates in the keyword-argument validation and default
+         system, else :class:`.ArgumentError` is raised.  If the dialect does
+         not include this collection, then any keyword argument can be
+         specified on behalf of this dialect already.  All dialects packaged
+         within SQLAlchemy include this collection, however for third party
+         dialects, support may vary.
 
         :param argument_name: name of the parameter.
 
@@ -183,9 +186,10 @@ class DialectKWArgs(object):
 
         construct_arg_dictionary = DialectKWArgs._kw_registry[dialect_name]
         if construct_arg_dictionary is None:
-            raise exc.ArgumentError("Dialect '%s' does have keyword-argument "
-                                    "validation and defaults enabled configured" %
-                                    dialect_name)
+            raise exc.ArgumentError(
+                "Dialect '%s' does have keyword-argument "
+                "validation and defaults enabled configured" %
+                dialect_name)
         if cls not in construct_arg_dictionary:
             construct_arg_dictionary[cls] = {}
         construct_arg_dictionary[cls][argument_name] = default
@@ -247,8 +251,8 @@ class DialectKWArgs(object):
         options to this construct.
 
         This is a two-level nested registry, keyed to ``<dialect_name>``
-        and ``<argument_name>``.  For example, the ``postgresql_where`` argument
-        would be locatable as::
+        and ``<argument_name>``.  For example, the ``postgresql_where``
+        argument would be locatable as::
 
             arg = my_object.dialect_options['postgresql']['where']
 
@@ -273,8 +277,9 @@ class DialectKWArgs(object):
         for k in kwargs:
             m = re.match('^(.+?)_(.+)$', k)
             if not m:
-                raise TypeError("Additional arguments should be "
-                                "named <dialectname>_<argument>, got '%s'" % k)
+                raise TypeError(
+                    "Additional arguments should be "
+                    "named <dialectname>_<argument>, got '%s'" % k)
             dialect_name, arg_name = m.group(1, 2)
 
             try:
@@ -517,8 +522,8 @@ class ColumnCollection(util.OrderedProperties):
             if not existing.shares_lineage(value):
                 util.warn('Column %r on table %r being replaced by '
                           '%r, which has the same key.  Consider '
-                          'use_labels for select() statements.' % (key,
-                                                                   getattr(existing, 'table', None), value))
+                          'use_labels for select() statements.' %
+                          (key, getattr(existing, 'table', None), value))
 
             # pop out memoized proxy_set as this
             # operation may very well be occurring
@@ -547,7 +552,8 @@ class ColumnCollection(util.OrderedProperties):
 
     def extend(self, iter):
         cols = list(iter)
-        self._all_columns.extend(c for c in cols if c not in self._all_col_set)
+        self._all_columns.extend(c for c in cols if c not in
+                                 self._all_col_set)
         self._all_col_set.update(cols)
         self._data.update((c.key, c) for c in cols)
 

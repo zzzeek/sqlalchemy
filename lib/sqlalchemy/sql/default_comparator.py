@@ -36,7 +36,8 @@ class _DefaultColumnComparator(operators.ColumnOperators):
 
     def reverse_operate(self, op, other, **kwargs):
         o = self.operators[op.__name__]
-        return o[0](self, self.expr, op, other, reverse=True, *o[1:], **kwargs)
+        return o[0](self, self.expr, op, other,
+                    reverse=True, *o[1:], **kwargs)
 
     def _adapt_expression(self, op, other_comparator):
         """evaluate the return type of <self> <op> <othertype>,
@@ -157,18 +158,20 @@ class _DefaultColumnComparator(operators.ColumnOperators):
             return self._boolean_compare(expr, op, seq_or_selectable,
                                          negate=negate_op, **kw)
         elif isinstance(seq_or_selectable, ClauseElement):
-            raise exc.InvalidRequestError('in_() accepts'
-                                          ' either a list of expressions '
-                                          'or a selectable: %r' % seq_or_selectable)
+            raise exc.InvalidRequestError(
+                'in_() accepts'
+                ' either a list of expressions '
+                'or a selectable: %r' % seq_or_selectable)
 
         # Handle non selectable arguments as sequences
         args = []
         for o in seq_or_selectable:
             if not _is_literal(o):
                 if not isinstance(o, operators.ColumnOperators):
-                    raise exc.InvalidRequestError('in_() accepts'
-                                                  ' either a list of expressions '
-                                                  'or a selectable: %r' % o)
+                    raise exc.InvalidRequestError(
+                        'in_() accepts'
+                        ' either a list of expressions '
+                        'or a selectable: %r' % o)
             elif o is None:
                 o = Null()
             else:
@@ -213,9 +216,11 @@ class _DefaultColumnComparator(operators.ColumnOperators):
 
     def _match_impl(self, expr, op, other, **kw):
         """See :meth:`.ColumnOperators.match`."""
-        return self._boolean_compare(expr, operators.match_op,
-                                     self._check_literal(expr, operators.match_op,
-                                                         other), **kw)
+        return self._boolean_compare(
+            expr, operators.match_op,
+            self._check_literal(
+                expr, operators.match_op, other),
+            **kw)
 
     def _distinct_impl(self, expr, op, **kw):
         """See :meth:`.ColumnOperators.distinct`."""

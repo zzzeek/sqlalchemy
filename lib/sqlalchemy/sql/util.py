@@ -321,8 +321,8 @@ def reduce_columns(columns, *clauses, **kw):
     \**kw may specify 'ignore_nonexistent_tables' to ignore foreign keys
     whose tables are not yet configured, or columns that aren't yet present.
 
-    This function is primarily used to determine the most minimal "primary key"
-    from a selectable, by reducing the set of primary key columns present
+    This function is primarily used to determine the most minimal "primary
+    key" from a selectable, by reducing the set of primary key columns present
     in the selectable to just those that are not repeated.
 
     """
@@ -362,8 +362,8 @@ def reduce_columns(columns, *clauses, **kw):
     if clauses:
         def visit_binary(binary):
             if binary.operator == operators.eq:
-                cols = util.column_set(chain(*[c.proxy_set
-                                               for c in columns.difference(omit)]))
+                cols = util.column_set(
+                    chain(*[c.proxy_set for c in columns.difference(omit)]))
                 if binary.left in cols and binary.right in cols:
                     for c in reversed(columns):
                         if c.shares_lineage(binary.right) and \
@@ -511,9 +511,9 @@ class ClauseAdapter(visitors.ReplacingCloningVisitor):
             require_embedded=require_embedded)
         if newcol is None and col in self.equivalents and col not in _seen:
             for equiv in self.equivalents[col]:
-                newcol = self._corresponding_column(equiv,
-                                                    require_embedded=require_embedded,
-                                                    _seen=_seen.union([col]))
+                newcol = self._corresponding_column(
+                    equiv, require_embedded=require_embedded,
+                    _seen=_seen.union([col]))
                 if newcol is not None:
                     return newcol
         if self.adapt_on_names and newcol is None:
@@ -549,7 +549,8 @@ class ColumnAdapter(ClauseAdapter):
     def __init__(self, selectable, equivalents=None,
                  chain_to=None, include=None,
                  exclude=None, adapt_required=False):
-        ClauseAdapter.__init__(self, selectable, equivalents, include, exclude)
+        ClauseAdapter.__init__(self, selectable, equivalents,
+                               include, exclude)
         if chain_to:
             self.chain(chain_to)
         self.columns = util.populate_column_dict(self._locate_col)

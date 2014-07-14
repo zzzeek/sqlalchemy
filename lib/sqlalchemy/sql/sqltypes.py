@@ -44,9 +44,12 @@ class _DateAffinity(object):
 
         def _adapt_expression(self, op, other_comparator):
             othertype = other_comparator.type._type_affinity
-            return op, \
-                to_instance(self.type._expression_adaptations.get(op, self._blank_dict).
-                            get(othertype, NULLTYPE))
+            return (
+                op, to_instance(
+                    self.type._expression_adaptations.
+                    get(op, self._blank_dict).
+                    get(othertype, NULLTYPE))
+            )
     comparator_factory = Comparator
 
 
@@ -56,8 +59,11 @@ class Concatenable(object):
 
     class Comparator(TypeEngine.Comparator):
         def _adapt_expression(self, op, other_comparator):
-            if op is operators.add and isinstance(other_comparator,
-                                                  (Concatenable.Comparator, NullType.Comparator)):
+            if (op is operators.add and
+                    isinstance(
+                        other_comparator,
+                        (Concatenable.Comparator, NullType.Comparator)
+                    )):
                 return operators.concat_op, self.expr.type
             else:
                 return op, self.expr.type
@@ -170,8 +176,8 @@ class String(Concatenable, TypeEngine):
                 if self._warn_on_bytestring:
                     def process(value):
                         if isinstance(value, util.binary_type):
-                            util.warn("Unicode type received non-unicode bind "
-                                      "param value.")
+                            util.warn("Unicode type received non-unicode"
+                                      "bind param value.")
                         return value
                     return process
                 else:
@@ -409,9 +415,9 @@ class BigInteger(Integer):
 class Numeric(_DateAffinity, TypeEngine):
     """A type for fixed precision numbers, such as ``NUMERIC`` or ``DECIMAL``.
 
-    This type returns Python ``decimal.Decimal`` objects by default, unless the
-    :paramref:`.Numeric.asdecimal` flag is set to False, in which case they
-    are coerced to Python ``float`` objects.
+    This type returns Python ``decimal.Decimal`` objects by default, unless
+    the :paramref:`.Numeric.asdecimal` flag is set to False, in which case
+    they are coerced to Python ``float`` objects.
 
     .. note::
 
@@ -421,8 +427,8 @@ class Numeric(_DateAffinity, TypeEngine):
         type (e.g. ``FLOAT``, ``REAL``, others).
         If the database column on the server is in fact a floating-point type
         type, such as ``FLOAT`` or ``REAL``, use the :class:`.Float`
-        type or a subclass, otherwise numeric coercion between ``float``/``Decimal``
-        may or may not function as expected.
+        type or a subclass, otherwise numeric coercion between
+        ``float``/``Decimal`` may or may not function as expected.
 
     .. note::
 
@@ -471,9 +477,10 @@ class Numeric(_DateAffinity, TypeEngine):
          database types don't have a notion of "scale", so by default the
          float type looks for the first ten decimal places when converting.
          Specfiying this value will override that length.  Types which
-         do include an explicit ".scale" value, such as the base :class:`.Numeric`
-         as well as the MySQL float types, will use the value of ".scale"
-         as the default for decimal_return_scale, if not otherwise specified.
+         do include an explicit ".scale" value, such as the base
+         :class:`.Numeric` as well as the MySQL float types, will use the
+         value of ".scale" as the default for decimal_return_scale, if not
+         otherwise specified.
 
          .. versionadded:: 0.9.0
 
@@ -596,8 +603,8 @@ class Float(Numeric):
         and not a decimal type (e.g. ``DECIMAL``, ``NUMERIC``, others).
         If the database column on the server is in fact a Numeric
         type, such as ``DECIMAL`` or ``NUMERIC``, use the :class:`.Numeric`
-        type or a subclass, otherwise numeric coercion between ``float``/``Decimal``
-        may or may not function as expected.
+        type or a subclass, otherwise numeric coercion between
+        ``float``/``Decimal`` may or may not function as expected.
 
     """
 
@@ -1566,12 +1573,13 @@ class NullType(TypeEngine):
       as ``None`` or is not passed at all.
 
     The :class:`.NullType` can be used within SQL expression invocation
-    without issue, it just has no behavior either at the expression construction
-    level or at the bind-parameter/result processing level.  :class:`.NullType`
-    will result in a :exc:`.CompileError` if the compiler is asked to render
-    the type itself, such as if it is used in a :func:`.cast` operation
-    or within a schema creation operation such as that invoked by
-    :meth:`.MetaData.create_all` or the :class:`.CreateTable` construct.
+    without issue, it just has no behavior either at the expression
+    construction level or at the bind-parameter/result processing level.
+    :class:`.NullType` will result in a :exc:`.CompileError` if the compiler
+    is asked to render the type itself, such as if it is used in a
+    :func:`.cast` operation or within a schema creation operation such as that
+    invoked by :meth:`.MetaData.create_all` or the :class:`.CreateTable`
+    construct.
 
     """
     __visit_name__ = 'null'
@@ -1631,9 +1639,10 @@ type_api._type_map = _type_map
 # the expression element system, as you might expect.   We can use
 # importlaters or whatnot, but the typing system just necessarily has
 # to have some kind of connection like this.  right now we're injecting the
-# _DefaultColumnComparator implementation into the TypeEngine.Comparator interface.
-# Alternatively TypeEngine.Comparator could have an "impl" injected, though
-# just injecting the base is simpler, error free, and more performant.
+# _DefaultColumnComparator implementation into the TypeEngine.Comparator
+# interface.  Alternatively TypeEngine.Comparator could have an "impl"
+# injected, though just injecting the base is simpler, error free, and more
+# performant.
 
 
 class Comparator(_DefaultColumnComparator):

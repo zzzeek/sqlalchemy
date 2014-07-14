@@ -27,7 +27,8 @@ class TypeEngine(Visitable):
     Common subclasses of :class:`.TypeEngine` include
     :class:`.String`, :class:`.Integer`, and :class:`.Boolean`.
 
-    For an overview of the SQLAlchemy typing system, see :ref:`types_toplevel`.
+    For an overview of the SQLAlchemy typing system, see
+    :ref:`types_toplevel`.
 
     .. seealso::
 
@@ -599,7 +600,8 @@ class TypeDecorator(TypeEngine):
     level to "IS <constant>" when compared using ``==`` (and same for
     ``IS NOT`` in conjunction with ``!=``.
 
-    For most SQLAlchemy types, this includes ``NoneType``, as well as ``bool``.
+    For most SQLAlchemy types, this includes ``NoneType``, as well as
+    ``bool``.
 
     :class:`.TypeDecorator` modifies this list to only include ``NoneType``,
     as typedecorator implementations that deal with boolean types are common.
@@ -648,8 +650,8 @@ class TypeDecorator(TypeEngine):
         if not isinstance(tt, self.__class__):
             raise AssertionError('Type object %s does not properly '
                                  'implement the copy() method, it must '
-                                 'return an object of type %s' % (self,
-                                                                  self.__class__))
+                                 'return an object of type %s' %
+                                 (self, self.__class__))
         tt.impl = typedesc
         return tt
 
@@ -793,16 +795,19 @@ class TypeDecorator(TypeEngine):
         """Provide a literal processing function for the given
         :class:`.Dialect`.
 
-        Subclasses here will typically override :meth:`.TypeDecorator.process_literal_param`
-        instead of this method directly.
+        Subclasses here will typically override
+        :meth:`.TypeDecorator.process_literal_param` instead of this method
+        directly.
 
-        By default, this method makes use of :meth:`.TypeDecorator.process_bind_param`
-        if that method is implemented, where :meth:`.TypeDecorator.process_literal_param`
-        is not.  The rationale here is that :class:`.TypeDecorator` typically deals
-        with Python conversions of data that are above the layer of database
-        presentation.  With the value converted by :meth:`.TypeDecorator.process_bind_param`,
-        the underlying type will then handle whether it needs to be presented to the
-        DBAPI as a bound parameter or to the database as an inline SQL value.
+        By default, this method makes use of
+        :meth:`.TypeDecorator.process_bind_param` if that method is
+        implemented, where :meth:`.TypeDecorator.process_literal_param` is
+        not.  The rationale here is that :class:`.TypeDecorator` typically
+        deals with Python conversions of data that are above the layer of
+        database presentation.  With the value converted by
+        :meth:`.TypeDecorator.process_bind_param`, the underlying type will
+        then handle whether it needs to be presented to the DBAPI as a bound
+        parameter or to the database as an inline SQL value.
 
         .. versionadded:: 0.9.0
 

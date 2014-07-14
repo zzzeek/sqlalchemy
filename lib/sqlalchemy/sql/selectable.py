@@ -198,8 +198,9 @@ class FromClause(Selectable):
     schema = None
     """Define the 'schema' attribute for this :class:`.FromClause`.
 
-    This is typically ``None`` for most objects except that of :class:`.Table`,
-    where it is taken as the value of the :paramref:`.Table.schema` argument.
+    This is typically ``None`` for most objects except that of
+    :class:`.Table`, where it is taken as the value of the
+    :paramref:`.Table.schema` argument.
 
     """
 
@@ -249,9 +250,10 @@ class FromClause(Selectable):
             SELECT user.id, user.name FROM user
             JOIN address ON user.id = address.user_id
 
-        :param right: the right side of the join; this is any :class:`.FromClause`
-         object such as a :class:`.Table` object, and may also be a selectable-compatible
-         object such as an ORM-mapped class.
+        :param right: the right side of the join; this is any
+         :class:`.FromClause` object such as a :class:`.Table` object, and
+         may also be a selectable-compatible object such as an ORM-mapped
+         class.
 
         :param onclause: a SQL expression representing the ON clause of the
          join.  If left at ``None``, :meth:`.FromClause.join` will attempt to
@@ -283,12 +285,15 @@ class FromClause(Selectable):
 
         The above is equivalent to::
 
-            j = user_table.join(address_table,
-                            user_table.c.id == address_table.c.user_id, isouter=True)
+            j = user_table.join(
+                address_table,
+                user_table.c.id == address_table.c.user_id,
+                isouter=True)
 
-        :param right: the right side of the join; this is any :class:`.FromClause`
-         object such as a :class:`.Table` object, and may also be a selectable-compatible
-         object such as an ORM-mapped class.
+        :param right: the right side of the join; this is any
+         :class:`.FromClause` object such as a :class:`.Table` object, and
+         may also be a selectable-compatible object such as an ORM-mapped
+         class.
 
         :param onclause: a SQL expression representing the ON clause of the
          join.  If left at ``None``, :meth:`.FromClause.join` will attempt to
@@ -372,8 +377,8 @@ class FromClause(Selectable):
         :param column: the target :class:`.ColumnElement` to be matched
 
         :param require_embedded: only return corresponding columns for
-         the given :class:`.ColumnElement`, if the given :class:`.ColumnElement`
-         is actually present within a sub-element
+         the given :class:`.ColumnElement`, if the given
+         :class:`.ColumnElement` is actually present within a sub-element
          of this :class:`.FromClause`.  Normally the column will match if
          it merely shares a common ancestor with one of the exported
          columns of this :class:`.FromClause`.
@@ -423,12 +428,14 @@ class FromClause(Selectable):
                     # columns that have no reference to the target
                     # column (also occurs with CompoundSelect)
 
-                    col_distance = util.reduce(operator.add,
-                                               [sc._annotations.get('weight', 1) for sc in
-                                                col.proxy_set if sc.shares_lineage(column)])
-                    c_distance = util.reduce(operator.add,
-                                             [sc._annotations.get('weight', 1) for sc in
-                                              c.proxy_set if sc.shares_lineage(column)])
+                    col_distance = util.reduce(
+                        operator.add,
+                        [sc._annotations.get('weight', 1) for sc in
+                         col.proxy_set if sc.shares_lineage(column)])
+                    c_distance = util.reduce(
+                        operator.add,
+                        [sc._annotations.get('weight', 1) for sc in
+                         c.proxy_set if sc.shares_lineage(column)])
                     if c_distance < col_distance:
                         col, intersect = c, i
         return col
@@ -535,7 +542,8 @@ class FromClause(Selectable):
         """
         if not self._cols_populated:
             return None
-        elif column.key in self.columns and self.columns[column.key] is column:
+        elif (column.key in self.columns and
+              self.columns[column.key] is column):
             return column
         else:
             return None
@@ -610,7 +618,8 @@ class Join(FromClause):
 
         E.g.::
 
-            j = join(user_table, address_table, user_table.c.id == address_table.c.user_id)
+            j = join(user_table, address_table,
+                     user_table.c.id == address_table.c.user_id)
             stmt = select([user_table]).select_from(j)
 
         would emit SQL along the lines of::
@@ -618,15 +627,16 @@ class Join(FromClause):
             SELECT user.id, user.name FROM user
             JOIN address ON user.id = address.user_id
 
-        Similar functionality is available given any :class:`.FromClause` object
-        (e.g. such as a :class:`.Table`) using the :meth:`.FromClause.join`
-        method.
+        Similar functionality is available given any
+        :class:`.FromClause` object (e.g. such as a :class:`.Table`) using
+        the :meth:`.FromClause.join` method.
 
         :param left: The left side of the join.
 
-        :param right: the right side of the join; this is any :class:`.FromClause`
-         object such as a :class:`.Table` object, and may also be a selectable-compatible
-         object such as an ORM-mapped class.
+        :param right: the right side of the join; this is any
+         :class:`.FromClause` object such as a :class:`.Table` object, and
+         may also be a selectable-compatible object such as an ORM-mapped
+         class.
 
         :param onclause: a SQL expression representing the ON clause of the
          join.  If left at ``None``, :meth:`.FromClause.join` will attempt to
@@ -807,7 +817,8 @@ class Join(FromClause):
                 hint = ""
             raise exc.NoForeignKeysError(
                 "Can't find any foreign key relationships "
-                "between '%s' and '%s'.%s" % (a.description, b.description, hint))
+                "between '%s' and '%s'.%s" %
+                (a.description, b.description, hint))
 
         crit = [(x == y) for x, y in list(constraints.values())[0]]
         if len(crit) == 1:
@@ -879,8 +890,8 @@ class Join(FromClause):
         columns as that of the two individual selectables presented under
         a single name - the individual columns are "auto-labeled", meaning
         the ``.c.`` collection of the resulting :class:`.Alias` represents
-        the names of the individual columns using a ``<tablename>_<columname>``
-        scheme::
+        the names of the individual columns using a
+        ``<tablename>_<columname>`` scheme::
 
             j.c.table_a_id
             j.c.table_b_a_id
@@ -947,8 +958,8 @@ class Join(FromClause):
             adapter = sqlutil.ClauseAdapter(left_a).\
                 chain(sqlutil.ClauseAdapter(right_a))
 
-            return left_a.join(right_a,
-                               adapter.traverse(self.onclause), isouter=self.isouter)
+            return left_a.join(right_a, adapter.traverse(self.onclause),
+                               isouter=self.isouter)
         else:
             return self.select(use_labels=True, correlate=False).alias(name)
 
@@ -972,9 +983,9 @@ class Alias(FromClause):
     sub-select within a SQL statement using the ``AS`` keyword (or
     without the keyword on certain databases such as Oracle).
 
-    This object is constructed from the :func:`~.expression.alias` module level
-    function as well as the :meth:`.FromClause.alias` method available on all
-    :class:`.FromClause` subclasses.
+    This object is constructed from the :func:`~.expression.alias` module
+    level function as well as the :meth:`.FromClause.alias` method available
+    on all :class:`.FromClause` subclasses.
 
     """
 
@@ -1449,8 +1460,8 @@ class SelectBase(Executable, FromClause):
 
         Example 1, non recursive::
 
-            from sqlalchemy import Table, Column, String, Integer, MetaData, \\
-                select, func
+            from sqlalchemy import (Table, Column, String, Integer,
+                                    MetaData, select, func)
 
             metadata = MetaData()
 
@@ -1488,8 +1499,8 @@ class SelectBase(Executable, FromClause):
 
         Example 2, WITH RECURSIVE::
 
-            from sqlalchemy import Table, Column, String, Integer, MetaData, \\
-                select, func
+            from sqlalchemy import (Table, Column, String, Integer,
+                                    MetaData, select, func)
 
             metadata = MetaData()
 
@@ -1530,7 +1541,8 @@ class SelectBase(Executable, FromClause):
 
         .. seealso::
 
-            :meth:`.orm.query.Query.cte` - ORM version of :meth:`.SelectBase.cte`.
+            :meth:`.orm.query.Query.cte` - ORM version of
+            :meth:`.SelectBase.cte`.
 
         """
         return CTE(self, name=name, recursive=recursive)
@@ -1567,16 +1579,16 @@ class GenerativeSelect(SelectBase):
     added.
 
     This serves as the base for :class:`.Select` and :class:`.CompoundSelect`
-    where elements such as ORDER BY, GROUP BY can be added and column rendering
-    can be controlled.  Compare to :class:`.TextAsFrom`, which, while it
-    subclasses :class:`.SelectBase` and is also a SELECT construct, represents
-    a fixed textual string which cannot be altered at this level, only
-    wrapped as a subquery.
+    where elements such as ORDER BY, GROUP BY can be added and column
+    rendering can be controlled.  Compare to :class:`.TextAsFrom`, which,
+    while it subclasses :class:`.SelectBase` and is also a SELECT construct,
+    represents a fixed textual string which cannot be altered at this level,
+    only wrapped as a subquery.
 
     .. versionadded:: 0.9.0 :class:`.GenerativeSelect` was added to
-       provide functionality specific to :class:`.Select` and :class:`.CompoundSelect`
-       while allowing :class:`.SelectBase` to be used for other SELECT-like
-       objects, e.g. :class:`.TextAsFrom`.
+       provide functionality specific to :class:`.Select` and
+       :class:`.CompoundSelect` while allowing :class:`.SelectBase` to be
+       used for other SELECT-like objects, e.g. :class:`.TextAsFrom`.
 
     """
     _order_by_clause = ClauseList()
@@ -1597,7 +1609,8 @@ class GenerativeSelect(SelectBase):
         self.use_labels = use_labels
 
         if for_update is not False:
-            self._for_update_arg = ForUpdateArg.parse_legacy_select(for_update)
+            self._for_update_arg = (ForUpdateArg.
+                                    parse_legacy_select(for_update))
 
         if autocommit is not None:
             util.warn_deprecated('autocommit on select() is '
@@ -1653,8 +1666,8 @@ class GenerativeSelect(SelectBase):
         provided which allow for common database-specific
         variants.
 
-        :param nowait: boolean; will render ``FOR UPDATE NOWAIT`` on Oracle and
-         Postgresql dialects.
+        :param nowait: boolean; will render ``FOR UPDATE NOWAIT`` on Oracle
+         and Postgresql dialects.
 
         :param read: boolean; will render ``LOCK IN SHARE MODE`` on MySQL,
          ``FOR SHARE`` on Postgresql.  On Postgresql, when combined with
@@ -1762,8 +1775,8 @@ class GenerativeSelect(SelectBase):
         The criterion will be appended to any pre-existing ORDER BY criterion.
 
         This is an **in-place** mutation method; the
-        :meth:`~.GenerativeSelect.order_by` method is preferred, as it provides standard
-        :term:`method chaining`.
+        :meth:`~.GenerativeSelect.order_by` method is preferred, as it
+        provides standard :term:`method chaining`.
 
         """
         if len(clauses) == 1 and clauses[0] is None:
@@ -1779,8 +1792,8 @@ class GenerativeSelect(SelectBase):
         The criterion will be appended to any pre-existing GROUP BY criterion.
 
         This is an **in-place** mutation method; the
-        :meth:`~.GenerativeSelect.group_by` method is preferred, as it provides standard
-        :term:`method chaining`.
+        :meth:`~.GenerativeSelect.group_by` method is preferred, as it
+        provides standard :term:`method chaining`.
 
         """
         if len(clauses) == 1 and clauses[0] is None:
@@ -1843,11 +1856,14 @@ class CompoundSelect(GenerativeSelect):
             if not numcols:
                 numcols = len(s.c._all_columns)
             elif len(s.c._all_columns) != numcols:
-                raise exc.ArgumentError('All selectables passed to '
-                                        'CompoundSelect must have identical numbers of '
-                                        'columns; select #%d has %d columns, select '
-                                        '#%d has %d' % (1, len(self.selects[0].c._all_columns), n
-                                                        + 1, len(s.c._all_columns)))
+                raise exc.ArgumentError(
+                    'All selectables passed to '
+                    'CompoundSelect must have identical numbers of '
+                    'columns; select #%d has %d columns, select '
+                    '#%d has %d' %
+                    (1, len(self.selects[0].c._all_columns),
+                     n + 1, len(s.c._all_columns))
+                )
 
             self.selects.append(s.self_group(self))
 
@@ -1959,7 +1975,8 @@ class CompoundSelect(GenerativeSelect):
           :func:`select`.
 
         """
-        return CompoundSelect(CompoundSelect.INTERSECT_ALL, *selects, **kwargs)
+        return CompoundSelect(
+            CompoundSelect.INTERSECT_ALL, *selects, **kwargs)
 
     def _scalar_type(self):
         return self.selects[0]._scalar_type()
@@ -1986,10 +2003,9 @@ class CompoundSelect(GenerativeSelect):
             # ForeignKeys in. this would allow the union() to have all
             # those fks too.
 
-            proxy = cols[0]._make_proxy(self,
-                                        name=cols[
-                                            0]._label if self.use_labels else None,
-                                        key=cols[0]._key_label if self.use_labels else None)
+            proxy = cols[0]._make_proxy(
+                self, name=cols[0]._label if self.use_labels else None,
+                key=cols[0]._key_label if self.use_labels else None)
 
             # hand-construct the "_proxies" collection to include all
             # derived columns place a 'weight' annotation corresponding
@@ -1997,8 +2013,8 @@ class CompoundSelect(GenerativeSelect):
             # that the corresponding_column() operation can resolve
             # conflicts
 
-            proxy._proxies = [c._annotate({'weight': i + 1}) for (i,
-                                                                  c) in enumerate(cols)]
+            proxy._proxies = [
+                c._annotate({'weight': i + 1}) for (i, c) in enumerate(cols)]
 
     def _refresh_for_new_column(self, column):
         for s in self.selects:
@@ -2008,7 +2024,8 @@ class CompoundSelect(GenerativeSelect):
             return None
 
         raise NotImplementedError("CompoundSelect constructs don't support "
-                                  "addition of columns to underlying selectables")
+                                  "addition of columns to underlying "
+                                  "selectables")
 
     def _copy_internals(self, clone=_clone, **kw):
         super(CompoundSelect, self)._copy_internals(clone, **kw)
@@ -2016,7 +2033,8 @@ class CompoundSelect(GenerativeSelect):
         self.selects = [clone(s, **kw) for s in self.selects]
         if hasattr(self, '_col_map'):
             del self._col_map
-        for attr in ('_order_by_clause', '_group_by_clause', '_for_update_arg'):
+        for attr in (
+                '_order_by_clause', '_group_by_clause', '_for_update_arg'):
             if getattr(self, attr) is not None:
                 setattr(self, attr, clone(getattr(self, attr), **kw))
 
@@ -2104,11 +2122,11 @@ class Select(HasPrefixes, GenerativeSelect):
                  **kwargs):
         """Construct a new :class:`.Select`.
 
-        Similar functionality is also available via the :meth:`.FromClause.select`
-        method on any :class:`.FromClause`.
+        Similar functionality is also available via the
+        :meth:`.FromClause.select` method on any :class:`.FromClause`.
 
-        All arguments which accept :class:`.ClauseElement` arguments also accept
-        string arguments, which will be converted as appropriate into
+        All arguments which accept :class:`.ClauseElement` arguments also
+        accept string arguments, which will be converted as appropriate into
         either :func:`text()` or :func:`literal_column()` constructs.
 
         .. seealso::
@@ -2120,12 +2138,12 @@ class Select(HasPrefixes, GenerativeSelect):
           A list of :class:`.ClauseElement` objects, typically
           :class:`.ColumnElement` objects or subclasses, which will form the
           columns clause of the resulting statement. For all members which are
-          instances of :class:`.Selectable`, the individual :class:`.ColumnElement`
-          members of the :class:`.Selectable` will be added individually to the
-          columns clause. For example, specifying a
+          instances of :class:`.Selectable`, the individual
+          :class:`.ColumnElement` members of the :class:`.Selectable` will be
+          added individually to the columns clause. For example, specifying a
           :class:`~sqlalchemy.schema.Table` instance will result in all the
-          contained :class:`~sqlalchemy.schema.Column` objects within to be added
-          to the columns clause.
+          contained :class:`~sqlalchemy.schema.Column` objects within to be
+          added to the columns clause.
 
           This argument is not present on the form of :func:`select()`
           available on :class:`~sqlalchemy.schema.Table`.
@@ -2136,14 +2154,14 @@ class Select(HasPrefixes, GenerativeSelect):
 
         :param from_obj:
           A list of :class:`.ClauseElement` objects which will be added to the
-          ``FROM`` clause of the resulting statement. Note that "from" objects are
-          automatically located within the columns and whereclause ClauseElements.
-          Use this parameter to explicitly specify "from" objects which are not
-          automatically locatable. This could include
-          :class:`~sqlalchemy.schema.Table` objects that aren't otherwise present,
-          or :class:`.Join` objects whose presence will supersede that of the
-          :class:`~sqlalchemy.schema.Table` objects already located in the other
-          clauses.
+          ``FROM`` clause of the resulting statement. Note that "from" objects
+          are automatically located within the columns and whereclause
+          ClauseElements.  Use this parameter to explicitly specify "from"
+          objects which are not automatically locatable. This could include
+          :class:`~sqlalchemy.schema.Table` objects that aren't otherwise
+          present, or :class:`.Join` objects whose presence will supersede
+          that of the :class:`~sqlalchemy.schema.Table` objects already
+          located in the other clauses.
 
         :param autocommit:
           Deprecated.  Use .execution_options(autocommit=<True|False>)
@@ -2152,19 +2170,19 @@ class Select(HasPrefixes, GenerativeSelect):
         :param bind=None:
           an :class:`~.Engine` or :class:`~.Connection` instance
           to which the
-          resulting :class:`.Select` object will be bound.  The :class:`.Select`
-          object will otherwise automatically bind to whatever
-          :class:`~.base.Connectable` instances can be located within its contained
-          :class:`.ClauseElement` members.
+          resulting :class:`.Select` object will be bound.  The
+          :class:`.Select` object will otherwise automatically bind to
+          whatever :class:`~.base.Connectable` instances can be located within
+          its contained :class:`.ClauseElement` members.
 
         :param correlate=True:
           indicates that this :class:`.Select` object should have its
           contained :class:`.FromClause` elements "correlated" to an enclosing
-          :class:`.Select` object.  This means that any :class:`.ClauseElement`
-          instance within the "froms" collection of this :class:`.Select`
-          which is also present in the "froms" collection of an
-          enclosing select will not be rendered in the ``FROM`` clause
-          of this select statement.
+          :class:`.Select` object.  This means that any
+          :class:`.ClauseElement` instance within the "froms" collection of
+          this :class:`.Select` which is also present in the "froms"
+          collection of an enclosing select will not be rendered in the
+          ``FROM`` clause of this select statement.
 
         :param distinct=False:
           when ``True``, applies a ``DISTINCT`` qualifier to the columns
@@ -2182,8 +2200,9 @@ class Select(HasPrefixes, GenerativeSelect):
           when ``True``, applies ``FOR UPDATE`` to the end of the
           resulting statement.
 
-          .. deprecated:: 0.9.0 - use :meth:`.GenerativeSelect.with_for_update`
-             to specify the structure of the ``FOR UPDATE`` clause.
+          .. deprecated:: 0.9.0 - use
+             :meth:`.GenerativeSelect.with_for_update` to specify the
+             structure of the ``FOR UPDATE`` clause.
 
           ``for_update`` accepts various string values interpreted by
           specific backends, including:
@@ -2233,8 +2252,8 @@ class Select(HasPrefixes, GenerativeSelect):
           collection of the resulting :class:`.Select` object will use these
           names as well for targeting column members.
 
-          use_labels is also available via the :meth:`~.GenerativeSelect.apply_labels`
-          generative method.
+          use_labels is also available via the
+          :meth:`~.GenerativeSelect.apply_labels` generative method.
 
         """
         self._auto_correlate = correlate
@@ -2378,10 +2397,11 @@ class Select(HasPrefixes, GenerativeSelect):
 
             if not len(froms):
                 raise exc.InvalidRequestError("Select statement '%s"
-                                              "' returned no FROM clauses due to "
-                                              "auto-correlation; specify "
-                                              "correlate(<tables>) to control "
-                                              "correlation manually." % self)
+                                              "' returned no FROM clauses "
+                                              " due to auto-correlation; "
+                                              " specify correlate(<tables>) "
+                                              "to control correlation "
+                                              "manually." % self)
 
         return froms
 
@@ -2422,7 +2442,8 @@ class Select(HasPrefixes, GenerativeSelect):
         and Sybase simultaneously::
 
             select([mytable]).\\
-                with_hint(mytable, "+ index(%(name)s ix_mytable)", 'oracle').\\
+                with_hint(
+                    mytable, "+ index(%(name)s ix_mytable)", 'oracle').\\
                 with_hint(mytable, "WITH INDEX ix_mytable", 'sybase')
 
         """
@@ -2432,8 +2453,9 @@ class Select(HasPrefixes, GenerativeSelect):
     @property
     def type(self):
         raise exc.InvalidRequestError("Select objects don't have a type.  "
-                                      "Call as_scalar() on this Select object "
-                                      "to return a 'scalar' version of this Select.")
+                                      "Call as_scalar() on this Select "
+                                      "object to return a 'scalar' version "
+                                      "of this Select.")
 
     @_memoized_property.method
     def locate_all_froms(self):
@@ -2478,8 +2500,8 @@ class Select(HasPrefixes, GenerativeSelect):
         # as of 0.7.4 we also put the current version of _froms, which
         # gets cleared on each generation.  previously we were "baking"
         # _froms into self._from_obj.
-        self._from_cloned = from_cloned = dict((f, clone(f, **kw))
-                                               for f in self._from_obj.union(self._froms))
+        self._from_cloned = from_cloned = dict(
+            (f, clone(f, **kw)) for f in self._from_obj.union(self._froms))
 
         # 3. update persistent _from_obj with the cloned versions.
         self._from_obj = util.OrderedSet(from_cloned[f] for f in
@@ -2764,16 +2786,16 @@ class Select(HasPrefixes, GenerativeSelect):
             :meth:`.Select.correlate`.
 
         .. versionchanged:: 0.8.0 The :meth:`.Select.correlate` method no
-           longer unconditionally removes entries from the FROM clause; instead,
-           the candidate FROM entries must also be matched by a FROM entry
-           located in an enclosing :class:`.Select`, which ultimately encloses
-           this one as present in the WHERE clause, ORDER BY clause, HAVING
-           clause, or columns clause of an enclosing :meth:`.Select`.
+           longer unconditionally removes entries from the FROM clause;
+           instead, the candidate FROM entries must also be matched by a FROM
+           entry located in an enclosing :class:`.Select`, which ultimately
+           encloses this one as present in the WHERE clause, ORDER BY clause,
+           HAVING clause, or columns clause of an enclosing :meth:`.Select`.
 
         .. versionchanged:: 0.8.2 explicit correlation takes place
            via any level of nesting of :class:`.Select` objects; in previous
-           0.8 versions, correlation would only occur relative to the immediate
-           enclosing :class:`.Select` construct.
+           0.8 versions, correlation would only occur relative to the
+           immediate enclosing :class:`.Select` construct.
 
         .. seealso::
 
@@ -2836,8 +2858,8 @@ class Select(HasPrefixes, GenerativeSelect):
         construct.
 
         This is an **in-place** mutation method; the
-        :meth:`~.Select.correlate` method is preferred, as it provides standard
-        :term:`method chaining`.
+        :meth:`~.Select.correlate` method is preferred, as it provides
+        standard :term:`method chaining`.
 
         """
 
@@ -2867,8 +2889,8 @@ class Select(HasPrefixes, GenerativeSelect):
         construct.
 
         This is an **in-place** mutation method; the
-        :meth:`~.Select.prefix_with` method is preferred, as it provides standard
-        :term:`method chaining`.
+        :meth:`~.Select.prefix_with` method is preferred, as it provides
+        standard :term:`method chaining`.
 
         """
         clause = _literal_as_text(clause)
@@ -2887,7 +2909,8 @@ class Select(HasPrefixes, GenerativeSelect):
         """
 
         self._reset_exported()
-        self._whereclause = and_(True_._ifnone(self._whereclause), whereclause)
+        self._whereclause = and_(
+            True_._ifnone(self._whereclause), whereclause)
 
     def append_having(self, having):
         """append the given expression to this select() construct's HAVING
@@ -2908,8 +2931,8 @@ class Select(HasPrefixes, GenerativeSelect):
         FROM clause.
 
         This is an **in-place** mutation method; the
-        :meth:`~.Select.select_from` method is preferred, as it provides standard
-        :term:`method chaining`.
+        :meth:`~.Select.select_from` method is preferred, as it provides
+        standard :term:`method chaining`.
 
         """
         self._reset_exported()
@@ -2933,12 +2956,14 @@ class Select(HasPrefixes, GenerativeSelect):
 
             return [
                 name_for_col(c)
-                for c in util.unique_list(_select_iterables(self._raw_columns))
+                for c in util.unique_list(
+                    _select_iterables(self._raw_columns))
             ]
         else:
             return [
                 (None, c)
-                for c in util.unique_list(_select_iterables(self._raw_columns))
+                for c in util.unique_list(
+                    _select_iterables(self._raw_columns))
             ]
 
     def _populate_column_collection(self):
@@ -2965,10 +2990,11 @@ class Select(HasPrefixes, GenerativeSelect):
                 if col in self.inner_columns and self._cols_populated:
                     our_label = col._key_label if self.use_labels else col.key
                     if our_label not in self.c:
-                        return col._make_proxy(self,
-                                               name=col._label if self.use_labels else None,
-                                               key=col._key_label if self.use_labels else None,
-                                               name_is_truncatable=True)
+                        return col._make_proxy(
+                            self,
+                            name=col._label if self.use_labels else None,
+                            key=col._key_label if self.use_labels else None,
+                            name_is_truncatable=True)
                 return None
         return None
 
@@ -3058,8 +3084,8 @@ class ScalarSelect(Generative, Grouping):
     @property
     def columns(self):
         raise exc.InvalidRequestError('Scalar Select expression has no '
-                                      'columns; use this object directly within a '
-                                      'column-level expression.')
+                                      'columns; use this object directly '
+                                      'within a column-level expression.')
     c = columns
 
     @_generative
@@ -3146,8 +3172,8 @@ class TextAsFrom(SelectBase):
     """Wrap a :class:`.TextClause` construct within a :class:`.SelectBase`
     interface.
 
-    This allows the :class:`.TextClause` object to gain a ``.c`` collection and
-    other FROM-like capabilities such as :meth:`.FromClause.alias`,
+    This allows the :class:`.TextClause` object to gain a ``.c`` collection
+    and other FROM-like capabilities such as :meth:`.FromClause.alias`,
     :meth:`.SelectBase.cte`, etc.
 
     The :class:`.TextAsFrom` construct is produced via the

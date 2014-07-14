@@ -6,7 +6,8 @@
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 """The :class:`.Annotated` class and related routines; creates hash-equivalent
-copies of SQL constructs which contain context-specific markers and associations.
+copies of SQL constructs which contain context-specific markers and
+associations.
 
 """
 
@@ -67,7 +68,8 @@ class Annotated(object):
             return self._with_annotations(_values)
 
     def _compiler_dispatch(self, visitor, **kw):
-        return self.__element.__class__._compiler_dispatch(self, visitor, **kw)
+        return self.__element.__class__._compiler_dispatch(
+            self, visitor, **kw)
 
     @property
     def _constructor(self):

@@ -27,7 +27,8 @@ else:
 class Operators(object):
     """Base of comparison and logical operators.
 
-    Implements base methods :meth:`~sqlalchemy.sql.operators.Operators.operate` and
+    Implements base methods
+    :meth:`~sqlalchemy.sql.operators.Operators.operate` and
     :meth:`~sqlalchemy.sql.operators.Operators.reverse_operate`, as well as
     :meth:`~sqlalchemy.sql.operators.Operators.__and__`,
     :meth:`~sqlalchemy.sql.operators.Operators.__or__`,
@@ -136,13 +137,13 @@ class Operators(object):
          .. versionadded:: 0.8 - added the 'precedence' argument.
 
         :param is_comparison: if True, the operator will be considered as a
-         "comparison" operator, that is which evaulates to a boolean true/false
-         value, like ``==``, ``>``, etc.  This flag should be set so that
-         ORM relationships can establish that the operator is a comparison
-         operator when used in a custom join condition.
+         "comparison" operator, that is which evaulates to a boolean
+         true/false value, like ``==``, ``>``, etc.  This flag should be set
+         so that ORM relationships can establish that the operator is a
+         comparison operator when used in a custom join condition.
 
-         .. versionadded:: 0.9.2 - added the :paramref:`.Operators.op.is_comparison`
-            flag.
+         .. versionadded:: 0.9.2 - added the
+            :paramref:`.Operators.op.is_comparison` flag.
 
         .. seealso::
 
@@ -422,8 +423,8 @@ class ColumnOperators(Operators):
     def notin_(self, other):
         """implement the ``NOT IN`` operator.
 
-        This is equivalent to using negation with :meth:`.ColumnOperators.in_`,
-        i.e. ``~x.in_(y)``.
+        This is equivalent to using negation with
+        :meth:`.ColumnOperators.in_`, i.e. ``~x.in_(y)``.
 
         .. versionadded:: 0.8
 
