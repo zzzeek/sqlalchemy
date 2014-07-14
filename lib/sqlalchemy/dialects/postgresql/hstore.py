@@ -69,7 +69,8 @@ def _parse_hstore(hstore_str):
     pair_match = HSTORE_PAIR_RE.match(hstore_str)
 
     while pair_match is not None:
-        key = pair_match.group('key').replace(r'\"', '"').replace("\\\\", "\\")
+        key = pair_match.group('key').replace(r'\"', '"').replace(
+            "\\\\", "\\")
         if pair_match.group('value_null'):
             value = None
         else:
@@ -141,15 +142,16 @@ class HSTORE(sqltypes.Concatenable, sqltypes.TypeEngine):
 
         data_table.c.data + {"k1": "v1"}
 
-    For a full list of special methods see :class:`.HSTORE.comparator_factory`.
+    For a full list of special methods see
+    :class:`.HSTORE.comparator_factory`.
 
     For usage with the SQLAlchemy ORM, it may be desirable to combine
     the usage of :class:`.HSTORE` with :class:`.MutableDict` dictionary
     now part of the :mod:`sqlalchemy.ext.mutable`
     extension.  This extension will allow "in-place" changes to the
     dictionary, e.g. addition of new keys or replacement/removal of existing
-    keys to/from the current dictionary, to produce events which will be detected
-    by the unit of work::
+    keys to/from the current dictionary, to produce events which will be
+    detected by the unit of work::
 
         from sqlalchemy.ext.mutable import MutableDict
 
@@ -168,9 +170,9 @@ class HSTORE(sqltypes.Concatenable, sqltypes.TypeEngine):
         session.commit()
 
     When the :mod:`sqlalchemy.ext.mutable` extension is not used, the ORM
-    will not be alerted to any changes to the contents of an existing dictionary,
-    unless that dictionary value is re-assigned to the HSTORE-attribute itself,
-    thus generating a change event.
+    will not be alerted to any changes to the contents of an existing
+    dictionary, unless that dictionary value is re-assigned to the
+    HSTORE-attribute itself, thus generating a change event.
 
     .. versionadded:: 0.8
 

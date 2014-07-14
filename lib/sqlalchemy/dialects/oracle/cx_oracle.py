@@ -10,7 +10,8 @@
 .. dialect:: oracle+cx_oracle
     :name: cx-Oracle
     :dbapi: cx_oracle
-    :connectstring: oracle+cx_oracle://user:pass@host:port/dbname[?key=value&key=value...]
+    :connectstring: oracle+cx_oracle://user:pass@host:port/dbname\
+[?key=value&key=value...]
     :url: http://cx-oracle.sourceforge.net/
 
 Additional Connect Arguments
@@ -52,21 +53,21 @@ on the URL, or as keyword arguments to :func:`.create_engine()` are:
   .. versionadded:: 0.8 specific DBAPI types can be excluded from the
      auto_setinputsizes feature via the exclude_setinputsizes attribute.
 
-* ``mode`` - This is given the string value of SYSDBA or SYSOPER, or alternatively
-  an integer value.  This value is only available as a URL query string
-  argument.
+* ``mode`` - This is given the string value of SYSDBA or SYSOPER, or
+  alternatively an integer value.  This value is only available as a URL query
+  string argument.
 
-* ``threaded`` - enable multithreaded access to cx_oracle connections.  Defaults
-  to ``True``.  Note that this is the opposite default of the cx_Oracle DBAPI
-  itself.
+* ``threaded`` - enable multithreaded access to cx_oracle connections.
+  Defaults to ``True``.  Note that this is the opposite default of the
+  cx_Oracle DBAPI itself.
 
 .. _cx_oracle_unicode:
 
 Unicode
 -------
 
-The cx_Oracle DBAPI as of version 5 fully supports unicode, and has the ability
-to return string results as Python unicode objects natively.
+The cx_Oracle DBAPI as of version 5 fully supports unicode, and has the
+ability to return string results as Python unicode objects natively.
 
 When used in Python 3, cx_Oracle returns all strings as Python unicode objects
 (that is, plain ``str`` in Python 3).  In Python 2, it will return as Python
@@ -74,37 +75,39 @@ unicode those column values that are of type ``NVARCHAR`` or ``NCLOB``.  For
 column values that are of type ``VARCHAR`` or other non-unicode string types,
 it will return values as Python strings (e.g. bytestrings).
 
-The cx_Oracle SQLAlchemy dialect presents two different options for the use case of
-returning ``VARCHAR`` column values as Python unicode objects under Python 2:
+The cx_Oracle SQLAlchemy dialect presents two different options for the use
+case of returning ``VARCHAR`` column values as Python unicode objects under
+Python 2:
 
 * the cx_Oracle DBAPI has the ability to coerce all string results to Python
   unicode objects unconditionally using output type handlers.  This has
   the advantage that the unicode conversion is global to all statements
   at the cx_Oracle driver level, meaning it works with raw textual SQL
   statements that have no typing information associated.  However, this system
-  has been observed to incur signfiicant performance overhead, not only because
-  it takes effect for all string values unconditionally, but also because cx_Oracle under
-  Python 2 seems to use a pure-Python function call in order to do the
-  decode operation, which under cPython can orders of magnitude slower
-  than doing it using C functions alone.
+  has been observed to incur signfiicant performance overhead, not only
+  because it takes effect for all string values unconditionally, but also
+  because cx_Oracle under Python 2 seems to use a pure-Python function call in
+  order to do the decode operation, which under cPython can orders of
+  magnitude slower than doing it using C functions alone.
 
-* SQLAlchemy has unicode-decoding services built in, and when using SQLAlchemy's
-  C extensions, these functions do not use any Python function calls and
-  are very fast.  The disadvantage to this approach is that the unicode
-  conversion only takes effect for statements where the :class:`.Unicode` type
-  or :class:`.String` type with ``convert_unicode=True`` is explicitly
-  associated with the result column.  This is the case for any ORM or Core
-  query or SQL expression as well as for a :func:`.text` construct that specifies
-  output column types, so in the vast majority of cases this is not an issue.
-  However, when sending a completely raw string to :meth:`.Connection.execute`,
-  this typing information isn't present, unless the string is handled
-  within a :func:`.text` construct that adds typing information.
+* SQLAlchemy has unicode-decoding services built in, and when using
+  SQLAlchemy's C extensions, these functions do not use any Python function
+  calls and are very fast.  The disadvantage to this approach is that the
+  unicode conversion only takes effect for statements where the
+  :class:`.Unicode` type or :class:`.String` type with
+  ``convert_unicode=True`` is explicitly associated with the result column.
+  This is the case for any ORM or Core query or SQL expression as well as for
+  a :func:`.text` construct that specifies output column types, so in the vast
+  majority of cases this is not an issue. However, when sending a completely
+  raw string to :meth:`.Connection.execute`, this typing information isn't
+  present, unless the string is handled within a :func:`.text` construct that
+  adds typing information.
 
 As of version 0.9.2 of SQLAlchemy, the default approach is to use SQLAlchemy's
 typing system.  This keeps cx_Oracle's expensive Python 2 approach
-disabled unless the user explicitly wants it.  Under Python 3, SQLAlchemy detects
-that cx_Oracle is returning unicode objects natively and cx_Oracle's system
-is used.
+disabled unless the user explicitly wants it.  Under Python 3, SQLAlchemy
+detects that cx_Oracle is returning unicode objects natively and cx_Oracle's
+system is used.
 
 To re-enable cx_Oracle's output type handler under Python 2, the
 ``coerce_to_unicode=True`` flag (new in 0.9.4) can be passed to
@@ -117,12 +120,13 @@ as Python unicode under Python 2 without using cx_Oracle's native handlers,
 the :func:`.text` feature can be used::
 
     from sqlalchemy import text, Unicode
-    result = conn.execute(text("select username from user").columns(username=Unicode))
+    result = conn.execute(
+        text("select username from user").columns(username=Unicode))
 
-.. versionchanged:: 0.9.2 cx_Oracle's outputtypehandlers are no longer used for
-   unicode results of non-unicode datatypes in Python 2, after they were identified as a major
-   performance bottleneck.  SQLAlchemy's own unicode facilities are used
-   instead.
+.. versionchanged:: 0.9.2 cx_Oracle's outputtypehandlers are no longer used
+   for unicode results of non-unicode datatypes in Python 2, after they were
+   identified as a major performance bottleneck.  SQLAlchemy's own unicode
+   facilities are used instead.
 
 .. versionadded:: 0.9.4 Added the ``coerce_to_unicode`` flag, to re-enable
    cx_Oracle's outputtypehandler and revert to pre-0.9.2 behavior.
@@ -132,38 +136,43 @@ the :func:`.text` feature can be used::
 RETURNING Support
 -----------------
 
-The cx_oracle DBAPI supports a limited subset of Oracle's already limited RETURNING support.
-Typically, results can only be guaranteed for at most one column being returned;
-this is the typical case when SQLAlchemy uses RETURNING to get just the value of a
-primary-key-associated sequence value.    Additional column expressions will
-cause problems in a non-determinative way, due to cx_oracle's lack of support for
-the OCI_DATA_AT_EXEC API which is required for more complex RETURNING scenarios.
+The cx_oracle DBAPI supports a limited subset of Oracle's already limited
+RETURNING support.  Typically, results can only be guaranteed for at most one
+column being returned; this is the typical case when SQLAlchemy uses RETURNING
+to get just the value of a primary-key-associated sequence value.
+Additional column expressions will cause problems in a non-determinative way,
+due to cx_oracle's lack of support for the OCI_DATA_AT_EXEC API which is
+required for more complex RETURNING scenarios.
 
-For this reason, stability may be enhanced by disabling RETURNING support completely;
-SQLAlchemy otherwise will use RETURNING to fetch newly sequence-generated
-primary keys.  As illustrated in :ref:`oracle_returning`::
+For this reason, stability may be enhanced by disabling RETURNING support
+completely; SQLAlchemy otherwise will use RETURNING to fetch newly
+sequence-generated primary keys.  As illustrated in :ref:`oracle_returning`::
 
-    engine = create_engine("oracle://scott:tiger@dsn", implicit_returning=False)
+    engine = create_engine("oracle://scott:tiger@dsn",
+                           implicit_returning=False)
 
 .. seealso::
 
-    http://docs.oracle.com/cd/B10501_01/appdev.920/a96584/oci05bnd.htm#420693 - OCI documentation for RETURNING
+    http://docs.oracle.com/cd/B10501_01/appdev.920/a96584/oci05bnd.htm#420693
+    - OCI documentation for RETURNING
 
-    http://sourceforge.net/mailarchive/message.php?msg_id=31338136 - cx_oracle developer commentary
+    http://sourceforge.net/mailarchive/message.php?msg_id=31338136
+    - cx_oracle developer commentary
 
 .. _cx_oracle_lob:
 
 LOB Objects
 -----------
 
-cx_oracle returns oracle LOBs using the cx_oracle.LOB object.  SQLAlchemy converts
-these to strings so that the interface of the Binary type is consistent with that of
-other backends, and so that the linkage to a live cursor is not needed in scenarios
-like result.fetchmany() and result.fetchall().   This means that by default, LOB
-objects are fully fetched unconditionally by SQLAlchemy, and the linkage to a live
-cursor is broken.
+cx_oracle returns oracle LOBs using the cx_oracle.LOB object.  SQLAlchemy
+converts these to strings so that the interface of the Binary type is
+consistent with that of other backends, and so that the linkage to a live
+cursor is not needed in scenarios like result.fetchmany() and
+result.fetchall().   This means that by default, LOB objects are fully fetched
+unconditionally by SQLAlchemy, and the linkage to a live cursor is broken.
 
-To disable this processing, pass ``auto_convert_lobs=False`` to :func:`.create_engine()`.
+To disable this processing, pass ``auto_convert_lobs=False`` to
+:func:`.create_engine()`.
 
 Two Phase Transaction Support
 -----------------------------
@@ -363,7 +372,8 @@ class _NativeUnicodeMixin(object):
                         return unicode(value)
                 return process
             else:
-                return super(_NativeUnicodeMixin, self).bind_processor(dialect)
+                return super(
+                    _NativeUnicodeMixin, self).bind_processor(dialect)
 
     # we apply a connection output handler that returns
     # unicode in all cases, so the "native_unicode" flag
@@ -397,7 +407,8 @@ class _OracleString(_NativeUnicodeMixin, sqltypes.String):
     pass
 
 
-class _OracleUnicodeText(_LOBMixin, _NativeUnicodeMixin, sqltypes.UnicodeText):
+class _OracleUnicodeText(
+        _LOBMixin, _NativeUnicodeMixin, sqltypes.UnicodeText):
     def get_dbapi_type(self, dbapi):
         return dbapi.NCLOB
 
@@ -487,9 +498,10 @@ class OracleExecutionContext_cx_oracle(OracleExecutionContext):
             # cx_oracle really has issues when you setinputsizes
             # on String, including that outparams/RETURNING
             # breaks for varchars
-            self.set_input_sizes(quoted_bind_names,
-                                 exclude_types=self.dialect.exclude_setinputsizes
-                                 )
+            self.set_input_sizes(
+                quoted_bind_names,
+                exclude_types=self.dialect.exclude_setinputsizes
+            )
 
         # if a single execute, check for outparams
         if len(self.compiled_parameters) == 1:
@@ -566,7 +578,8 @@ class OracleExecutionContext_cx_oracle(OracleExecutionContext):
         return result
 
 
-class OracleExecutionContext_cx_oracle_with_unicode(OracleExecutionContext_cx_oracle):
+class OracleExecutionContext_cx_oracle_with_unicode(
+        OracleExecutionContext_cx_oracle):
     """Support WITH_UNICODE in Python 2.xx.
 
     WITH_UNICODE allows cx_Oracle's Python 3 unicode handling
@@ -590,7 +603,8 @@ class OracleExecutionContext_cx_oracle_with_unicode(OracleExecutionContext_cx_or
 
 
 class ReturningResultProxy(_result.FullyBufferedResultProxy):
-    """Result proxy which stuffs the _returning clause + outparams into the fetch."""
+    """Result proxy which stuffs the _returning clause + outparams
+    into the fetch."""
 
     def __init__(self, context, returning_params):
         self._returning_params = returning_params
@@ -604,8 +618,10 @@ class ReturningResultProxy(_result.FullyBufferedResultProxy):
         ]
 
     def _buffer_rows(self):
-        return collections.deque([tuple(self._returning_params["ret_%d" % i]
-                                        for i, c in enumerate(self._returning_params))])
+        return collections.deque(
+            [tuple(self._returning_params["ret_%d" % i]
+                   for i, c in enumerate(self._returning_params))]
+        )
 
 
 class OracleDialect_cx_oracle(OracleDialect):
@@ -695,7 +711,8 @@ class OracleDialect_cx_oracle(OracleDialect):
             # this occurs in tests with mock DBAPIs
             self._cx_oracle_string_types = set()
             self._cx_oracle_with_unicode = False
-        elif self.cx_oracle_ver >= (5,) and not hasattr(self.dbapi, 'UNICODE'):
+        elif self.cx_oracle_ver >= (5,) and not \
+                hasattr(self.dbapi, 'UNICODE'):
             # cx_Oracle WITH_UNICODE mode.  *only* python
             # unicode objects accepted for anything
             self.supports_unicode_statements = True
@@ -703,15 +720,15 @@ class OracleDialect_cx_oracle(OracleDialect):
             self._cx_oracle_with_unicode = True
 
             if util.py2k:
-                # There's really no reason to run with WITH_UNICODE under Python 2.x.
-                # Give the user a hint.
+                # There's really no reason to run with WITH_UNICODE under
+                # Python 2.x.  Give the user a hint.
                 util.warn(
                     "cx_Oracle is compiled under Python 2.xx using the "
                     "WITH_UNICODE flag.  Consider recompiling cx_Oracle "
-                    "without this flag, which is in no way necessary for full "
-                    "support of Unicode. Otherwise, all string-holding bind "
-                    "parameters must be explicitly typed using SQLAlchemy's "
-                    "String type or one of its subtypes,"
+                    "without this flag, which is in no way necessary for "
+                    "full support of Unicode. Otherwise, all string-holding "
+                    "bind parameters must be explicitly typed using "
+                    "SQLAlchemy's String type or one of its subtypes,"
                     "or otherwise be passed as Python unicode.  "
                     "Plain Python strings passed as bind parameters will be "
                     "silently corrupted by cx_Oracle."
@@ -727,8 +744,8 @@ class OracleDialect_cx_oracle(OracleDialect):
             self.dbapi_type_map = {}
         else:
             # only use this for LOB objects.  using it for strings, dates
-            # etc. leads to a little too much magic, reflection doesn't know if it should
-            # expect encoded strings or unicodes, etc.
+            # etc. leads to a little too much magic, reflection doesn't know
+            # if it should expect encoded strings or unicodes, etc.
             self.dbapi_type_map = {
                 self.dbapi.CLOB: oracle.CLOB(),
                 self.dbapi.NCLOB: oracle.NCLOB(),

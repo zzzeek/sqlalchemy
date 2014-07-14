@@ -9,31 +9,37 @@
 .. dialect:: oracle
     :name: Oracle
 
-    Oracle version 8 through current (11g at the time of this writing) are supported.
+    Oracle version 8 through current (11g at the time of this writing) are
+    supported.
 
 Connect Arguments
 -----------------
 
-The dialect supports several :func:`~sqlalchemy.create_engine()` arguments which
-affect the behavior of the dialect regardless of driver in use.
+The dialect supports several :func:`~sqlalchemy.create_engine()` arguments
+which affect the behavior of the dialect regardless of driver in use.
 
-* ``use_ansi`` - Use ANSI JOIN constructs (see the section on Oracle 8).  Defaults
-  to ``True``.  If ``False``, Oracle-8 compatible constructs are used for joins.
+* ``use_ansi`` - Use ANSI JOIN constructs (see the section on Oracle 8).
+  Defaults to ``True``.  If ``False``, Oracle-8 compatible constructs are used
+  for joins.
 
-* ``optimize_limits`` - defaults to ``False``. see the section on LIMIT/OFFSET.
+* ``optimize_limits`` - defaults to ``False``. see the section on
+  LIMIT/OFFSET.
 
-* ``use_binds_for_limits`` - defaults to ``True``.  see the section on LIMIT/OFFSET.
+* ``use_binds_for_limits`` - defaults to ``True``.  see the section on
+  LIMIT/OFFSET.
 
 Auto Increment Behavior
 -----------------------
 
-SQLAlchemy Table objects which include integer primary keys are usually assumed to have
-"autoincrementing" behavior, meaning they can generate their own primary key values upon
-INSERT.  Since Oracle has no "autoincrement" feature, SQLAlchemy relies upon sequences
-to produce these values.   With the Oracle dialect, *a sequence must always be explicitly
-specified to enable autoincrement*.  This is divergent with the majority of documentation
-examples which assume the usage of an autoincrement-capable database.   To specify sequences,
-use the sqlalchemy.schema.Sequence object which is passed to a Column construct::
+SQLAlchemy Table objects which include integer primary keys are usually
+assumed to have "autoincrementing" behavior, meaning they can generate their
+own primary key values upon INSERT.  Since Oracle has no "autoincrement"
+feature, SQLAlchemy relies upon sequences to produce these values.   With the
+Oracle dialect, *a sequence must always be explicitly specified to enable
+autoincrement*.  This is divergent with the majority of documentation
+examples which assume the usage of an autoincrement-capable database.   To
+specify sequences, use the sqlalchemy.schema.Sequence object which is passed
+to a Column construct::
 
   t = Table('mytable', metadata,
         Column('id', Integer, Sequence('id_seq'), primary_key=True),
@@ -50,15 +56,16 @@ This step is also required when using table reflection, i.e. autoload=True::
 Identifier Casing
 -----------------
 
-In Oracle, the data dictionary represents all case insensitive identifier names
-using UPPERCASE text.   SQLAlchemy on the other hand considers an all-lower case identifier
-name to be case insensitive.   The Oracle dialect converts all case insensitive identifiers
-to and from those two formats during schema level communication, such as reflection of
-tables and indexes.   Using an UPPERCASE name on the SQLAlchemy side indicates a
-case sensitive identifier, and SQLAlchemy will quote the name - this will cause mismatches
-against data dictionary data received from Oracle, so unless identifier names have been
-truly created as case sensitive (i.e. using quoted names), all lowercase names should be
-used on the SQLAlchemy side.
+In Oracle, the data dictionary represents all case insensitive identifier
+names using UPPERCASE text.   SQLAlchemy on the other hand considers an
+all-lower case identifier name to be case insensitive.   The Oracle dialect
+converts all case insensitive identifiers to and from those two formats during
+schema level communication, such as reflection of tables and indexes.   Using
+an UPPERCASE name on the SQLAlchemy side indicates a case sensitive
+identifier, and SQLAlchemy will quote the name - this will cause mismatches
+against data dictionary data received from Oracle, so unless identifier names
+have been truly created as case sensitive (i.e. using quoted names), all
+lowercase names should be used on the SQLAlchemy side.
 
 
 LIMIT/OFFSET Support
@@ -71,44 +78,49 @@ http://www.oracle.com/technology/oramag/oracle/06-sep/o56asktom.html .
 
 There are two options which affect its behavior:
 
-* the "FIRST ROWS()" optimization keyword is not used by default.  To enable the usage of this
-  optimization directive, specify ``optimize_limits=True`` to :func:`.create_engine`.
-* the values passed for the limit/offset are sent as bound parameters.   Some users have observed
-  that Oracle produces a poor query plan when the values are sent as binds and not
-  rendered literally.   To render the limit/offset values literally within the SQL
-  statement, specify ``use_binds_for_limits=False`` to :func:`.create_engine`.
+* the "FIRST ROWS()" optimization keyword is not used by default.  To enable
+  the usage of this optimization directive, specify ``optimize_limits=True``
+  to :func:`.create_engine`.
+* the values passed for the limit/offset are sent as bound parameters.   Some
+  users have observed that Oracle produces a poor query plan when the values
+  are sent as binds and not rendered literally.   To render the limit/offset
+  values literally within the SQL statement, specify
+  ``use_binds_for_limits=False`` to :func:`.create_engine`.
 
-Some users have reported better performance when the entirely different approach of a
-window query is used, i.e. ROW_NUMBER() OVER (ORDER BY), to provide LIMIT/OFFSET (note
-that the majority of users don't observe this).  To suit this case the
-method used for LIMIT/OFFSET can be replaced entirely.  See the recipe at
+Some users have reported better performance when the entirely different
+approach of a window query is used, i.e. ROW_NUMBER() OVER (ORDER BY), to
+provide LIMIT/OFFSET (note that the majority of users don't observe this).
+To suit this case the method used for LIMIT/OFFSET can be replaced entirely.
+See the recipe at
 http://www.sqlalchemy.org/trac/wiki/UsageRecipes/WindowFunctionsByDefault
-which installs a select compiler that overrides the generation of limit/offset with
-a window function.
+which installs a select compiler that overrides the generation of limit/offset
+with a window function.
 
 .. _oracle_returning:
 
 RETURNING Support
 -----------------
 
-The Oracle database supports a limited form of RETURNING, in order to retrieve result
-sets of matched rows from INSERT, UPDATE and DELETE statements.  Oracle's
-RETURNING..INTO syntax only supports one row being returned, as it relies upon
-OUT parameters in order to function.  In addition, supported DBAPIs have further
-limitations (see :ref:`cx_oracle_returning`).
+The Oracle database supports a limited form of RETURNING, in order to retrieve
+result sets of matched rows from INSERT, UPDATE and DELETE statements.
+Oracle's RETURNING..INTO syntax only supports one row being returned, as it
+relies upon OUT parameters in order to function.  In addition, supported
+DBAPIs have further limitations (see :ref:`cx_oracle_returning`).
 
-SQLAlchemy's "implicit returning" feature, which employs RETURNING within an INSERT
-and sometimes an UPDATE statement in order to fetch newly generated primary key values
-and other SQL defaults and expressions, is normally enabled on the Oracle
-backend.  By default, "implicit returning" typically only fetches the value of a
-single ``nextval(some_seq)`` expression embedded into an INSERT in order to increment
-a sequence within an INSERT statement and get the value back at the same time.
-To disable this feature across the board, specify ``implicit_returning=False`` to
-:func:`.create_engine`::
+SQLAlchemy's "implicit returning" feature, which employs RETURNING within an
+INSERT and sometimes an UPDATE statement in order to fetch newly generated
+primary key values and other SQL defaults and expressions, is normally enabled
+on the Oracle backend.  By default, "implicit returning" typically only
+fetches the value of a single ``nextval(some_seq)`` expression embedded into
+an INSERT in order to increment a sequence within an INSERT statement and get
+the value back at the same time. To disable this feature across the board,
+specify ``implicit_returning=False`` to :func:`.create_engine`::
 
-    engine = create_engine("oracle://scott:tiger@dsn", implicit_returning=False)
+    engine = create_engine("oracle://scott:tiger@dsn",
+                           implicit_returning=False)
 
-Implicit returning can also be disabled on a table-by-table basis as a table option::
+Implicit returning can also be disabled on a table-by-table basis as a table
+option::
 
     # Core Table
     my_table = Table("my_table", metadata, ..., implicit_returning=False)
@@ -121,13 +133,15 @@ Implicit returning can also be disabled on a table-by-table basis as a table opt
 
 .. seealso::
 
-    :ref:`cx_oracle_returning` - additional cx_oracle-specific restrictions on implicit returning.
+    :ref:`cx_oracle_returning` - additional cx_oracle-specific restrictions on
+    implicit returning.
 
 ON UPDATE CASCADE
 -----------------
 
-Oracle doesn't have native ON UPDATE CASCADE functionality.  A trigger based solution
-is available at http://asktom.oracle.com/tkyte/update_cascade/index.html .
+Oracle doesn't have native ON UPDATE CASCADE functionality.  A trigger based
+solution is available at
+http://asktom.oracle.com/tkyte/update_cascade/index.html .
 
 When using the SQLAlchemy ORM, the ORM has limited ability to manually issue
 cascading updates - specify ForeignKey objects using the
@@ -137,29 +151,32 @@ and specify "passive_updates=False" on each relationship().
 Oracle 8 Compatibility
 ----------------------
 
-When Oracle 8 is detected, the dialect internally configures itself to the following
-behaviors:
+When Oracle 8 is detected, the dialect internally configures itself to the
+following behaviors:
 
 * the use_ansi flag is set to False.  This has the effect of converting all
   JOIN phrases into the WHERE clause, and in the case of LEFT OUTER JOIN
   makes use of Oracle's (+) operator.
 
 * the NVARCHAR2 and NCLOB datatypes are no longer generated as DDL when
-  the :class:`~sqlalchemy.types.Unicode` is used - VARCHAR2 and CLOB are issued
-  instead.   This because these types don't seem to work correctly on Oracle 8
-  even though they are available.  The :class:`~sqlalchemy.types.NVARCHAR`
-  and :class:`~sqlalchemy.dialects.oracle.NCLOB` types will always generate NVARCHAR2 and NCLOB.
+  the :class:`~sqlalchemy.types.Unicode` is used - VARCHAR2 and CLOB are
+  issued instead.   This because these types don't seem to work correctly on
+  Oracle 8 even though they are available.  The
+  :class:`~sqlalchemy.types.NVARCHAR` and
+  :class:`~sqlalchemy.dialects.oracle.NCLOB` types will always generate
+  NVARCHAR2 and NCLOB.
 
 * the "native unicode" mode is disabled when using cx_oracle, i.e. SQLAlchemy
-  encodes all Python unicode objects to "string" before passing in as bind parameters.
+  encodes all Python unicode objects to "string" before passing in as bind
+  parameters.
 
 Synonym/DBLINK Reflection
 -------------------------
 
-When using reflection with Table objects, the dialect can optionally search for tables
-indicated by synonyms, either in local or remote schemas or accessed over DBLINK,
-by passing the flag ``oracle_resolve_synonyms=True`` as a
-keyword argument to the :class:`.Table` construct::
+When using reflection with Table objects, the dialect can optionally search
+for tables indicated by synonyms, either in local or remote schemas or
+accessed over DBLINK, by passing the flag ``oracle_resolve_synonyms=True`` as
+a keyword argument to the :class:`.Table` construct::
 
     some_table = Table('some_table', autoload=True,
                                 autoload_with=some_engine,
@@ -167,9 +184,10 @@ keyword argument to the :class:`.Table` construct::
 
 When this flag is set, the given name (such as ``some_table`` above) will
 be searched not just in the ``ALL_TABLES`` view, but also within the
-``ALL_SYNONYMS`` view to see if this name is actually a synonym to another name.
-If the synonym is located and refers to a DBLINK, the oracle dialect knows
-how to locate the table's information using DBLINK syntax (e.g. ``@dblink``).
+``ALL_SYNONYMS`` view to see if this name is actually a synonym to another
+name.  If the synonym is located and refers to a DBLINK, the oracle dialect
+knows how to locate the table's information using DBLINK syntax(e.g.
+``@dblink``).
 
 ``oracle_resolve_synonyms`` is accepted wherever reflection arguments are
 accepted, including methods such as :meth:`.MetaData.reflect` and
@@ -202,7 +220,8 @@ import re
 from sqlalchemy import util, sql
 from sqlalchemy.engine import default, base, reflection
 from sqlalchemy.sql import compiler, visitors, expression
-from sqlalchemy.sql import operators as sql_operators, functions as sql_functions
+from sqlalchemy.sql import (operators as sql_operators,
+                            functions as sql_functions)
 from sqlalchemy import types as sqltypes, schema as sa_schema
 from sqlalchemy.types import VARCHAR, NVARCHAR, CHAR, \
     BLOB, CLOB, TIMESTAMP, FLOAT
@@ -308,10 +327,11 @@ class INTERVAL(sqltypes.TypeEngine):
         This is due to a lack of support for YEAR TO MONTH intervals
         within available DBAPIs (cx_oracle and zxjdbc).
 
-        :param day_precision: the day precision value.  this is the number of digits
-          to store for the day field.  Defaults to "2"
-        :param second_precision: the second precision value.  this is the number of digits
-          to store for the fractional seconds field.  Defaults to "6".
+        :param day_precision: the day precision value.  this is the number of
+          digits to store for the day field.  Defaults to "2"
+        :param second_precision: the second precision value.  this is the
+          number of digits to store for the fractional seconds field.
+          Defaults to "6".
 
         """
         self.day_precision = day_precision
@@ -557,8 +577,8 @@ class OracleCompiler(compiler.SQLCompiler):
                             binary.left = _OuterJoinColumn(binary.left)
                         elif join.right.is_derived_from(binary.right.table):
                             binary.right = _OuterJoinColumn(binary.right)
-                clauses.append(visitors.cloned_traverse(join.onclause, {},
-                                                        {'binary': visit_binary}))
+                clauses.append(visitors.cloned_traverse(
+                    join.onclause, {}, {'binary': visit_binary}))
             else:
                 clauses.append(join.onclause)
 
@@ -581,10 +601,13 @@ class OracleCompiler(compiler.SQLCompiler):
         return self.process(vc.column) + "(+)"
 
     def visit_sequence(self, seq):
-        return self.dialect.identifier_preparer.format_sequence(seq) + ".nextval"
+        return (self.dialect.identifier_preparer.format_sequence(seq) +
+                ".nextval")
 
     def visit_alias(self, alias, asfrom=False, ashint=False, **kwargs):
-        """Oracle doesn't like ``FROM table AS alias``.  Is the AS standard SQL??"""
+        """Oracle doesn't like ``FROM table AS alias``.  Is the AS standard
+        SQL??
+        """
 
         if asfrom or ashint:
             alias_name = isinstance(alias.name, expression._truncated_label) and \
@@ -601,7 +624,8 @@ class OracleCompiler(compiler.SQLCompiler):
     def returning_clause(self, stmt, returning_cols):
         columns = []
         binds = []
-        for i, column in enumerate(expression._select_iterables(returning_cols)):
+        for i, column in enumerate(
+                expression._select_iterables(returning_cols)):
             if column.type._has_column_expression:
                 col_expr = column.type.column_expression(column)
             else:
@@ -610,7 +634,8 @@ class OracleCompiler(compiler.SQLCompiler):
             self.binds[outparam.key] = outparam
             binds.append(
                 self.bindparam_string(self._truncate_bindparam(outparam)))
-            columns.append(self.process(col_expr, within_columns_clause=False))
+            columns.append(
+                self.process(col_expr, within_columns_clause=False))
             self.result_map[outparam.key] = (
                 outparam.key,
                 (column, getattr(column, 'name', None),
@@ -621,7 +646,9 @@ class OracleCompiler(compiler.SQLCompiler):
         return 'RETURNING ' + ', '.join(columns) + " INTO " + ", ".join(binds)
 
     def _TODO_visit_compound_select(self, select):
-        """Need to determine how to get ``LIMIT``/``OFFSET`` into a ``UNION`` for Oracle."""
+        """Need to determine how to get ``LIMIT``/``OFFSET`` into a
+        ``UNION`` for Oracle.
+        """
         pass
 
     def visit_select(self, select, **kwargs):
@@ -641,15 +668,17 @@ class OracleCompiler(compiler.SQLCompiler):
             limit_clause = select._limit_clause
             offset_clause = select._offset_clause
             if limit_clause is not None or offset_clause is not None:
-                # See http://www.oracle.com/technology/oramag/oracle/06-sep/o56asktom.html
+                # See http://www.oracle.com/technology/oramag/oracle/06-sep/\
+                # o56asktom.html
                 #
                 # Generalized form of an Oracle pagination query:
                 #   select ... from (
-                #     select /*+ FIRST_ROWS(N) */ ...., rownum as ora_rn from (
-                #         select distinct ... where ... order by ...
+                #     select /*+ FIRST_ROWS(N) */ ...., rownum as ora_rn from
+                #       (  select distinct ... where ... order by ...
                 #     ) where ROWNUM <= :limit+:offset
                 #   ) where ora_rn > :offset
-                # Outer select and "ROWNUM as ora_rn" can be dropped if limit=0
+                # Outer select and "ROWNUM as ora_rn" can be dropped if
+                # limit=0
 
                 # TODO: use annotations instead of clone + attr set ?
                 select = select._generate()
@@ -745,8 +774,9 @@ class OracleDDLCompiler(compiler.DDLCompiler):
         if constraint.onupdate is not None:
             util.warn(
                 "Oracle does not contain native UPDATE CASCADE "
-                "functionality - onupdates will not be rendered for foreign keys. "
-                "Consider using deferrable=True, initially='deferred' or triggers.")
+                "functionality - onupdates will not be rendered for foreign "
+                "keys.  Consider using deferrable=True, initially='deferred' "
+                "or triggers.")
 
         return text
 
@@ -770,14 +800,16 @@ class OracleIdentifierPreparer(compiler.IdentifierPreparer):
 
     def format_savepoint(self, savepoint):
         name = re.sub(r'^_+', '', savepoint.ident)
-        return super(OracleIdentifierPreparer, self).format_savepoint(savepoint, name)
+        return super(
+            OracleIdentifierPreparer, self).format_savepoint(savepoint, name)
 
 
 class OracleExecutionContext(default.DefaultExecutionContext):
     def fire_sequence(self, seq, type_):
-        return self._execute_scalar("SELECT " +
-                                    self.dialect.identifier_preparer.format_sequence(seq) +
-                                    ".nextval FROM DUAL", type_)
+        return self._execute_scalar(
+            "SELECT " +
+            self.dialect.identifier_preparer.format_sequence(seq) +
+            ".nextval FROM DUAL", type_)
 
 
 class OracleDialect(default.DefaultDialect):
@@ -858,7 +890,8 @@ class OracleDialect(default.DefaultDialect):
         cursor = connection.execute(
             sql.text("SELECT table_name FROM all_tables "
                      "WHERE table_name = :name AND owner = :schema_name"),
-            name=self.denormalize_name(table_name), schema_name=self.denormalize_name(schema))
+            name=self.denormalize_name(table_name),
+            schema_name=self.denormalize_name(schema))
         return cursor.first() is not None
 
     def has_sequence(self, connection, sequence_name, schema=None):
@@ -866,8 +899,10 @@ class OracleDialect(default.DefaultDialect):
             schema = self.default_schema_name
         cursor = connection.execute(
             sql.text("SELECT sequence_name FROM all_sequences "
-                     "WHERE sequence_name = :name AND sequence_owner = :schema_name"),
-            name=self.denormalize_name(sequence_name), schema_name=self.denormalize_name(schema))
+                     "WHERE sequence_name = :name AND "
+                     "sequence_owner = :schema_name"),
+            name=self.denormalize_name(sequence_name),
+            schema_name=self.denormalize_name(schema))
         return cursor.first() is not None
 
     def normalize_name(self, name):
@@ -876,8 +911,8 @@ class OracleDialect(default.DefaultDialect):
         if util.py2k:
             if isinstance(name, str):
                 name = name.decode(self.encoding)
-        if name.upper() == name and \
-                not self.identifier_preparer._requires_quotes(name.lower()):
+        if name.upper() == name and not \
+                self.identifier_preparer._requires_quotes(name.lower()):
             return name.lower()
         else:
             return name
@@ -885,7 +920,8 @@ class OracleDialect(default.DefaultDialect):
     def denormalize_name(self, name):
         if name is None:
             return None
-        elif name.lower() == name and not self.identifier_preparer._requires_quotes(name.lower()):
+        elif name.lower() == name and not \
+                self.identifier_preparer._requires_quotes(name.lower()):
             name = name.upper()
         if util.py2k:
             if not self.supports_unicode_binds:
@@ -895,14 +931,17 @@ class OracleDialect(default.DefaultDialect):
         return name
 
     def _get_default_schema_name(self, connection):
-        return self.normalize_name(connection.execute('SELECT USER FROM DUAL').scalar())
+        return self.normalize_name(
+            connection.execute('SELECT USER FROM DUAL').scalar())
 
-    def _resolve_synonym(self, connection, desired_owner=None, desired_synonym=None, desired_table=None):
+    def _resolve_synonym(self, connection, desired_owner=None,
+                         desired_synonym=None, desired_table=None):
         """search for a local synonym matching the given desired owner/name.
 
         if desired_owner is None, attempts to locate a distinct owner.
 
-        returns the actual name, owner, dblink name, and synonym name if found.
+        returns the actual name, owner, dblink name, and synonym name if
+        found.
         """
 
         q = "SELECT owner, table_owner, table_name, db_link, "\
@@ -925,17 +964,20 @@ class OracleDialect(default.DefaultDialect):
         if desired_owner:
             row = result.first()
             if row:
-                return row['table_name'], row['table_owner'], row['db_link'], row['synonym_name']
+                return (row['table_name'], row['table_owner'],
+                        row['db_link'], row['synonym_name'])
             else:
                 return None, None, None, None
         else:
             rows = result.fetchall()
             if len(rows) > 1:
                 raise AssertionError(
-                    "There are multiple tables visible to the schema, you must specify owner")
+                    "There are multiple tables visible to the schema, you "
+                    "must specify owner")
             elif len(rows) == 1:
                 row = rows[0]
-                return row['table_name'], row['table_owner'], row['db_link'], row['synonym_name']
+                return (row['table_name'], row['table_owner'],
+                        row['db_link'], row['synonym_name'])
             else:
                 return None, None, None, None
 
@@ -984,7 +1026,8 @@ class OracleDialect(default.DefaultDialect):
             schema = self.default_schema_name
         s = sql.text(
             "SELECT table_name FROM all_tables "
-            "WHERE nvl(tablespace_name, 'no tablespace') NOT IN ('SYSTEM', 'SYSAUX') "
+            "WHERE nvl(tablespace_name, 'no tablespace') NOT IN "
+            "('SYSTEM', 'SYSAUX') "
             "AND OWNER = :owner "
             "AND IOT_NAME IS NULL")
         cursor = connection.execute(s, owner=schema)
@@ -1126,8 +1169,8 @@ class OracleDialect(default.DefaultDialect):
         for rset in rp:
             if rset.index_name != last_index_name:
                 remove_if_primary_key(index)
-                index = dict(
-                    name=self.normalize_name(rset.index_name), column_names=[])
+                index = dict(name=self.normalize_name(rset.index_name),
+                             column_names=[])
                 indexes.append(index)
             index['unique'] = uniqueness.get(rset.uniqueness, False)
 
@@ -1191,9 +1234,9 @@ class OracleDialect(default.DefaultDialect):
                                           info_cache=info_cache)
         pkeys = []
         constraint_name = None
-        constraint_data = self._get_constraint_data(connection, table_name,
-                                                    schema, dblink,
-                                                    info_cache=kw.get('info_cache'))
+        constraint_data = self._get_constraint_data(
+            connection, table_name, schema, dblink,
+            info_cache=kw.get('info_cache'))
 
         for row in constraint_data:
             (cons_name, cons_type, local_column, remote_table, remote_column, remote_owner) = \
@@ -1226,9 +1269,9 @@ class OracleDialect(default.DefaultDialect):
                                           resolve_synonyms, dblink,
                                           info_cache=info_cache)
 
-        constraint_data = self._get_constraint_data(connection, table_name,
-                                                    schema, dblink,
-                                                    info_cache=kw.get('info_cache'))
+        constraint_data = self._get_constraint_data(
+            connection, table_name, schema, dblink,
+            info_cache=kw.get('info_cache'))
 
         def fkey_rec():
             return {
@@ -1276,7 +1319,8 @@ class OracleDialect(default.DefaultDialect):
 
                     rec['referred_table'] = remote_table
 
-                    if requested_schema is not None or self.denormalize_name(remote_owner) != schema:
+                    if requested_schema is not None or \
+                       self.denormalize_name(remote_owner) != schema:
                         rec['referred_schema'] = remote_owner
 
                 local_cols.append(local_column)

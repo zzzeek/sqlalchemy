@@ -130,9 +130,9 @@ class MySQLDialect_mysqldb(MySQLDialect):
         util.coerce_kw_type(opts, 'read_timeout', int)
         util.coerce_kw_type(opts, 'client_flag', int)
         util.coerce_kw_type(opts, 'local_infile', int)
-        # Note: using either of the below will cause all strings to be returned
-        # as Unicode, both in raw SQL operations and with column types like
-        # String and MSString.
+        # Note: using either of the below will cause all strings to be
+        # returned as Unicode, both in raw SQL operations and with column
+        # types like String and MSString.
         util.coerce_kw_type(opts, 'use_unicode', bool)
         util.coerce_kw_type(opts, 'charset', str)
 

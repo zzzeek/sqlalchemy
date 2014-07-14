@@ -9,7 +9,8 @@
 .. dialect:: mssql+zxjdbc
     :name: zxJDBC for Jython
     :dbapi: zxjdbc
-    :connectstring: mssql+zxjdbc://user:pass@host:port/dbname[?key=value&key=value...]
+    :connectstring: mssql+zxjdbc://user:pass@host:port/dbname\
+[?key=value&key=value...]
     :driverurl: http://jtds.sourceforge.net/
 
 

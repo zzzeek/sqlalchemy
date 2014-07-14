@@ -273,8 +273,9 @@ class SybaseExecutionContext(default.DefaultExecutionContext):
                 self._enable_identity_insert = False
 
             if self._enable_identity_insert:
-                self.cursor.execute("SET IDENTITY_INSERT %s ON" %
-                                    self.dialect.identifier_preparer.format_table(tbl))
+                self.cursor.execute(
+                    "SET IDENTITY_INSERT %s ON" %
+                    self.dialect.identifier_preparer.format_table(tbl))
 
         if self.isddl:
             # TODO: to enhance this, we can detect "ddl in tran" on the
@@ -329,9 +330,9 @@ class SybaseSQLCompiler(compiler.SQLCompiler):
         limit = select._limit
         if limit:
             # if select._limit == 1:
-                #s += "FIRST "
+                # s += "FIRST "
             # else:
-                #s += "TOP %s " % (select._limit,)
+                # s += "TOP %s " % (select._limit,)
             s += "TOP %s " % (limit,)
         offset = select._offset
         if offset:
@@ -520,8 +521,8 @@ class SybaseDialect(default.DefaultDialect):
         for (name, type_, nullable, autoincrement, default, precision, scale,
              length) in results:
             col_info = self._get_column_info(name, type_, bool(nullable),
-                                             bool(
-                                                 autoincrement), default, precision, scale,
+                                             bool(autoincrement),
+                                             default, precision, scale,
                                              length)
             columns.append(col_info)
 

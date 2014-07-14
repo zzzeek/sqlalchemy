@@ -26,9 +26,9 @@ supported in any given server release.
 Connection Timeouts
 -------------------
 
-MySQL features an automatic connection close behavior, for connections that have
-been idle for eight hours or more.   To circumvent having this issue, use the
-``pool_recycle`` option which controls the maximum age of any connection::
+MySQL features an automatic connection close behavior, for connections that
+have been idle for eight hours or more.   To circumvent having this issue, use
+the ``pool_recycle`` option which controls the maximum age of any connection::
 
     engine = create_engine('mysql+mysqldb://...', pool_recycle=3600)
 
@@ -38,10 +38,12 @@ CREATE TABLE arguments including Storage Engines
 ------------------------------------------------
 
 MySQL's CREATE TABLE syntax includes a wide array of special options,
-including ``ENGINE``, ``CHARSET``, ``MAX_ROWS``, ``ROW_FORMAT``, ``INSERT_METHOD``, and many more.
+including ``ENGINE``, ``CHARSET``, ``MAX_ROWS``, ``ROW_FORMAT``,
+``INSERT_METHOD``, and many more.
 To accommodate the rendering of these arguments, specify the form
 ``mysql_argument_name="value"``.  For example, to specify a table with
-``ENGINE`` of ``InnoDB``, ``CHARSET`` of ``utf8``, and ``KEY_BLOCK_SIZE`` of ``1024``::
+``ENGINE`` of ``InnoDB``, ``CHARSET`` of ``utf8``, and ``KEY_BLOCK_SIZE``
+of ``1024``::
 
   Table('mytable', metadata,
         Column('data', String(32)),
@@ -50,26 +52,28 @@ To accommodate the rendering of these arguments, specify the form
         mysql_key_block_size="1024"
        )
 
-The MySQL dialect will normally transfer any keyword specified as ``mysql_keyword_name``
-to be rendered as ``KEYWORD_NAME`` in the ``CREATE TABLE`` statement.  A handful
-of these names will render with a space instead of an underscore; to support this,
-the MySQL dialect has awareness of these particular names, which include
-``DATA DIRECTORY`` (e.g. ``mysql_data_directory``), ``CHARACTER SET`` (e.g.
-``mysql_character_set``) and ``INDEX DIRECTORY`` (e.g. ``mysql_index_directory``).
+The MySQL dialect will normally transfer any keyword specified as
+``mysql_keyword_name`` to be rendered as ``KEYWORD_NAME`` in the
+``CREATE TABLE`` statement.  A handful of these names will render with a space
+instead of an underscore; to support this, the MySQL dialect has awareness of
+these particular names, which include ``DATA DIRECTORY``
+(e.g. ``mysql_data_directory``), ``CHARACTER SET`` (e.g.
+``mysql_character_set``) and ``INDEX DIRECTORY`` (e.g.
+``mysql_index_directory``).
 
-The most common argument is ``mysql_engine``, which refers to the storage engine
-for the table.  Historically, MySQL server installations would default
+The most common argument is ``mysql_engine``, which refers to the storage
+engine for the table.  Historically, MySQL server installations would default
 to ``MyISAM`` for this value, although newer versions may be defaulting
 to ``InnoDB``.  The ``InnoDB`` engine is typically preferred for its support
 of transactions and foreign keys.
 
 A :class:`.Table` that is created in a MySQL database with a storage engine
-of ``MyISAM`` will be essentially non-transactional, meaning any INSERT/UPDATE/DELETE
-statement referring to this table will be invoked as autocommit.   It also will have no
-support for foreign key constraints; while the ``CREATE TABLE`` statement
-accepts foreign key options, when using the ``MyISAM`` storage engine these
-arguments are discarded.  Reflecting such a table will also produce no
-foreign key constraint information.
+of ``MyISAM`` will be essentially non-transactional, meaning any
+INSERT/UPDATE/DELETE statement referring to this table will be invoked as
+autocommit.   It also will have no support for foreign key constraints; while
+the ``CREATE TABLE`` statement accepts foreign key options, when using the
+``MyISAM`` storage engine these arguments are discarded.  Reflecting such a
+table will also produce no foreign key constraint information.
 
 For fully atomic transactions as well as support for foreign key
 constraints, all participating ``CREATE TABLE`` statements must specify a
@@ -118,7 +122,8 @@ AUTO_INCREMENT Behavior
 -----------------------
 
 When creating tables, SQLAlchemy will automatically set ``AUTO_INCREMENT`` on
-the first :class:`.Integer` primary key column which is not marked as a foreign key::
+the first :class:`.Integer` primary key column which is not marked as a
+foreign key::
 
   >>> t = Table('mytable', metadata,
   ...   Column('mytable_id', Integer, primary_key=True)
@@ -129,10 +134,10 @@ the first :class:`.Integer` primary key column which is not marked as a foreign 
           PRIMARY KEY (id)
   )
 
-You can disable this behavior by passing ``False`` to the :paramref:`~.Column.autoincrement`
-argument of :class:`.Column`.  This flag can also be used to enable
-auto-increment on a secondary column in a multi-column key for some storage
-engines::
+You can disable this behavior by passing ``False`` to the
+:paramref:`~.Column.autoincrement` argument of :class:`.Column`.  This flag
+can also be used to enable auto-increment on a secondary column in a
+multi-column key for some storage engines::
 
   Table('mytable', metadata,
         Column('gid', Integer, primary_key=True, autoincrement=False),
@@ -184,8 +189,8 @@ usual definition of "number of rows matched by an UPDATE or DELETE" statement.
 This is in contradiction to the default setting on most MySQL DBAPI drivers,
 which is "number of rows actually modified/deleted".  For this reason, the
 SQLAlchemy MySQL dialects always set the ``constants.CLIENT.FOUND_ROWS`` flag,
-or whatever is equivalent for the DBAPI in use, on connect, unless the flag value
-is overridden using DBAPI-specific options
+or whatever is equivalent for the DBAPI in use, on connect, unless the flag
+value is overridden using DBAPI-specific options
 (such as ``client_flag`` for the MySQL-Python driver, ``found_rows`` for the
 OurSQL driver).
 
@@ -197,14 +202,14 @@ See also:
 CAST Support
 ------------
 
-MySQL documents the CAST operator as available in version 4.0.2.  When using the
-SQLAlchemy :func:`.cast` function, SQLAlchemy
-will not render the CAST token on MySQL before this version, based on server version
-detection, instead rendering the internal expression directly.
+MySQL documents the CAST operator as available in version 4.0.2.  When using
+the SQLAlchemy :func:`.cast` function, SQLAlchemy
+will not render the CAST token on MySQL before this version, based on server
+version detection, instead rendering the internal expression directly.
 
-CAST may still not be desirable on an early MySQL version post-4.0.2, as it didn't
-add all datatype support until 4.1.1.   If your application falls into this
-narrow area, the behavior of CAST can be controlled using the
+CAST may still not be desirable on an early MySQL version post-4.0.2, as it
+didn't add all datatype support until 4.1.1.   If your application falls into
+this narrow area, the behavior of CAST can be controlled using the
 :ref:`sqlalchemy.ext.compiler_toplevel` system, as per the recipe below::
 
     from sqlalchemy.sql.expression import Cast
@@ -241,7 +246,8 @@ become part of the index. SQLAlchemy provides this feature via the
 
     Index('my_index', my_table.c.data, mysql_length=10)
 
-    Index('a_b_idx', my_table.c.a, my_table.c.b, mysql_length={'a': 4, 'b': 9})
+    Index('a_b_idx', my_table.c.a, my_table.c.b, mysql_length={'a': 4,
+                                                               'b': 9})
 
 Prefix lengths are given in characters for nonbinary string types and in bytes
 for binary string types. The value passed to the keyword argument *must* be
@@ -289,10 +295,10 @@ Foreign Key Arguments to Avoid
 
 MySQL does not support the foreign key arguments "DEFERRABLE", "INITIALLY",
 or "MATCH".  Using the ``deferrable`` or ``initially`` keyword argument with
-:class:`.ForeignKeyConstraint` or :class:`.ForeignKey` will have the effect of these keywords being
-rendered in a DDL expression, which will then raise an error on MySQL.
-In order to use these keywords on a foreign key while having them ignored
-on a MySQL backend, use a custom compile rule::
+:class:`.ForeignKeyConstraint` or :class:`.ForeignKey` will have the effect of
+these keywords being rendered in a DDL expression, which will then raise an
+error on MySQL.  In order to use these keywords on a foreign key while having
+them ignored on a MySQL backend, use a custom compile rule::
 
     from sqlalchemy.ext.compiler import compiles
     from sqlalchemy.schema import ForeignKeyConstraint
@@ -303,19 +309,20 @@ on a MySQL backend, use a custom compile rule::
         return compiler.visit_foreign_key_constraint(element, **kw)
 
 .. versionchanged:: 0.9.0 - the MySQL backend no longer silently ignores
-   the ``deferrable`` or ``initially`` keyword arguments of :class:`.ForeignKeyConstraint`
-   and :class:`.ForeignKey`.
+   the ``deferrable`` or ``initially`` keyword arguments of
+   :class:`.ForeignKeyConstraint` and :class:`.ForeignKey`.
 
 The "MATCH" keyword is in fact more insidious, and is explicitly disallowed
-by SQLAlchemy in conjunction with the MySQL backend.  This argument is silently
-ignored by MySQL, but in addition has the effect of ON UPDATE and ON DELETE options
-also being ignored by the backend.   Therefore MATCH should never be used with the
-MySQL backend; as is the case with DEFERRABLE and INITIALLY, custom compilation
-rules can be used to correct a MySQL ForeignKeyConstraint at DDL definition time.
+by SQLAlchemy in conjunction with the MySQL backend.  This argument is
+silently ignored by MySQL, but in addition has the effect of ON UPDATE and ON
+DELETE options also being ignored by the backend.   Therefore MATCH should
+never be used with the MySQL backend; as is the case with DEFERRABLE and
+INITIALLY, custom compilation rules can be used to correct a MySQL
+ForeignKeyConstraint at DDL definition time.
 
-.. versionadded:: 0.9.0 - the MySQL backend will raise a :class:`.CompileError`
-   when the ``match`` keyword is used with :class:`.ForeignKeyConstraint`
-   or :class:`.ForeignKey`.
+.. versionadded:: 0.9.0 - the MySQL backend will raise a
+   :class:`.CompileError` when the ``match`` keyword is used with
+   :class:`.ForeignKeyConstraint` or :class:`.ForeignKey`.
 
 Reflection of Foreign Key Constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -364,15 +371,15 @@ RESERVED_WORDS = set(
      'deterministic', 'distinct', 'distinctrow', 'div', 'double', 'drop',
      'dual', 'each', 'else', 'elseif', 'enclosed', 'escaped', 'exists',
      'exit', 'explain', 'false', 'fetch', 'float', 'float4', 'float8',
-     'for', 'force', 'foreign', 'from', 'fulltext', 'grant', 'group', 'having',
-     'high_priority', 'hour_microsecond', 'hour_minute', 'hour_second', 'if',
-     'ignore', 'in', 'index', 'infile', 'inner', 'inout', 'insensitive',
-     'insert', 'int', 'int1', 'int2', 'int3', 'int4', 'int8', 'integer',
-     'interval', 'into', 'is', 'iterate', 'join', 'key', 'keys', 'kill',
-     'leading', 'leave', 'left', 'like', 'limit', 'linear', 'lines', 'load',
-     'localtime', 'localtimestamp', 'lock', 'long', 'longblob', 'longtext',
-     'loop', 'low_priority', 'master_ssl_verify_server_cert', 'match',
-     'mediumblob', 'mediumint', 'mediumtext', 'middleint',
+     'for', 'force', 'foreign', 'from', 'fulltext', 'grant', 'group',
+     'having', 'high_priority', 'hour_microsecond', 'hour_minute',
+     'hour_second', 'if', 'ignore', 'in', 'index', 'infile', 'inner', 'inout',
+     'insensitive', 'insert', 'int', 'int1', 'int2', 'int3', 'int4', 'int8',
+     'integer', 'interval', 'into', 'is', 'iterate', 'join', 'key', 'keys',
+     'kill', 'leading', 'leave', 'left', 'like', 'limit', 'linear', 'lines',
+     'load', 'localtime', 'localtimestamp', 'lock', 'long', 'longblob',
+     'longtext', 'loop', 'low_priority', 'master_ssl_verify_server_cert',
+     'match', 'mediumblob', 'mediumint', 'mediumtext', 'middleint',
      'minute_microsecond', 'minute_second', 'mod', 'modifies', 'natural',
      'not', 'no_write_to_binlog', 'null', 'numeric', 'on', 'optimize',
      'option', 'optionally', 'or', 'order', 'out', 'outer', 'outfile',
@@ -445,8 +452,9 @@ class _FloatType(_NumericType, sqltypes.Float):
         self.scale = scale
 
     def __repr__(self):
-        return util.generic_repr(self,
-                                 to_inspect=[_FloatType, _NumericType, sqltypes.Float])
+        return util.generic_repr(self, to_inspect=[_FloatType,
+                                                   _NumericType,
+                                                   sqltypes.Float])
 
 
 class _IntegerType(_NumericType, sqltypes.Integer):
@@ -455,8 +463,9 @@ class _IntegerType(_NumericType, sqltypes.Integer):
         super(_IntegerType, self).__init__(**kw)
 
     def __repr__(self):
-        return util.generic_repr(self,
-                                 to_inspect=[_IntegerType, _NumericType, sqltypes.Integer])
+        return util.generic_repr(self, to_inspect=[_IntegerType,
+                                                   _NumericType,
+                                                   sqltypes.Integer])
 
 
 class _StringType(sqltypes.String):
@@ -542,10 +551,10 @@ class DOUBLE(_FloatType):
         .. note::
 
             The :class:`.DOUBLE` type by default converts from float
-            to Decimal, using a truncation that defaults to 10 digits.  Specify
-            either ``scale=n`` or ``decimal_return_scale=n`` in order to change
-            this scale, or ``asdecimal=False`` to return values directly as
-            Python floating points.
+            to Decimal, using a truncation that defaults to 10 digits.
+            Specify either ``scale=n`` or ``decimal_return_scale=n`` in order
+            to change this scale, or ``asdecimal=False`` to return values
+            directly as Python floating points.
 
         :param precision: Total digits in this number.  If scale and precision
           are both None, values are stored to limits allowed by the server.
@@ -575,10 +584,10 @@ class REAL(_FloatType, sqltypes.REAL):
         .. note::
 
             The :class:`.REAL` type by default converts from float
-            to Decimal, using a truncation that defaults to 10 digits.  Specify
-            either ``scale=n`` or ``decimal_return_scale=n`` in order to change
-            this scale, or ``asdecimal=False`` to return values directly as
-            Python floating points.
+            to Decimal, using a truncation that defaults to 10 digits.
+            Specify either ``scale=n`` or ``decimal_return_scale=n`` in order
+            to change this scale, or ``asdecimal=False`` to return values
+            directly as Python floating points.
 
         :param precision: Total digits in this number.  If scale and precision
           are both None, values are stored to limits allowed by the server.
@@ -733,9 +742,9 @@ class SMALLINT(_IntegerType, sqltypes.SMALLINT):
 class BIT(sqltypes.TypeEngine):
     """MySQL BIT type.
 
-    This type is for MySQL 5.0.3 or greater for MyISAM, and 5.0.5 or greater for
-    MyISAM, MEMORY, InnoDB and BDB.  For older versions, use a MSTinyInteger()
-    type.
+    This type is for MySQL 5.0.3 or greater for MyISAM, and 5.0.5 or greater
+    for MyISAM, MEMORY, InnoDB and BDB.  For older versions, use a
+    MSTinyInteger() type.
 
     """
 
@@ -1265,8 +1274,8 @@ class ENUM(sqltypes.Enum, _EnumeratedValues):
         sqltypes.Enum.__init__(self, *values)
 
     def __repr__(self):
-        return util.generic_repr(self,
-                                 to_inspect=[ENUM, _StringType, sqltypes.Enum])
+        return util.generic_repr(
+            self, to_inspect=[ENUM, _StringType, sqltypes.Enum])
 
     def bind_processor(self, dialect):
         super_convert = super(ENUM, self).bind_processor(dialect)
@@ -1368,7 +1377,8 @@ class SET(_EnumeratedValues):
         super_convert = super(SET, self).bind_processor(dialect)
 
         def process(value):
-            if value is None or isinstance(value, util.int_types + util.string_types):
+            if value is None or isinstance(
+                    value, util.int_types + util.string_types):
                 pass
             else:
                 if None in value:
@@ -1509,7 +1519,8 @@ class MySQLCompiler(compiler.SQLCompiler):
         elif isinstance(type_, (sqltypes.DECIMAL, sqltypes.DateTime,
                                 sqltypes.Date, sqltypes.Time)):
             return self.dialect.type_compiler.process(type_)
-        elif isinstance(type_, sqltypes.String) and not isinstance(type_, (ENUM, SET)):
+        elif isinstance(type_, sqltypes.String) \
+                and not isinstance(type_, (ENUM, SET)):
             adapted = CHAR._adapt_string_for_cast(type_)
             return self.dialect.type_compiler.process(adapted)
         elif isinstance(type_, sqltypes._Binary):
@@ -1577,7 +1588,8 @@ class MySQLCompiler(compiler.SQLCompiler):
         # The latter is more readable for offsets but we're stuck with the
         # former until we can refine dialects by server revision.
 
-        limit_clause, offset_clause = select._limit_clause, select._offset_clause
+        limit_clause, offset_clause = select._limit_clause, \
+            select._offset_clause
 
         if limit_clause is None and offset_clause is None:
             return ''
@@ -1610,7 +1622,8 @@ class MySQLCompiler(compiler.SQLCompiler):
         else:
             return None
 
-    def update_tables_clause(self, update_stmt, from_table, extra_froms, **kw):
+    def update_tables_clause(self, update_stmt, from_table,
+                             extra_froms, **kw):
         return ', '.join(t._compiler_dispatch(self, asfrom=True, **kw)
                          for t in [from_table] + list(extra_froms))
 
@@ -1706,7 +1719,8 @@ class MySQLDDLCompiler(compiler.DDLCompiler):
 
             joiner = '='
             if opt in ('TABLESPACE', 'DEFAULT CHARACTER SET',
-                       'CHARACTER SET', 'COLLATE', 'PARTITION BY', 'PARTITIONS'):
+                       'CHARACTER SET', 'COLLATE',
+                       'PARTITION BY', 'PARTITIONS'):
                 joiner = ' '
 
             table_opts.append(joiner.join((opt, arg)))
@@ -1732,8 +1746,9 @@ class MySQLDDLCompiler(compiler.DDLCompiler):
         if length is not None:
 
             if isinstance(length, dict):
-                # length value can be a (column_name --> integer value) mapping
-                # specifying the prefix length for each column of the index
+                # length value can be a (column_name --> integer value)
+                # mapping specifying the prefix length for each column of the
+                # index
                 columns = ', '.join(
                     '%s(%d)' % (expr, length[col.name]) if col.name in length
                     else
@@ -1898,8 +1913,8 @@ class MySQLTypeCompiler(compiler.GenericTypeCompiler):
         if self._mysql_type(type_) and \
                 type_.scale is not None and \
                 type_.precision is not None:
-            return self._extend_numeric(type_,
-                                        "FLOAT(%s, %s)" % (type_.precision, type_.scale))
+            return self._extend_numeric(
+                type_, "FLOAT(%s, %s)" % (type_.precision, type_.scale))
         elif type_.precision is not None:
             return self._extend_numeric(type_,
                                         "FLOAT(%s)" % (type_.precision,))
@@ -1908,25 +1923,25 @@ class MySQLTypeCompiler(compiler.GenericTypeCompiler):
 
     def visit_INTEGER(self, type_):
         if self._mysql_type(type_) and type_.display_width is not None:
-            return self._extend_numeric(type_,
-                                        "INTEGER(%(display_width)s)" %
-                                        {'display_width': type_.display_width})
+            return self._extend_numeric(
+                type_, "INTEGER(%(display_width)s)" %
+                {'display_width': type_.display_width})
         else:
             return self._extend_numeric(type_, "INTEGER")
 
     def visit_BIGINT(self, type_):
         if self._mysql_type(type_) and type_.display_width is not None:
-            return self._extend_numeric(type_,
-                                        "BIGINT(%(display_width)s)" %
-                                        {'display_width': type_.display_width})
+            return self._extend_numeric(
+                type_, "BIGINT(%(display_width)s)" %
+                {'display_width': type_.display_width})
         else:
             return self._extend_numeric(type_, "BIGINT")
 
     def visit_MEDIUMINT(self, type_):
         if self._mysql_type(type_) and type_.display_width is not None:
-            return self._extend_numeric(type_,
-                                        "MEDIUMINT(%(display_width)s)" %
-                                        {'display_width': type_.display_width})
+            return self._extend_numeric(
+                type_, "MEDIUMINT(%(display_width)s)" %
+                {'display_width': type_.display_width})
         else:
             return self._extend_numeric(type_, "MEDIUMINT")
 
@@ -1996,7 +2011,8 @@ class MySQLTypeCompiler(compiler.GenericTypeCompiler):
 
     def visit_VARCHAR(self, type_):
         if type_.length:
-            return self._extend_string(type_, {}, "VARCHAR(%d)" % type_.length)
+            return self._extend_string(
+                type_, {}, "VARCHAR(%d)" % type_.length)
         else:
             raise exc.CompileError(
                 "VARCHAR requires a length on dialect %s" %
@@ -2013,8 +2029,9 @@ class MySQLTypeCompiler(compiler.GenericTypeCompiler):
         # We'll actually generate the equiv. "NATIONAL VARCHAR" instead
         # of "NVARCHAR".
         if type_.length:
-            return self._extend_string(type_, {'national': True},
-                                       "VARCHAR(%(length)s)" % {'length': type_.length})
+            return self._extend_string(
+                type_, {'national': True},
+                "VARCHAR(%(length)s)" % {'length': type_.length})
         else:
             raise exc.CompileError(
                 "NVARCHAR requires a length on dialect %s" %
@@ -2024,8 +2041,9 @@ class MySQLTypeCompiler(compiler.GenericTypeCompiler):
         # We'll actually generate the equiv.
         # "NATIONAL CHAR" instead of "NCHAR".
         if type_.length:
-            return self._extend_string(type_, {'national': True},
-                                       "CHAR(%(length)s)" % {'length': type_.length})
+            return self._extend_string(
+                type_, {'national': True},
+                "CHAR(%(length)s)" % {'length': type_.length})
         else:
             return self._extend_string(type_, {'national': True}, "CHAR")
 
@@ -2099,7 +2117,9 @@ class MySQLIdentifierPreparer(compiler.IdentifierPreparer):
 
 @log.class_logger
 class MySQLDialect(default.DefaultDialect):
-    """Details of the MySQL dialect.  Not used directly in application code."""
+    """Details of the MySQL dialect.
+    Not used directly in application code.
+    """
 
     name = 'mysql'
     supports_alter = True
@@ -2158,8 +2178,8 @@ class MySQLDialect(default.DefaultDialect):
         else:
             return None
 
-    _isolation_lookup = set(['SERIALIZABLE',
-                             'READ UNCOMMITTED', 'READ COMMITTED', 'REPEATABLE READ'])
+    _isolation_lookup = set(['SERIALIZABLE', 'READ UNCOMMITTED',
+                             'READ COMMITTED', 'REPEATABLE READ'])
 
     def set_isolation_level(self, connection, level):
         level = level.replace('_', ' ')
@@ -2187,10 +2207,11 @@ class MySQLDialect(default.DefaultDialect):
         """Execute a COMMIT."""
 
         # COMMIT/ROLLBACK were introduced in 3.23.15.
-        # Yes, we have at least one user who has to talk to these old versions!
+        # Yes, we have at least one user who has to talk to these old
+        # versions!
         #
-        # Ignore commit/rollback if support isn't present, otherwise even basic
-        # operations via autocommit fail.
+        # Ignore commit/rollback if support isn't present, otherwise even
+        # basic operations via autocommit fail.
         try:
             dbapi_connection.commit()
         except:
@@ -2236,7 +2257,8 @@ class MySQLDialect(default.DefaultDialect):
         return [row['data'][0:row['gtrid_length']] for row in resultset]
 
     def is_disconnect(self, e, connection, cursor):
-        if isinstance(e, (self.dbapi.OperationalError, self.dbapi.ProgrammingError)):
+        if isinstance(e, (self.dbapi.OperationalError,
+                          self.dbapi.ProgrammingError)):
             return self._extract_error_code(e) in \
                 (2006, 2013, 2014, 2045, 2055)
         elif isinstance(e, self.dbapi.InterfaceError):
@@ -2306,8 +2328,8 @@ class MySQLDialect(default.DefaultDialect):
         if self._server_ansiquotes:
             # if ansiquotes == True, build a new IdentifierPreparer
             # with the new setting
-            self.identifier_preparer = self.preparer(self,
-                                                     server_ansiquotes=self._server_ansiquotes)
+            self.identifier_preparer = self.preparer(
+                self, server_ansiquotes=self._server_ansiquotes)
 
         default.DefaultDialect.initialize(self, connection)
 
@@ -2331,13 +2353,15 @@ class MySQLDialect(default.DefaultDialect):
 
         charset = self._connection_charset
         if self.server_version_info < (5, 0, 2):
-            rp = connection.execute("SHOW TABLES FROM %s" %
-                                    self.identifier_preparer.quote_identifier(current_schema))
+            rp = connection.execute(
+                "SHOW TABLES FROM %s" %
+                self.identifier_preparer.quote_identifier(current_schema))
             return [row[0] for
                     row in self._compat_fetchall(rp, charset=charset)]
         else:
-            rp = connection.execute("SHOW FULL TABLES FROM %s" %
-                                    self.identifier_preparer.quote_identifier(current_schema))
+            rp = connection.execute(
+                "SHOW FULL TABLES FROM %s" %
+                self.identifier_preparer.quote_identifier(current_schema))
 
             return [row[0]
                     for row in self._compat_fetchall(rp, charset=charset)
@@ -2352,8 +2376,9 @@ class MySQLDialect(default.DefaultDialect):
         if self.server_version_info < (5, 0, 2):
             return self.get_table_names(connection, schema)
         charset = self._connection_charset
-        rp = connection.execute("SHOW FULL TABLES FROM %s" %
-                                self.identifier_preparer.quote_identifier(schema))
+        rp = connection.execute(
+            "SHOW FULL TABLES FROM %s" %
+            self.identifier_preparer.quote_identifier(schema))
         return [row[0]
                 for row in self._compat_fetchall(rp, charset=charset)
                 if row[1] in ('VIEW', 'SYSTEM VIEW')]
@@ -2394,7 +2419,8 @@ class MySQLDialect(default.DefaultDialect):
         for spec in parsed_state.constraints:
             # only FOREIGN KEYs
             ref_name = spec['table'][-1]
-            ref_schema = len(spec['table']) > 1 and spec['table'][-2] or schema
+            ref_schema = len(spec['table']) > 1 and \
+                spec['table'][-2] or schema
 
             if not ref_schema:
                 if default_schema is None:
@@ -2985,7 +3011,8 @@ class MySQLTableDefinitionParser(object):
             r'%(iq)s(?P<name>(?:%(esc_fq)s|[^%(fq)s])+)%(fq)s +'
             r'FOREIGN KEY +'
             r'\((?P<local>[^\)]+?)\) REFERENCES +'
-            r'(?P<table>%(iq)s[^%(fq)s]+%(fq)s(?:\.%(iq)s[^%(fq)s]+%(fq)s)?) +'
+            r'(?P<table>%(iq)s[^%(fq)s]+%(fq)s'
+            r'(?:\.%(iq)s[^%(fq)s]+%(fq)s)?) +'
             r'\((?P<foreign>[^\)]+?)\)'
             r'(?: +(?P<match>MATCH \w+))?'
             r'(?: +ON DELETE (?P<ondelete>%(on)s))?'
@@ -3014,8 +3041,9 @@ class MySQLTableDefinitionParser(object):
 
         self._add_option_regex('UNION', r'\([^\)]+\)')
         self._add_option_regex('TABLESPACE', r'.*? STORAGE DISK')
-        self._add_option_regex('RAID_TYPE',
-                               r'\w+\s+RAID_CHUNKS\s*\=\s*\w+RAID_CHUNKSIZE\s*=\s*\w+')
+        self._add_option_regex(
+            'RAID_TYPE',
+            r'\w+\s+RAID_CHUNKS\s*\=\s*\w+RAID_CHUNKSIZE\s*=\s*\w+')
 
     _optional_equals = r'(?:\s*(?:=\s*)|\s+)'
 
@@ -3023,8 +3051,9 @@ class MySQLTableDefinitionParser(object):
         regex = (r'(?P<directive>%s)%s'
                  r"'(?P<val>(?:[^']|'')*?)'(?!')" %
                  (re.escape(directive), self._optional_equals))
-        self._pr_options.append(_pr_compile(regex, lambda v:
-                                            v.replace("\\\\", "\\").replace("''", "'")))
+        self._pr_options.append(_pr_compile(
+            regex, lambda v: v.replace("\\\\", "\\").replace("''", "'")
+        ))
 
     def _add_option_word(self, directive):
         regex = (r'(?P<directive>%s)%s'

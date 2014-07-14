@@ -10,7 +10,8 @@
 .. dialect:: mysql+cymysql
     :name: CyMySQL
     :dbapi: cymysql
-    :connectstring: mysql+cymysql://<username>:<password>@<host>/<dbname>[?<options>]
+    :connectstring: mysql+cymysql://<username>:<password>@<host>/<dbname>\
+[?<options>]
     :url: https://github.com/nakagami/CyMySQL
 
 """

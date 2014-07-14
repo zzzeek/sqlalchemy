@@ -9,14 +9,15 @@
 .. dialect:: mysql+mysqlconnector
     :name: MySQL Connector/Python
     :dbapi: myconnpy
-    :connectstring: mysql+mysqlconnector://<user>:<password>@<host>[:<port>]/<dbname>
+    :connectstring: mysql+mysqlconnector://<user>:<password>@\
+<host>[:<port>]/<dbname>
     :url: http://dev.mysql.com/downloads/connector/python/
 
 
 """
 
-from .base import (MySQLDialect,
-                   MySQLExecutionContext, MySQLCompiler, MySQLIdentifierPreparer,
+from .base import (MySQLDialect, MySQLExecutionContext,
+                   MySQLCompiler, MySQLIdentifierPreparer,
                    BIT)
 
 from ... import util

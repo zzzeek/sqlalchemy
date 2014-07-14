@@ -91,7 +91,7 @@ class MSDialect_mxodbc(MxODBCConnector, MSDialect):
 
     # this is only needed if "native ODBC" mode is used,
     # which is now disabled by default.
-    #statement_compiler = MSSQLStrictCompiler
+    # statement_compiler = MSSQLStrictCompiler
 
     execution_ctx_cls = MSExecutionContext_mxodbc
 

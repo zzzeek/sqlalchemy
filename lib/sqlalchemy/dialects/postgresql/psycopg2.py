@@ -9,7 +9,8 @@
 .. dialect:: postgresql+psycopg2
     :name: psycopg2
     :dbapi: psycopg2
-    :connectstring: postgresql+psycopg2://user:password@host:port/dbname[?key=value&key=value...]
+    :connectstring: postgresql+psycopg2://user:password@host:port/dbname\
+[?key=value&key=value...]
     :url: http://pypi.python.org/pypi/psycopg2/
 
 psycopg2 Connect Arguments
@@ -21,9 +22,9 @@ psycopg2-specific keyword arguments which are accepted by
 * ``server_side_cursors``: Enable the usage of "server side cursors" for SQL
   statements which support this feature. What this essentially means from a
   psycopg2 point of view is that the cursor is created using a name, e.g.
-  ``connection.cursor('some name')``, which has the effect that result rows are
-  not immediately pre-fetched and buffered after statement execution, but are
-  instead left on the server and only retrieved as needed. SQLAlchemy's
+  ``connection.cursor('some name')``, which has the effect that result rows
+  are not immediately pre-fetched and buffered after statement execution, but
+  are instead left on the server and only retrieved as needed. SQLAlchemy's
   :class:`~sqlalchemy.engine.ResultProxy` uses special row-buffering
   behavior when this feature is enabled, such that groups of 100 rows at a
   time are fetched over the wire to reduce conversational overhead.
@@ -54,7 +55,8 @@ using ``host`` as an additional keyword argument::
 
 See also:
 
-`PQconnectdbParams <http://www.postgresql.org/docs/9.1/static/libpq-connect.html#LIBPQ-PQCONNECTDBPARAMS>`_
+`PQconnectdbParams <http://www.postgresql.org/docs/9.1/static\
+/libpq-connect.html#LIBPQ-PQCONNECTDBPARAMS>`_
 
 Per-Statement/Connection Execution Options
 -------------------------------------------
@@ -90,11 +92,13 @@ Typically, this can be changed to ``utf-8``, as a more useful default::
 
 A second way to affect the client encoding is to set it within Psycopg2
 locally.   SQLAlchemy will call psycopg2's ``set_client_encoding()``
-method (see: http://initd.org/psycopg/docs/connection.html#connection.set_client_encoding)
+method (see:
+http://initd.org/psycopg/docs/connection.html#connection.set_client_encoding)
 on all new connections based on the value passed to
 :func:`.create_engine` using the ``client_encoding`` parameter::
 
-    engine = create_engine("postgresql://user:pass@host/dbname", client_encoding='utf8')
+    engine = create_engine("postgresql://user:pass@host/dbname",
+                           client_encoding='utf8')
 
 This overrides the encoding specified in the Postgresql client configuration.
 
@@ -128,11 +132,12 @@ Psycopg2 Transaction Isolation Level
 As discussed in :ref:`postgresql_isolation_level`,
 all Postgresql dialects support setting of transaction isolation level
 both via the ``isolation_level`` parameter passed to :func:`.create_engine`,
-as well as the ``isolation_level`` argument used by :meth:`.Connection.execution_options`.
-When using the psycopg2 dialect, these options make use of
-psycopg2's ``set_isolation_level()`` connection method, rather than
-emitting a Postgresql directive; this is because psycopg2's API-level
-setting is always emitted at the start of each transaction in any case.
+as well as the ``isolation_level`` argument used by
+:meth:`.Connection.execution_options`.  When using the psycopg2 dialect, these
+options make use of psycopg2's ``set_isolation_level()`` connection method,
+rather than emitting a Postgresql directive; this is because psycopg2's
+API-level setting is always emitted at the start of each transaction in any
+case.
 
 The psycopg2 dialect supports these constants for isolation level:
 
@@ -166,35 +171,38 @@ The psycopg2 dialect will log Postgresql NOTICE messages via the
 HSTORE type
 ------------
 
-The ``psycopg2`` DBAPI includes an extension to natively handle marshalling of the
-HSTORE type.   The SQLAlchemy psycopg2 dialect will enable this extension
+The ``psycopg2`` DBAPI includes an extension to natively handle marshalling of
+the HSTORE type.   The SQLAlchemy psycopg2 dialect will enable this extension
 by default when it is detected that the target database has the HSTORE
 type set up for use.   In other words, when the dialect makes the first
 connection, a sequence like the following is performed:
 
-1. Request the available HSTORE oids using ``psycopg2.extras.HstoreAdapter.get_oids()``.
-   If this function returns a list of HSTORE identifiers, we then determine that
-   the ``HSTORE`` extension is present.
+1. Request the available HSTORE oids using
+   ``psycopg2.extras.HstoreAdapter.get_oids()``.
+   If this function returns a list of HSTORE identifiers, we then determine
+   that the ``HSTORE`` extension is present.
 
 2. If the ``use_native_hstore`` flag is at its default of ``True``, and
    we've detected that ``HSTORE`` oids are available, the
    ``psycopg2.extensions.register_hstore()`` extension is invoked for all
    connections.
 
-The ``register_hstore()`` extension has the effect of **all Python dictionaries
-being accepted as parameters regardless of the type of target column in SQL**.
-The dictionaries are converted by this extension into a textual HSTORE expression.
-If this behavior is not desired, disable the
-use of the hstore extension by setting ``use_native_hstore`` to ``False`` as follows::
+The ``register_hstore()`` extension has the effect of **all Python
+dictionaries being accepted as parameters regardless of the type of target
+column in SQL**. The dictionaries are converted by this extension into a
+textual HSTORE expression.  If this behavior is not desired, disable the
+use of the hstore extension by setting ``use_native_hstore`` to ``False`` as
+follows::
 
     engine = create_engine("postgresql+psycopg2://scott:tiger@localhost/test",
                 use_native_hstore=False)
 
-The ``HSTORE`` type is **still supported** when the ``psycopg2.extensions.register_hstore()``
-extension is not used.  It merely means that the coercion between Python dictionaries and the HSTORE
+The ``HSTORE`` type is **still supported** when the
+``psycopg2.extensions.register_hstore()`` extension is not used.  It merely
+means that the coercion between Python dictionaries and the HSTORE
 string format, on both the parameter side and the result side, will take
-place within SQLAlchemy's own marshalling logic, and not that of ``psycopg2`` which
-may be more performant.
+place within SQLAlchemy's own marshalling logic, and not that of ``psycopg2``
+which may be more performant.
 
 """
 from __future__ import absolute_import
@@ -294,12 +302,15 @@ class PGExecutionContext_psycopg2(PGExecutionContext):
         if self.dialect.server_side_cursors:
             is_server_side = \
                 self.execution_options.get('stream_results', True) and (
-                    (self.compiled and isinstance(self.compiled.statement, expression.Selectable)
+                    (self.compiled and isinstance(self.compiled.statement,
+                                                  expression.Selectable)
                      or
                      (
                         (not self.compiled or
-                         isinstance(self.compiled.statement, expression.TextClause))
-                        and self.statement and SERVER_SIDE_CURSOR_RE.match(self.statement))
+                         isinstance(self.compiled.statement,
+                                    expression.TextClause))
+                        and self.statement and SERVER_SIDE_CURSOR_RE.match(
+                            self.statement))
                      )
                 )
         else:
@@ -310,7 +321,8 @@ class PGExecutionContext_psycopg2(PGExecutionContext):
         if is_server_side:
             # use server-side cursors:
             # http://lists.initd.org/pipermail/psycopg/2007-January/005251.html
-            ident = "c_%s_%s" % (hex(id(self))[2:], hex(_server_side_id())[2:])
+            ident = "c_%s_%s" % (hex(id(self))[2:],
+                                 hex(_server_side_id())[2:])
             return self._dbapi_connection.cursor(ident)
         else:
             return self._dbapi_connection.cursor()

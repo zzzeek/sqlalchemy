@@ -27,12 +27,13 @@ class JSONElement(elements.BinaryExpression):
         expr = mytable.c.json_data['some_key']
 
     The expression typically compiles to a JSON access such as ``col -> key``.
-    Modifiers are then available for typing behavior, including :meth:`.JSONElement.cast`
-    and :attr:`.JSONElement.astext`.
+    Modifiers are then available for typing behavior, including
+    :meth:`.JSONElement.cast` and :attr:`.JSONElement.astext`.
 
     """
 
-    def __init__(self, left, right, astext=False, opstring=None, result_type=None):
+    def __init__(self, left, right, astext=False,
+                 opstring=None, result_type=None):
         self._astext = astext
         if opstring is None:
             if hasattr(right, '__iter__') and \
@@ -129,15 +130,16 @@ class JSON(sqltypes.TypeEngine):
 
     * Path index operations returning text (required for text comparison)::
 
-        data_table.c.data[('key_1', 'key_2', ..., 'key_n')].astext == 'some value'
+        data_table.c.data[('key_1', 'key_2', ..., 'key_n')].astext == \\
+            'some value'
 
-    Index operations return an instance of :class:`.JSONElement`, which represents
-    an expression such as ``column -> index``.  This element then defines
-    methods such as :attr:`.JSONElement.astext` and :meth:`.JSONElement.cast`
-    for setting up type behavior.
+    Index operations return an instance of :class:`.JSONElement`, which
+    represents an expression such as ``column -> index``.  This element then
+    defines methods such as :attr:`.JSONElement.astext` and
+    :meth:`.JSONElement.cast` for setting up type behavior.
 
-    The :class:`.JSON` type, when used with the SQLAlchemy ORM, does not detect
-    in-place mutations to the structure.  In order to detect these, the
+    The :class:`.JSON` type, when used with the SQLAlchemy ORM, does not
+    detect in-place mutations to the structure.  In order to detect these, the
     :mod:`sqlalchemy.ext.mutable` extension must be used.  This extension will
     allow "in-place" changes to the datastructure to produce events which
     will be detected by the unit of work.  See the example at :class:`.HSTORE`
@@ -241,15 +243,16 @@ class JSONB(JSON):
 
     * Path index operations returning text (required for text comparison)::
 
-        data_table.c.data[('key_1', 'key_2', ..., 'key_n')].astext == 'some value'
+        data_table.c.data[('key_1', 'key_2', ..., 'key_n')].astext == \\
+            'some value'
 
-    Index operations return an instance of :class:`.JSONElement`, which represents
-    an expression such as ``column -> index``.  This element then defines
-    methods such as :attr:`.JSONElement.astext` and :meth:`.JSONElement.cast`
-    for setting up type behavior.
+    Index operations return an instance of :class:`.JSONElement`, which
+    represents an expression such as ``column -> index``.  This element then
+    defines methods such as :attr:`.JSONElement.astext` and
+    :meth:`.JSONElement.cast` for setting up type behavior.
 
-    The :class:`.JSON` type, when used with the SQLAlchemy ORM, does not detect
-    in-place mutations to the structure.  In order to detect these, the
+    The :class:`.JSON` type, when used with the SQLAlchemy ORM, does not
+    detect in-place mutations to the structure.  In order to detect these, the
     :mod:`sqlalchemy.ext.mutable` extension must be used.  This extension will
     allow "in-place" changes to the datastructure to produce events which
     will be detected by the unit of work.  See the example at :class:`.HSTORE`

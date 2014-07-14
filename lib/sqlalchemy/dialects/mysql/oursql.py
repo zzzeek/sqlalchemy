@@ -80,7 +80,8 @@ class MySQLDialect_oursql(MySQLDialect):
         return __import__('oursql')
 
     def do_execute(self, cursor, statement, parameters, context=None):
-        """Provide an implementation of *cursor.execute(statement, parameters)*."""
+        """Provide an implementation of
+        *cursor.execute(statement, parameters)*."""
 
         if context and context.plain_query:
             cursor.execute(statement, plain_query=True)
@@ -192,7 +193,8 @@ class MySQLDialect_oursql(MySQLDialect):
 
     def is_disconnect(self, e, connection, cursor):
         if isinstance(e, self.dbapi.ProgrammingError):
-            return e.errno is None and 'cursor' not in e.args[1] and e.args[1].endswith('closed')
+            return e.errno is None and 'cursor' not in e.args[1] \
+                and e.args[1].endswith('closed')
         else:
             return e.errno in (2006, 2013, 2014, 2045, 2055)
 

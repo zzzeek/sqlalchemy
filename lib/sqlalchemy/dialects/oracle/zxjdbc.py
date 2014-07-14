@@ -10,7 +10,8 @@
     :name: zxJDBC for Jython
     :dbapi: zxjdbc
     :connectstring: oracle+zxjdbc://user:pass@host/dbname
-    :driverurl: http://www.oracle.com/technology/software/tech/java/sqlj_jdbc/index.html.
+    :driverurl: http://www.oracle.com/technology/software/tech/java/\
+sqlj_jdbc/index.html.
 
 """
 import decimal
@@ -18,7 +19,9 @@ import re
 
 from sqlalchemy import sql, types as sqltypes, util
 from sqlalchemy.connectors.zxJDBC import ZxJDBCConnector
-from sqlalchemy.dialects.oracle.base import OracleCompiler, OracleDialect, OracleExecutionContext
+from sqlalchemy.dialects.oracle.base import (OracleCompiler,
+                                             OracleDialect,
+                                             OracleExecutionContext)
 from sqlalchemy.engine import result as _result
 from sqlalchemy.sql import expression
 import collections
@@ -65,7 +68,8 @@ class OracleCompiler_zxjdbc(OracleCompiler):
             expression._select_iterables(returning_cols))
 
         # within_columns_clause=False so that labels (foo AS bar) don't render
-        columns = [self.process(c, within_columns_clause=False, result_map=self.result_map)
+        columns = [self.process(c, within_columns_clause=False,
+                                result_map=self.result_map)
                    for c in self.returning_cols]
 
         if not hasattr(self, 'returning_parameters'):
@@ -108,8 +112,11 @@ class OracleExecutionContext_zxjdbc(OracleExecutionContext):
                         msg += ' [SQLState: %s]' % sqle.getSQLState()
                     raise zxJDBC.Error(msg)
                 else:
-                    row = tuple(self.cursor.datahandler.getPyObject(rrs, index, dbtype)
-                                for index, dbtype in self.compiled.returning_parameters)
+                    row = tuple(
+                        self.cursor.datahandler.getPyObject(
+                            rrs, index, dbtype)
+                        for index, dbtype in
+                        self.compiled.returning_parameters)
                     return ReturningResultProxy(self, row)
             finally:
                 if rrs is not None:
@@ -170,8 +177,8 @@ class ReturningParam(object):
 
     def __repr__(self):
         kls = self.__class__
-        return '<%s.%s object at 0x%x type=%s>' % (kls.__module__, kls.__name__, id(self),
-                                                   self.type)
+        return '<%s.%s object at 0x%x type=%s>' % (
+            kls.__module__, kls.__name__, id(self), self.type)
 
 
 class OracleDialect_zxjdbc(ZxJDBCConnector, OracleDialect):
@@ -212,10 +219,12 @@ class OracleDialect_zxjdbc(ZxJDBCConnector, OracleDialect):
 
     def initialize(self, connection):
         super(OracleDialect_zxjdbc, self).initialize(connection)
-        self.implicit_returning = connection.connection.driverversion >= '10.2'
+        self.implicit_returning = \
+            connection.connection.driverversion >= '10.2'
 
     def _create_jdbc_url(self, url):
-        return 'jdbc:oracle:thin:@%s:%s:%s' % (url.host, url.port or 1521, url.database)
+        return 'jdbc:oracle:thin:@%s:%s:%s' % (
+            url.host, url.port or 1521, url.database)
 
     def _get_server_version_info(self, connection):
         version = re.search(

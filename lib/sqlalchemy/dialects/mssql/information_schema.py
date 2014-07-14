@@ -54,7 +54,8 @@ tables = Table("TABLES", ischema,
                Column("TABLE_SCHEMA", CoerceUnicode, key="table_schema"),
                Column("TABLE_NAME", CoerceUnicode, key="table_name"),
                Column(
-                   "TABLE_TYPE", String(convert_unicode=True), key="table_type"),
+                   "TABLE_TYPE", String(convert_unicode=True),
+                   key="table_type"),
                schema="INFORMATION_SCHEMA")
 
 columns = Table("COLUMNS", ischema,
@@ -75,42 +76,43 @@ columns = Table("COLUMNS", ischema,
 constraints = Table("TABLE_CONSTRAINTS", ischema,
                     Column("TABLE_SCHEMA", CoerceUnicode, key="table_schema"),
                     Column("TABLE_NAME", CoerceUnicode, key="table_name"),
-                    Column(
-                        "CONSTRAINT_NAME", CoerceUnicode, key="constraint_name"),
+                    Column("CONSTRAINT_NAME", CoerceUnicode,
+                           key="constraint_name"),
                     Column("CONSTRAINT_TYPE", String(
                         convert_unicode=True), key="constraint_type"),
                     schema="INFORMATION_SCHEMA")
 
 column_constraints = Table("CONSTRAINT_COLUMN_USAGE", ischema,
-                           Column(
-                               "TABLE_SCHEMA", CoerceUnicode, key="table_schema"),
-                           Column(
-                               "TABLE_NAME", CoerceUnicode, key="table_name"),
-                           Column(
-                               "COLUMN_NAME", CoerceUnicode, key="column_name"),
-                           Column(
-                               "CONSTRAINT_NAME", CoerceUnicode, key="constraint_name"),
+                           Column("TABLE_SCHEMA", CoerceUnicode,
+                                  key="table_schema"),
+                           Column("TABLE_NAME", CoerceUnicode,
+                                  key="table_name"),
+                           Column("COLUMN_NAME", CoerceUnicode,
+                                  key="column_name"),
+                           Column("CONSTRAINT_NAME", CoerceUnicode,
+                                  key="constraint_name"),
                            schema="INFORMATION_SCHEMA")
 
 key_constraints = Table("KEY_COLUMN_USAGE", ischema,
-                        Column(
-                            "TABLE_SCHEMA", CoerceUnicode, key="table_schema"),
-                        Column("TABLE_NAME", CoerceUnicode, key="table_name"),
-                        Column(
-                            "COLUMN_NAME", CoerceUnicode, key="column_name"),
-                        Column(
-                            "CONSTRAINT_NAME", CoerceUnicode, key="constraint_name"),
-                        Column(
-                            "ORDINAL_POSITION", Integer, key="ordinal_position"),
+                        Column("TABLE_SCHEMA", CoerceUnicode,
+                               key="table_schema"),
+                        Column("TABLE_NAME", CoerceUnicode,
+                               key="table_name"),
+                        Column("COLUMN_NAME", CoerceUnicode,
+                               key="column_name"),
+                        Column("CONSTRAINT_NAME", CoerceUnicode,
+                               key="constraint_name"),
+                        Column("ORDINAL_POSITION", Integer,
+                               key="ordinal_position"),
                         schema="INFORMATION_SCHEMA")
 
 ref_constraints = Table("REFERENTIAL_CONSTRAINTS", ischema,
-                        Column(
-                            "CONSTRAINT_CATALOG", CoerceUnicode, key="constraint_catalog"),
-                        Column(
-                            "CONSTRAINT_SCHEMA", CoerceUnicode, key="constraint_schema"),
-                        Column(
-                            "CONSTRAINT_NAME", CoerceUnicode, key="constraint_name"),
+                        Column("CONSTRAINT_CATALOG", CoerceUnicode,
+                               key="constraint_catalog"),
+                        Column("CONSTRAINT_SCHEMA", CoerceUnicode,
+                               key="constraint_schema"),
+                        Column("CONSTRAINT_NAME", CoerceUnicode,
+                               key="constraint_name"),
                         # TODO: is CATLOG misspelled ?
                         Column("UNIQUE_CONSTRAINT_CATLOG", CoerceUnicode,
                                key="unique_constraint_catalog"),

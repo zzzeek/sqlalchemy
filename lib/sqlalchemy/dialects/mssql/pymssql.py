@@ -9,7 +9,8 @@
 .. dialect:: mssql+pymssql
     :name: pymssql
     :dbapi: pymssql
-    :connectstring: mssql+pymssql://<username>:<password>@<freetds_name>?charset=utf8
+    :connectstring: mssql+pymssql://<username>:<password>@<freetds_name>?\
+charset=utf8
     :url: http://pymssql.org/
 
 pymssql is a Python module that provides a Python DBAPI interface around

@@ -9,15 +9,16 @@
 .. dialect:: firebird+kinterbasdb
     :name: kinterbasdb
     :dbapi: kinterbasdb
-    :connectstring: firebird+kinterbasdb://user:password@host:port/path/to/db[?key=value&key=value...]
+    :connectstring: firebird+kinterbasdb://user:password@host:port/path/to/db\
+[?key=value&key=value...]
     :url: http://firebirdsql.org/index.php?op=devel&sub=python
 
 Arguments
 ----------
 
 The Kinterbasdb backend accepts the ``enable_rowcount`` and ``retaining``
-arguments accepted by the :mod:`sqlalchemy.dialects.firebird.fdb` dialect.   In addition, it
-also accepts the following:
+arguments accepted by the :mod:`sqlalchemy.dialects.firebird.fdb` dialect.
+In addition, it also accepts the following:
 
 * ``type_conv`` - select the kind of mapping done on the types: by default
   SQLAlchemy uses 200 with Unicode, datetime and decimal support.  See

@@ -427,7 +427,7 @@ class FBDialect(default.DefaultDialect):
                 sqltypes.DateTime: sqltypes.DATE
             }
 
-        self.implicit_returning = self._version_two  and \
+        self.implicit_returning = self._version_two and \
             self.__dict__.get('implicit_returning', True)
 
     def normalize_name(self, name):

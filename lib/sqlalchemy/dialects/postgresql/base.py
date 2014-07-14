@@ -50,22 +50,25 @@ Transaction Isolation Level
 All Postgresql dialects support setting of transaction isolation level
 both via a dialect-specific parameter ``isolation_level``
 accepted by :func:`.create_engine`,
-as well as the ``isolation_level`` argument as passed to :meth:`.Connection.execution_options`.
-When using a non-psycopg2 dialect, this feature works by issuing the
-command ``SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL
-<level>`` for each new connection.
+as well as the ``isolation_level`` argument as passed to
+:meth:`.Connection.execution_options`.  When using a non-psycopg2 dialect,
+this feature works by issuing the command
+``SET SESSION CHARACTERISTICS AS TRANSACTION ISOLATION LEVEL <level>`` for
+each new connection.
 
 To set isolation level using :func:`.create_engine`::
 
     engine = create_engine(
-                    "postgresql+pg8000://scott:tiger@localhost/test",
-                    isolation_level="READ UNCOMMITTED"
-                )
+        "postgresql+pg8000://scott:tiger@localhost/test",
+        isolation_level="READ UNCOMMITTED"
+    )
 
 To set using per-connection execution options::
 
     connection = engine.connect()
-    connection = connection.execution_options(isolation_level="READ COMMITTED")
+    connection = connection.execution_options(
+        isolation_level="READ COMMITTED"
+    )
 
 Valid values for ``isolation_level`` include:
 
@@ -93,12 +96,13 @@ The Postgresql dialect can reflect tables from any schema.  The
 :paramref:`.Table.schema` argument, or alternatively the
 :paramref:`.MetaData.reflect.schema` argument determines which schema will
 be searched for the table or tables.   The reflected :class:`.Table` objects
-will in all cases retain this ``.schema`` attribute as was specified.  However,
-with regards to tables which these :class:`.Table` objects refer to via
-foreign key constraint, a decision must be made as to how the ``.schema``
+will in all cases retain this ``.schema`` attribute as was specified.
+However, with regards to tables which these :class:`.Table` objects refer to
+via foreign key constraint, a decision must be made as to how the ``.schema``
 is represented in those remote tables, in the case where that remote
 schema name is also a member of the current
-`Postgresql search path <http://www.postgresql.org/docs/9.0/static/ddl-schemas.html#DDL-SCHEMAS-PATH>`_.
+`Postgresql search path
+<http://www.postgresql.org/docs/9.0/static/ddl-schemas.html#DDL-SCHEMAS-PATH>`_.
 
 By default, the Postgresql dialect mimics the behavior encouraged by
 Postgresql's own ``pg_get_constraintdef()`` builtin procedure.  This function
@@ -115,7 +119,8 @@ illustrates this behavior::
     CREATE TABLE
     test=> SET search_path TO public, test_schema;
     test=> SELECT pg_catalog.pg_get_constraintdef(r.oid, true) FROM
-    test-> pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+    test-> pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n
+    test-> ON n.oid = c.relnamespace
     test-> JOIN pg_catalog.pg_constraint r  ON c.oid = r.conrelid
     test-> WHERE c.relname='referring' AND r.contype = 'f'
     test-> ;
@@ -124,10 +129,11 @@ illustrates this behavior::
      FOREIGN KEY (referred_id) REFERENCES referred(id)
     (1 row)
 
-Above, we created a table ``referred`` as a member of the remote schema ``test_schema``, however
-when we added ``test_schema`` to the PG ``search_path`` and then asked ``pg_get_constraintdef()``
-for the ``FOREIGN KEY`` syntax, ``test_schema`` was not included in the
-output of the function.
+Above, we created a table ``referred`` as a member of the remote schema
+``test_schema``, however when we added ``test_schema`` to the
+PG ``search_path`` and then asked ``pg_get_constraintdef()`` for the
+``FOREIGN KEY`` syntax, ``test_schema`` was not included in the output of
+the function.
 
 On the other hand, if we set the search path back to the typical default
 of ``public``::
@@ -139,7 +145,8 @@ The same query against ``pg_get_constraintdef()`` now returns the fully
 schema-qualified name for us::
 
     test=> SELECT pg_catalog.pg_get_constraintdef(r.oid, true) FROM
-    test-> pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+    test-> pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n
+    test-> ON n.oid = c.relnamespace
     test-> JOIN pg_catalog.pg_constraint r  ON c.oid = r.conrelid
     test-> WHERE c.relname='referring' AND r.contype = 'f';
                          pg_get_constraintdef
@@ -157,7 +164,8 @@ reflection process as follows::
     >>> with engine.connect() as conn:
     ...     conn.execute("SET search_path TO test_schema, public")
     ...     meta = MetaData()
-    ...     referring = Table('referring', meta, autoload=True, autoload_with=conn)
+    ...     referring = Table('referring', meta,
+    ...                       autoload=True, autoload_with=conn)
     ...
     <sqlalchemy.engine.result.ResultProxy object at 0x101612ed0>
 
@@ -167,16 +175,18 @@ The above process would deliver to the :attr:`.MetaData.tables` collection
     >>> meta.tables['referred'].schema is None
     True
 
-To alter the behavior of reflection such that the referred schema is maintained
-regardless of the ``search_path`` setting, use the ``postgresql_ignore_search_path``
-option, which can be specified as a dialect-specific argument to both
-:class:`.Table` as well as :meth:`.MetaData.reflect`::
+To alter the behavior of reflection such that the referred schema is
+maintained regardless of the ``search_path`` setting, use the
+``postgresql_ignore_search_path`` option, which can be specified as a
+dialect-specific argument to both :class:`.Table` as well as
+:meth:`.MetaData.reflect`::
 
     >>> with engine.connect() as conn:
     ...     conn.execute("SET search_path TO test_schema, public")
     ...     meta = MetaData()
-    ...     referring = Table('referring', meta, autoload=True, autoload_with=conn,
-    ...                     postgresql_ignore_search_path=True)
+    ...     referring = Table('referring', meta, autoload=True,
+    ...                       autoload_with=conn,
+    ...                       postgresql_ignore_search_path=True)
     ...
     <sqlalchemy.engine.result.ResultProxy object at 0x1016126d0>
 
@@ -187,29 +197,33 @@ We will now have ``test_schema.referred`` stored as schema-qualified::
 
 .. sidebar:: Best Practices for Postgresql Schema reflection
 
-    The description of Postgresql schema reflection behavior is complex, and is
-    the product of many years of dealing with widely varied use cases and user preferences.
-    But in fact, there's no need to understand any of it if you just stick to the simplest
-    use pattern: leave the ``search_path`` set to its default of ``public`` only, never refer
-    to the name ``public`` as an explicit schema name otherwise, and
-    refer to all other schema names explicitly when building
-    up a :class:`.Table` object.  The options described here are only for those users
-    who can't, or prefer not to, stay within these guidelines.
+    The description of Postgresql schema reflection behavior is complex, and
+    is the product of many years of dealing with widely varied use cases and
+    user preferences. But in fact, there's no need to understand any of it if
+    you just stick to the simplest use pattern: leave the ``search_path`` set
+    to its default of ``public`` only, never refer to the name ``public`` as
+    an explicit schema name otherwise, and refer to all other schema names
+    explicitly when building up a :class:`.Table` object.  The options
+    described here are only for those users who can't, or prefer not to, stay
+    within these guidelines.
 
-Note that **in all cases**, the "default" schema is always reflected as ``None``.
-The "default" schema on Postgresql is that which is returned by the
-Postgresql ``current_schema()`` function.  On a typical Postgresql installation,
-this is the name ``public``.  So a table that refers to another which is
-in the ``public`` (i.e. default) schema will always have the ``.schema`` attribute
-set to ``None``.
+Note that **in all cases**, the "default" schema is always reflected as
+``None``. The "default" schema on Postgresql is that which is returned by the
+Postgresql ``current_schema()`` function.  On a typical Postgresql
+installation, this is the name ``public``.  So a table that refers to another
+which is in the ``public`` (i.e. default) schema will always have the
+``.schema`` attribute set to ``None``.
 
 .. versionadded:: 0.9.2 Added the ``postgresql_ignore_search_path``
-   dialect-level option accepted by :class:`.Table` and :meth:`.MetaData.reflect`.
+   dialect-level option accepted by :class:`.Table` and
+   :meth:`.MetaData.reflect`.
 
 
 .. seealso::
 
-        `The Schema Search Path <http://www.postgresql.org/docs/9.0/static/ddl-schemas.html#DDL-SCHEMAS-PATH>`_ - on the Postgresql website.
+        `The Schema Search Path
+        <http://www.postgresql.org/docs/9.0/static/ddl-schemas.html#DDL-SCHEMAS-PATH>`_
+        - on the Postgresql website.
 
 INSERT/UPDATE...RETURNING
 -------------------------
@@ -273,19 +287,19 @@ produces a statement equivalent to::
     SELECT CAST('some text' AS TSVECTOR) AS anon_1
 
 Full Text Searches in Postgresql are influenced by a combination of: the
-PostgresSQL setting of ``default_text_search_config``, the ``regconfig`` used to
-build the GIN/GiST indexes, and the ``regconfig`` optionally passed in during a
-query.
+PostgresSQL setting of ``default_text_search_config``, the ``regconfig`` used
+to build the GIN/GiST indexes, and the ``regconfig`` optionally passed in
+during a query.
 
 When performing a Full Text Search against a column that has a GIN or
-GiST index that is already pre-computed (which is common on full text searches)
-one may need to explicitly pass in a particular PostgresSQL ``regconfig`` value
-to ensure the query-planner utilizes the index and does not re-compute the
-column on demand.
+GiST index that is already pre-computed (which is common on full text
+searches) one may need to explicitly pass in a particular PostgresSQL
+``regconfig`` value to ensure the query-planner utilizes the index and does
+not re-compute the column on demand.
 
-In order to provide for this explicit query planning, or to use different search
-strategies, the ``match`` method accepts a ``postgresql_regconfig`` keyword
-argument.
+In order to provide for this explicit query planning, or to use different
+search strategies, the ``match`` method accepts a ``postgresql_regconfig``
+keyword argument.
 
     select([mytable.c.id]).where(
         mytable.c.title.match('somestring', postgresql_regconfig='english')
@@ -296,8 +310,8 @@ Emits the equivalent of::
     SELECT mytable.id FROM mytable
     WHERE mytable.title @@ to_tsquery('english', 'somestring')
 
-One can also specifically pass in a `'regconfig'` value to the ``to_tsvector()``
-command as the initial argument.
+One can also specifically pass in a `'regconfig'` value to the
+``to_tsvector()`` command as the initial argument.
 
     select([mytable.c.id]).where(
             func.to_tsvector('english', mytable.c.title )\
@@ -310,9 +324,9 @@ produces a statement equivalent to::
     WHERE to_tsvector('english', mytable.title) @@
         to_tsquery('english', 'somestring')
 
-It is recommended that you use the ``EXPLAIN ANALYZE...`` tool from PostgresSQL
-to ensure that you are generating queries with SQLAlchemy that take full
-advantage of any indexes you may have created for full text search.
+It is recommended that you use the ``EXPLAIN ANALYZE...`` tool from
+PostgresSQL to ensure that you are generating queries with SQLAlchemy that
+take full advantage of any indexes you may have created for full text search.
 
 FROM ONLY ...
 ------------------------
@@ -413,11 +427,11 @@ RESERVED_WORDS = set(
      "default", "deferrable", "desc", "distinct", "do", "else", "end",
      "except", "false", "fetch", "for", "foreign", "from", "grant", "group",
      "having", "in", "initially", "intersect", "into", "leading", "limit",
-     "localtime", "localtimestamp", "new", "not", "null", "of", "off", "offset",
-     "old", "on", "only", "or", "order", "placing", "primary", "references",
-     "returning", "select", "session_user", "some", "symmetric", "table",
-     "then", "to", "trailing", "true", "union", "unique", "user", "using",
-     "variadic", "when", "where", "window", "with", "authorization",
+     "localtime", "localtimestamp", "new", "not", "null", "of", "off",
+     "offset", "old", "on", "only", "or", "order", "placing", "primary",
+     "references", "returning", "select", "session_user", "some", "symmetric",
+     "table", "then", "to", "trailing", "true", "union", "unique", "user",
+     "using", "variadic", "when", "where", "window", "with", "authorization",
      "between", "binary", "cross", "current_schema", "freeze", "full",
      "ilike", "inner", "is", "isnull", "join", "left", "like", "natural",
      "notnull", "outer", "over", "overlaps", "right", "similar", "verbose"
@@ -534,7 +548,8 @@ class UUID(sqltypes.TypeEngine):
          """
         if as_uuid and _python_UUID is None:
             raise NotImplementedError(
-                "This version of Python does not support the native UUID type."
+                "This version of Python does not support "
+                "the native UUID type."
             )
         self.as_uuid = as_uuid
 
@@ -1047,7 +1062,8 @@ class ENUM(sqltypes.Enum):
             return
 
         if not checkfirst or \
-                not bind.dialect.has_type(bind, self.name, schema=self.schema):
+                not bind.dialect.has_type(
+                    bind, self.name, schema=self.schema):
             bind.execute(CreateEnumType(self))
 
     def drop(self, bind=None, checkfirst=True):
@@ -1557,16 +1573,19 @@ class DropEnumType(schema._CreateDropBase):
 
 class PGExecutionContext(default.DefaultExecutionContext):
     def fire_sequence(self, seq, type_):
-        return self._execute_scalar(("select nextval('%s')" %
-                                     self.dialect.identifier_preparer.format_sequence(seq)), type_)
+        return self._execute_scalar((
+            "select nextval('%s')" %
+            self.dialect.identifier_preparer.format_sequence(seq)), type_)
 
     def get_insert_default(self, column):
-        if column.primary_key and column is column.table._autoincrement_column:
+        if column.primary_key and \
+                column is column.table._autoincrement_column:
             if column.server_default and column.server_default.has_argument:
 
                 # pre-execute passive defaults on primary key columns
                 return self._execute_scalar("select %s" %
-                                            column.server_default.arg, column.type)
+                                            column.server_default.arg,
+                                            column.type)
 
             elif (column.default is None or
                   (column.default.is_sequence and
@@ -1679,8 +1698,8 @@ class PGDialect(default.DefaultDialect):
         else:
             return None
 
-    _isolation_lookup = set(['SERIALIZABLE',
-                             'READ UNCOMMITTED', 'READ COMMITTED', 'REPEATABLE READ'])
+    _isolation_lookup = set(['SERIALIZABLE', 'READ UNCOMMITTED',
+                             'READ COMMITTED', 'REPEATABLE READ'])
 
     def set_isolation_level(self, connection, level):
         level = level.replace('_', ' ')
@@ -1745,7 +1764,8 @@ class PGDialect(default.DefaultDialect):
         return connection.scalar("select current_schema()")
 
     def has_schema(self, connection, schema):
-        query = "select nspname from pg_namespace where lower(nspname)=:schema"
+        query = ("select nspname from pg_namespace "
+                 "where lower(nspname)=:schema")
         cursor = connection.execute(
             sql.text(
                 query,
@@ -1764,8 +1784,8 @@ class PGDialect(default.DefaultDialect):
             cursor = connection.execute(
                 sql.text(
                     "select relname from pg_class c join pg_namespace n on "
-                    "n.oid=c.relnamespace where n.nspname=current_schema() and "
-                    "relname=:name",
+                    "n.oid=c.relnamespace where n.nspname=current_schema() "
+                    "and relname=:name",
                     bindparams=[
                         sql.bindparam('name', util.text_type(table_name),
                                       type_=sqltypes.Unicode)]
@@ -1779,9 +1799,11 @@ class PGDialect(default.DefaultDialect):
                     "relname=:name",
                     bindparams=[
                         sql.bindparam('name',
-                                      util.text_type(table_name), type_=sqltypes.Unicode),
+                                      util.text_type(table_name),
+                                      type_=sqltypes.Unicode),
                         sql.bindparam('schema',
-                                      util.text_type(schema), type_=sqltypes.Unicode)]
+                                      util.text_type(schema),
+                                      type_=sqltypes.Unicode)]
                 )
             )
         return bool(cursor.first())
@@ -1810,7 +1832,8 @@ class PGDialect(default.DefaultDialect):
                         sql.bindparam('name', util.text_type(sequence_name),
                                       type_=sqltypes.Unicode),
                         sql.bindparam('schema',
-                                      util.text_type(schema), type_=sqltypes.Unicode)
+                                      util.text_type(schema),
+                                      type_=sqltypes.Unicode)
                     ]
                 )
             )
@@ -1996,7 +2019,8 @@ class PGDialect(default.DefaultDialect):
                      bindparams=[
                          sql.bindparam('table_oid', type_=sqltypes.Integer)],
                      typemap={
-                         'attname': sqltypes.Unicode, 'default': sqltypes.Unicode}
+                         'attname': sqltypes.Unicode,
+                         'default': sqltypes.Unicode}
                      )
         c = connection.execute(s, table_oid=table_oid)
         rows = c.fetchall()
@@ -2196,8 +2220,10 @@ class PGDialect(default.DefaultDialect):
         FK_REGEX = re.compile(
             r'FOREIGN KEY \((.*?)\) REFERENCES (?:(.*?)\.)?(.*?)\((.*?)\)'
             r'[\s]?(MATCH (FULL|PARTIAL|SIMPLE)+)?'
-            r'[\s]?(ON UPDATE (CASCADE|RESTRICT|NO ACTION|SET NULL|SET DEFAULT)+)?'
-            r'[\s]?(ON DELETE (CASCADE|RESTRICT|NO ACTION|SET NULL|SET DEFAULT)+)?'
+            r'[\s]?(ON UPDATE '
+            r'(CASCADE|RESTRICT|NO ACTION|SET NULL|SET DEFAULT)+)?'
+            r'[\s]?(ON DELETE '
+            r'(CASCADE|RESTRICT|NO ACTION|SET NULL|SET DEFAULT)+)?'
             r'[\s]?(DEFERRABLE|NOT DEFERRABLE)?'
             r'[\s]?(INITIALLY (DEFERRED|IMMEDIATE)+)?'
         )
@@ -2218,7 +2244,8 @@ class PGDialect(default.DefaultDialect):
             if deferrable is not None:
                 deferrable = True if deferrable == 'DEFERRABLE' else False
             constrained_columns = [preparer._unquote_identifier(x)
-                                   for x in re.split(r'\s*,\s*', constrained_columns)]
+                                   for x in re.split(
+                                       r'\s*,\s*', constrained_columns)]
 
             if postgresql_ignore_search_path:
                 # when ignoring search path, we use the actual schema
@@ -2240,7 +2267,8 @@ class PGDialect(default.DefaultDialect):
 
             referred_table = preparer._unquote_identifier(referred_table)
             referred_columns = [preparer._unquote_identifier(x)
-                                for x in re.split(r'\s*,\s', referred_columns)]
+                                for x in
+                                re.split(r'\s*,\s', referred_columns)]
             fkey_d = {
                 'name': conname,
                 'constrained_columns': constrained_columns,
@@ -2360,7 +2388,8 @@ class PGDialect(default.DefaultDialect):
             FROM
                 pg_catalog.pg_constraint cons
                 join pg_attribute a
-                  on cons.conrelid = a.attrelid AND a.attnum = ANY(cons.conkey)
+                  on cons.conrelid = a.attrelid AND
+                    a.attnum = ANY(cons.conkey)
             WHERE
                 cons.conrelid = :table_oid AND
                 cons.contype = 'u'

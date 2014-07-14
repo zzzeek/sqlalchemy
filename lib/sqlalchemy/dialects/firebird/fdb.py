@@ -9,7 +9,8 @@
 .. dialect:: firebird+fdb
     :name: fdb
     :dbapi: pyodbc
-    :connectstring: firebird+fdb://user:password@host:port/path/to/db[?key=value&key=value...]
+    :connectstring: firebird+fdb://user:password@host:port/path/to/db\
+[?key=value&key=value...]
     :url: http://pypi.python.org/pypi/fdb/
 
     fdb is a kinterbasdb compatible DBAPI for Firebird.
@@ -23,8 +24,9 @@
 Arguments
 ----------
 
-The ``fdb`` dialect is based on the :mod:`sqlalchemy.dialects.firebird.kinterbasdb`
-dialect, however does not accept every argument that Kinterbasdb does.
+The ``fdb`` dialect is based on the
+:mod:`sqlalchemy.dialects.firebird.kinterbasdb` dialect, however does not
+accept every argument that Kinterbasdb does.
 
 * ``enable_rowcount`` - True by default, setting this to False disables
   the usage of "cursor.rowcount" with the
@@ -61,8 +63,8 @@ dialect, however does not accept every argument that Kinterbasdb does.
 
   .. seealso::
 
-    http://pythonhosted.org/fdb/usage-guide.html#retaining-transactions - information
-    on the "retaining" flag.
+    http://pythonhosted.org/fdb/usage-guide.html#retaining-transactions
+    - information on the "retaining" flag.
 
 """
 

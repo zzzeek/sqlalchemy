@@ -55,9 +55,9 @@ Examples of pyodbc connection string URLs:
 
     DRIVER={SQL Server};Server=host;Database=db;UID=user;PWD=pass;port=123
 
-* ``mssql+pyodbc://user:pass@host/db?driver=MyDriver`` - connects using a connection
-  string that includes a custom
-  ODBC driver name.  This will create the following connection string::
+* ``mssql+pyodbc://user:pass@host/db?driver=MyDriver`` - connects using a
+  connection string that includes a custom ODBC driver name.  This will create
+  the following connection string::
 
     DRIVER={MyDriver};Server=host;Database=db;UID=user;PWD=pass
 
@@ -85,14 +85,14 @@ Unicode Binds
 -------------
 
 The current state of PyODBC on a unix backend with FreeTDS and/or
-EasySoft is poor regarding unicode; different OS platforms and versions of UnixODBC
-versus IODBC versus FreeTDS/EasySoft versus PyODBC itself dramatically
-alter how strings are received.  The PyODBC dialect attempts to use all the information
-it knows to determine whether or not a Python unicode literal can be
-passed directly to the PyODBC driver or not; while SQLAlchemy can encode
-these to bytestrings first, some users have reported that PyODBC mis-handles
-bytestrings for certain encodings and requires a Python unicode object,
-while the author has observed widespread cases where a Python unicode
+EasySoft is poor regarding unicode; different OS platforms and versions of
+UnixODBC versus IODBC versus FreeTDS/EasySoft versus PyODBC itself
+dramatically alter how strings are received.  The PyODBC dialect attempts to
+use all the information it knows to determine whether or not a Python unicode
+literal can be passed directly to the PyODBC driver or not; while SQLAlchemy
+can encode these to bytestrings first, some users have reported that PyODBC
+mis-handles bytestrings for certain encodings and requires a Python unicode
+object, while the author has observed widespread cases where a Python unicode
 is completely misinterpreted by PyODBC, particularly when dealing with
 the information schema tables used in table reflection, and the value
 must first be encoded to a bytestring.

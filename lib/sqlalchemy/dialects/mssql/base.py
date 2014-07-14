@@ -13,9 +13,9 @@
 Auto Increment Behavior
 -----------------------
 
-SQL Server provides so-called "auto incrementing" behavior using the ``IDENTITY``
-construct, which can be placed on an integer primary key.  SQLAlchemy
-considers ``IDENTITY`` within its default "autoincrement" behavior,
+SQL Server provides so-called "auto incrementing" behavior using the
+``IDENTITY`` construct, which can be placed on an integer primary key.
+SQLAlchemy considers ``IDENTITY`` within its default "autoincrement" behavior,
 described at :paramref:`.Column.autoincrement`; this means
 that by default, the first integer primary key column in a :class:`.Table`
 will be considered to be the identity column and will generate DDL as such::
@@ -52,24 +52,25 @@ specify ``autoincrement=False`` on all integer primary key columns::
     An INSERT statement which refers to an explicit value for such
     a column is prohibited by SQL Server, however SQLAlchemy will detect this
     and modify the ``IDENTITY_INSERT`` flag accordingly at statement execution
-    time.  As this is not a high performing process, care should be taken to set
-    the ``autoincrement`` flag appropriately for columns that will not actually
-    require IDENTITY behavior.
+    time.  As this is not a high performing process, care should be taken to
+    set the ``autoincrement`` flag appropriately for columns that will not
+    actually require IDENTITY behavior.
 
 Controlling "Start" and "Increment"
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Specific control over the parameters of the ``IDENTITY`` value is supported
-using the :class:`.schema.Sequence` object.  While this object normally represents
-an explicit "sequence" for supporting backends, on SQL Server it is re-purposed
-to specify behavior regarding the identity column, including support
-of the "start" and "increment" values::
+using the :class:`.schema.Sequence` object.  While this object normally
+represents an explicit "sequence" for supporting backends, on SQL Server it is
+re-purposed to specify behavior regarding the identity column, including
+support of the "start" and "increment" values::
 
     from sqlalchemy import Table, Integer, Sequence, Column
 
     Table('test', metadata,
            Column('id', Integer,
-                  Sequence('blah', start=100, increment=10), primary_key=True),
+                  Sequence('blah', start=100, increment=10),
+                  primary_key=True),
            Column('name', String(20))
          ).create(some_engine)
 
@@ -88,10 +89,10 @@ optional and will default to 1,1.
 INSERT behavior
 ^^^^^^^^^^^^^^^^
 
-Handling of the ``IDENTITY`` column at INSERT time involves two key techniques.
-The most common is being able to fetch the "last inserted value" for a given
-``IDENTITY`` column, a process which SQLAlchemy performs implicitly in many
-cases, most importantly within the ORM.
+Handling of the ``IDENTITY`` column at INSERT time involves two key
+techniques. The most common is being able to fetch the "last inserted value"
+for a given ``IDENTITY`` column, a process which SQLAlchemy performs
+implicitly in many cases, most importantly within the ORM.
 
 The process for fetching this value has several variants:
 
@@ -106,9 +107,9 @@ The process for fetching this value has several variants:
   ``implicit_returning=False``, either the ``scope_identity()`` function or
   the ``@@identity`` variable is used; behavior varies by backend:
 
-  * when using PyODBC, the phrase ``; select scope_identity()`` will be appended
-    to the end of the INSERT statement; a second result set will be fetched
-    in order to receive the value.  Given a table as::
+  * when using PyODBC, the phrase ``; select scope_identity()`` will be
+    appended to the end of the INSERT statement; a second result set will be
+    fetched in order to receive the value.  Given a table as::
 
         t = Table('t', m, Column('id', Integer, primary_key=True),
                 Column('x', Integer),
@@ -121,17 +122,18 @@ The process for fetching this value has several variants:
         INSERT INTO t (x) VALUES (?); select scope_identity()
 
   * Other dialects such as pymssql will call upon
-    ``SELECT scope_identity() AS lastrowid`` subsequent to an INSERT statement.
-    If the flag ``use_scope_identity=False`` is passed to :func:`.create_engine`,
-    the statement ``SELECT @@identity AS lastrowid`` is used instead.
+    ``SELECT scope_identity() AS lastrowid`` subsequent to an INSERT
+    statement. If the flag ``use_scope_identity=False`` is passed to
+    :func:`.create_engine`, the statement ``SELECT @@identity AS lastrowid``
+    is used instead.
 
 A table that contains an ``IDENTITY`` column will prohibit an INSERT statement
 that refers to the identity column explicitly.  The SQLAlchemy dialect will
 detect when an INSERT construct, created using a core :func:`.insert`
 construct (not a plain string SQL), refers to the identity column, and
-in this case will emit ``SET IDENTITY_INSERT ON`` prior to the insert statement
-proceeding, and ``SET IDENTITY_INSERT OFF`` subsequent to the execution.
-Given this example::
+in this case will emit ``SET IDENTITY_INSERT ON`` prior to the insert
+statement proceeding, and ``SET IDENTITY_INSERT OFF`` subsequent to the
+execution.  Given this example::
 
     m = MetaData()
     t = Table('t', m, Column('id', Integer, primary_key=True),
@@ -250,7 +252,8 @@ To generate a clustered primary key use::
 
 which will render the table, for example, as::
 
-  CREATE TABLE my_table (x INTEGER NOT NULL, y INTEGER NOT NULL, PRIMARY KEY CLUSTERED (x, y))
+  CREATE TABLE my_table (x INTEGER NOT NULL, y INTEGER NOT NULL,
+                         PRIMARY KEY CLUSTERED (x, y))
 
 Similarly, we can generate a clustered unique constraint using::
 
@@ -272,7 +275,8 @@ for :class:`.Index`.
 INCLUDE
 ^^^^^^^
 
-The ``mssql_include`` option renders INCLUDE(colname) for the given string names::
+The ``mssql_include`` option renders INCLUDE(colname) for the given string
+names::
 
     Index("my_index", table.c.x, mssql_include=['y'])
 
@@ -763,11 +767,12 @@ class MSExecutionContext(default.DefaultExecutionContext):
                 not self.executemany
 
             if self._enable_identity_insert:
-                self.root_connection._cursor_execute(self.cursor,
-                                                     "SET IDENTITY_INSERT %s ON" %
-                                                     self.dialect.identifier_preparer.format_table(
-                                                         tbl),
-                                                     (), self)
+                self.root_connection._cursor_execute(
+                    self.cursor,
+                    "SET IDENTITY_INSERT %s ON" %
+                    self.dialect.identifier_preparer.format_table(tbl),
+                    (),
+                    self)
 
     def post_exec(self):
         """Disable IDENTITY_INSERT if enabled."""
@@ -775,11 +780,14 @@ class MSExecutionContext(default.DefaultExecutionContext):
         conn = self.root_connection
         if self._select_lastrowid:
             if self.dialect.use_scope_identity:
-                conn._cursor_execute(self.cursor,
-                                     "SELECT scope_identity() AS lastrowid", (), self)
+                conn._cursor_execute(
+                    self.cursor,
+                    "SELECT scope_identity() AS lastrowid", (), self)
             else:
                 conn._cursor_execute(self.cursor,
-                                     "SELECT @@identity AS lastrowid", (), self)
+                                     "SELECT @@identity AS lastrowid",
+                                     (),
+                                     self)
             # fetchall() ensures the cursor is consumed without closing it
             row = self.cursor.fetchall()[0]
             self._lastrowid = int(row[0])
@@ -963,7 +971,8 @@ class MSSQLCompiler(compiler.SQLCompiler):
             (field, self.process(extract.expr, **kw))
 
     def visit_savepoint(self, savepoint_stmt):
-        return "SAVE TRANSACTION %s" % self.preparer.format_savepoint(savepoint_stmt)
+        return "SAVE TRANSACTION %s" % \
+            self.preparer.format_savepoint(savepoint_stmt)
 
     def visit_rollback_to_savepoint(self, savepoint_stmt):
         return ("ROLLBACK TRANSACTION %s"
@@ -971,7 +980,8 @@ class MSSQLCompiler(compiler.SQLCompiler):
 
     def visit_column(self, column, add_to_result_map=None, **kwargs):
         if column.table is not None and \
-                (not self.isupdate and not self.isdelete) or self.is_subquery():
+                (not self.isupdate and not self.isdelete) or \
+                self.is_subquery():
             # translate for schema-qualified table aliases
             t = self._schema_aliased_table(column.table)
             if t is not None:
@@ -1169,7 +1179,8 @@ class MSDDLCompiler(compiler.DDLCompiler):
                 preparer.format_table(index.table),
                 ', '.join(
                     self.sql_compiler.process(expr,
-                                              include_table=False, literal_binds=True) for
+                                              include_table=False,
+                                              literal_binds=True) for
                     expr in index.expressions)
             )
 
@@ -1177,7 +1188,9 @@ class MSDDLCompiler(compiler.DDLCompiler):
         if index.dialect_options['mssql']['include']:
             inclusions = [index.table.c[col]
                           if isinstance(col, util.string_types) else col
-                          for col in index.dialect_options['mssql']['include']]
+                          for col in
+                          index.dialect_options['mssql']['include']
+                          ]
 
             text += " INCLUDE (%s)" \
                 % ', '.join([preparer.quote(c.name)
@@ -1482,7 +1495,8 @@ class MSDialect(default.DefaultDialect):
 
     @reflection.cache
     @_db_plus_owner
-    def get_view_definition(self, connection, viewname, dbname, owner, schema, **kw):
+    def get_view_definition(self, connection, viewname,
+                            dbname, owner, schema, **kw):
         rp = connection.execute(
             sql.text(
                 "select definition from sys.sql_modules as mod, "
@@ -1607,13 +1621,16 @@ class MSDialect(default.DefaultDialect):
 
     @reflection.cache
     @_db_plus_owner
-    def get_pk_constraint(self, connection, tablename, dbname, owner, schema, **kw):
+    def get_pk_constraint(self, connection, tablename,
+                          dbname, owner, schema, **kw):
         pkeys = []
         TC = ischema.constraints
         C = ischema.key_constraints.alias('C')
 
         # Primary key constraints
-        s = sql.select([C.c.column_name, TC.c.constraint_type, C.c.constraint_name],
+        s = sql.select([C.c.column_name,
+                        TC.c.constraint_type,
+                        C.c.constraint_name],
                        sql.and_(TC.c.constraint_name == C.c.constraint_name,
                                 TC.c.table_schema == C.c.table_schema,
                                 C.c.table_name == tablename,
@@ -1630,7 +1647,8 @@ class MSDialect(default.DefaultDialect):
 
     @reflection.cache
     @_db_plus_owner
-    def get_foreign_keys(self, connection, tablename, dbname, owner, schema, **kw):
+    def get_foreign_keys(self, connection, tablename,
+                         dbname, owner, schema, **kw):
         RR = ischema.ref_constraints
         C = ischema.key_constraints.alias('C')
         R = ischema.key_constraints.alias('R')
