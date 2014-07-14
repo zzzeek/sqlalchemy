@@ -74,7 +74,8 @@ def _standard_listen_example(dispatch_descriptor, sample_target, fn):
         "from sqlalchemy import event\n\n"
         "# standard decorator style%(current_since)s\n"
         "@event.listens_for(%(sample_target)s, '%(event_name)s')\n"
-        "def receive_%(event_name)s(%(named_event_arguments)s%(has_kw_arguments)s):\n"
+        "def receive_%(event_name)s("
+        "%(named_event_arguments)s%(has_kw_arguments)s):\n"
         "    \"listen for the '%(event_name)s' event\"\n"
         "\n    # ... (event handling logic) ...\n"
     )
@@ -83,7 +84,8 @@ def _standard_listen_example(dispatch_descriptor, sample_target, fn):
         text += (
 
             "\n# named argument style (new in 0.9)\n"
-            "@event.listens_for(%(sample_target)s, '%(event_name)s', named=True)\n"
+            "@event.listens_for("
+            "%(sample_target)s, '%(event_name)s', named=True)\n"
             "def receive_%(event_name)s(**kw):\n"
             "    \"listen for the '%(event_name)s' event\"\n"
             "%(example_kw_arg)s\n"
@@ -108,12 +110,14 @@ def _legacy_listen_examples(dispatch_descriptor, sample_target, fn):
         text += (
             "\n# legacy calling style (pre-%(since)s)\n"
             "@event.listens_for(%(sample_target)s, '%(event_name)s')\n"
-            "def receive_%(event_name)s(%(named_event_arguments)s%(has_kw_arguments)s):\n"
+            "def receive_%(event_name)s("
+            "%(named_event_arguments)s%(has_kw_arguments)s):\n"
             "    \"listen for the '%(event_name)s' event\"\n"
             "\n    # ... (event handling logic) ...\n" % {
                 "since": since,
                 "event_name": fn.__name__,
-                "has_kw_arguments": " **kw" if dispatch_descriptor.has_kw else "",
+                "has_kw_arguments": " **kw"
+                if dispatch_descriptor.has_kw else "",
                 "named_event_arguments": ", ".join(args),
                 "sample_target": sample_target
             }
