@@ -65,7 +65,8 @@ class SuiteRequirements(Requirements):
         # somehow only_if([x, y]) isn't working here, negation/conjunctions
         # getting confused.
         return exclusions.only_if(
-            lambda: self.on_update_cascade.enabled or self.deferrable_fks.enabled
+            lambda: self.on_update_cascade.enabled or
+            self.deferrable_fks.enabled
         )
 
     @property
@@ -94,13 +95,17 @@ class SuiteRequirements(Requirements):
 
     @property
     def offset(self):
-        """target database can render OFFSET, or an equivalent, in a SELECT."""
+        """target database can render OFFSET, or an equivalent, in a
+        SELECT.
+        """
 
         return exclusions.open()
 
     @property
     def bound_limit_offset(self):
-        """target database can render LIMIT and/or OFFSET using a bound parameter"""
+        """target database can render LIMIT and/or OFFSET using a bound
+        parameter
+        """
 
         return exclusions.open()
 
@@ -333,7 +338,9 @@ class SuiteRequirements(Requirements):
 
     @property
     def unicode_ddl(self):
-        """Target driver must support some degree of non-ascii symbol names."""
+        """Target driver must support some degree of non-ascii symbol
+        names.
+        """
         return exclusions.closed()
 
     @property
@@ -580,7 +587,9 @@ class SuiteRequirements(Requirements):
 
     @property
     def unicode_connections(self):
-        """Target driver must support non-ASCII characters being passed at all."""
+        """Target driver must support non-ASCII characters being passed at
+        all.
+        """
         return exclusions.open()
 
     @property
@@ -593,8 +602,8 @@ class SuiteRequirements(Requirements):
         """Test environment must allow ad-hoc engine/connection creation.
 
         DBs that scale poorly for many connections, even when closed, i.e.
-        Oracle, may use the "--low-connections" option which flags this requirement
-        as not present.
+        Oracle, may use the "--low-connections" option which flags this
+        requirement as not present.
 
         """
         return exclusions.skip_if(

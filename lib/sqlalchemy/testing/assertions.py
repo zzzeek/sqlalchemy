@@ -415,7 +415,8 @@ class AssertsExecutionResults(object):
             assertsql.asserter.clear_rules()
 
     def assert_sql(self, db, callable_, list_, with_sequences=None):
-        if with_sequences is not None and config.db.dialect.supports_sequences:
+        if (with_sequences is not None and
+                config.db.dialect.supports_sequences):
             rules = with_sequences
         else:
             rules = list_

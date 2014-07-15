@@ -23,7 +23,8 @@ fixtures = None
 path = os.path.join(os.path.dirname(__file__), "plugin_base.py")
 if sys.version_info >= (3, 3):
     from importlib import machinery
-    plugin_base = machinery.SourceFileLoader("plugin_base", path).load_module()
+    plugin_base = machinery.SourceFileLoader(
+        "plugin_base", path).load_module()
 else:
     import imp
     plugin_base = imp.load_source("plugin_base", path)

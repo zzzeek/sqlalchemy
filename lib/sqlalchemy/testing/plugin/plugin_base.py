@@ -8,8 +8,8 @@
 """Testing extensions.
 
 this module is designed to work as a testing-framework-agnostic library,
-so that we can continue to support nose and also begin adding new functionality
-via py.test.
+so that we can continue to support nose and also begin adding new
+functionality via py.test.
 
 """
 
@@ -54,7 +54,8 @@ options = None
 def setup_options(make_option):
     make_option("--log-info", action="callback", type="string", callback=_log,
                 help="turn on info logging for <LOG> (multiple OK)")
-    make_option("--log-debug", action="callback", type="string", callback=_log,
+    make_option("--log-debug", action="callback",
+                type="string", callback=_log,
                 help="turn on debug logging for <LOG> (multiple OK)")
     make_option("--db", action="append", type="string", dest="db",
                 help="Use prefab database uri. Multiple OK, "
@@ -274,7 +275,8 @@ def _prep_testing_database(options, file_config):
 
             if config.requirements.schemas.enabled_for_config(cfg):
                 try:
-                    view_names = inspector.get_view_names(schema="test_schema")
+                    view_names = inspector.get_view_names(
+                        schema="test_schema")
                 except NotImplementedError:
                     pass
                 else:

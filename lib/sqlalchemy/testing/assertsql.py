@@ -99,10 +99,10 @@ class ExactSQL(SQLMatchRule):
             params = {}
         self._result = equivalent
         if not self._result:
-            self._errmsg = \
-                'Testing for exact statement %r exact params %r, '\
-                'received %r with params %r' % (sql, params,
-                                                _received_statement, _received_parameters)
+            self._errmsg = (
+                'Testing for exact statement %r exact params %r, '
+                'received %r with params %r' % 
+                (sql, params, _received_statement, _received_parameters))
 
 
 class RegexSQL(SQLMatchRule):
@@ -168,9 +168,11 @@ class CompiledSQL(SQLMatchRule):
             compiled = \
                 context.compiled.statement.compile(dialect=DefaultDialect())
         else:
-            compiled = \
-                context.compiled.statement.compile(dialect=DefaultDialect(),
-                                                   column_keys=context.compiled.column_keys)
+            compiled = (
+                context.compiled.statement.compile(
+                    dialect=DefaultDialect(),
+                    column_keys=context.compiled.column_keys)
+            )
         _received_statement = re.sub(r'[\n\t]', '', str(compiled))
         equivalent = self.statement == _received_statement
         if self.params:
@@ -202,12 +204,14 @@ class CompiledSQL(SQLMatchRule):
         self._result = equivalent
         if not self._result:
             print('Testing for compiled statement %r partial params '
-                  '%r, received %r with params %r' % (self.statement,
-                                                      all_params, _received_statement, all_received))
-            self._errmsg = \
-                'Testing for compiled statement %r partial params %r, '\
-                'received %r with params %r' % (self.statement,
-                                                all_params, _received_statement, all_received)
+                  '%r, received %r with params %r' % 
+                  (self.statement, all_params,
+                   _received_statement, all_received))
+            self._errmsg = (
+                'Testing for compiled statement %r partial params %r, '
+                'received %r with params %r' % 
+                (self.statement, all_params,
+                 _received_statement, all_received))
 
             # print self._errmsg
 
