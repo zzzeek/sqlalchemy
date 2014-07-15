@@ -11,7 +11,7 @@ import gc
 import time
 import random
 import sys
-from . import types
+import types
 
 if jython:
     def jython_gc_collect(*args):
