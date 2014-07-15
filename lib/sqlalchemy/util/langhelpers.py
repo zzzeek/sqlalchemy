@@ -206,9 +206,9 @@ def get_cls_kwargs(cls, _set=None):
     """Return the full set of inherited kwargs for the given `cls`.
 
     Probes a class's __init__ method, collecting all named arguments.  If the
-    __init__ defines a \**kwargs catch-all, then the constructor is presumed to
-    pass along unrecognized keywords to its base classes, and the collection
-    process is repeated recursively on each of the bases.
+    __init__ defines a \**kwargs catch-all, then the constructor is presumed
+    to pass along unrecognized keywords to its base classes, and the
+    collection process is repeated recursively on each of the bases.
 
     Uses a subset of inspect.getargspec() to cut down on method overhead.
     No anonymous tuple arguments please !
@@ -1232,7 +1232,8 @@ def chop_traceback(tb, exclude_prefix=_UNITTEST_RE, exclude_suffix=_SQLA_RE):
       a list of traceback lines as returned by ``traceback.format_stack()``
 
     :param exclude_prefix:
-      a regular expression object matching lines to skip at beginning of ``tb``
+      a regular expression object matching lines to skip at beginning of
+      ``tb``
 
     :param exclude_suffix:
       a regular expression object matching lines to skip at end of ``tb``

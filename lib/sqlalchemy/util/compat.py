@@ -41,7 +41,8 @@ if py3k:
     import builtins
 
     from inspect import getfullargspec as inspect_getfullargspec
-    from urllib.parse import quote_plus, unquote_plus, parse_qsl, quote, unquote
+    from urllib.parse import (quote_plus, unquote_plus,
+                              parse_qsl, quote, unquote)
     import configparser
     from io import StringIO
 
