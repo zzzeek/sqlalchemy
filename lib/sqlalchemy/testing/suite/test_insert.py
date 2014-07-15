@@ -59,8 +59,9 @@ class LastrowidTest(fixtures.TablesTest):
         )
 
     # failed on pypy1.9 but seems to be OK on pypy 2.1
-    #@exclusions.fails_if(lambda: util.pypy, "lastrowid not maintained after "
-    #                        "connection close")
+    # @exclusions.fails_if(lambda: util.pypy,
+    #                      "lastrowid not maintained after "
+    #                      "connection close")
     @requirements.dbapi_lastrowid
     def test_native_lastrowid_autoinc(self):
         r = config.db.execute(
@@ -143,10 +144,10 @@ class InsertBehaviorTest(fixtures.TablesTest):
 
         config.db.execute(
             table.insert(inline=True).
-            from_select(
-                        ("id", "data",), select([table.c.id + 5, table.c.data]).where(
-                            table.c.data.in_(["data2", "data3"]))
-            ),
+            from_select(("id", "data",),
+                        select([table.c.id + 5, table.c.data]).
+                        where(table.c.data.in_(["data2", "data3"]))
+                        ),
         )
 
         eq_(

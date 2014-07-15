@@ -101,7 +101,7 @@ class ExactSQL(SQLMatchRule):
         if not self._result:
             self._errmsg = (
                 'Testing for exact statement %r exact params %r, '
-                'received %r with params %r' % 
+                'received %r with params %r' %
                 (sql, params, _received_statement, _received_parameters))
 
 
@@ -204,12 +204,12 @@ class CompiledSQL(SQLMatchRule):
         self._result = equivalent
         if not self._result:
             print('Testing for compiled statement %r partial params '
-                  '%r, received %r with params %r' % 
+                  '%r, received %r with params %r' %
                   (self.statement, all_params,
                    _received_statement, all_received))
             self._errmsg = (
                 'Testing for compiled statement %r partial params %r, '
-                'received %r with params %r' % 
+                'received %r with params %r' %
                 (self.statement, all_params,
                  _received_statement, all_received))
 

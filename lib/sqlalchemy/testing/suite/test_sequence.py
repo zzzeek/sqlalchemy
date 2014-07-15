@@ -89,8 +89,8 @@ class HasSequenceTest(fixtures.TestBase):
         s1 = Sequence('user_id_seq', schema="test_schema")
         testing.db.execute(schema.CreateSequence(s1))
         try:
-            eq_(testing.db.dialect.has_sequence(testing.db,
-                                                'user_id_seq', schema="test_schema"), True)
+            eq_(testing.db.dialect.has_sequence(
+                testing.db, 'user_id_seq', schema="test_schema"), True)
         finally:
             testing.db.execute(schema.DropSequence(s1))
 

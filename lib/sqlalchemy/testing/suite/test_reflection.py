@@ -58,7 +58,8 @@ class ComponentReflectionTest(fixtures.TablesTest):
                           Column('test1', sa.CHAR(5), nullable=False),
                           Column('test2', sa.Float(5), nullable=False),
                           Column('parent_user_id', sa.Integer,
-                                 sa.ForeignKey('%susers.user_id' % schema_prefix)),
+                                 sa.ForeignKey('%susers.user_id' %
+                                               schema_prefix)),
                           schema=schema,
                           test_needs_fk=True,
                           )
@@ -223,7 +224,8 @@ class ComponentReflectionTest(fixtures.TablesTest):
                 # a base within one of the generic types.
 
                 self.assert_(len(set(ctype.__mro__).
-                                 intersection(ctype_def.__mro__).intersection([
+                                 intersection(ctype_def.__mro__).
+                                 intersection([
                                      sql_types.Integer,
                                      sql_types.Numeric,
                                      sql_types.DateTime,
@@ -231,8 +233,8 @@ class ComponentReflectionTest(fixtures.TablesTest):
                                      sql_types.Time,
                                      sql_types.String,
                                      sql_types._Binary,
-                                 ])) > 0, '%s(%s), %s(%s)' % (col.name,
-                                                              col.type, cols[i]['name'], ctype))
+                                 ])) > 0, '%s(%s), %s(%s)' %
+                             (col.name, col.type, cols[i]['name'], ctype))
 
                 if not col.primary_key:
                     assert cols[i]['default'] is None

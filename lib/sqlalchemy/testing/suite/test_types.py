@@ -333,7 +333,8 @@ class NumericTest(_LiteralRoundTripFixture, fixtures.TestBase):
 
     @testing.emits_warning(r".*does \*not\* support Decimal objects natively")
     @testing.provide_metadata
-    def _do_test(self, type_, input_, output, filter_=None, check_scale=False):
+    def _do_test(self, type_, input_, output,
+                 filter_=None, check_scale=False):
         metadata = self.metadata
         t = Table('t', metadata, Column('x', type_))
         t.create()

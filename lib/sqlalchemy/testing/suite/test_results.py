@@ -127,12 +127,10 @@ class PercentSchemaNamesTest(fixtures.TablesTest):
                                          Column(
                                              "spaces % more spaces", Integer),
                                          )
-        cls.tables.lightweight_percent_table = sql.table('percent%table',
-                                                         sql.column(
-                                                             "percent%"),
-                                                         sql.column(
-                                                             "spaces % more spaces"),
-                                                         )
+        cls.tables.lightweight_percent_table = sql.table(
+            'percent%table', sql.column("percent%"),
+            sql.column("spaces % more spaces")
+        )
 
     def test_single_roundtrip(self):
         percent_table = self.tables.percent_table
