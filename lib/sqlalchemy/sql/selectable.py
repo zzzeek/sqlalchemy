@@ -2398,8 +2398,8 @@ class Select(HasPrefixes, GenerativeSelect):
             if not len(froms):
                 raise exc.InvalidRequestError("Select statement '%s"
                                               "' returned no FROM clauses "
-                                              " due to auto-correlation; "
-                                              " specify correlate(<tables>) "
+                                              "due to auto-correlation; "
+                                              "specify correlate(<tables>) "
                                               "to control correlation "
                                               "manually." % self)
 
