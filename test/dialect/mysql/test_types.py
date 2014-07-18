@@ -243,7 +243,13 @@ class TypesTest(fixtures.TestBase, AssertsExecutionResults, AssertsCompiledSQL):
             (mysql.ENUM, ["foo", "bar"], {'unicode':True},
              '''ENUM('foo','bar') UNICODE'''),
 
-            (String, [20], {"collation": "utf8"}, 'VARCHAR(20) COLLATE utf8')
+            (String, [20], {"collation": "utf8"}, 'VARCHAR(20) COLLATE utf8'),
+
+            (Unicode, [20], {}, 'NATIONAL VARCHAR(20)'),
+
+            (UnicodeText, [], {}, 'TEXT UNICODE'),
+
+            (UnicodeText, [20], {}, 'TEXT(20) UNICODE'),
 
 
            ]
@@ -257,7 +263,7 @@ class TypesTest(fixtures.TestBase, AssertsExecutionResults, AssertsCompiledSQL):
             # test that repr() copies out all arguments
             self.assert_compile(
                 eval("mysql.%r" % type_inst)
-                    if type_ is not String
+                    if type_ not in (String, Unicode, UnicodeText)
                     else eval("%r" % type_inst),
                 res
             )
@@ -823,4 +829,3 @@ class EnumSetTest(fixtures.TestBase, AssertsExecutionResults, AssertsCompiledSQL
 def colspec(c):
     return testing.db.dialect.ddl_compiler(
                     testing.db.dialect, None).get_column_specification(c)
-
