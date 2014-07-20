@@ -86,7 +86,7 @@ class Connection(Connectable):
 
         print("hi!"
                 "Im not flake8!"
-                "more changes 1 2"
+                "more changes 1 2 3"
             )
     def _branch(self):
         """Return a new Connection which references this Connection's
