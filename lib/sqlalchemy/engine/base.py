@@ -84,10 +84,8 @@ class Connection(Connectable):
         if self._has_events or self.engine._has_events:
             self.dispatch.engine_connect(self, _branch)
 
-        print("hi!"
-                "Im not flake8!"
-                "more changes 1 2 3"
-            )
+        print("hi!, Im flake8!")
+
     def _branch(self):
         """Return a new Connection which references this Connection's
         engine and connection; but does not have close_with_result enabled,
