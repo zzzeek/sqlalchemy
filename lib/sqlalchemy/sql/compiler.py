@@ -195,6 +195,8 @@ class Compiled(object):
 
         """
 
+        print("Code change #2"
+            "")
         self.dialect = dialect
         self.bind = bind
         if statement is not None:
