@@ -202,7 +202,8 @@ class Compiled(object):
         if statement is not None:
             self.statement = statement
             self.can_execute = statement.supports_execution
-            self.string = self.process(self.statement, **compile_kwargs)
+            self.string = self.process(self.statement,
+                        **compile_kwargs)
 
     @util.deprecated("0.7", ":class:`.Compiled` objects now compile "
                      "within the constructor.")
