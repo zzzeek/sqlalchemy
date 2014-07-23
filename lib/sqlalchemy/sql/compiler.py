@@ -196,6 +196,7 @@ class Compiled(object):
         print("bad pep8 code"
                 "for demonstration purposes"
             )
+        print("and here's some more code")
         self.dialect = dialect
         self.bind = bind
         if statement is not None:
