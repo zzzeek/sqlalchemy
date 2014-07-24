@@ -189,6 +189,8 @@ class Compiled(object):
         :param compile_kwargs: additional kwargs that will be
          passed to the initial call to :meth:`.Compiled.process`.
 
+        # -> a totally non-impactful change
+
          .. versionadded:: 0.8
 
         """
