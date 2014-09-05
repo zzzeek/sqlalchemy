@@ -9,6 +9,8 @@
 
 """
 
+import weakref
+
 from .. import exc, util
 from .base import _from_objects, ColumnSet
 from . import operators, visitors
@@ -553,7 +555,7 @@ class ColumnAdapter(ClauseAdapter):
                                include, exclude)
         if chain_to:
             self.chain(chain_to)
-        self.columns = util.populate_column_dict(self._locate_col)
+        self.columns = util.populate_column_dict(weakref.proxy(self._locate_col))
         self.adapt_required = adapt_required
 
     def wrap(self, adapter):
@@ -562,7 +564,7 @@ class ColumnAdapter(ClauseAdapter):
         ac._locate_col = ac._wrap(ac._locate_col, adapter._locate_col)
         ac.adapt_clause = ac._wrap(ac.adapt_clause, adapter.adapt_clause)
         ac.adapt_list = ac._wrap(ac.adapt_list, adapter.adapt_list)
-        ac.columns = util.populate_column_dict(ac._locate_col)
+        ac.columns = util.populate_column_dict(weakref.proxy(ac._locate_col))
         return ac
 
     adapt_clause = ClauseAdapter.traverse

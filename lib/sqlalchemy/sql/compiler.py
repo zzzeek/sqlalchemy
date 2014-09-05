@@ -30,6 +30,7 @@ from .. import util, exc
 import decimal
 import itertools
 import operator
+import weakref
 
 RESERVED_WORDS = set([
     'all', 'analyse', 'analyze', 'and', 'any', 'array',
@@ -389,7 +390,9 @@ class SQLCompiler(Compiled):
 
         # a map which tracks "anonymous" identifiers that are created on
         # the fly here
-        self.anon_map = util.PopulateDict(self._process_anon)
+        # weakref note: for some reason weakref.proxy(self._process_anon) wasn't enough here
+        weak_self = weakref.ref(self)
+        self.anon_map = util.PopulateDict(lambda key: weak_self()._process_anon(key))
 
         # a map which tracks "truncated" names based on
         # dialect.label_length or dialect.max_identifier_length
