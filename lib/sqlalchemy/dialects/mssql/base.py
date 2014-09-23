@@ -1600,9 +1600,9 @@ class MSDialect(default.DefaultDialect):
                     kwargs.pop('length')
 
             if coltype is None:
-                util.warn(
+                util.warn(exc.SAUnknownTypeReflectionWarning(
                     "Did not recognize type '%s' of column '%s'" %
-                    (type, name))
+                    (type, name)))
                 coltype = sqltypes.NULLTYPE
             else:
                 if issubclass(coltype, sqltypes.Numeric) and \

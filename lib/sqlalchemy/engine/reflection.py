@@ -605,9 +605,9 @@ class Inspector(object):
             flavor = index_d.get('type', 'index')
             if include_columns and \
                     not set(columns).issubset(include_columns):
-                util.warn(
+                util.warn(exc.SAOmittedIndexReflectionWarning(
                     "Omitting %s key for (%s), key covers omitted columns." %
-                    (flavor, ', '.join(columns)))
+                    (flavor, ', '.join(columns))))
                 continue
             # look for columns by orig name in cols_by_orig_name,
             # but support columns that are in-Python only as fallback
@@ -617,11 +617,11 @@ class Inspector(object):
                     idx_col = cols_by_orig_name[c] \
                         if c in cols_by_orig_name else table.c[c]
                 except KeyError:
-                    util.warn(
+                    util.warn(exc.SAIncompleteIndexReflectionWarning(
                         "%s key '%s' was not located in "
                         "columns for table '%s'" % (
                             flavor, c, table_name
-                        ))
+                        )))
                 else:
                     idx_cols.append(idx_col)
 

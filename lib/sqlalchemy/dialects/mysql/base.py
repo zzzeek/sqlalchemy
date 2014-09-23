@@ -2904,10 +2904,14 @@ class MySQLTableDefinitionParser(object):
                 spec = m.groupdict()
                 spec['full'] = False
         if not spec:
-            util.warn("Unknown column definition %r" % line)
+            util.warn(exc.SAUnparsableTypeReflectionWarning(
+                "Unknown column definition %r" % line
+            ))
             return
         if not spec['full']:
-            util.warn("Incomplete reflection of column definition %r" % line)
+            util.warn(exc.SAIncompleteTypeReflectionWarning(
+                "Incomplete reflection of column definition %r" % line
+            ))
 
         name, type_, args, notnull = \
             spec['name'], spec['coltype'], spec['arg'], spec['notnull']
@@ -2915,8 +2919,10 @@ class MySQLTableDefinitionParser(object):
         try:
             col_type = self.dialect.ischema_names[type_]
         except KeyError:
-            util.warn("Did not recognize type '%s' of column '%s'" %
-                      (type_, name))
+            util.warn(exc.SAUnknownTypeReflectionWarning(
+                "Did not recognize type '%s' of column '%s'" %
+                (type_, name)
+            ))
             col_type = sqltypes.NullType
 
         # Column type positional arguments eg. varchar(32)

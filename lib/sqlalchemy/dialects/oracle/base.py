@@ -232,7 +232,7 @@ in conjunction with the :class:`.Table` construct:
 
 import re
 
-from sqlalchemy import util, sql
+from sqlalchemy import util, sql, exc
 from sqlalchemy.engine import default, base, reflection
 from sqlalchemy.sql import compiler, visitors, expression
 from sqlalchemy.sql import (operators as sql_operators,
@@ -1137,8 +1137,9 @@ class OracleDialect(default.DefaultDialect):
                 try:
                     coltype = self.ischema_names[coltype]
                 except KeyError:
-                    util.warn("Did not recognize type '%s' of column '%s'" %
-                              (coltype, colname))
+                    util.warn(exc.SAUnknownTypeReflectionWarning(
+                        "Did not recognize type '%s' of column '%s'" %
+                        (coltype, colname)))
                     coltype = sqltypes.NULLTYPE
 
             cdict = {

@@ -987,10 +987,10 @@ class SQLiteDialect(default.DefaultDialect):
             try:
                 coltype = coltype(*[int(a) for a in args])
             except TypeError:
-                util.warn(
+                util.warn(exc.SAIncompleteTypeReflectionWarning(
                     "Could not instantiate type %s with "
                     "reflected arguments %s; using no arguments." %
-                    (coltype, args))
+                    (coltype, args)))
                 coltype = coltype()
         else:
             coltype = coltype()
