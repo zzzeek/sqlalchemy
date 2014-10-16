@@ -81,6 +81,8 @@ class FloatCoercionTest(fixtures.TablesTest, AssertsExecutionResults):
 
     @testing.fails_on('postgresql+zxjdbc',
                       'zxjdbc has no support for PG arrays')
+    @testing.fails_on('postgresql+minipg',
+                      'minipg has no support for PG arrays')
     @testing.provide_metadata
     def test_arrays(self):
         metadata = self.metadata
@@ -561,7 +563,7 @@ class ArrayTest(fixtures.TablesTest, AssertsExecutionResults):
 
     __only_on__ = 'postgresql'
     __backend__ = True
-    __unsupported_on__ = 'postgresql+pg8000', 'postgresql+zxjdbc'
+    __unsupported_on__ = 'postgresql+pg8000', 'postgresql+minipg', 'postgresql+zxjdbc'
 
     @classmethod
     def define_tables(cls, metadata):
