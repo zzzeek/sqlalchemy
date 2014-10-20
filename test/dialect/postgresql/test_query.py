@@ -684,6 +684,7 @@ class MatchTest(fixtures.TestBase, AssertsCompiledSQL):
         metadata.drop_all()
 
     @testing.fails_on('postgresql+pg8000', 'uses positional')
+    @testing.fails_on('postgresql+minipg', 'uses format')
     @testing.fails_on('postgresql+zxjdbc', 'uses qmark')
     def test_expression_pyformat(self):
         self.assert_compile(matchtable.c.title.match('somstr'),
@@ -692,27 +693,32 @@ class MatchTest(fixtures.TestBase, AssertsCompiledSQL):
 
     @testing.fails_on('postgresql+psycopg2', 'uses pyformat')
     @testing.fails_on('postgresql+pypostgresql', 'uses pyformat')
+    @testing.fails_on('postgresql+minipg', 'uses format')
     @testing.fails_on('postgresql+zxjdbc', 'uses qmark')
     def test_expression_positional(self):
         self.assert_compile(matchtable.c.title.match('somstr'),
                             'matchtable.title @@ to_tsquery(%s)')
 
+    @testing.fails_on('postgresql+minipg', 'uses format')
     def test_simple_match(self):
         results = matchtable.select().where(
             matchtable.c.title.match('python')).order_by(
             matchtable.c.id).execute().fetchall()
         eq_([2, 5], [r.id for r in results])
 
+    @testing.fails_on('postgresql+minipg', 'uses format')
     def test_simple_match_with_apostrophe(self):
         results = matchtable.select().where(
             matchtable.c.title.match("Matz's")).execute().fetchall()
         eq_([3], [r.id for r in results])
 
+    @testing.fails_on('postgresql+minipg', 'uses format')
     def test_simple_derivative_match(self):
         results = matchtable.select().where(
             matchtable.c.title.match('nutshells')).execute().fetchall()
         eq_([5], [r.id for r in results])
 
+    @testing.fails_on('postgresql+minipg', 'uses format')
     def test_or_match(self):
         results1 = matchtable.select().where(
             or_(
@@ -725,6 +731,7 @@ class MatchTest(fixtures.TestBase, AssertsCompiledSQL):
             matchtable.c.id).execute().fetchall()
         eq_([3, 5], [r.id for r in results2])
 
+    @testing.fails_on('postgresql+minipg', 'uses format')
     def test_and_match(self):
         results1 = matchtable.select().where(
             and_(
@@ -737,6 +744,7 @@ class MatchTest(fixtures.TestBase, AssertsCompiledSQL):
                                          )).execute().fetchall()
         eq_([5], [r.id for r in results2])
 
+    @testing.fails_on('postgresql+minipg', 'uses format')
     def test_match_across_joins(self):
         results = matchtable.select().where(
             and_(

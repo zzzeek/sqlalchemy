@@ -267,6 +267,7 @@ class DefaultRequirements(SuiteRequirements):
                     "sqlite",
                     "sybase",
                     ("mysql", "<", (5, 0, 3)),
+                    "postgresql+minipg",
                     ], "savepoints not supported")
 
 
@@ -369,6 +370,7 @@ class DefaultRequirements(SuiteRequirements):
             no_support('drizzle', 'two-phase xact not supported by database'),
             no_support('sqlite', 'two-phase xact not supported by database'),
             no_support('sybase', 'two-phase xact not supported by drivers/SQLA'),
+            no_support('postgresql+minipg', 'two-phase xact not supported by minipg'),
             no_support('postgresql+zxjdbc',
                     'FIXME: JDBC driver confuses the transaction state, may '
                        'need separate XA implementation'),

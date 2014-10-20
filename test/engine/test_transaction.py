@@ -1211,7 +1211,6 @@ class TLTransactionTest(fixtures.TestBase):
             order_by(users.c.user_id)).fetchall(),
             [(1, ), (2, )])
 
-
 class IsolationLevelTest(fixtures.TestBase):
     __requires__ = ('isolation_level', 'ad_hoc_engines')
     __backend__ = True
