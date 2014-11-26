@@ -40,6 +40,9 @@ def _history_mapper(local_mapper):
 
     if not super_mapper or local_mapper.local_table is not super_mapper.local_table:
         cols = []
+        version_meta = {"version_meta": True}  # add column.info to identify
+                                               # columns specific to versioning
+                                               
         for column in local_mapper.local_table.c:
             if _is_versioning_col(column):
                 continue
@@ -57,20 +60,18 @@ def _history_mapper(local_mapper):
         if super_mapper:
             super_fks.append(('version', super_history_mapper.local_table.c.version))
 
-        version_meta = {"version_meta": True}  # add column.info to identify
-                                               # columns specific to versioning
+        else:
+            # "changed" column stores the UTC timestamp of when the
+            # history row was created.
+            # This column is optional and can be omitted.
+            cols.append(Column('changed', DateTime,
+                                default=datetime.datetime.utcnow,
+                                info=version_meta))
 
         # "version" stores the integer version id.  This column is
         # required.
         cols.append(Column('version', Integer, primary_key=True,
                             autoincrement=False, info=version_meta))
-
-        # "changed" column stores the UTC timestamp of when the
-        # history row was created.
-        # This column is optional and can be omitted.
-        cols.append(Column('changed', DateTime,
-                            default=datetime.datetime.utcnow,
-                            info=version_meta))
 
         if super_fks:
             cols.append(ForeignKeyConstraint(*zip(*super_fks)))
