@@ -857,7 +857,7 @@ class OracleDialect_cx_oracle(OracleDialect):
     def create_connect_args(self, url):
         dialect_opts = dict(url.query)
         for opt in ('use_ansi', 'auto_setinputsizes', 'auto_convert_lobs',
-                    'threaded', 'allow_twophase'):
+                    'threaded', 'allow_twophase', 'use_service_name'):
             if opt in dialect_opts:
                 util.coerce_kw_type(dialect_opts, opt, bool)
                 setattr(self, opt, dialect_opts[opt])
@@ -869,7 +869,14 @@ class OracleDialect_cx_oracle(OracleDialect):
                 port = int(port)
             else:
                 port = 1521
-            dsn = self.dbapi.makedsn(url.host, port, url.database)
+
+            makedsn_args = (url.database,)
+            makedsn_kwargs = {}
+            if hasattr(self, 'use_service_name') and self.use_service_name is True:
+                makedsn_args = ()
+                makedsn_kwargs = {'service_name': url.database}
+
+            dsn = self.dbapi.makedsn(url.host, port, *makedsn_args, **makedsn_kwargs)
         else:
             # we have a local tnsname
             dsn = url.host
