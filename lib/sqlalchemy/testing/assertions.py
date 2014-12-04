@@ -110,6 +110,9 @@ def _expect_warnings(exc_cls, messages):
     real_warn = warnings.warn
 
     def our_warn(msg, exception, *arg, **kw):
+        if isinstance(msg, Warning):
+            msg, exception = str(msg), type(msg)
+
         if not issubclass(exception, exc_cls):
             return real_warn(msg, exception, *arg, **kw)
 

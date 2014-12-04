@@ -550,8 +550,9 @@ class SybaseDialect(default.DefaultDialect):
             # if is_array:
             #     coltype = ARRAY(coltype)
         else:
-            util.warn("Did not recognize type '%s' of column '%s'" %
-                      (type_, name))
+            util.warn(exc.SAUnknownTypeReflectionWarning(
+                "Did not recognize type '%s' of column '%s'" %
+                (type_, name)))
             coltype = sqltypes.NULLTYPE
 
         if default:

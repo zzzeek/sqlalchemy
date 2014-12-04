@@ -2305,8 +2305,10 @@ class PGDialect(default.DefaultDialect):
             if is_array:
                 coltype = ARRAY(coltype)
         else:
-            util.warn("Did not recognize type '%s' of column '%s'" %
-                      (attype, name))
+            util.warn(exc.SAUnknownTypeReflectionWarning(
+                "Did not recognize type '%s' of column '%s'" %
+                (attype, name)
+            ))
             coltype = sqltypes.NULLTYPE
         # adjust the default value
         autoincrement = False
@@ -2533,17 +2535,17 @@ class PGDialect(default.DefaultDialect):
 
             if expr:
                 if idx_name != sv_idx_name:
-                    util.warn(
+                    util.warn(exc.SAUnsupportedIndexReflectionWarning(
                         "Skipped unsupported reflection of "
                         "expression-based index %s"
-                        % idx_name)
+                        % idx_name))
                 sv_idx_name = idx_name
                 continue
 
             if prd and not idx_name == sv_idx_name:
-                util.warn(
+                util.warn(exc.SAIncompleteIndexReflectionWarning(
                     "Predicate of partial index %s ignored during reflection"
-                    % idx_name)
+                    % idx_name))
                 sv_idx_name = idx_name
 
             has_idx = idx_name in indexes

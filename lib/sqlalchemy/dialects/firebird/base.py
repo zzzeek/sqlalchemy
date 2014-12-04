@@ -609,8 +609,9 @@ class FBDialect(default.DefaultDialect):
             colspec = row['ftype'].rstrip()
             coltype = self.ischema_names.get(colspec)
             if coltype is None:
-                util.warn("Did not recognize type '%s' of column '%s'" %
-                          (colspec, name))
+                util.warn(exc.SAUnknownTypeReflectionWarning(
+                    "Did not recognize type '%s' of column '%s'" %
+                    (colspec, name)))
                 coltype = sqltypes.NULLTYPE
             elif issubclass(coltype, Integer) and row['fprec'] != 0:
                 coltype = NUMERIC(

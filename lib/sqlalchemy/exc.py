@@ -371,3 +371,35 @@ class SAPendingDeprecationWarning(PendingDeprecationWarning):
 
 class SAWarning(RuntimeWarning):
     """Issued at runtime."""
+
+
+class SAIndexReflectionWarning(SAWarning):
+    """ Issued if an index cannot be reflected """
+
+
+class SAOmittedIndexReflectionWarning(SAIndexReflectionWarning):
+    """ Issued if an index is ignored, because of omitted columns """
+
+
+class SAIncompleteIndexReflectionWarning(SAIndexReflectionWarning):
+    """ Issued if an index is missing columns or predicates """
+
+
+class SAUnsupportedIndexReflectionWarning(SAIndexReflectionWarning):
+    """ Issued if an index type is not supported and hence not reflected """
+
+
+class SATypeReflectionWarning(SAWarning):
+    """ Issued if a type cannot be reflected """
+
+
+class SAUnknownTypeReflectionWarning(SATypeReflectionWarning):
+    """ Issued if the reflected type is not known to SQLAlchemy """
+
+
+class SAUnparsableTypeReflectionWarning(SATypeReflectionWarning):
+    """ Issued if the type info from the DB could not be parsed """
+
+
+class SAIncompleteTypeReflectionWarning(SATypeReflectionWarning):
+    """ Issued if the type reflection is incomplete """

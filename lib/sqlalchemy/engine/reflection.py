@@ -645,9 +645,9 @@ class Inspector(object):
             duplicates = index_d.get('duplicates_constraint')
             if include_columns and \
                     not set(columns).issubset(include_columns):
-                util.warn(
+                util.warn(exc.SAOmittedIndexReflectionWarning(
                     "Omitting %s key for (%s), key covers omitted columns." %
-                    (flavor, ', '.join(columns)))
+                    (flavor, ', '.join(columns))))
                 continue
             if duplicates:
                 continue
@@ -659,11 +659,11 @@ class Inspector(object):
                     idx_col = cols_by_orig_name[c] \
                         if c in cols_by_orig_name else table.c[c]
                 except KeyError:
-                    util.warn(
+                    util.warn(exc.SAIncompleteIndexReflectionWarning(
                         "%s key '%s' was not located in "
                         "columns for table '%s'" % (
                             flavor, c, table_name
-                        ))
+                        )))
                 else:
                     idx_cols.append(idx_col)
 
