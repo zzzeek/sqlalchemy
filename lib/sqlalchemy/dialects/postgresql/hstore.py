@@ -272,7 +272,14 @@ class HSTORE(sqltypes.Concatenable, sqltypes.TypeEngine):
             return sqltypes.Concatenable.Comparator.\
                 _adapt_expression(self, op, other_comparator)
 
+    def __init__(self, hstore_registered=False):
+        self.hstore_registered = hstore_registered
+        super(HSTORE, self).__init__()
+
     def bind_processor(self, dialect):
+        if self.hstore_registered:
+            return (lambda o: o)
+
         if util.py2k:
             encoding = dialect.encoding
 
@@ -290,6 +297,9 @@ class HSTORE(sqltypes.Concatenable, sqltypes.TypeEngine):
         return process
 
     def result_processor(self, dialect, coltype):
+        if self.hstore_registered:
+            return (lambda o: o)
+
         if util.py2k:
             encoding = dialect.encoding
 
