@@ -164,7 +164,7 @@ class JSON(sqltypes.TypeEngine):
 
     __visit_name__ = 'JSON'
 
-    def __init__(self, none_as_null=False):
+    def __init__(self, none_as_null=False, json_registered=False):
         """Construct a :class:`.JSON` type.
 
         :param none_as_null: if True, persist the value ``None`` as a
@@ -180,6 +180,7 @@ class JSON(sqltypes.TypeEngine):
 
          """
         self.none_as_null = none_as_null
+        self.json_registered = json_registered
 
     class comparator_factory(sqltypes.Concatenable.Comparator):
         """Define comparison operations for :class:`.JSON`."""
@@ -197,6 +198,9 @@ class JSON(sqltypes.TypeEngine):
                 _adapt_expression(self, op, other_comparator)
 
     def bind_processor(self, dialect):
+        if self.json_registered:
+            return (lambda o: o)
+
         json_serializer = dialect._json_serializer or json.dumps
         if util.py2k:
             encoding = dialect.encoding
@@ -217,6 +221,9 @@ class JSON(sqltypes.TypeEngine):
         return process
 
     def result_processor(self, dialect, coltype):
+        if self.json_registered:
+            return (lambda o: o)
+
         json_deserializer = dialect._json_deserializer or json.loads
         if util.py2k:
             encoding = dialect.encoding
