@@ -747,6 +747,12 @@ class SQLCompiler(Compiled):
             )
         )
 
+    def visit_within_group(self, within_group, **kwargs):
+        return "%s WITHIN GROUP (ORDER BY %s)" % (
+            within_group.func._compiler_dispatch(self, **kwargs),
+            within_group.order_by._compiler_dispatch(self, **kwargs)
+        )
+
     def visit_funcfilter(self, funcfilter, **kwargs):
         return "%s FILTER (WHERE %s)" % (
             funcfilter.func._compiler_dispatch(self, **kwargs),

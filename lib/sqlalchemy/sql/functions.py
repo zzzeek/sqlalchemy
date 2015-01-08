@@ -12,7 +12,7 @@ from . import sqltypes, schema
 from .base import Executable, ColumnCollection
 from .elements import ClauseList, Cast, Extract, _literal_as_binds, \
     literal_column, _type_from_args, ColumnElement, _clone,\
-    Over, BindParameter, FunctionFilter
+    Over, BindParameter, FunctionFilter, WithinGroup
 from .selectable import FromClause, Select, Alias
 
 from . import operators
@@ -115,6 +115,28 @@ class FunctionElement(Executable, ColumnElement, FromClause):
 
         """
         return Over(self, partition_by=partition_by, order_by=order_by)
+
+    def within_group(self, order_by=None):
+        """Produce a WITHIN GROUP clause against this function.
+
+        Used against ordered-set and hypothetical-set aggregates
+        within groups.
+
+        The expression::
+
+            func.percentile_disc(0.25).within_group(order_by='x')
+
+        is shorthand for::
+
+            from sqlalchemy import within_group
+            within_group(func.percentile_disc(0.25), order_by='x')
+
+        See :func:`~.expression.within_group` for a full description.
+
+        .. versionadded:: 1.0
+
+        """
+        return WithinGroup(self, order_by=order_by)
 
     def filter(self, *criterion):
         """Produce a FILTER clause against this function.
