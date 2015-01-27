@@ -61,6 +61,12 @@ on the URL, or as keyword arguments to :func:`.create_engine()` are:
   Defaults to ``True``.  Note that this is the opposite default of the
   cx_Oracle DBAPI itself.
 
+* ``service_name`` - An option to use connection string (DSN) with
+  ``SERVICE_NAME`` instead of ``SID``. It can't be passed when a ``database``
+  part is given.
+  E.g. ``oracle+cx_oracle://scott:tiger@host:1521/?service_name=hr``
+  is a valid url. This value is only available as a URL query string argument.
+
 .. _cx_oracle_unicode:
 
 Unicode
@@ -857,12 +863,14 @@ class OracleDialect_cx_oracle(OracleDialect):
     def create_connect_args(self, url):
         dialect_opts = dict(url.query)
         for opt in ('use_ansi', 'auto_setinputsizes', 'auto_convert_lobs',
-                    'threaded', 'allow_twophase', 'use_service_name'):
+                    'threaded', 'allow_twophase'):
             if opt in dialect_opts:
                 util.coerce_kw_type(dialect_opts, opt, bool)
                 setattr(self, opt, dialect_opts[opt])
 
-        if url.database:
+        database = url.database
+        service_name = dialect_opts.get('service_name', None)
+        if database or service_name:
             # if we have a database, then we have a remote host
             port = url.port
             if port:
@@ -870,13 +878,16 @@ class OracleDialect_cx_oracle(OracleDialect):
             else:
                 port = 1521
 
-            makedsn_args = (url.database,)
-            makedsn_kwargs = {}
-            if hasattr(self, 'use_service_name') and self.use_service_name is True:
-                makedsn_args = ()
-                makedsn_kwargs = {'service_name': url.database}
+            if database and service_name:
+                raise exc.InvalidRequestError(
+                    '"service_name" option shouldn\'t '
+                    'be used with a "database" part of the url')
+            if database:
+                makedsn_kwargs = {'sid': database}
+            if service_name:
+                makedsn_kwargs = {'service_name': service_name}
 
-            dsn = self.dbapi.makedsn(url.host, port, *makedsn_args, **makedsn_kwargs)
+            dsn = self.dbapi.makedsn(url.host, port, **makedsn_kwargs)
         else:
             # we have a local tnsname
             dsn = url.host
