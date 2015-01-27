@@ -189,7 +189,7 @@ class EnumTest(fixtures.TestBase, AssertsExecutionResults):
 
         try:
             self.assert_sql(
-                testing.db, go, [], with_sequences=[
+                testing.db, go, [
                     ("CREATE TABLE foo (\tbar "
                      "VARCHAR(5), \tCONSTRAINT myenum CHECK "
                      "(bar IN ('one', 'two', 'three')))", {})])
@@ -259,9 +259,9 @@ class EnumTest(fixtures.TestBase, AssertsExecutionResults):
 
         try:
             self.assert_sql(
-                engine, go, [], with_sequences=[
-                    ("CREATE TABLE foo (\tbar "
-                     "VARCHAR(5), \tCONSTRAINT myenum CHECK "
+                engine, go, [
+                    ("CREATE TABLE foo (bar "
+                     "VARCHAR(5), CONSTRAINT myenum CHECK "
                      "(bar IN ('one', 'two', 'three')))", {})])
         finally:
             metadata.drop_all(engine)
@@ -379,10 +379,12 @@ class NumericInterpretationTest(fixtures.TestBase):
     __backend__ = True
 
     def test_numeric_codes(self):
-        from sqlalchemy.dialects.postgresql import pg8000, psycopg2, base
+        from sqlalchemy.dialects.postgresql import psycopg2cffi, pg8000, \
+            psycopg2, base
 
-        for dialect in (pg8000.dialect(), psycopg2.dialect()):
-
+        dialects = (pg8000.dialect(), psycopg2.dialect(),
+                    psycopg2cffi.dialect())
+        for dialect in dialects:
             typ = Numeric().dialect_impl(dialect)
             for code in base._INT_TYPES + base._FLOAT_TYPES + \
                     base._DECIMAL_TYPES:
@@ -1397,7 +1399,7 @@ class HStoreRoundTripTest(fixtures.TablesTest):
                     use_native_hstore=False))
         else:
             engine = testing.db
-        engine.connect()
+        engine.connect().close()
         return engine
 
     def test_reflect(self):
@@ -2029,7 +2031,7 @@ class JSONRoundTripTest(fixtures.TablesTest):
             engine = engines.testing_engine(options=options)
         else:
             engine = testing.db
-        engine.connect()
+        engine.connect().close()
         return engine
 
     def test_reflect(self):

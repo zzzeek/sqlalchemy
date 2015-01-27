@@ -66,12 +66,13 @@ in ``/tmp``, or whatever socket directory was specified when PostgreSQL
 was built.  This value can be overridden by passing a pathname to psycopg2,
 using ``host`` as an additional keyword argument::
 
-    create_engine("postgresql+psycopg2://user:password@/dbname?host=/var/lib/postgresql")
+    create_engine("postgresql+psycopg2://user:password@/dbname?\
+host=/var/lib/postgresql")
 
 See also:
 
-`PQconnectdbParams <http://www.postgresql.org/docs/9.1/static\
-/libpq-connect.html#LIBPQ-PQCONNECTDBPARAMS>`_
+`PQconnectdbParams <http://www.postgresql.org/docs/9.1/static/\
+libpq-connect.html#LIBPQ-PQCONNECTDBPARAMS>`_
 
 Per-Statement/Connection Execution Options
 -------------------------------------------
@@ -237,7 +238,7 @@ The psycopg2 dialect supports these constants for isolation level:
 * ``AUTOCOMMIT``
 
 .. versionadded:: 0.8.2 support for AUTOCOMMIT isolation level when using
-   psycopg2.
+    psycopg2.
 
 .. seealso::
 
@@ -511,9 +512,19 @@ class PGDialect_psycopg2(PGDialect):
         import psycopg2
         return psycopg2
 
+    @classmethod
+    def _psycopg2_extensions(cls):
+        from psycopg2 import extensions
+        return extensions
+
+    @classmethod
+    def _psycopg2_extras(cls):
+        from psycopg2 import extras
+        return extras
+
     @util.memoized_property
     def _isolation_lookup(self):
-        from psycopg2 import extensions
+        extensions = self._psycopg2_extensions()
         return {
             'AUTOCOMMIT': extensions.ISOLATION_LEVEL_AUTOCOMMIT,
             'READ COMMITTED': extensions.ISOLATION_LEVEL_READ_COMMITTED,
@@ -535,7 +546,8 @@ class PGDialect_psycopg2(PGDialect):
         connection.set_isolation_level(level)
 
     def on_connect(self):
-        from psycopg2 import extras, extensions
+        extras = self._psycopg2_extras()
+        extensions = self._psycopg2_extensions()
 
         fns = []
         if self.client_encoding is not None:
@@ -585,7 +597,7 @@ class PGDialect_psycopg2(PGDialect):
     @util.memoized_instancemethod
     def _hstore_oids(self, conn):
         if self.psycopg2_version >= (2, 4):
-            from psycopg2 import extras
+            extras = self._psycopg2_extras()
             oids = extras.HstoreAdapter.get_oids(conn)
             if oids is not None and oids[0]:
                 return oids[0:2]

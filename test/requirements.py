@@ -127,9 +127,15 @@ class DefaultRequirements(SuiteRequirements):
             )
 
     @property
-    def temporary_table(self):
-        """Target database must support CREATE TEMPORARY TABLE"""
-        return exclusions.open()
+    def temporary_tables(self):
+        """target database supports temporary tables"""
+        return skip_if(
+                    ["mssql"], "sql server has some other syntax?"
+                )
+
+    @property
+    def temp_table_reflection(self):
+        return self.temporary_tables
 
     @property
     def reflectable_autoincrement(self):
@@ -454,6 +460,7 @@ class DefaultRequirements(SuiteRequirements):
         )
 
 
+
     @property
     def emulated_lastrowid(self):
         """"target dialect retrieves cursor.lastrowid or an equivalent
@@ -649,6 +656,10 @@ class DefaultRequirements(SuiteRequirements):
                         'postgresql+pg8000', None, None,
                         'postgresql+pg8000 has FP inaccuracy even with '
                         'only four decimal places '),
+                    (
+                        'postgresql+psycopg2cffi', None, None,
+                        'postgresql+psycopg2cffi has FP inaccuracy even with '
+                        'only four decimal places '),
                 ])
 
     @property
@@ -749,6 +760,10 @@ class DefaultRequirements(SuiteRequirements):
                     "+psycopg2", None, None,
                     "psycopg2 2.4 no longer accepts percent "
                     "sign in bind placeholders"),
+                (
+                    "+psycopg2cffi", None, None,
+                    "psycopg2cffi does not accept percent signs in "
+                    "bind placeholders"),
                 ("mysql", None, None, "executemany() doesn't work here")
             ]
         )
@@ -771,6 +786,17 @@ class DefaultRequirements(SuiteRequirements):
                 "Not supported on MySQL + Windows"
             )
 
+    @property
+    def mssql_freetds(self):
+        return only_on(
+            LambdaPredicate(
+                lambda config: (
+                    (against(config, 'mssql+pyodbc') and
+                     config.db.dialect.freetds)
+                    or against(config, 'mssql+pymssql')
+                )
+            )
+        )
 
     @property
     def selectone(self):

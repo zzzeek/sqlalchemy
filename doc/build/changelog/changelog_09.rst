@@ -1,3 +1,4 @@
+
 ==============
 0.9 Changelog
 ==============
@@ -12,6 +13,102 @@
 
 .. changelog::
     :version: 0.9.9
+
+    .. change::
+        :tags: feature, engine
+        :versions: 1.0.0
+
+        Added new user-space accessors for viewing transaction isolation
+        levels; :meth:`.Connection.get_isolation_level`,
+        :attr:`.Connection.default_isolation_level`.
+
+    .. change::
+        :tags: bug, postgresql
+        :versions: 1.0.0
+        :tickets: 3174
+
+        Fixed bug where Postgresql dialect would fail to render an
+        expression in an :class:`.Index` that did not correspond directly
+        to a table-bound column; typically when a :func:`.text` construct
+        was one of the expressions within the index; or could misinterpret the
+        list of expressions if one or more of them were such an expression.
+
+    .. change::
+        :tags: bug, orm
+        :versions: 1.0.0
+        :tickets: 3287
+
+        The "wildcard" loader options, in particular the one set up by
+        the :func:`.orm.load_only` option to cover all attributes not
+        explicitly mentioned, now takes into account the superclasses
+        of a given entity, if that entity is mapped with inheritance mapping,
+        so that attribute names within the superclasses are also omitted
+        from the load.  Additionally, the polymorphic discriminator column
+        is unconditionally included in the list, just in the same way that
+        primary key columns are, so that even with load_only() set up,
+        polymorphic loading of subtypes continues to function correctly.
+
+    .. change::
+        :tags: bug, sql
+        :versions: 1.0.0
+        :pullreq: bitbucket:41
+
+        Added the ``native_enum`` flag to the ``__repr__()`` output
+        of :class:`.Enum`, which is mostly important when using it with
+        Alembic autogenerate.  Pull request courtesy Dimitris Theodorou.
+
+    .. change::
+        :tags: bug, orm, pypy
+        :versions: 1.0.0
+        :tickets: 3285
+
+        Fixed bug where if an exception were thrown at the start of a
+        :class:`.Query` before it fetched results, particularly when
+        row processors can't be formed, the cursor would stay open with
+        results pending and not actually be closed.  This is typically only
+        an issue on an interpreter like Pypy where the cursor isn't
+        immediately GC'ed, and can in some circumstances lead to transactions/
+        locks being open longer than is desirable.
+
+    .. change::
+        :tags: change, mysql
+        :versions: 1.0.0
+        :tickets: 3275
+
+        The ``gaerdbms`` dialect is no longer necessary, and emits a
+        deprecation warning.  Google now recommends using the MySQLdb
+        dialect directly.
+
+    .. change::
+        :tags: bug, sql
+        :versions: 1.0.0
+        :tickets: 3278
+
+        Fixed bug where using a :class:`.TypeDecorator` that implemented
+        a type that was also a :class:`.TypeDecorator` would fail with
+        Python's "Cannot create a consistent method resolution order (MRO)"
+        error, when any kind of SQL comparison expression were used against
+        an object using this type.
+
+    .. change::
+        :tags: bug, mysql
+        :versions: 1.0.0
+        :tickets: 3274
+
+        Added a version check to the MySQLdb dialect surrounding the
+        check for 'utf8_bin' collation, as this fails on MySQL server < 5.0.
+
+    .. change::
+        :tags: enhancement, orm
+        :versions: 1.0.0
+
+        Added new method :meth:`.Session.invalidate`, functions similarly
+        to :meth:`.Session.close`, except also calls
+        :meth:`.Connection.invalidate`
+        on all connections, guaranteeing that they will not be returned to
+        the connection pool.  This is useful in situations e.g. dealing
+        with gevent timeouts when it is not safe to use the connection further,
+        even for rollbacks.
 
     .. change::
         :tags: bug, examples
@@ -274,7 +371,7 @@
         :versions: 1.0.0
         :pullrequest: bitbucket:28
 
-        Fixed bug where :ref:`ext.mutable.MutableDict`
+        Fixed bug where :class:`.ext.mutable.MutableDict`
         failed to implement the ``update()`` dictionary method, thus
         not catching changes. Pull request courtesy Matt Chisholm.
 
@@ -283,9 +380,9 @@
         :versions: 1.0.0
         :pullrequest: bitbucket:27
 
-        Fixed bug where a custom subclass of :ref:`ext.mutable.MutableDict`
+        Fixed bug where a custom subclass of :class:`.ext.mutable.MutableDict`
         would not show up in a "coerce" operation, and would instead
-        return a plain :ref:`ext.mutable.MutableDict`.  Pull request
+        return a plain :class:`.ext.mutable.MutableDict`.  Pull request
         courtesy Matt Chisholm.
 
     .. change::
@@ -517,7 +614,7 @@
         :tags: bug, orm
         :tickets: 3117
 
-        The "evaulator" for query.update()/delete() won't work with multi-table
+        The "evaluator" for query.update()/delete() won't work with multi-table
         updates, and needs to be set to `synchronize_session=False` or
         `synchronize_session='fetch'`; a warning is now emitted.  In
         1.0 this will be promoted to a full exception.
@@ -537,7 +634,7 @@
         :tickets: 3078
 
         Added kw argument ``postgresql_regconfig`` to the
-        :meth:`.Operators.match` operator, allows the "reg config" argument
+        :meth:`.ColumnOperators.match` operator, allows the "reg config" argument
         to be specified to the ``to_tsquery()`` function emitted.
         Pull request courtesy Jonathan Vanasco.
 
@@ -826,7 +923,7 @@
         translated through some kind of SQL function or expression.  This
         is kind of experimental, but the first proof of concept is a
         "materialized path" join condition where a path string is compared
-        to itself using "like".   The :meth:`.Operators.like` operator has
+        to itself using "like".   The :meth:`.ColumnOperators.like` operator has
         also been added to the list of valid operators to use in a primaryjoin
         condition.
 
@@ -1899,8 +1996,8 @@
         Fixed an issue where the C extensions in Py3K are using the wrong API
         to specify the top-level module function, which breaks
         in Python 3.4b2.  Py3.4b2 changes PyMODINIT_FUNC to return
-        "void" instead of "PyObject *", so we now make sure to use
-        "PyMODINIT_FUNC" instead of "PyObject *" directly.  Pull request
+        "void" instead of ``PyObject *``, so we now make sure to use
+        "PyMODINIT_FUNC" instead of ``PyObject *`` directly.  Pull request
         courtesy cgohlke.
 
     .. change::
@@ -2884,7 +2981,7 @@
         in an ``ORDER BY`` clause, if that label is also referred to
         in the columns clause of the select, instead of rewriting the
         full expression.  This gives the database a better chance to
-        optimize the evaulation of the same expression in two different
+        optimize the evaluation of the same expression in two different
         contexts.
 
         .. seealso::

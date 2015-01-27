@@ -230,6 +230,7 @@ class Pool(log.Identified):
                 % reset_on_return)
 
         self.echo = echo
+
         if _dispatch:
             self.dispatch._update(_dispatch, only_propagate=False)
         if _dialect:
@@ -917,9 +918,9 @@ class QueuePool(Pool):
           on returning a connection. Defaults to 30.
 
         :param \**kw: Other keyword arguments including
-        :paramref:`.Pool.recycle`, :paramref:`.Pool.echo`,
-        :paramref:`.Pool.reset_on_return` and others are passed to the
-        :class:`.Pool` constructor.
+          :paramref:`.Pool.recycle`, :paramref:`.Pool.echo`,
+          :paramref:`.Pool.reset_on_return` and others are passed to the
+          :class:`.Pool` constructor.
 
         """
         Pool.__init__(self, creator, **kw)

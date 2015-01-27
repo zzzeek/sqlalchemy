@@ -229,6 +229,7 @@ class AssertsCompiledSQL(object):
     def assert_compile(self, clause, result, params=None,
                        checkparams=None, dialect=None,
                        checkpositional=None,
+                       check_prefetch=None,
                        use_default_dialect=False,
                        allow_dialect_select=False,
                        literal_binds=False):
@@ -289,6 +290,8 @@ class AssertsCompiledSQL(object):
         if checkpositional is not None:
             p = c.construct_params(params)
             eq_(tuple([p[x] for x in c.positiontup]), checkpositional)
+        if check_prefetch is not None:
+            eq_(c.prefetch, check_prefetch)
 
 
 class ComparesTables(object):
@@ -405,29 +408,27 @@ class AssertsExecutionResults(object):
                         cls.__name__, repr(expected_item)))
         return True
 
-    def assert_sql_execution(self, db, callable_, *rules):
-        assertsql.asserter.add_rules(rules)
-        try:
-            callable_()
-            assertsql.asserter.statement_complete()
-        finally:
-            assertsql.asserter.clear_rules()
+    def sql_execution_asserter(self, db=None):
+        if db is None:
+            from . import db as db
 
-    def assert_sql(self, db, callable_, list_, with_sequences=None):
-        if (with_sequences is not None and
-                config.db.dialect.supports_sequences):
-            rules = with_sequences
-        else:
-            rules = list_
+        return assertsql.assert_engine(db)
+
+    def assert_sql_execution(self, db, callable_, *rules):
+        with self.sql_execution_asserter(db) as asserter:
+            callable_()
+        asserter.assert_(*rules)
+
+    def assert_sql(self, db, callable_, rules):
 
         newrules = []
         for rule in rules:
             if isinstance(rule, dict):
                 newrule = assertsql.AllOf(*[
-                    assertsql.ExactSQL(k, v) for k, v in rule.items()
+                    assertsql.CompiledSQL(k, v) for k, v in rule.items()
                 ])
             else:
-                newrule = assertsql.ExactSQL(*rule)
+                newrule = assertsql.CompiledSQL(*rule)
             newrules.append(newrule)
 
         self.assert_sql_execution(db, callable_, *newrules)
