@@ -26,7 +26,7 @@ is orders of magnitude faster than that of MySQLdb as it does not call into
 Python functions to do so.  Therefore, the **recommended URL to use for
 unicode** will include both charset and use_unicode=0::
 
-    create_engine("mysql+mysqldb://user:pass@host/dbname?charset=utf8&use_unicode=0")
+    create_engine("mysql+mysqldb://user:pass@host/dbname?charset=utf8mb4&use_unicode=0")
 
 As of this writing, MySQLdb only runs on Python 2.   It is not known how
 MySQLdb behaves on Python 3 as far as unicode decoding.
