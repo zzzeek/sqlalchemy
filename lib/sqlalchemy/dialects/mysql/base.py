@@ -3309,7 +3309,7 @@ class _DecodingRowProxy(object):
             item = item.tostring()
 
         if self.charset and isinstance(item, util.binary_type):
-            return item.decode(charset)
+            return item.decode(self.charset)
         else:
             return item
 
