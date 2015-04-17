@@ -353,7 +353,7 @@ class FromClause(Selectable):
 
         return Join(self, right, onclause, isouter, full)
 
-    def outerjoin(self, right, onclause=None):
+    def outerjoin(self, right, onclause=None, full=False):
         """Return a :class:`.Join` from this :class:`.FromClause`
         to another :class:`FromClause`, with the "isouter" flag set to
         True.
@@ -381,6 +381,8 @@ class FromClause(Selectable):
          join.  If left at ``None``, :meth:`.FromClause.join` will attempt to
          join the two tables based on a foreign key relationship.
 
+        :param full: if True, render a FULL OUTER JOIN, instead of JOIN.
+
         .. seealso::
 
             :meth:`.FromClause.join`
@@ -389,7 +391,7 @@ class FromClause(Selectable):
 
         """
 
-        return Join(self, right, onclause, True)
+        return Join(self, right, onclause, True, full)
 
     def alias(self, name=None, flat=False):
         """return an alias of this :class:`.FromClause`.
@@ -670,7 +672,7 @@ class Join(FromClause):
         self.full = full
 
     @classmethod
-    def _create_outerjoin(cls, left, right, onclause=None):
+    def _create_outerjoin(cls, left, right, onclause=None, full=False):
         """Return an ``OUTER JOIN`` clause element.
 
         The returned object is an instance of :class:`.Join`.
@@ -692,7 +694,7 @@ class Join(FromClause):
         :class:`.Join` object.
 
         """
-        return cls(left, right, onclause, isouter=True)
+        return cls(left, right, onclause, isouter=True, full)
 
     @classmethod
     def _create_join(cls, left, right, onclause=None, isouter=False,
