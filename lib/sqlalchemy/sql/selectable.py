@@ -341,7 +341,8 @@ class FromClause(Selectable):
 
         :param isouter: if True, render a LEFT OUTER JOIN, instead of JOIN.
 
-        :param full: if True, render a FULL OUTER JOIN, instead of JOIN.
+        :param full: if True, render a FULL OUTER JOIN, instead of LEFT OUTER
+            JOIN.
 
         .. seealso::
 
@@ -694,7 +695,7 @@ class Join(FromClause):
         :class:`.Join` object.
 
         """
-        return cls(left, right, onclause, isouter=True, full)
+        return cls(left, right, onclause, isouter=True, full=full)
 
     @classmethod
     def _create_join(cls, left, right, onclause=None, isouter=False,
