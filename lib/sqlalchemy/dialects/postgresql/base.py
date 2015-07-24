@@ -2641,7 +2641,7 @@ class PGDialect(default.DefaultDialect):
                   i.relname as relname,
                   ix.indisunique, ix.indexprs, ix.indpred,
                   a.attname, a.attnum, NULL, ix.indkey%s,
-                  i.reloptions, am.amname
+                  NULL, am.amname
               FROM
                   pg_class t
                         join pg_index ix on t.oid = ix.indrelid
