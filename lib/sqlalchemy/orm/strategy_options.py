@@ -854,6 +854,29 @@ def noload(*keys):
 
 
 @loader_option()
+def raiseload(loadopt, attr):
+    """Indicate that the given relationship attribute should remain unloaded.
+
+    Accessing the relationship attribute anyway raises an
+    :exc:`~sqlalchemy.exc.InvalidRequestError`.
+
+    This function is part of the :class:`.Load` interface and supports
+    both method-chained and standalone operation.
+
+    :func:`.orm.raiseload` applies to :func:`.relationship` attributes only.
+
+    .. versionadded:: 1.1.0
+    """
+
+    return loadopt.set_relationship_strategy(attr, {"lazy": "raise"})
+
+
+@raiseload._add_unbound_fn
+def raiseload(*keys):
+    return _UnboundLoad._from_keys(_UnboundLoad.raiseload, keys, False, {})
+
+
+@loader_option()
 def defaultload(loadopt, attr):
     """Indicate an attribute should load using its default loader style.
 
