@@ -22,6 +22,15 @@
     :version: 1.1.0b1
 
     .. change::
+        :tags: feature, orm
+        :pullreq: github:193
+
+        Added new relationship loading strategy :func:`.orm.raiseload` (also
+        accessible via ``lazy='raise'``).  This strategy behaves almost like
+        :func:`.orm.noload` but instaed of returning ``None`` it raises an
+        InvalidRequestError.  Pull request courtesy Adrian Moennich.
+
+    .. change::
         :tags: bug, mssql
         :tickets: 3504
 

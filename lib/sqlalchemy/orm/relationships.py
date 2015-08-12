@@ -524,6 +524,10 @@ class RelationshipProperty(StrategizedProperty):
             support "write-only" attributes, or attributes which are
             populated in some manner specific to the application.
 
+          * ``raise`` - no loading should occur at any time, and accessing
+            the attribute will fail with an
+            :exc:`~sqlalchemy.exc.InvalidRequestError`.
+
           * ``dynamic`` - the attribute will return a pre-configured
             :class:`.Query` object for all read
             operations, onto which further filtering operations can be

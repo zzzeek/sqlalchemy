@@ -107,6 +107,10 @@ be persisted to the database as well as locally available for reading at the
 time they are added. However when instances of ``MyClass`` are freshly loaded
 from the database, the ``children`` collection stays empty.
 
+If the application is expected to never access such an unloaded relationship,
+``lazy='raise'`` may be used.  Accessing such a relationship will raise an
+:exc:`~sqlalchemy.exc.InvalidRequestError`.
+
 .. _passive_deletes:
 
 Using Passive Deletes
