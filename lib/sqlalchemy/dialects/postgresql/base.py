@@ -598,6 +598,51 @@ class OID(sqltypes.TypeEngine):
     __visit_name__ = "OID"
 
 
+class LTREE(sqltypes.TypeEngine):
+
+    """Postgresql LTREE type.
+    """
+
+    class Comparator(sqltypes.Concatenable.Comparator):
+
+        def ancestor_of(self, other):
+            if isinstance(other, list):
+                return self.expr.op('@>')(expression.cast(other, ARRAY(LTREE)))
+            else:
+                return self.expr.op('@>')(other)
+
+        def descendant_of(self, other):
+            if isinstance(other, list):
+                return self.expr.op('<@')(expression.cast(other, ARRAY(LTREE)))
+            else:
+                return self.expr.op('<@')(other)
+
+        def lquery(self, other):
+            if isinstance(other, list):
+                return self.expr.op('?')(expression.cast(other, ARRAY(LQUERY)))
+            else:
+                return self.expr.op('~')(other)
+
+        def ltxtquery(self, other):
+            return self.expr.op('@')(other)
+
+    comparator_factory = Comparator
+
+    __visit_name__ = 'LTREE'
+
+PGLTree = LTREE
+
+
+class LQUERY(sqltypes.TypeEngine):
+    __visit_name__ = 'LQUERY'
+PGLQuery = LQUERY
+
+
+class LTXTQUERY(sqltypes.TypeEngine):
+    __visit_name__ = 'LTXTQUERY'
+PGLTxtQuery = LTXTQUERY
+
+
 class TIMESTAMP(sqltypes.TIMESTAMP):
 
     def __init__(self, timezone=False, precision=None):
@@ -1370,7 +1415,10 @@ ischema_names = {
     'interval': INTERVAL,
     'interval year to month': INTERVAL,
     'interval day to second': INTERVAL,
-    'tsvector': TSVECTOR
+    'tsvector': TSVECTOR,
+    'ltree': LTREE,
+    'lquery': LQUERY,
+    'ltxtquery': LTXTQUERY
 }
 
 
@@ -1791,6 +1839,15 @@ class PGTypeCompiler(compiler.GenericTypeCompiler):
         return self.process(type_.item_type) + ('[]' * (type_.dimensions
                                                         if type_.dimensions
                                                         is not None else 1))
+
+    def visit_LTREE(self, type_, **kw):
+        return 'LTREE'
+
+    def visit_LQUERY(self, type_, **kw):
+        return 'LQUERY'
+
+    def visit_LTXTQUERY(self, type_, **kw):
+        return 'LTXTQUERY'
 
 
 class PGIdentifierPreparer(compiler.IdentifierPreparer):

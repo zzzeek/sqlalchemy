@@ -13,7 +13,7 @@ from .base import \
     INTEGER, BIGINT, SMALLINT, VARCHAR, CHAR, TEXT, NUMERIC, FLOAT, REAL, \
     INET, CIDR, UUID, BIT, MACADDR, OID, DOUBLE_PRECISION, TIMESTAMP, TIME, \
     DATE, BYTEA, BOOLEAN, INTERVAL, ARRAY, ENUM, dialect, array, Any, All, \
-    TSVECTOR, DropEnumType
+    TSVECTOR, DropEnumType, LTREE, LQUERY, LTXTQUERY
 from .constraints import ExcludeConstraint
 from .hstore import HSTORE, hstore
 from .json import JSON, JSONElement, JSONB
@@ -27,5 +27,5 @@ __all__ = (
     'INTERVAL', 'ARRAY', 'ENUM', 'dialect', 'Any', 'All', 'array', 'HSTORE',
     'hstore', 'INT4RANGE', 'INT8RANGE', 'NUMRANGE', 'DATERANGE',
     'TSRANGE', 'TSTZRANGE', 'json', 'JSON', 'JSONB', 'JSONElement',
-    'DropEnumType'
+    'DropEnumType', 'LTREE', 'LQUERY', 'LTXTQUERY'
 )

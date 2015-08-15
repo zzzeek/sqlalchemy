@@ -14,7 +14,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import base as postgresql
 from sqlalchemy.dialects.postgresql import HSTORE, hstore, array, \
     INT4RANGE, INT8RANGE, NUMRANGE, DATERANGE, TSRANGE, TSTZRANGE, \
-    JSON, JSONB
+    JSON, JSONB, LTREE, LQUERY, LTXTQUERY
 import decimal
 from sqlalchemy import util
 from sqlalchemy.testing.util import round_decimal
@@ -1050,6 +1050,18 @@ class TimestampTest(fixtures.TestBase, AssertsExecutionResults):
         s = select([text("timestamp '2007-12-25'")])
         result = connection.execute(s).first()
         eq_(result[0], datetime.datetime(2007, 12, 25, 0, 0))
+
+
+class LTreeTest(fixtures.TestBase, AssertsExecutionResults):
+    __only_on__ = 'postgresql >= 9.1.0'
+    __backend__ = True
+
+    def test_ltree(self):
+        engine = testing.db
+        connection = engine.connect()
+
+        # The Postgresql server must have the LTREE extension enabled.
+        # `CREATE EXTENSION ltree;`
 
 
 class SpecialTypesTest(fixtures.TestBase, ComparesTables, AssertsCompiledSQL):
