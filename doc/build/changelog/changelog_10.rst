@@ -16,7 +16,110 @@
         :start-line: 5
 
 .. changelog::
+    :version: 1.0.9
+
+    .. change::
+        :tags: bug, orm
+        :tickets: 3510
+        :versions: 1.1.0b1
+
+        Fixed 1.0 regression where the "noload" loader strategy would fail
+        to function for a many-to-one relationship.  The loader used an
+        API to place "None" into the dictionary which no longer actually
+        writes a value; this is a side effect of :ticket:`3061`.
+
+    .. change::
+        :tags: bug, sybase
+        :tickets: 3508, 3509
+        :versions: 1.1.0b1
+
+        Fixed two issues regarding Sybase reflection, allowing tables
+        without primary keys to be reflected as well as ensured that
+        a SQL statement involved in foreign key detection is pre-fetched up
+        front to avoid driver issues upon nested queries.  Fixes here
+        courtesy Eugene Zapolsky; note that we cannot currently test
+        Sybase to locally verify these changes.
+
+    .. change::
+        :tags: bug, postgresql
+        :pullreq: github:190
+        :versions: 1.1.0b1
+
+        An adjustment to the new Postgresql feature of reflecting storage
+        options and USING of :ticket:`3455` released in 1.0.6,
+        to disable the feature for Postgresql versions < 8.2 where the
+        ``reloptions`` column is not provided; this allows Amazon Redshift
+        to again work as it is based on an 8.0.x version of Postgresql.
+        Fix courtesy Pete Hollobon.
+
+
+.. changelog::
+    :version: 1.0.8
+    :released: July 22, 2015
+
+    .. change::
+        :tags: bug, misc
+        :tickets: 3494
+
+        Fixed an issue where a particular base class within utils
+        didn't implement ``__slots__``, and therefore meant all subclasses
+        of that class didn't either, negating the rationale for ``__slots__``
+        to be in use.  Didn't cause any issue except on IronPython
+        which apparently does not implement ``__slots__`` behavior compatibly
+        with cPython.
+
+
+.. changelog::
     :version: 1.0.7
+    :released: July 20, 2015
+
+    .. change::
+        :tags: feature, sql
+        :tickets: 3459
+        :pullreq: bitbucket:56
+
+        Added a :meth:`.ColumnElement.cast` method which performs the same
+        purpose as the standalone :func:`.cast` function.  Pull request
+        courtesy Sebastian Bank.
+
+    .. change::
+        :tags: bug, engine
+        :tickets: 3481
+
+        Fixed regression where new methods on :class:`.ResultProxy` used
+        by the ORM :class:`.Query` object (part of the performance
+        enhancements of :ticket:`3175`) would not raise the "this result
+        does not return rows" exception in the case where the driver
+        (typically MySQL) fails to generate cursor.description correctly;
+        an AttributeError against NoneType would be raised instead.
+
+    .. change::
+        :tags: bug, engine
+        :tickets: 3483
+
+        Fixed regression where :meth:`.ResultProxy.keys` would return
+        un-adjusted internal symbol names for "anonymous" labels, which
+        are the "foo_1" types of labels we see generated for SQL functions
+        without labels and similar.  This was a side effect of the
+        performance enhancements implemented as part of #918.
+
+
+    .. change::
+        :tags: bug, sql
+        :tickets: 3490
+
+        Fixed bug where coersion of literal ``True`` or ``False`` constant
+        in conjunction with :func:`.and_` or :func:`.or_` would fail
+        with an AttributeError.
+
+    .. change::
+        :tags: bug, sql
+        :tickets: 3485
+
+        Fixed potential issue where a custom subclass
+        of :class:`.FunctionElement` or other column element that incorrectly
+        states 'None' or any other invalid object as the ``.type``
+        attribute will report this exception instead of recursion overflow.
 
     .. change::
         :tags: bug, sql

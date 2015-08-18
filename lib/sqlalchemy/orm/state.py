@@ -294,7 +294,7 @@ class InstanceState(interfaces.InspectionAttr):
             return {}
 
     def _initialize_instance(*mixed, **kwargs):
-        self, instance, args = mixed[0], mixed[1], mixed[2:]
+        self, instance, args = mixed[0], mixed[1], mixed[2:]  # noqa
         manager = self.manager
 
         manager.dispatch.init(self, args, kwargs)
@@ -373,12 +373,6 @@ class InstanceState(interfaces.InspectionAttr):
                 deserialize(state_dict['load_path'])
 
         state_dict['manager'](self, inst, state_dict)
-
-    def _initialize(self, key):
-        """Set this attribute to an empty value or collection,
-           based on the AttributeImpl in use."""
-
-        self.manager.get_impl(key).initialize(self, self.dict)
 
     def _reset(self, dict_, key):
         """Remove the given attribute and any

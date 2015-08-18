@@ -346,7 +346,10 @@ class NoLoader(AbstractRelationshipLoader):
             self, context, path, loadopt, mapper,
             result, adapter, populators):
         def invoke_no_load(state, dict_, row):
-            state._initialize(self.key)
+            if self.uselist:
+                state.manager.get_impl(self.key).initialize(state, dict_)
+            else:
+                dict_[self.key] = None
         populators["new"].append((self.key, invoke_no_load))
 
 
@@ -361,7 +364,8 @@ class LazyLoader(AbstractRelationshipLoader, util.MemoizedSlots):
 
     __slots__ = (
         '_lazywhere', '_rev_lazywhere', 'use_get', '_bind_to_col',
-        '_equated_columns', '_rev_bind_to_col', '_rev_equated_columns')
+        '_equated_columns', '_rev_bind_to_col', '_rev_equated_columns',
+        '_simple_lazy_clause')
 
     def __init__(self, parent):
         super(LazyLoader, self).__init__(parent)

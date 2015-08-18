@@ -1,4 +1,5 @@
-from sqlalchemy.testing import eq_, assert_raises_message, assert_raises, is_
+from sqlalchemy.testing import eq_, assert_raises_message, assert_raises, \
+    is_, in_, not_in_
 from sqlalchemy import testing
 from sqlalchemy.testing import fixtures, engines
 from sqlalchemy import util
@@ -975,14 +976,22 @@ class QueryTest(fixtures.TestBase):
         # result.BufferedColumnResultProxy
 
         conn = testing.db.connect()
-        for meth in ('fetchone', 'fetchall', 'first', 'scalar', 'fetchmany'):
+        for meth in [
+            lambda r: r.fetchone(),
+            lambda r: r.fetchall(),
+            lambda r: r.first(),
+            lambda r: r.scalar(),
+            lambda r: r.fetchmany(),
+            lambda r: r._getter('user'),
+            lambda r: r._has_key('user'),
+        ]:
             trans = conn.begin()
             result = conn.execute(users.insert(), user_id=1)
             assert_raises_message(
                 exc.ResourceClosedError,
                 "This result object does not return rows. "
                 "It has been closed automatically.",
-                getattr(result, meth),
+                meth, result,
             )
             trans.rollback()
 
@@ -1018,6 +1027,11 @@ class QueryTest(fixtures.TestBase):
         ).first()
 
         eq_(list(row.keys()), ["case_insensitive", "CaseSensitive"])
+
+        in_("case_insensitive", row._keymap)
+        in_("CaseSensitive", row._keymap)
+        not_in_("casesensitive", row._keymap)
+
         eq_(row["case_insensitive"], 1)
         eq_(row["CaseSensitive"], 2)
 
@@ -1030,6 +1044,32 @@ class QueryTest(fixtures.TestBase):
             lambda: row["casesensitive"]
         )
 
+    def test_row_case_sensitive_unoptimized(self):
+        ins_db = engines.testing_engine(options={"case_sensitive": True})
+        row = ins_db.execute(
+            select([
+                literal_column("1").label("case_insensitive"),
+                literal_column("2").label("CaseSensitive"),
+                text("3 AS screw_up_the_cols")
+            ])
+        ).first()
+
+        eq_(
+            list(row.keys()),
+            ["case_insensitive", "CaseSensitive", "screw_up_the_cols"])
+
+        in_("case_insensitive", row._keymap)
+        in_("CaseSensitive", row._keymap)
+        not_in_("casesensitive", row._keymap)
+
+        eq_(row["case_insensitive"], 1)
+        eq_(row["CaseSensitive"], 2)
+        eq_(row["screw_up_the_cols"], 3)
+
+        assert_raises(KeyError, lambda: row["Case_insensitive"])
+        assert_raises(KeyError, lambda: row["casesensitive"])
+        assert_raises(KeyError, lambda: row["screw_UP_the_cols"])
+
     def test_row_case_insensitive(self):
         ins_db = engines.testing_engine(options={"case_sensitive": False})
         row = ins_db.execute(
@@ -1040,10 +1080,40 @@ class QueryTest(fixtures.TestBase):
         ).first()
 
         eq_(list(row.keys()), ["case_insensitive", "CaseSensitive"])
+
+        in_("case_insensitive", row._keymap)
+        in_("CaseSensitive", row._keymap)
+        in_("casesensitive", row._keymap)
+
         eq_(row["case_insensitive"], 1)
         eq_(row["CaseSensitive"], 2)
         eq_(row["Case_insensitive"], 1)
         eq_(row["casesensitive"], 2)
+
+    def test_row_case_insensitive_unoptimized(self):
+        ins_db = engines.testing_engine(options={"case_sensitive": False})
+        row = ins_db.execute(
+            select([
+                literal_column("1").label("case_insensitive"),
+                literal_column("2").label("CaseSensitive"),
+                text("3 AS screw_up_the_cols")
+            ])
+        ).first()
+
+        eq_(
+            list(row.keys()),
+            ["case_insensitive", "CaseSensitive", "screw_up_the_cols"])
+
+        in_("case_insensitive", row._keymap)
+        in_("CaseSensitive", row._keymap)
+        in_("casesensitive", row._keymap)
+
+        eq_(row["case_insensitive"], 1)
+        eq_(row["CaseSensitive"], 2)
+        eq_(row["screw_up_the_cols"], 3)
+        eq_(row["Case_insensitive"], 1)
+        eq_(row["casesensitive"], 2)
+        eq_(row["screw_UP_the_cols"], 3)
 
     def test_row_as_args(self):
         users.insert().execute(user_id=1, user_name='john')
@@ -1241,10 +1311,38 @@ class QueryTest(fixtures.TestBase):
 
     def test_keys(self):
         users.insert().execute(user_id=1, user_name='foo')
-        r = users.select().execute()
-        eq_([x.lower() for x in list(r.keys())], ['user_id', 'user_name'])
-        r = r.first()
-        eq_([x.lower() for x in list(r.keys())], ['user_id', 'user_name'])
+        result = users.select().execute()
+        eq_(
+            result.keys(),
+            ['user_id', 'user_name']
+        )
+        row = result.first()
+        eq_(
+            row.keys(),
+            ['user_id', 'user_name']
+        )
+
+    def test_keys_anon_labels(self):
+        """test [ticket:3483]"""
+
+        users.insert().execute(user_id=1, user_name='foo')
+        result = testing.db.execute(
+            select([
+                users.c.user_id,
+                users.c.user_name.label(None),
+                func.count(literal_column('1'))]).
+            group_by(users.c.user_id, users.c.user_name)
+        )
+
+        eq_(
+            result.keys(),
+            ['user_id', 'user_name_1', 'count_1']
+        )
+        row = result.first()
+        eq_(
+            row.keys(),
+            ['user_id', 'user_name_1', 'count_1']
+        )
 
     def test_items(self):
         users.insert().execute(user_id=1, user_name='foo')

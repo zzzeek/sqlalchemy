@@ -20,6 +20,7 @@ INTEGERTYPE = None
 NULLTYPE = None
 STRINGTYPE = None
 MATCHTYPE = None
+INDEXABLE = None
 
 
 class TypeEngine(Visitable):
@@ -125,6 +126,19 @@ class TypeEngine(Visitable):
 
     .. versionadded:: 0.8  The expression system was enhanced to support
       customization of operators on a per-type level.
+
+    """
+
+    evaluates_none = False
+    """If True, the Python constant ``None`` is considered to be handled
+    explicitly by this type.
+
+    The ORM will use this flag to ensure that a positive value of ``None``
+    is definitely passed to the backend, ignoring whether or not there
+    are Python or server side defaults on this column.
+
+    .. versionadded:: 1.1
+
 
     """
 

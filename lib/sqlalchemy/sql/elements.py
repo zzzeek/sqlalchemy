@@ -715,7 +715,14 @@ class ColumnElement(operators.ColumnOperators, ClauseElement):
 
     @util.memoized_property
     def comparator(self):
-        return self.type.comparator_factory(self)
+        try:
+            comparator_factory = self.type.comparator_factory
+        except AttributeError:
+            raise TypeError(
+                "Object %r associated with '.type' attribute "
+                "is not a TypeEngine class or object" % self.type)
+        else:
+            return comparator_factory(self)
 
     def __getattr__(self, key):
         try:
@@ -836,6 +843,16 @@ class ColumnElement(operators.ColumnOperators, ClauseElement):
                 return True
         else:
             return False
+
+    def cast(self, type_):
+        """Produce a type cast, i.e. ``CAST(<expression> AS <type>)``.
+
+        This is a shortcut to the :func:`~.expression.cast` function.
+
+        .. versionadded:: 1.0.7
+
+        """
+        return Cast(self, type_)
 
     def label(self, name):
         """Produce a column label, i.e. ``<columnname> AS <name>``.
@@ -1840,9 +1857,12 @@ class BooleanClauseList(ClauseList, ColumnElement):
     def _construct(cls, operator, continue_on, skip_on, *clauses, **kw):
         convert_clauses = []
 
-        clauses = util.coerce_generator_arg(clauses)
+        clauses = [
+            _expression_literal_as_text(clause)
+            for clause in
+            util.coerce_generator_arg(clauses)
+        ]
         for clause in clauses:
-            clause = _expression_literal_as_text(clause)
 
             if isinstance(clause, continue_on):
                 continue
@@ -2777,6 +2797,28 @@ class BinaryExpression(ColumnElement):
                 modifiers=self.modifiers)
         else:
             return super(BinaryExpression, self)._negate()
+
+
+class Slice(ColumnElement):
+    """Represent SQL for a Python array-slice object.
+
+    This is not a specific SQL construct at this level, but
+    may be interpreted by specific dialects, e.g. Postgresql.
+
+    """
+    __visit_name__ = 'slice'
+
+    def __init__(self, start, stop, step):
+        self.start = start
+        self.stop = stop
+        self.step = step
+        self.type = type_api.NULLTYPE
+
+
+class IndexExpression(BinaryExpression):
+    """Represent the class of expressions that are like an "index" operation.
+    """
+    pass
 
 
 class Grouping(ColumnElement):

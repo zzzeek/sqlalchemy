@@ -9,6 +9,7 @@
 
 """
 
+import collections
 import datetime as dt
 import codecs
 
@@ -68,7 +69,39 @@ class Concatenable(object):
                     )):
                 return operators.concat_op, self.expr.type
             else:
-                return op, self.expr.type
+                return super(Concatenable.Comparator, self)._adapt_expression(
+                    op, other_comparator)
+
+    comparator_factory = Comparator
+
+
+class Indexable(object):
+    """A mixin that marks a type as supporting indexing operations,
+    such as array or JSON structures.
+
+
+    .. versionadded:: 1.1.0
+
+
+    """
+
+    zero_indexes = False
+    """if True, Python zero-based indexes should be interpreted as one-based
+    on the SQL expression side."""
+
+    class Comparator(TypeEngine.Comparator):
+
+        def _setup_getitem(self, index):
+            raise NotImplementedError()
+
+        def __getitem__(self, index):
+            operator, adjusted_right_expr, result_type = \
+                self._setup_getitem(index)
+            return self.operate(
+                operator,
+                adjusted_right_expr,
+                result_type=result_type
+            )
 
     comparator_factory = Comparator
 
@@ -215,9 +248,6 @@ class String(Concatenable, TypeEngine):
             self.convert_unicode != 'force_nocheck'
         )
         if needs_convert:
-            to_unicode = processors.to_unicode_processor_factory(
-                dialect.encoding, self.unicode_error)
-
             if needs_isinstance:
                 return processors.to_conditional_unicode_processor_factory(
                     dialect.encoding, self.unicode_error)
@@ -1648,6 +1678,8 @@ class NullType(TypeEngine):
 
     _isnull = True
 
+    hashable = False
+
     def literal_processor(self, dialect):
         def process(value):
             return "NULL"
@@ -1712,6 +1744,7 @@ type_api.STRINGTYPE = STRINGTYPE
 type_api.INTEGERTYPE = INTEGERTYPE
 type_api.NULLTYPE = NULLTYPE
 type_api.MATCHTYPE = MATCHTYPE
+type_api.INDEXABLE = Indexable
 type_api._type_map = _type_map
 
 TypeEngine.Comparator.BOOLEANTYPE = BOOLEANTYPE
