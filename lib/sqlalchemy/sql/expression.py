@@ -36,7 +36,8 @@ from .elements import ClauseElement, ColumnElement,\
     True_, False_, BinaryExpression, Tuple, TypeClause, Extract, \
     Grouping, not_, \
     collate, literal_column, between,\
-    literal, outparam, type_coerce, ClauseList, FunctionFilter
+    literal, outparam, type_coerce, ClauseList, FunctionFilter, \
+    WithinGroup
 
 from .elements import SavepointClause, RollbackToSavepointClause, \
     ReleaseSavepointClause
@@ -99,6 +100,8 @@ update = public_factory(Update, ".expression.update")
 delete = public_factory(Delete, ".expression.delete")
 funcfilter = public_factory(
     FunctionFilter, ".expression.funcfilter")
+within_group = public_factory(
+    WithinGroup, ".expression.within_group")
 
 
 # internal functions still being called from tests and the ORM,
