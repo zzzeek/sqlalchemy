@@ -3810,7 +3810,7 @@ class SessionBindTest(QueryTest):
     def _assert_bind_args(self, session):
         get_bind = mock.Mock(side_effect=session.get_bind)
         with mock.patch.object(session, "get_bind", get_bind):
-            yield
+            yield get_bind
         for call_ in get_bind.mock_calls:
             is_(call_[1][0], inspect(self.classes.User))
             is_not_(call_[2]['clause'], None)
@@ -3845,6 +3845,28 @@ class SessionBindTest(QueryTest):
         with self._assert_bind_args(session):
             session.query(User).filter(User.id == 15).update(
                 {"name": "foob"}, synchronize_session=False)
+
+    def test_bulk_update_ordered_dict(self):
+        User = self.classes.User
+        session = Session()
+
+        # Do update using ordered dict and check that parameters order is
+        # preserved
+        with self._assert_bind_args(session) as mock_args:
+            session.query(User).filter(User.id == 15).update(
+                util.OrderedDict((('name', 'foob'), ('id', 123))))
+            cols = [c.name for c
+                    in mock_args.mock_calls[0][2]['clause'].parameters.keys()]
+            assert ['name', 'id'] == cols
+
+        # Now invert the order and use a list instead of an ordered dict and
+        # check that order is also preserved
+        with self._assert_bind_args(session) as mock_args:
+            session.query(User).filter(User.id == 15).update(
+                [('id', 123), ('name', 'foob')])
+            cols = [c.name for c
+                    in mock_args.mock_calls[0][2]['clause'].parameters.keys()]
+            assert ['id', 'name'] == cols
 
     def test_bulk_delete_no_sync(self):
         User = self.classes.User

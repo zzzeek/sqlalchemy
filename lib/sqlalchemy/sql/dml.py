@@ -15,6 +15,7 @@ from .elements import ClauseElement, _literal_as_text, Null, and_, _clone, \
 from .selectable import _interpret_as_from, _interpret_as_select, HasPrefixes
 from .. import util
 from .. import exc
+from sqlalchemy.sql import schema
 
 
 class UpdateBase(DialectKWArgs, HasPrefixes, Executable, ClauseElement):
@@ -30,16 +31,26 @@ class UpdateBase(DialectKWArgs, HasPrefixes, Executable, ClauseElement):
     _prefixes = ()
 
     def _process_colparams(self, parameters):
+        def is_value_pair_dict(params):
+            # Check if params is a value list/tuple representing a dictionary
+            return (
+                isinstance(params, (list, tuple)) and
+                all(isinstance(p, (list, tuple)) and len(p) == 2 and
+                    isinstance(p[0], schema.Column) for p in params))
+
         def process_single(p):
             if isinstance(p, (list, tuple)):
-                return dict(
+                if is_value_pair_dict(p):
+                    return util.OrderedDict(p)
+                return util.OrderedDict(
                     (c.key, pval)
                     for c, pval in zip(self.table.c, p)
                 )
             else:
                 return p
 
-        if (isinstance(parameters, (list, tuple)) and parameters and
+        if (not is_value_pair_dict(parameters) and
+                isinstance(parameters, (list, tuple)) and parameters and
                 isinstance(parameters[0], (list, tuple, dict))):
 
             if not self._supports_multi_parameters:

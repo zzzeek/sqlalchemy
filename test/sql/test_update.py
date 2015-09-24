@@ -4,6 +4,7 @@ from sqlalchemy.dialects import mysql
 from sqlalchemy.engine import default
 from sqlalchemy.testing import AssertsCompiledSQL, eq_, fixtures
 from sqlalchemy.testing.schema import Table, Column
+from sqlalchemy import util
 
 
 class _UpdateFromTestBase(object):
@@ -114,7 +115,7 @@ class UpdateTest(_UpdateFromTestBase, fixtures.TablesTest, AssertsCompiledSQL):
                    table1.c.myid == 12,
                    values={table1.c.name: table1.c.myid}),
             'UPDATE mytable '
-            'SET name=mytable.myid, description=:description '
+            'SET description=:description, name=mytable.myid '
             'WHERE mytable.myid = :myid_1',
             params={'description': 'test'},
             checkparams={'description': 'test', 'myid_1': 12})
@@ -127,7 +128,8 @@ class UpdateTest(_UpdateFromTestBase, fixtures.TablesTest, AssertsCompiledSQL):
             'UPDATE mytable '
             'SET myid=:myid, description=:description '
             'WHERE mytable.myid = :myid_1',
-            params={'myid_1': 12, 'myid': 9, 'description': 'test'})
+            params=util.OrderedDict((
+                ('myid_1', 12), ('myid', 9), ('description', 'test'))))
 
     def test_update_8(self):
         table1 = self.tables.mytable
@@ -153,18 +155,41 @@ class UpdateTest(_UpdateFromTestBase, fixtures.TablesTest, AssertsCompiledSQL):
             update(table1, table1.c.myid == 12, values=v1).values(v2),
             'UPDATE mytable '
             'SET '
-            'name=(mytable.name || :name_1), '
-            'description=:description '
+            'description=:description, '
+            'name=(mytable.name || :name_1) '
             'WHERE mytable.myid = :myid_1',
             params={'description': 'test'})
 
     def test_update_11(self):
         table1 = self.tables.mytable
 
-        values = {
-            table1.c.name: table1.c.name + 'lala',
-            table1.c.myid: func.do_stuff(table1.c.myid, literal('hoho'))
-        }
+        values = util.OrderedDict((
+            (table1.c.myid, func.do_stuff(table1.c.myid, literal('hoho'))),
+            (table1.c.name, table1.c.name + 'lala')))
+        self.assert_compile(
+            update(
+                table1,
+                (table1.c.myid == func.hoho(4)) & (
+                    table1.c.name == literal('foo') +
+                    table1.c.name +
+                    literal('lala')),
+                values=values),
+            'UPDATE mytable '
+            'SET '
+            'myid=do_stuff(mytable.myid, :param_1), '
+            'name=(mytable.name || :name_1) '
+            'WHERE '
+            'mytable.myid = hoho(:hoho_1) AND '
+            'mytable.name = :param_2 || mytable.name || :param_3')
+
+    def test_update_12(self):
+        table1 = self.tables.mytable
+
+        # Confirm that we can pass values not only as dicts and ordered dicts,
+        # but as value pairs
+        values = (
+            (table1.c.myid, func.do_stuff(table1.c.myid, literal('hoho'))),
+            (table1.c.name, table1.c.name + 'lala'))
         self.assert_compile(
             update(
                 table1,

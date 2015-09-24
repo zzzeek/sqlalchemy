@@ -1971,7 +1971,8 @@ class SQLCompiler(Compiled):
         table_text = self.update_tables_clause(update_stmt, update_stmt.table,
                                                extra_froms, **kw)
 
-        crud_params = crud._get_crud_params(self, update_stmt, **kw)
+        crud_params = crud._get_crud_params(self, update_stmt, keep_order=True,
+                                            **kw)
 
         if update_stmt._hints:
             dialect_hints, table_text = self._setup_crud_hints(

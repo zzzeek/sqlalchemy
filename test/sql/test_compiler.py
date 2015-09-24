@@ -2764,7 +2764,7 @@ class CRUDTest(fixtures.TestBase, AssertsCompiledSQL):
             u.values(
                 x=3 +
                 bindparam('x')),
-            "UPDATE foo SET x=(:param_1 + :x), y=:y WHERE foo.x = :x",
+            "UPDATE foo SET y=:y, x=(:param_1 + :x) WHERE foo.x = :x",
             params={
                 'x': 1,
                 'y': 2})
@@ -2951,9 +2951,9 @@ class InlineDefaultTest(fixtures.TestBase, AssertsCompiledSQL):
                   )
 
         self.assert_compile(t.update(inline=True, values={'col3': 'foo'}),
-                            "UPDATE test SET col1=foo(:foo_1), col2=(SELECT "
-                            "coalesce(max(foo.id)) AS coalesce_1 FROM foo), "
-                            "col3=:col3")
+                            "UPDATE test SET col3=:col3, col1=foo(:foo_1), "
+                            "col2=(SELECT coalesce(max(foo.id)) AS coalesce_1 "
+                            "FROM foo)")
 
 
 class SchemaTest(fixtures.TestBase, AssertsCompiledSQL):

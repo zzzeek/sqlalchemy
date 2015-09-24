@@ -1220,6 +1220,8 @@ class BulkUpdate(BulkUD):
     def __init__(self, query, values, update_kwargs):
         super(BulkUpdate, self).__init__(query)
         self.values = values
+        # Accept values as a dictionary or any other iterable of value pairs
+        self.values = util.OrderedDict(values)
         self.update_kwargs = update_kwargs
 
     @classmethod
@@ -1258,7 +1260,7 @@ class BulkUpdate(BulkUD):
                 "Invalid expression type: %r" % key)
 
     def _do_exec(self):
-        values = dict(
+        values = util.OrderedDict(
             (self._resolve_string_to_expr(k), v)
             for k, v in self.values.items()
         )
