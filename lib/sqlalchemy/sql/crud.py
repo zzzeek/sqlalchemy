@@ -14,6 +14,8 @@ from .. import exc
 from . import elements
 import operator
 
+from sqlalchemy.sql import util as sql_util
+
 REQUIRED = util.symbol('REQUIRED', """
 Placeholder for the value within a :class:`.BindParameter`
 which is required to be present when the statement is passed
@@ -26,7 +28,7 @@ values present.
 """)
 
 
-def _get_crud_params(compiler, stmt, keep_order=False, **kw):
+def _get_crud_params(compiler, stmt, **kw):
     """create a set of tuples representing column/string pairs for use
     in an INSERT or UPDATE statement.
 
@@ -61,15 +63,22 @@ def _get_crud_params(compiler, stmt, keep_order=False, **kw):
     _column_as_key, _getattr_col_key, _col_bind_name = \
         _key_getters_for_crud_column(compiler)
 
+    # We have to keep parameters' order if we are doing an update and the
+    # statement paramenters are a list or tuple of pairs.  It would also work
+    # without isupdate check, but adding it shortcircuits the boolean operation
+    # resulting in false for all inserts.
+    keep_order = (compiler.isupdate
+                  and sql_util.is_value_pair_dict(stmt.parameters))
+    dict_type = util.OrderedDict if keep_order else dict
     # if we have statement parameters - set defaults in the
     # compiled params
     if compiler.column_keys is None:
-        parameters = util.OrderedDict()
+        parameters = dict_type()
     else:
-        parameters = util.OrderedDict((_column_as_key(key), REQUIRED)
-                                      for key in compiler.column_keys
-                                      if not stmt_parameters or
-                                      key not in stmt_parameters)
+        parameters = dict_type((_column_as_key(key), REQUIRED)
+                               for key in compiler.column_keys
+                               if not stmt_parameters or
+                               key not in stmt_parameters)
 
     # create a list of column assignment clauses as tuples
     values = []

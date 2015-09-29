@@ -930,7 +930,7 @@ class ServerVersioningTest(fixtures.MappedTest):
             # "default" - on a "returning" backend, the statement
             # includes "RETURNING"
             CompiledSQL(
-                "UPDATE version_table SET value=:value, version_id=2 "
+                "UPDATE version_table SET version_id=2, value=:value "
                 "WHERE version_table.id = :version_table_id AND "
                 "version_table.version_id = :version_table_version_id",
                 lambda ctx: [

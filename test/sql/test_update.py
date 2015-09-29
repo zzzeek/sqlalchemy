@@ -115,7 +115,7 @@ class UpdateTest(_UpdateFromTestBase, fixtures.TablesTest, AssertsCompiledSQL):
                    table1.c.myid == 12,
                    values={table1.c.name: table1.c.myid}),
             'UPDATE mytable '
-            'SET description=:description, name=mytable.myid '
+            'SET name=mytable.myid, description=:description '
             'WHERE mytable.myid = :myid_1',
             params={'description': 'test'},
             checkparams={'description': 'test', 'myid_1': 12})
@@ -128,8 +128,7 @@ class UpdateTest(_UpdateFromTestBase, fixtures.TablesTest, AssertsCompiledSQL):
             'UPDATE mytable '
             'SET myid=:myid, description=:description '
             'WHERE mytable.myid = :myid_1',
-            params=util.OrderedDict((
-                ('myid_1', 12), ('myid', 9), ('description', 'test'))))
+            params={'myid_1': 12, 'myid': 9, 'description': 'test'})
 
     def test_update_8(self):
         table1 = self.tables.mytable
@@ -155,17 +154,19 @@ class UpdateTest(_UpdateFromTestBase, fixtures.TablesTest, AssertsCompiledSQL):
             update(table1, table1.c.myid == 12, values=v1).values(v2),
             'UPDATE mytable '
             'SET '
-            'description=:description, '
-            'name=(mytable.name || :name_1) '
+            'name=(mytable.name || :name_1), '
+            'description=:description '
             'WHERE mytable.myid = :myid_1',
             params={'description': 'test'})
 
     def test_update_11(self):
         table1 = self.tables.mytable
 
-        values = util.OrderedDict((
-            (table1.c.myid, func.do_stuff(table1.c.myid, literal('hoho'))),
-            (table1.c.name, table1.c.name + 'lala')))
+        values = {
+            table1.c.name: table1.c.name + 'lala',
+            table1.c.myid: func.do_stuff(table1.c.myid, literal('hoho'))
+        }
+
         self.assert_compile(
             update(
                 table1,
@@ -185,11 +186,57 @@ class UpdateTest(_UpdateFromTestBase, fixtures.TablesTest, AssertsCompiledSQL):
     def test_update_12(self):
         table1 = self.tables.mytable
 
-        # Confirm that we can pass values not only as dicts and ordered dicts,
-        # but as value pairs
+        # Confirm that we can pass values as tuple value pairs
         values = (
             (table1.c.myid, func.do_stuff(table1.c.myid, literal('hoho'))),
             (table1.c.name, table1.c.name + 'lala'))
+        self.assert_compile(
+            update(
+                table1,
+                (table1.c.myid == func.hoho(4)) & (
+                    table1.c.name == literal('foo') +
+                    table1.c.name +
+                    literal('lala')),
+                values=values),
+            'UPDATE mytable '
+            'SET '
+            'myid=do_stuff(mytable.myid, :param_1), '
+            'name=(mytable.name || :name_1) '
+            'WHERE '
+            'mytable.myid = hoho(:hoho_1) AND '
+            'mytable.name = :param_2 || mytable.name || :param_3')
+
+    def test_update_13(self):
+        table1 = self.tables.mytable
+
+        # Confirm that we can pass values as list value pairs
+        values = [
+            (table1.c.myid, func.do_stuff(table1.c.myid, literal('hoho'))),
+            (table1.c.name, table1.c.name + 'lala')]
+        self.assert_compile(
+            update(
+                table1,
+                (table1.c.myid == func.hoho(4)) & (
+                    table1.c.name == literal('foo') +
+                    table1.c.name +
+                    literal('lala')),
+                values=values),
+            'UPDATE mytable '
+            'SET '
+            'myid=do_stuff(mytable.myid, :param_1), '
+            'name=(mytable.name || :name_1) '
+            'WHERE '
+            'mytable.myid = hoho(:hoho_1) AND '
+            'mytable.name = :param_2 || mytable.name || :param_3')
+
+    def test_update_14(self):
+        table1 = self.tables.mytable
+
+        # Confirm that ordered dicts are treated as normal dicts
+        values = util.OrderedDict((
+            (table1.c.name, table1.c.name + 'lala'),
+            (table1.c.myid, func.do_stuff(table1.c.myid, literal('hoho')))))
+
         self.assert_compile(
             update(
                 table1,

@@ -3846,21 +3846,44 @@ class SessionBindTest(QueryTest):
             session.query(User).filter(User.id == 15).update(
                 {"name": "foob"}, synchronize_session=False)
 
+    def test_bulk_update_unordered_dict(self):
+        User = self.classes.User
+        session = Session()
+
+        # Do an update using unordered dict and check that the parametes used
+        # are unordered
+        with self._assert_bind_args(session) as mock_args:
+            session.query(User).filter(User.id == 15).update(
+                {'name': 'foob', 'id': 123})
+            # Confirm that an unordered dict is being used
+            assert dict == type(mock_args.mock_calls[0][2]['clause'].parameters)
+
     def test_bulk_update_ordered_dict(self):
         User = self.classes.User
         session = Session()
 
-        # Do update using ordered dict and check that parameters order is
-        # preserved
+        # Do an update using an ordered dict and check that the parametes used
+        # are unordered
         with self._assert_bind_args(session) as mock_args:
             session.query(User).filter(User.id == 15).update(
-                util.OrderedDict((('name', 'foob'), ('id', 123))))
-            cols = [c.name for c
-                    in mock_args.mock_calls[0][2]['clause'].parameters.keys()]
-            assert ['name', 'id'] == cols
+                {'name': 'foob', 'id': 123})
+            assert dict == type(mock_args.mock_calls[0][2]['clause'].parameters)
 
-        # Now invert the order and use a list instead of an ordered dict and
-        # check that order is also preserved
+    def test_bulk_update_with_order(self):
+        User = self.classes.User
+        session = Session()
+
+        # Do update using a tuple and check that order is preserved
+        # preserved from the dictionary but from the columns order
+        with self._assert_bind_args(session) as mock_args:
+            session.query(User).filter(User.id == 15).update(
+                (('id', 123), ('name', 'foob')))
+            assert isinstance(
+                mock_args.mock_calls[0][2]['clause'].parameters,
+                dict)
+
+        # Now invert the order and use a list instead, and check that order is
+        # also preserved
         with self._assert_bind_args(session) as mock_args:
             session.query(User).filter(User.id == 15).update(
                 [('id', 123), ('name', 'foob')])
