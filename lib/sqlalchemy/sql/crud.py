@@ -68,8 +68,13 @@ def _get_crud_params(compiler, stmt, **kw):
     # without isupdate check, but adding it shortcircuits the boolean operation
     # resulting in false for all inserts.
     keep_order = (compiler.isupdate
-                  and sql_util.is_value_pair_dict(stmt.parameters))
-    dict_type = util.OrderedDict if keep_order else dict
+                  and sql_util.is_value_pair_dict(stmt_parameters))
+    if keep_order:
+        stmt_parameters = util.OrderedDict(stmt_parameters)
+        dict_type = util.OrderedDict
+    else:
+        dict_type = dict
+
     # if we have statement parameters - set defaults in the
     # compiled params
     if compiler.column_keys is None:

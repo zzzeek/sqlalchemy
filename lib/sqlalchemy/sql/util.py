@@ -439,7 +439,7 @@ def criterion_as_pairs(expression, consider_as_foreign_keys=None,
 
 def is_value_pair_dict(params):
     """Check if params is a value list/tuple representing a dictionary."""
-    return (isinstance(params, (list, tuple)) and
+    return (isinstance(params, (list, tuple)) and len(params) > 0 and
             all(isinstance(p, (list, tuple)) and len(p) == 2 and
                 isinstance(p[0], schema.Column) for p in params))
 

@@ -3855,8 +3855,9 @@ class SessionBindTest(QueryTest):
         with self._assert_bind_args(session) as mock_args:
             session.query(User).filter(User.id == 15).update(
                 {'name': 'foob', 'id': 123})
-            # Confirm that an unordered dict is being used
-            assert dict == type(mock_args.mock_calls[0][2]['clause'].parameters)
+            # Confirm that parameters are a dict instead of tuple or list
+            params_type = type(mock_args.mock_calls[0][2]['clause'].parameters)
+            assert params_type is dict
 
     def test_bulk_update_ordered_dict(self):
         User = self.classes.User
@@ -3866,29 +3867,29 @@ class SessionBindTest(QueryTest):
         # are unordered
         with self._assert_bind_args(session) as mock_args:
             session.query(User).filter(User.id == 15).update(
-                {'name': 'foob', 'id': 123})
-            assert dict == type(mock_args.mock_calls[0][2]['clause'].parameters)
+                util.OrderedDict((('name', 'foob'), ('id', 123))))
+            params_type = type(mock_args.mock_calls[0][2]['clause'].parameters)
+            assert params_type is dict
 
     def test_bulk_update_with_order(self):
         User = self.classes.User
         session = Session()
 
         # Do update using a tuple and check that order is preserved
-        # preserved from the dictionary but from the columns order
         with self._assert_bind_args(session) as mock_args:
             session.query(User).filter(User.id == 15).update(
                 (('id', 123), ('name', 'foob')))
-            assert isinstance(
-                mock_args.mock_calls[0][2]['clause'].parameters,
-                dict)
+            cols = [c[0].name for c
+                    in mock_args.mock_calls[0][2]['clause'].parameters]
+            assert ['id', 'name'] == cols
 
         # Now invert the order and use a list instead, and check that order is
         # also preserved
         with self._assert_bind_args(session) as mock_args:
             session.query(User).filter(User.id == 15).update(
                 [('id', 123), ('name', 'foob')])
-            cols = [c.name for c
-                    in mock_args.mock_calls[0][2]['clause'].parameters.keys()]
+            cols = [c[0].name for c
+                    in mock_args.mock_calls[0][2]['clause'].parameters]
             assert ['id', 'name'] == cols
 
     def test_bulk_delete_no_sync(self):

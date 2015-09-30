@@ -32,13 +32,9 @@ class UpdateBase(DialectKWArgs, HasPrefixes, Executable, ClauseElement):
 
     def _process_colparams(self, parameters):
         def process_single(p):
-            if isinstance(p, (list, tuple)):
-                if sql_util.is_value_pair_dict(p):
-                    return util.OrderedDict(p)
-                return dict(
-                    (c.key, pval)
-                    for c, pval in zip(self.table.c, p)
-                )
+            if (isinstance(p, (list, tuple)) and
+                    not sql_util.is_value_pair_dict(p)):
+                return {c.key: pval for c, pval in zip(self.table.c, p)}
             else:
                 return p
 

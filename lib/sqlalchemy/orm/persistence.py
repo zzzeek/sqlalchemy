@@ -1259,16 +1259,12 @@ class BulkUpdate(BulkUD):
 
     def _do_exec(self):
         if isinstance(self.values, (list, tuple)):
-            dict_type = util.OrderedDict
-            values = self.values
+            values = tuple((self._resolve_string_to_expr(k), v)
+                           for k, v in self.values)
         else:
-            dict_type = dict
-            values = self.values.items()
+            values = {self._resolve_string_to_expr(k): v
+                      for k, v in self.values.items()}
 
-        values = dict_type(
-            (self._resolve_string_to_expr(k), v)
-            for k, v in values
-        )
         update_stmt = sql.update(self.primary_table,
                                  self.context.whereclause, values,
                                  **self.update_kwargs)
