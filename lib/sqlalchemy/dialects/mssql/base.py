@@ -526,16 +526,20 @@ class _MSDate(sqltypes.Date):
                 return value
         return process
 
-    _reg = re.compile(r"(\d+)-(\d+)-(\d+)")
+    _reg_str = r"(\d+)-(\d+)-(\d+)"
+    _reg = re.compile(_reg_str)
 
     def result_processor(self, dialect, coltype):
         def process(value):
             if isinstance(value, datetime.datetime):
                 return value.date()
             elif isinstance(value, util.string_types):
+                m = self._reg.match(value)
+                if not m:
+                    raise Exception("could not parse value {0} with MSDate regexp {1}".format(value, self._reg_str))
                 return datetime.date(*[
                     int(x or 0)
-                    for x in self._reg.match(value).groups()
+                    for x in m.groups()
                 ])
             else:
                 return value
@@ -560,16 +564,20 @@ class TIME(sqltypes.TIME):
             return value
         return process
 
-    _reg = re.compile(r"(\d+):(\d+):(\d+)(?:\.(\d{0,6}))?")
+    _reg_str = r"(\d+):(\d+):(\d+)(?:\.(\d{0,6}))?"
+    _reg = re.compile(_reg_str)
 
     def result_processor(self, dialect, coltype):
         def process(value):
             if isinstance(value, datetime.datetime):
                 return value.time()
             elif isinstance(value, util.string_types):
+                m = self._reg.match(value)
+                if not m:
+                    raise Exception("could not parse value {0} with TIME regexp {1}".format(value, self._reg_str))
                 return datetime.time(*[
                     int(x or 0)
-                    for x in self._reg.match(value).groups()])
+                    for x in m.groups()])
             else:
                 return value
         return process
