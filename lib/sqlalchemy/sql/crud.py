@@ -14,7 +14,6 @@ from .. import exc
 from . import elements
 import operator
 
-from sqlalchemy.sql import util as sql_util
 
 REQUIRED = util.symbol('REQUIRED', """
 Placeholder for the value within a :class:`.BindParameter`
@@ -67,9 +66,7 @@ def _get_crud_params(compiler, stmt, **kw):
     # statement paramenters are a list or tuple of pairs.  It would also work
     # without isupdate check, but adding it shortcircuits the boolean operation
     # resulting in false for all inserts.
-    keep_order = (compiler.isupdate
-                  and sql_util.is_value_pair_dict(stmt_parameters))
-    if keep_order:
+    if stmt._preserve_parameter_order:
         stmt_parameters = util.OrderedDict(stmt_parameters)
         dict_type = util.OrderedDict
     else:
@@ -111,7 +108,8 @@ def _get_crud_params(compiler, stmt, **kw):
         _scan_cols(
             compiler, stmt, parameters,
             _getattr_col_key, _column_as_key,
-            _col_bind_name, check_columns, values, kw, keep_order=keep_order)
+            _col_bind_name, check_columns, values, kw,
+            keep_order=stmt._preserve_parameter_order)
 
     if parameters and stmt_parameters:
         check = set(parameters).intersection(

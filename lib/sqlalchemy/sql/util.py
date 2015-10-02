@@ -29,7 +29,6 @@ join_condition = util.langhelpers.public_factory(
 from .annotation import _shallow_annotate, _deep_annotate, _deep_deannotate
 from .elements import _find_columns
 from .ddl import sort_tables
-from sqlalchemy.sql import schema
 
 
 def find_join_source(clauses, join_to):
@@ -435,13 +434,6 @@ def criterion_as_pairs(expression, consider_as_foreign_keys=None,
     pairs = []
     visitors.traverse(expression, {}, {'binary': visit_binary})
     return pairs
-
-
-def is_value_pair_dict(params):
-    """Check if params is a value list/tuple representing a dictionary."""
-    return (isinstance(params, (list, tuple)) and len(params) > 0 and
-            all(isinstance(p, (list, tuple)) and len(p) == 2 and
-                isinstance(p[0], schema.Column) for p in params))
 
 
 class ClauseAdapter(visitors.ReplacingCloningVisitor):
