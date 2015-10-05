@@ -39,7 +39,7 @@ class UpdateBase(DialectKWArgs, HasPrefixes, Executable, ClauseElement):
 
         def process_single(p):
             if not is_ordered and isinstance(p, (list, tuple)):
-                return {c.key: pval for c, pval in zip(self.table.c, p)}
+                return dict((c.key, pval) for c, pval in zip(self.table.c, p))
             else:
                 return p
 
@@ -556,8 +556,8 @@ class Insert(ValuesBase):
             raise exc.InvalidRequestError(
                 "This construct already inserts value expressions")
 
-        colparams = self._process_colparams({_column_as_key(n): Null()
-                                            for n in names})
+        colparams = self._process_colparams(dict((_column_as_key(n), Null())
+                                                 for n in names))
         self.parameters = colparams[0]
         self._has_multi_parameters = colparams[1]
         self._preserve_parameter_order = colparams[2]

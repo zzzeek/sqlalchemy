@@ -1262,8 +1262,8 @@ class BulkUpdate(BulkUD):
             values = tuple((self._resolve_string_to_expr(k), v)
                            for k, v in self.values)
         else:
-            values = {self._resolve_string_to_expr(k): v
-                      for k, v in self.values.items()}
+            values = dict((self._resolve_string_to_expr(k), v)
+                          for k, v in self.values.items())
 
         update_stmt = sql.update(self.primary_table,
                                  self.context.whereclause, values,
