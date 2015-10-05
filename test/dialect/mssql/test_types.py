@@ -33,6 +33,18 @@ class TimeTypeTest(fixtures.TestBase):
         result_processor = mssql_time_type.result_processor(None, None)
         eq_(expected, result_processor(value))
 
+    def test_result_processor_invalid(self):
+        mssql_time_type = TIME()
+        result_processor = mssql_time_type.result_processor(None, None)
+        ex = None
+        bogus_value = 'abc'
+        try:
+            result_processor(bogus_value)
+        except Exception as caught:
+            ex = str(caught)
+        expected = 'could not parse value ' + bogus_value + ' as a TIME'
+        eq_(expected, ex)
+
 
 class MSDateTypeTest(fixtures.TestBase):
 
@@ -44,6 +56,18 @@ class MSDateTypeTest(fixtures.TestBase):
         mssql_date_type = _MSDate()
         result_processor = mssql_date_type.result_processor(None, None)
         eq_(expected, result_processor(value))
+
+    def test_result_processor_invalid(self):
+        mssql_date_type = _MSDate()
+        result_processor = mssql_date_type.result_processor(None, None)
+        ex = None
+        bogus_value = 'abc'
+        try:
+            result_processor(bogus_value)
+        except Exception as caught:
+            ex = str(caught)
+        expected = 'could not parse value ' + bogus_value + ' as a _MSDate'
+        eq_(expected, ex)
 
 
 class TypeDDLTest(fixtures.TestBase):

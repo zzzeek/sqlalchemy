@@ -536,7 +536,7 @@ class _MSDate(sqltypes.Date):
             elif isinstance(value, util.string_types):
                 m = self._reg.match(value)
                 if not m:
-                    raise Exception("could not parse value {0} with MSDate regexp {1}".format(value, self._reg_str))
+                    raise Exception("could not parse value {0} as a _MSDate".format(value))
                 return datetime.date(*[
                     int(x or 0)
                     for x in m.groups()
@@ -574,7 +574,7 @@ class TIME(sqltypes.TIME):
             elif isinstance(value, util.string_types):
                 m = self._reg.match(value)
                 if not m:
-                    raise Exception("could not parse value {0} with TIME regexp {1}".format(value, self._reg_str))
+                    raise Exception("could not parse value {0} as a TIME".format(value))
                 return datetime.time(*[
                     int(x or 0)
                     for x in m.groups()])
