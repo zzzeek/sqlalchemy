@@ -17,6 +17,42 @@
 
 .. changelog::
     :version: 1.0.9
+    :released: October 20, 2015
+
+    .. change::
+        :tags: bug, orm, postgresql
+        :versions: 1.1.0b1
+        :tickets: 3556
+
+        Fixed regression in 1.0 where new feature of using "executemany"
+        for UPDATE statements in the ORM (e.g. :ref:`feature_updatemany`)
+        would break on Postgresql and other RETURNING backends
+        when using server-side version generation
+        schemes, as the server side value is retrieved via RETURNING which
+        is not supported with executemany.
+
+    .. change::
+        :tags: feature, ext
+        :versions: 1.1.0b1
+        :tickets: 3551
+
+        Added the :paramref:`.AssociationProxy.info` parameter to the
+        :class:`.AssociationProxy` constructor, to suit the
+        :attr:`.AssociationProxy.info` accessor that was added in
+        :ticket:`2971`.  This is possible because :class:`.AssociationProxy`
+        is constructed explicitly, unlike a hybrid which is constructed
+        implicitly via the decorator syntax.
+
+    .. change::
+        :tags: bug, oracle
+        :versions: 1.1.0b1
+        :tickets: 3548
+
+        Fixed bug in Oracle dialect where reflection of tables and other
+        symbols with names quoted to force all-lower-case would not be
+        identified properly in reflection queries.  The :class:`.quoted_name`
+        construct is now applied to incoming symbol names that detect as
+        forced into all-lower-case within the "name normalize" process.
 
     .. change::
         :tags: feature, orm

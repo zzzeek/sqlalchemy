@@ -732,7 +732,6 @@ class AutoIncrementTest(fixtures.TablesTest):
         )
         assert x._autoincrement_column is None
 
-    @testing.fails_on('sqlite', 'FIXME: unknown')
     def test_non_autoincrement(self):
         # sqlite INT primary keys can be non-unique! (only for ints)
         nonai = Table(
@@ -746,8 +745,9 @@ class AutoIncrementTest(fixtures.TablesTest):
             # mysql in legacy mode fails on second row
             nonai.insert().execute(data='row 1')
             nonai.insert().execute(data='row 2')
-        assert_raises(
-            sa.exc.DBAPIError,
+        assert_raises_message(
+            sa.exc.CompileError,
+            ".*has no Python-side or server-side default.*",
             go
         )
 
@@ -1079,6 +1079,23 @@ class SequenceTest(fixtures.TestBase, testing.AssertsCompiledSQL):
         metadata.drop_all(testing.db)
         assert not self._has_sequence('s1')
         assert not self._has_sequence('s2')
+
+    @testing.requires.returning
+    @testing.provide_metadata
+    def test_freestanding_sequence_via_autoinc(self):
+        t = Table(
+            'some_table', self.metadata,
+            Column(
+                'id', Integer,
+                autoincrement=True,
+                primary_key=True,
+                default=Sequence(
+                    'my_sequence', metadata=self.metadata).next_value())
+        )
+        self.metadata.create_all(testing.db)
+
+        result = testing.db.execute(t.insert())
+        eq_(result.inserted_primary_key, [1])
 
 cartitems = sometable = metadata = None
 

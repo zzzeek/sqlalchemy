@@ -579,8 +579,7 @@ class GetTest(QueryTest):
         table = Table(
             'unicode_data', metadata,
             Column(
-                'id', Unicode(40), primary_key=True,
-                test_needs_autoincrement=True),
+                'id', Unicode(40), primary_key=True),
             Column('data', Unicode(40)))
         metadata.create_all()
         ustring = util.b('petit voix m\xe2\x80\x99a').decode('utf-8')
@@ -3624,13 +3623,17 @@ class ImmediateTest(_fixtures.FixtureTest):
 
         sess = create_session()
 
-        assert_raises(
+        assert_raises_message(
             sa.orm.exc.NoResultFound,
+            "No row was found for one\(\)",
             sess.query(User).filter(User.id == 99).one)
 
         eq_(sess.query(User).filter(User.id == 7).one().id, 7)
 
-        assert_raises(sa.orm.exc.MultipleResultsFound, sess.query(User).one)
+        assert_raises_message(
+            sa.orm.exc.MultipleResultsFound,
+            "Multiple rows were found for one\(\)",
+            sess.query(User).one)
 
         assert_raises(
             sa.orm.exc.NoResultFound,
