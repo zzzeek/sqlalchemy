@@ -8,7 +8,7 @@ from sqlalchemy import Table, Column, MetaData, Float, \
     UnicodeText, LargeBinary
 from sqlalchemy import types, schema
 from sqlalchemy.databases import mssql
-from sqlalchemy.dialects.mssql.base import TIME
+from sqlalchemy.dialects.mssql.base import TIME, _MSDate
 from sqlalchemy.testing import fixtures, \
     AssertsExecutionResults, ComparesTables
 from sqlalchemy import testing
@@ -32,6 +32,42 @@ class TimeTypeTest(fixtures.TestBase):
         mssql_time_type = TIME()
         result_processor = mssql_time_type.result_processor(None, None)
         eq_(expected, result_processor(value))
+
+    def test_result_processor_invalid(self):
+        mssql_time_type = TIME()
+        result_processor = mssql_time_type.result_processor(None, None)
+        ex = None
+        bogus_value = 'abc'
+        try:
+            result_processor(bogus_value)
+        except Exception as caught:
+            ex = str(caught)
+        expected = 'could not parse value ' + bogus_value + ' as a TIME'
+        eq_(expected, ex)
+
+
+class MSDateTypeTest(fixtures.TestBase):
+
+    def test_result_processor(self):
+        expected = datetime.date(2000, 1, 2)
+        self._assert_result_processor(expected, '2000-01-02')
+
+    def _assert_result_processor(self, expected, value):
+        mssql_date_type = _MSDate()
+        result_processor = mssql_date_type.result_processor(None, None)
+        eq_(expected, result_processor(value))
+
+    def test_result_processor_invalid(self):
+        mssql_date_type = _MSDate()
+        result_processor = mssql_date_type.result_processor(None, None)
+        ex = None
+        bogus_value = 'abc'
+        try:
+            result_processor(bogus_value)
+        except Exception as caught:
+            ex = str(caught)
+        expected = 'could not parse value ' + bogus_value + ' as a _MSDate'
+        eq_(expected, ex)
 
 
 class TypeDDLTest(fixtures.TestBase):
