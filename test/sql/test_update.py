@@ -4,6 +4,7 @@ from sqlalchemy.dialects import mysql
 from sqlalchemy.engine import default
 from sqlalchemy.testing import AssertsCompiledSQL, eq_, fixtures
 from sqlalchemy.testing.schema import Table, Column
+from sqlalchemy import util
 
 
 class _UpdateFromTestBase(object):
@@ -165,6 +166,77 @@ class UpdateTest(_UpdateFromTestBase, fixtures.TablesTest, AssertsCompiledSQL):
             table1.c.name: table1.c.name + 'lala',
             table1.c.myid: func.do_stuff(table1.c.myid, literal('hoho'))
         }
+
+        self.assert_compile(
+            update(
+                table1,
+                (table1.c.myid == func.hoho(4)) & (
+                    table1.c.name == literal('foo') +
+                    table1.c.name +
+                    literal('lala')),
+                values=values),
+            'UPDATE mytable '
+            'SET '
+            'myid=do_stuff(mytable.myid, :param_1), '
+            'name=(mytable.name || :name_1) '
+            'WHERE '
+            'mytable.myid = hoho(:hoho_1) AND '
+            'mytable.name = :param_2 || mytable.name || :param_3')
+
+    def test_update_12(self):
+        table1 = self.tables.mytable
+
+        # Confirm that we can pass values as tuple value pairs
+        values = (
+            (table1.c.myid, func.do_stuff(table1.c.myid, literal('hoho'))),
+            (table1.c.name, table1.c.name + 'lala'))
+        self.assert_compile(
+            update(
+                table1,
+                (table1.c.myid == func.hoho(4)) & (
+                    table1.c.name == literal('foo') +
+                    table1.c.name +
+                    literal('lala')),
+                values=values),
+            'UPDATE mytable '
+            'SET '
+            'myid=do_stuff(mytable.myid, :param_1), '
+            'name=(mytable.name || :name_1) '
+            'WHERE '
+            'mytable.myid = hoho(:hoho_1) AND '
+            'mytable.name = :param_2 || mytable.name || :param_3')
+
+    def test_update_13(self):
+        table1 = self.tables.mytable
+
+        # Confirm that we can pass values as list value pairs
+        values = [
+            (table1.c.myid, func.do_stuff(table1.c.myid, literal('hoho'))),
+            (table1.c.name, table1.c.name + 'lala')]
+        self.assert_compile(
+            update(
+                table1,
+                (table1.c.myid == func.hoho(4)) & (
+                    table1.c.name == literal('foo') +
+                    table1.c.name +
+                    literal('lala')),
+                values=values),
+            'UPDATE mytable '
+            'SET '
+            'myid=do_stuff(mytable.myid, :param_1), '
+            'name=(mytable.name || :name_1) '
+            'WHERE '
+            'mytable.myid = hoho(:hoho_1) AND '
+            'mytable.name = :param_2 || mytable.name || :param_3')
+
+    def test_update_14(self):
+        table1 = self.tables.mytable
+
+        # Confirm that ordered dicts are treated as normal dicts
+        values = util.OrderedDict((
+            (table1.c.name, table1.c.name + 'lala'),
+            (table1.c.myid, func.do_stuff(table1.c.myid, literal('hoho')))))
+
         self.assert_compile(
             update(
                 table1,

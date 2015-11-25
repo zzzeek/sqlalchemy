@@ -15,6 +15,7 @@ from .elements import ClauseElement, _literal_as_text, Null, and_, _clone, \
 from .selectable import _interpret_as_from, _interpret_as_select, HasPrefixes
 from .. import util
 from .. import exc
+from sqlalchemy.sql import schema
 
 
 class UpdateBase(DialectKWArgs, HasPrefixes, Executable, ClauseElement):
@@ -32,24 +33,26 @@ class UpdateBase(DialectKWArgs, HasPrefixes, Executable, ClauseElement):
     def _process_colparams(self, parameters):
         def process_single(p):
             if isinstance(p, (list, tuple)):
-                return dict(
-                    (c.key, pval)
-                    for c, pval in zip(self.table.c, p)
-                )
+                return dict((c.key, pval) for c, pval in zip(self.table.c, p))
             else:
                 return p
 
-        if (isinstance(parameters, (list, tuple)) and parameters and
-                isinstance(parameters[0], (list, tuple, dict))):
+        if parameters and isinstance(parameters, (list, tuple)):
+            p0 = parameters[0]
+            is_lt = isinstance(p0, (list, tuple))
+            # If it's an ordered dict in the form of value pairs return it
+            if is_lt and len(p0) == 2 and isinstance(p0[0], schema.Column):
+                return parameters, False, True
 
-            if not self._supports_multi_parameters:
-                raise exc.InvalidRequestError(
-                    "This construct does not support "
-                    "multiple parameter sets.")
+            if is_lt or isinstance(p0, dict):
+                if not self._supports_multi_parameters:
+                    raise exc.InvalidRequestError(
+                        "This construct does not support "
+                        "multiple parameter sets.")
 
-            return [process_single(p) for p in parameters], True
-        else:
-            return process_single(parameters), False
+                return [process_single(p) for p in parameters], True, False
+
+        return process_single(parameters), False, False
 
     def params(self, *arg, **kw):
         """Set the parameters for the statement.
@@ -178,12 +181,14 @@ class ValuesBase(UpdateBase):
 
     _supports_multi_parameters = False
     _has_multi_parameters = False
+    _preserve_parameter_order = False
     select = None
 
     def __init__(self, table, values, prefixes):
         self.table = _interpret_as_from(table)
-        self.parameters, self._has_multi_parameters = \
-            self._process_colparams(values)
+
+        self.parameters, self._has_multi_parameters, \
+            self._preserve_parameter_order = self._process_colparams(values)
         if prefixes:
             self._setup_prefixes(prefixes)
 
@@ -315,12 +320,14 @@ class ValuesBase(UpdateBase):
             v = {}
 
         if self.parameters is None:
-            self.parameters, self._has_multi_parameters = \
-                self._process_colparams(v)
+            self.parameters, self._has_multi_parameters, \
+                self._preserve_parameter_order = self._process_colparams(v)
         else:
             if self._has_multi_parameters:
                 self.parameters = list(self.parameters)
-                p, self._has_multi_parameters = self._process_colparams(v)
+                p, self._has_multi_parameters, \
+                    self._preserve_parameter_order = self._process_colparams(v)
+
                 if not self._has_multi_parameters:
                     raise exc.ArgumentError(
                         "Can't mix single-values and multiple values "
@@ -329,7 +336,8 @@ class ValuesBase(UpdateBase):
                 self.parameters.extend(p)
             else:
                 self.parameters = self.parameters.copy()
-                p, self._has_multi_parameters = self._process_colparams(v)
+                p, self._has_multi_parameters, \
+                    self._preserve_parameter_order = self._process_colparams(v)
                 if self._has_multi_parameters:
                     raise exc.ArgumentError(
                         "Can't mix single-values and multiple values "
@@ -548,8 +556,8 @@ class Insert(ValuesBase):
             raise exc.InvalidRequestError(
                 "This construct already inserts value expressions")
 
-        self.parameters, self._has_multi_parameters = \
-            self._process_colparams(
+        self.parameters, self._has_multi_parameters, \
+            self._preserve_parameter_order = self._process_colparams(
                 dict((_column_as_key(n), Null()) for n in names))
 
         self.select_names = names
