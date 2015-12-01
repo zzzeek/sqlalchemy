@@ -1049,6 +1049,12 @@ class MSSQLCompiler(compiler.SQLCompiler):
             return compiler.SQLCompiler.get_select_precolumns(
                 self, select, **kw)
 
+    def visit_sequence(self, sequence):
+        if self.dialect.server_version_info >= MS_2012_VERSION:
+            return "NEXT VALUE FOR {0}".format(self.dialect.identifier_preparer.format_sequence(sequence))
+        else:
+            return super(MSSQLCompiler, self).visit_sequence(sequence)
+
     def get_from_hint_text(self, table, text):
         return text
 
