@@ -534,6 +534,13 @@ output::
    ``explicit_defaults_for_timestamp``.  Prior to this version, it will
    not render "NOT NULL" for a TIMESTAMP column that is ``nullable=False``.
 
+JSON Types
+----------
+
+The MySQL dialect supports the JSON datatype as of version 5.7:
+
+* :class:`.mysql.JSON`
+
 """
 
 import datetime
@@ -601,6 +608,8 @@ RESERVED_WORDS = set(
 
      'get', 'io_after_gtids', 'io_before_gtids', 'master_bind', 'one_shot',
         'partition', 'sql_after_gtids', 'sql_before_gtids',  # 5.6
+
+     'json',  # 5.7
 
      ])
 
@@ -2225,6 +2234,12 @@ class MySQLTypeCompiler(compiler.GenericTypeCompiler):
         else:
             return self._extend_numeric(type_, "SMALLINT")
 
+    def visit_JSON(self, type_, **kw):
+        if not self.dialect._supports_json:
+            util.warn("Current MySQL version does not support JSON.")
+            return "TEXT"
+        return "JSON"
+
     def visit_BIT(self, type_, **kw):
         if type_.length is not None:
             return "BIT(%s)" % type_.length
@@ -2433,10 +2448,13 @@ class MySQLDialect(default.DefaultDialect):
         })
     ]
 
-    def __init__(self, isolation_level=None, **kwargs):
-        kwargs.pop('use_ansiquotes', None)   # legacy
+    def __init__(self, isolation_level=None, json_serializer=None,
+                 json_deserializer=None, **kwargs):
+        kwargs.pop('use_ansiquotes', None)  # legacy
         default.DefaultDialect.__init__(self, **kwargs)
         self.isolation_level = isolation_level
+        self._json_deserializer = json_deserializer
+        self._json_serializer = json_serializer
 
     def on_connect(self):
         if self.isolation_level is not None:
@@ -2606,6 +2624,11 @@ class MySQLDialect(default.DefaultDialect):
     def _supports_cast(self):
         return self.server_version_info is None or \
             self.server_version_info >= (4, 0, 2)
+
+    @property
+    def _supports_json(self):
+        return self.server_version_info is None or \
+               self.server_version_info >= (5, 7, 9)
 
     @reflection.cache
     def get_schema_names(self, connection, **kw):
