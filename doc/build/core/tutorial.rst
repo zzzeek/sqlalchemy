@@ -345,12 +345,12 @@ inserted, as we do here to add some email addresses:
 .. sourcecode:: pycon+sql
 
     >>> conn.execute(addresses.insert(), [
-    ...    {'user_id': 1, 'email_address' : 'jack@yahoo.com'},
-    ...    {'user_id': 1, 'email_address' : 'jack@msn.com'},
-    ...    {'user_id': 2, 'email_address' : 'www@www.org'},
-    ...    {'user_id': 2, 'email_address' : 'wendy@aol.com'},
+    ...    {'user_id': 1, 'email_addresses' : 'jack@yahoo.com'},
+    ...    {'user_id': 1, 'email_addresses' : 'jack@msn.com'},
+    ...    {'user_id': 2, 'email_addresses' : 'www@www.org'},
+    ...    {'user_id': 2, 'email_addresses' : 'wendy@aol.com'},
     ... ])
-    {opensql}INSERT INTO addresses (user_id, email_address) VALUES (?, ?)
+    {opensql}INSERT INTO addresses (user_id, email_addresses) VALUES (?, ?)
     ((1, 'jack@yahoo.com'), (1, 'jack@msn.com'), (2, 'www@www.org'), (2, 'wendy@aol.com'))
     COMMIT
     {stop}<sqlalchemy.engine.result.ResultProxy object at 0x...>
