@@ -21,6 +21,8 @@ from .base import \
     TINYBLOB, TINYINT, TINYTEXT,\
     VARBINARY, VARCHAR, YEAR, dialect
 
+from .json import JSON
+
 __all__ = (
     'BIGINT', 'BINARY', 'BIT', 'BLOB', 'BOOLEAN', 'CHAR', 'DATE', 'DATETIME',
     'DECIMAL', 'DOUBLE', 'ENUM', 'DECIMAL', 'FLOAT', 'INTEGER', 'INTEGER',
