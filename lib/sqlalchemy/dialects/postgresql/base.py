@@ -415,6 +415,12 @@ keyword argument::
 
 .. versionadded:: 1.0.6
 
+PostgreSQL allows to define the tablespace in which to create the index.
+The tablespace can be specified on :class:`.Index` using the ``postgresql_tablespace``
+keyword argument::
+
+    Index('my_index', my_table.c.data, postgresql_tablespace='my_tablespace')
+
 .. _postgresql_index_concurrently:
 
 Indexes with CONCURRENTLY
@@ -1295,6 +1301,11 @@ class PGDDLCompiler(compiler.DDLCompiler):
                 ['%s = %s' % storage_parameter
                  for storage_parameter in withclause.items()]))
 
+        tablespace_name = index.dialect_options['postgresql']['tablespace']
+
+        if tablespace_name:
+            text += " TABLESPACE %s" % preparer.quote(tablespace_name)
+
         whereclause = index.dialect_options["postgresql"]["where"]
 
         if whereclause is not None:
@@ -1632,7 +1643,8 @@ class PGDialect(default.DefaultDialect):
             "where": None,
             "ops": {},
             "concurrently": False,
-            "with": {}
+            "with": {},
+            "tablespace": None
         }),
         (schema.Table, {
             "ignore_search_path": False,
