@@ -49,6 +49,12 @@ class InstanceState(interfaces.InspectionAttr):
 
     """
 
+    # Slot-ize heavily-used attributes - it's faster, and more compact
+    # like this. Do *NOT* add class-defaulted attributes, as using slots
+    # invalidate that mechanism.
+    __slots__ = ('class','manager','obj','callables','comitted_state',
+                 '__dict__','__weakref__')
+
     session_id = None
     key = None
     runid = None
@@ -428,11 +434,14 @@ class InstanceState(interfaces.InspectionAttr):
         state_dict = {'instance': self.obj()}
         state_dict.update(
             (k, self.__dict__[k]) for k in (
-                'committed_state', '_pending_mutations', 'modified',
-                'expired', 'callables', 'key', 'parents', 'load_options',
+                '_pending_mutations', 'modified',
+                'expired', 'key', 'parents', 'load_options',
                 'class_', 'expired_attributes'
             ) if k in self.__dict__
         )
+        # Slots
+        state_dict.update((k, getattr(self, k)) for k in ('committed_state', 'callables'))
+
         if self.load_path:
             state_dict['load_path'] = self.load_path.serialize()
 
