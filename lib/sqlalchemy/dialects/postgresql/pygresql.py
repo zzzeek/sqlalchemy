@@ -56,44 +56,44 @@ class _PGNumeric(Numeric):
 class _PGHStore(HSTORE):
 
     def bind_processor(self, dialect):
-        if not dialect._use_native_hstore:
+        if not dialect.use_native_hstore:
             return super(_PGHStore, self).bind_processor(dialect)
 
     def result_processor(self, dialect, coltype):
-        if not dialect._use_native_hstore:
+        if not dialect.use_native_hstore:
             return super(_PGHStore, self).result_processor(dialect, coltype)
 
 
 class _PGJSON(JSON):
 
     def bind_processor(self, dialect):
-        if not dialect._use_native_json:
+        if not dialect.use_native_json:
             return super(_PGJSON, self).bind_processor(dialect)
 
     def result_processor(self, dialect, coltype):
-        if not dialect._use_native_json:
+        if not dialect.use_native_json:
             return super(_PGJSON, self).result_processor(dialect, coltype)
 
 
 class _PGJSONB(JSONB):
 
     def bind_processor(self, dialect):
-        if not dialect._use_native_json:
+        if not dialect.use_native_json:
             return super(_PGJSONB, self).bind_processor(dialect)
 
     def result_processor(self, dialect, coltype):
-        if not dialect._use_native_json:
+        if not dialect.use_native_json:
             return super(_PGJSONB, self).result_processor(dialect, coltype)
 
 
 class _PGUUID(UUID):
 
     def bind_processor(self, dialect):
-        if not dialect._use_native_uuid:
+        if not dialect.use_native_uuid:
             return super(_PGUUID, self).bind_processor(dialect)
 
     def result_processor(self, dialect, coltype):
-        if not dialect._use_native_uuid:
+        if not dialect.use_native_uuid:
             return super(_PGUUID, self).result_processor(dialect, coltype)
 
 
@@ -122,14 +122,13 @@ class PGDialect_pygresql(PGDialect):
     def __init__(self, use_native_hstore=False,
             use_native_json=False, use_native_uuid=True, **kwargs):
         super(PGDialect_pygresql, self).__init__(**kwargs)
-        if self.dbapi:
-            try:
-                version = self.dbapi.version
-                m = re.match(r'(\d+)\.(\d+)', version)
-                version = (int(m.group(1)), int(m.group(2)))
-            except (AttributeError, ValueError):
-                version = (0, 0)
-            self.dbapi_version = version
+        try:
+            version = self.dbapi.version
+            m = re.match(r'(\d+)\.(\d+)', version)
+            version = (int(m.group(1)), int(m.group(2)))
+        except (AttributeError, ValueError, TypeError):
+            version = (0, 0)
+        self.dbapi_version = version
         self.use_native_hstore = use_native_hstore and version >= (5, 0)
         self.use_native_json = use_native_json and version >= (5, 0)
         self.use_native_uuid = use_native_uuid and version >= (5, 0)
@@ -138,7 +137,7 @@ class PGDialect_pygresql(PGDialect):
         opts = url.translate_connect_args(username='user')
         if 'port' in opts:
             opts['host'] = '%s:%s' % (
-                opts['host'].rsplit(':', 1)[0], opts.pop('port'))
+                opts.get('host', '').rsplit(':', 1)[0], opts.pop('port'))
         opts.update(url.query)
         return [], opts
 
