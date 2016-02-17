@@ -695,6 +695,7 @@ class AutomapBase(object):
             cls,
             engine=None,
             reflect=False,
+            schema=None,
             classname_for_table=classname_for_table,
             collection_class=list,
             name_for_scalar_relationship=name_for_scalar_relationship,
@@ -739,6 +740,7 @@ class AutomapBase(object):
         if reflect:
             cls.metadata.reflect(
                 engine,
+                schema=schema,
                 extend_existing=True,
                 autoload_replace=False
             )
