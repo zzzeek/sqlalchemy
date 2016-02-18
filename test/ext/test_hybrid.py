@@ -99,10 +99,12 @@ class PropertyExpressionTest(fixtures.TestBase, AssertsCompiledSQL):
 
             @hybrid.hybrid_property
             def value(self):
+                "This is an instance-level docstring"
                 return int(self._value) - 5
 
             @value.expression
             def value(cls):
+                "This is a class-level docstring"
                 return func.foo(cls._value) + cls.bar_value
 
             @value.setter
@@ -204,6 +206,17 @@ class PropertyExpressionTest(fixtures.TestBase, AssertsCompiledSQL):
             "SELECT a_1.value AS a_1_value, a_1.id AS a_1_id "
             "FROM a AS a_1 WHERE foo(a_1.value) + bar(a_1.value) = :param_1"
         )
+
+    def test_docstring(self):
+        A = self._fixture()
+        # This is tricky. `A.value` returns a SQL element, which has its
+        # own docstring, so it's reasonable to expect this to fail:
+        eq_(A.value.__doc__, "This is a class-level docstring")
+        # We can get at the hybrid_property object by going through the `__dict__`
+        # property, but even doing that, we end up with the wrong docstring!
+        # We should get the class-level docstring...
+        eq_(A.__dict__['value'].__doc__, "This is a class-level docstring")
+        # ... but we get the instance-level docstring, instead!
 
 class PropertyValueTest(fixtures.TestBase, AssertsCompiledSQL):
     __dialect__ = 'default'
