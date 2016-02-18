@@ -784,7 +784,10 @@ class hybrid_property(interfaces.InspectionAttrInfo):
             create_proxied_attribute(self)
 
         def expr(owner):
-            return proxy_attr(owner, self.__name__, self, comparator(owner))
+            return proxy_attr(
+                owner, self.__name__, self, comparator(owner),
+                doc=self.__doc__,
+            )
         self.expr = expr
         return self
 

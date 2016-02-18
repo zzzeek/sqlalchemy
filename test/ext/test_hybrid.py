@@ -30,6 +30,7 @@ class PropertyComparatorTest(fixtures.TestBase, AssertsCompiledSQL):
 
             @hybrid.hybrid_property
             def value(self):
+                "This is a docstring"
                 return self._value - 5
 
             @value.comparator
@@ -80,6 +81,11 @@ class PropertyComparatorTest(fixtures.TestBase, AssertsCompiledSQL):
             "SELECT a_1.value AS a_1_value, a_1.id AS a_1_id "
             "FROM a AS a_1 WHERE upper(a_1.value) = upper(:upper_1)"
         )
+
+    def test_docstring(self):
+        A = self._fixture()
+        eq_(A.value.__doc__, "This is a docstring")
+
 
 class PropertyExpressionTest(fixtures.TestBase, AssertsCompiledSQL):
     __dialect__ = 'default'
@@ -257,10 +263,12 @@ class MethodExpressionTest(fixtures.TestBase, AssertsCompiledSQL):
 
             @hybrid.hybrid_method
             def value(self, x):
+                "This is an instance-level docstring"
                 return int(self._value) + x
 
             @value.expression
             def value(cls, value):
+                "This is a class-level docstring"
                 return func.foo(cls._value, value) + value
 
         return A
@@ -327,3 +335,9 @@ class MethodExpressionTest(fixtures.TestBase, AssertsCompiledSQL):
             sess.query(aliased(A).value(5)),
             "SELECT foo(a_1.value, :foo_1) + :foo_2 AS anon_1 FROM a AS a_1"
         )
+
+    def test_docstring(self):
+        A = self._fixture()
+        eq_(A.value.__doc__, "This is a class-level docstring")
+        a1 = A(_value=10)
+        eq_(a1.value.__doc__, "This is an instance-level docstring")
