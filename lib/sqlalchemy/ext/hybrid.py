@@ -817,6 +817,12 @@ class Comparator(interfaces.PropComparator):
 
 
 class ExprComparator(Comparator):
+    def __clause_element__(self):
+        return self.expression
+
+    def __getattr__(self, key):
+        return getattr(self.expression, key)
+
     def operate(self, op, *other, **kwargs):
         return op(self.__clause_element__(), *other, **kwargs)
 
