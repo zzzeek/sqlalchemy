@@ -732,7 +732,7 @@ class hybrid_property(interfaces.InspectionAttrInfo):
         self.fget = fget
         self.fset = fset
         self.fdel = fdel
-        self.expr = expr or fget
+        self.expression(expr or fget)
         util.update_wrapper(self, fget)
 
     def __get__(self, instance, owner):
@@ -768,8 +768,12 @@ class hybrid_property(interfaces.InspectionAttrInfo):
         """Provide a modifying decorator that defines a SQL-expression
         producing method."""
 
-        self.expr = expr
-        return self
+        def _expr(cls):
+            return ExprComparator(expr(cls))
+        util.update_wrapper(_expr, expr)
+
+        self.expr = _expr
+        return self.comparator(_expr)
 
     def comparator(self, comparator):
         """Provide a modifying decorator that defines a custom
@@ -786,8 +790,7 @@ class hybrid_property(interfaces.InspectionAttrInfo):
         def expr(owner):
             return proxy_attr(
                 owner, self.__name__, self, comparator(owner),
-                doc=self.__doc__,
-            )
+                doc=comparator.__doc__ or self.__doc__)
         self.expr = expr
         return self
 
@@ -811,3 +814,11 @@ class Comparator(interfaces.PropComparator):
     def adapt_to_entity(self, adapt_to_entity):
         # interesting....
         return self
+
+
+class ExprComparator(Comparator):
+    def operate(self, op, *other, **kwargs):
+        return op(self.__clause_element__(), *other, **kwargs)
+
+    def reverse_operate(self, op, other, **kwargs):
+        return op(other, self.__clause_element__(), **kwargs)

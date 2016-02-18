@@ -89,6 +89,7 @@ class PropertyComparatorTest(fixtures.TestBase, AssertsCompiledSQL):
 
 class PropertyExpressionTest(fixtures.TestBase, AssertsCompiledSQL):
     __dialect__ = 'default'
+
     def _fixture(self):
         Base = declarative_base()
 
@@ -167,7 +168,7 @@ class PropertyExpressionTest(fixtures.TestBase, AssertsCompiledSQL):
     def test_expression(self):
         A = self._fixture()
         self.assert_compile(
-            A.value,
+            A.value.__clause_element__(),
             "foo(a.value) + bar(a.value)"
         )
 
@@ -185,7 +186,7 @@ class PropertyExpressionTest(fixtures.TestBase, AssertsCompiledSQL):
     def test_aliased_expression(self):
         A = self._fixture()
         self.assert_compile(
-            aliased(A).value,
+            aliased(A).value.__clause_element__(),
             "foo(a_1.value) + bar(a_1.value)"
         )
 
@@ -209,17 +210,16 @@ class PropertyExpressionTest(fixtures.TestBase, AssertsCompiledSQL):
 
     def test_docstring(self):
         A = self._fixture()
-        # This is tricky. `A.value` returns a SQL element, which has its
-        # own docstring, so it's reasonable to expect this to fail:
         eq_(A.value.__doc__, "This is a class-level docstring")
-        # We can get at the hybrid_property object by going through the `__dict__`
-        # property, but even doing that, we end up with the wrong docstring!
-        # We should get the class-level docstring...
-        eq_(A.__dict__['value'].__doc__, "This is a class-level docstring")
-        # ... but we get the instance-level docstring, instead!
+
+        # no docstring here since we get a literal
+        a1 = A(_value=10)
+        eq_(a1.value, 5)
+
 
 class PropertyValueTest(fixtures.TestBase, AssertsCompiledSQL):
     __dialect__ = 'default'
+
     def _fixture(self, assignable):
         Base = declarative_base()
 
@@ -257,15 +257,16 @@ class PropertyValueTest(fixtures.TestBase, AssertsCompiledSQL):
             delattr, a1, 'value'
         )
 
-
     def test_set_get(self):
         A = self._fixture(True)
         a1 = A(value=5)
         eq_(a1.value, 5)
         eq_(a1._value, 10)
 
+
 class MethodExpressionTest(fixtures.TestBase, AssertsCompiledSQL):
     __dialect__ = 'default'
+
     def _fixture(self):
         Base = declarative_base()
 
@@ -305,7 +306,6 @@ class MethodExpressionTest(fixtures.TestBase, AssertsCompiledSQL):
             inspect(A).all_orm_descriptors.value.info,
             {"some key": "some value"}
         )
-
 
     def test_aliased_expression(self):
         A = self._fixture()
@@ -353,4 +353,7 @@ class MethodExpressionTest(fixtures.TestBase, AssertsCompiledSQL):
         A = self._fixture()
         eq_(A.value.__doc__, "This is a class-level docstring")
         a1 = A(_value=10)
+
+        # a1.value is still a method, so it has a
+        # docstring
         eq_(a1.value.__doc__, "This is an instance-level docstring")
