@@ -687,7 +687,7 @@ class hybrid_method(interfaces.InspectionAttrInfo):
 
         """
         self.func = func
-        self.expr = expr or func
+        self.expression(expr or func)
 
     def __get__(self, instance, owner):
         if instance is None:
@@ -700,6 +700,8 @@ class hybrid_method(interfaces.InspectionAttrInfo):
         SQL-expression producing method."""
 
         self.expr = expr
+        if not self.expr.__doc__:
+            self.expr.__doc__ = self.func.__doc__
         return self
 
 

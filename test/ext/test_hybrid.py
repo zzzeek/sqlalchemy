@@ -286,6 +286,15 @@ class MethodExpressionTest(fixtures.TestBase, AssertsCompiledSQL):
                 "This is a class-level docstring"
                 return func.foo(cls._value, value) + value
 
+            @hybrid.hybrid_method
+            def other_value(self, x):
+                "This is an instance-level docstring"
+                return int(self._value) + x
+
+            @other_value.expression
+            def other_value(cls, value):
+                return func.foo(cls._value, value) + value
+
         return A
 
     def test_call(self):
@@ -353,11 +362,14 @@ class MethodExpressionTest(fixtures.TestBase, AssertsCompiledSQL):
     def test_docstring(self):
         A = self._fixture()
         eq_(A.value.__doc__, "This is a class-level docstring")
+        eq_(A.other_value.__doc__, "This is an instance-level docstring")
         a1 = A(_value=10)
 
         # a1.value is still a method, so it has a
         # docstring
         eq_(a1.value.__doc__, "This is an instance-level docstring")
+
+        eq_(a1.other_value.__doc__, "This is an instance-level docstring")
 
 
 class SpecialObjectTest(fixtures.TestBase, AssertsCompiledSQL):
