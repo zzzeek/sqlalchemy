@@ -1356,6 +1356,7 @@ class PGDDLCompiler(compiler.DDLCompiler):
 
 
 class PGTypeCompiler(compiler.GenericTypeCompiler):
+
     def visit_TSVECTOR(self, type, **kw):
         return "TSVECTOR"
 
@@ -2329,110 +2330,64 @@ class PGDialect(default.DefaultDialect):
         table_oid = self.get_table_oid(connection, table_name, schema,
                                        info_cache=kw.get('info_cache'))
 
-        # cast indkey as varchar since it's an int2vector,
-        # returned as a list by some drivers such as pypostgresql
-
-        if self.server_version_info < (8, 5):
-            IDX_SQL = """
-              SELECT
-                  i.relname as relname,
-                  ix.indisunique, ix.indexprs, ix.indpred,
-                  a.attname, a.attnum, NULL, ix.indkey%s,
-                  %s, am.amname
-              FROM
-                  pg_class t
-                        join pg_index ix on t.oid = ix.indrelid
-                        join pg_class i on i.oid = ix.indexrelid
-                        left outer join
-                            pg_attribute a
-                            on t.oid = a.attrelid and %s
-                        left outer join
-                            pg_am am
-                            on i.relam = am.oid
-              WHERE
-                  t.relkind IN ('r', 'v', 'f', 'm')
-                  and t.oid = :table_oid
-                  and ix.indisprimary = 'f'
-              ORDER BY
-                  t.relname,
-                  i.relname
-            """ % (
-                # version 8.3 here was based on observing the
-                # cast does not work in PG 8.2.4, does work in 8.3.0.
-                # nothing in PG changelogs regarding this.
-                "::varchar" if self.server_version_info >= (8, 3) else "",
-                "i.reloptions" if self.server_version_info >= (8, 2)
-                else "NULL",
-                self._pg_index_any("a.attnum", "ix.indkey")
-            )
-        else:
-            IDX_SQL = """
-              SELECT
-                  i.relname as relname,
-                  ix.indisunique, ix.indexprs, ix.indpred,
-                  a.attname, a.attnum, c.conrelid, ix.indkey::varchar,
-                  i.reloptions, am.amname
-              FROM
-                  pg_class t
-                        join pg_index ix on t.oid = ix.indrelid
-                        join pg_class i on i.oid = ix.indexrelid
-                        left outer join
-                            pg_attribute a
-                            on t.oid = a.attrelid and a.attnum = ANY(ix.indkey)
-                        left outer join
-                            pg_constraint c
-                            on (ix.indrelid = c.conrelid and
-                                ix.indexrelid = c.conindid and
-                                c.contype in ('p', 'u', 'x'))
-                        left outer join
-                            pg_am am
-                            on i.relam = am.oid
-              WHERE
-                  t.relkind IN ('r', 'v', 'f', 'm')
-                  and t.oid = :table_oid
-                  and ix.indisprimary = 'f'
-              ORDER BY
-                  t.relname,
-                  i.relname
-            """
+        IDX_SQL = """
+          SELECT
+              i.relname as relname,
+              ix.indisunique,
+              pg_get_indexdef(i.oid, s.i + 1, false),
+              s.i,
+              pg_get_expr(ix.indpred, ix.indrelid),
+              c.conrelid,
+              %s,
+              am.amname
+          FROM
+              pg_class t
+                    join pg_index ix on t.oid = ix.indrelid
+                    join pg_class i on i.oid = ix.indexrelid
+                    join generate_series(0, current_setting('max_index_keys')::int - 1) s(i)
+                        on ix.indkey[s.i] is NOT NULL
+                    left outer join
+                        pg_constraint c
+                        on (ix.indrelid = c.conrelid and
+                        ix.indexrelid = c.conindid and
+                        c.contype in ('p', 'u', 'x'))
+                    left outer join
+                        pg_am am
+                        on i.relam = am.oid
+          WHERE
+              t.relkind IN ('r', 'v', 'f', 'm')
+              and t.oid = :table_oid
+              and ix.indisprimary = 'f'
+          ORDER BY
+              t.relname,
+              i.relname,
+              s.i
+        """ % (
+            "i.reloptions" if self.server_version_info >= (8, 2) else "NULL"
+        )
 
         t = sql.text(IDX_SQL, typemap={'attname': sqltypes.Unicode})
         c = connection.execute(t, table_oid=table_oid)
 
-        indexes = defaultdict(lambda: defaultdict(dict))
+        indexes = defaultdict(lambda: defaultdict(list))
 
         sv_idx_name = None
         for row in c.fetchall():
-            (idx_name, unique, expr, prd, col,
-             col_num, conrelid, idx_key, options, amname) = row
-
-            if expr:
-                if idx_name != sv_idx_name:
-                    util.warn(
-                        "Skipped unsupported reflection of "
-                        "expression-based index %s"
-                        % idx_name)
-                sv_idx_name = idx_name
-                continue
-
-            if prd and not idx_name == sv_idx_name:
-                util.warn(
-                    "Predicate of partial index %s ignored during reflection"
-                    % idx_name)
-                sv_idx_name = idx_name
+            (idx_name, unique, col, col_num, prd, conrelid, options, amname) = row
 
             has_idx = idx_name in indexes
             index = indexes[idx_name]
             if col is not None:
-                index['cols'][col_num] = col
+                index['cols'].append(col.strip('"'))
             if not has_idx:
-                index['key'] = [int(k.strip()) for k in idx_key.split()]
                 index['unique'] = unique
                 if conrelid is not None:
                     index['duplicates_constraint'] = idx_name
                 if options:
                     index['options'] = dict(
                         [option.split("=") for option in options])
+                if prd:
+                    index['where'] = prd
 
                 # it *might* be nice to include that this is 'btree' in the
                 # reflection info.  But we don't want an Index object
@@ -2446,16 +2401,19 @@ class PGDialect(default.DefaultDialect):
             entry = {
                 'name': name,
                 'unique': idx['unique'],
-                'column_names': [idx['cols'][i] for i in idx['key']]
+                'column_names': idx['cols']
             }
             if 'duplicates_constraint' in idx:
                 entry['duplicates_constraint'] = idx['duplicates_constraint']
             if 'options' in idx:
                 entry.setdefault(
-                    'dialect_options', {})["postgresql_with"] = idx['options']
+                    'dialect_options', {})['postgresql_with'] = idx['options']
             if 'amname' in idx:
                 entry.setdefault(
-                    'dialect_options', {})["postgresql_using"] = idx['amname']
+                    'dialect_options', {})['postgresql_using'] = idx['amname']
+            if 'where' in idx:
+                entry.setdefault(
+                    'dialect_options', {})['postgresql_where'] = idx['where']
             result.append(entry)
         return result
 

@@ -17,6 +17,7 @@ import re
 
 
 class ForeignTableReflectionTest(fixtures.TablesTest, AssertsExecutionResults):
+
     """Test reflection on foreign tables"""
 
     __requires__ = 'postgresql_test_dblink',
@@ -74,6 +75,7 @@ class ForeignTableReflectionTest(fixtures.TablesTest, AssertsExecutionResults):
 
 class MaterializedViewReflectionTest(
         fixtures.TablesTest, AssertsExecutionResults):
+
     """Test reflection on materialized views"""
 
     __only_on__ = 'postgresql >= 9.3'
@@ -142,6 +144,7 @@ class MaterializedViewReflectionTest(
 
 
 class DomainReflectionTest(fixtures.TestBase, AssertsExecutionResults):
+
     """Test PostgreSQL domains"""
 
     __only_on__ = 'postgresql > 8.3'
@@ -610,7 +613,7 @@ class ReflectionTest(fixtures.TestBase):
 
     @testing.provide_metadata
     def test_index_reflection(self):
-        """ Reflecting partial & expression-based indexes should warn
+        """ reflect partial & expression-based indexes
         """
 
         metadata = self.metadata
@@ -624,41 +627,43 @@ class ReflectionTest(fixtures.TestBase):
             Column(
                 'aname', String(20)))
         metadata.create_all()
-        testing.db.execute("""
-          create index idx1 on party ((id || name))
-        """)
-        testing.db.execute("""
-          create unique index idx2 on party (id) where name = 'test'
-        """)
-        testing.db.execute("""
-            create index idx3 on party using btree
-                (lower(name::text), lower(aname::text))
-        """)
+        with testing.db.connect().execution_options(autocommit=True) as conn:
+            conn.execute("""
+                CREATE INDEX idx1 ON party (((id)::text || (name)::text))
+            """)
+            conn.execute("""
+                CREATE UNIQUE INDEX idx2 ON party (id) WHERE (name)::text = 'test'::text
+            """)
+            conn.execute("""
+                CREATE INDEX idx3 ON party USING btree
+                    (lower((name)::text), lower((aname)::text))
+            """)
 
-        def go():
-            m2 = MetaData(testing.db)
-            t2 = Table('party', m2, autoload=True)
-            assert len(t2.indexes) == 2
-
-            # Make sure indexes are in the order we expect them in
+            m = MetaData()
+            t2 = Table('party', m, autoload_with=conn)
+            eq_(len(t2.indexes), 4)
 
             tmp = [(idx.name, idx) for idx in t2.indexes]
             tmp.sort()
-            r1, r2 = [idx[1] for idx in tmp]
-            assert r1.name == 'idx2'
-            assert r1.unique == True
-            assert r2.unique == False
-            assert [t2.c.id] == r1.columns
-            assert [t2.c.name] == r2.columns
+            r1, r2, r3, r4 = [idx[1] for idx in tmp]
 
-        testing.assert_warnings(
-            go,
-            ['Skipped unsupported reflection of '
-             'expression-based index idx1',
-             'Predicate of partial index idx2 ignored during '
-             'reflection',
-             'Skipped unsupported reflection of '
-             'expression-based index idx3'])
+            eq_(r1.unique, False)
+            eq_(r1.name, 'idx1')
+            eq_(r1.expressions[0].text, '(((id)::text || (name)::text))')
+
+            eq_(r2.unique, True)
+            eq_(r2.name, 'idx2')
+            eq_(r2.unique, True)
+            eq_(r2.columns, [t2.c.id])
+            eq_(r2.dialect_options['postgresql']['where'], "((name)::text = 'test'::text)")
+
+            eq_(r3.unique, False)
+            eq_(r3.name, 'idx3')
+            eq_(r3.expressions[0].text, 'lower((name)::text)')
+            eq_(r3.expressions[1].text, 'lower((aname)::text)')
+
+            eq_(r4.unique, False)
+            eq_(r4.columns, [t2.c.name])
 
     @testing.provide_metadata
     def test_index_reflection_modified(self):
