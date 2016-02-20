@@ -2235,9 +2235,10 @@ class Session(_SessionClassMethods):
         ):
             self._bulk_save_mappings(
                 mapper, states, isupdate, True,
-                return_defaults, update_changed_only)
+                return_defaults, update_changed_only, False)
 
-    def bulk_insert_mappings(self, mapper, mappings, return_defaults=False):
+    def bulk_insert_mappings(
+            self, mapper, mappings, return_defaults=False, with_none=False):
         """Perform a bulk insert of the given list of mapping dictionaries.
 
         The bulk insert feature allows plain Python dictionaries to be used as
@@ -2290,6 +2291,9 @@ class Session(_SessionClassMethods):
          reason this flag should be set as the returned default information
          is not used.
 
+        :param with_none: when True, `None` values are not omitted which can
+         help in reducing the number of insert statements.
+
 
         .. seealso::
 
@@ -2301,7 +2305,7 @@ class Session(_SessionClassMethods):
 
         """
         self._bulk_save_mappings(
-            mapper, mappings, False, False, return_defaults, False)
+            mapper, mappings, False, False, return_defaults, False, with_none)
 
     def bulk_update_mappings(self, mapper, mappings):
         """Perform a bulk update of the given list of mapping dictionaries.
@@ -2350,11 +2354,12 @@ class Session(_SessionClassMethods):
             :meth:`.Session.bulk_save_objects`
 
         """
-        self._bulk_save_mappings(mapper, mappings, True, False, False, False)
+        self._bulk_save_mappings(
+            mapper, mappings, True, False, False, False, False)
 
     def _bulk_save_mappings(
             self, mapper, mappings, isupdate, isstates,
-            return_defaults, update_changed_only):
+            return_defaults, update_changed_only, with_none):
         mapper = _class_to_mapper(mapper)
         self._flushing = True
 
@@ -2367,7 +2372,8 @@ class Session(_SessionClassMethods):
                     isstates, update_changed_only)
             else:
                 persistence._bulk_insert(
-                    mapper, mappings, transaction, isstates, return_defaults)
+                    mapper, mappings, transaction,
+                    isstates, return_defaults, with_none)
             transaction.commit()
 
         except:
