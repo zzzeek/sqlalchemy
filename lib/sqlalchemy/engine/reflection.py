@@ -57,6 +57,7 @@ def cache(fn, self, con, *args, **kw):
 
 
 class Inspector(object):
+
     """Performs database schema inspection.
 
     The Inspector acts as a proxy to the reflection methods of the
@@ -727,26 +728,25 @@ class Inspector(object):
                 continue
             if duplicates:
                 continue
-            # look for columns by orig name in cols_by_orig_name,
-            # but support columns that are in-Python only as fallback
+
             idx_cols = []
             for c in columns:
-                try:
-                    idx_col = cols_by_orig_name[c] \
-                        if c in cols_by_orig_name else table.c[c]
-                except KeyError:
-                    util.warn(
-                        "%s key '%s' was not located in "
-                        "columns for table '%s'" % (
-                            flavor, c, table_name
-                        ))
+                if c in cols_by_orig_name:
+                    idx_col = cols_by_orig_name[c]
+                elif c in table.c:
+                    idx_col = table.c[c]
                 else:
-                    idx_cols.append(idx_col)
+                    # expression-based index
+                    idx_col = sql.text(c)
 
-            sa_schema.Index(
+                idx_cols.append(idx_col)
+
+            idx = sa_schema.Index(
                 name, *idx_cols,
                 **dict(list(dialect_options.items()) + [('unique', unique)])
             )
+            if idx.table is None:
+                table.append_constraint(idx)
 
     def _reflect_unique_constraints(
         self, table_name, schema, table, cols_by_orig_name,
