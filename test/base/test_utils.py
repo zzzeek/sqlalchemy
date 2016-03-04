@@ -7,7 +7,7 @@ from sqlalchemy.testing import eq_, is_, ne_, fails_if, mock, expect_warnings
 from sqlalchemy.testing.util import picklers, gc_collect
 from sqlalchemy.util import classproperty, WeakSequence, get_callable_argspec
 from sqlalchemy.sql import column
-from sqlalchemy.util import langhelpers, compat
+from sqlalchemy.util import OrderedDict, langhelpers, compat
 import inspect
 
 
@@ -120,6 +120,33 @@ class _KeyedTupleTest(object):
             eq_(list(kt.keys()), ['a', 'b'])
             eq_(kt._fields, ('a', 'b'))
             eq_(kt._asdict(), {'a': 1, 'b': 3})
+
+    def test_asdict_impl(self):
+        keyed_tuple = self._fixture([1, 2, 3, 4], ['a', 'b', 'c', 'd'])
+        from sqlalchemy.util import OrderedDict
+        assert keyed_tuple._asdict(impl=OrderedDict) == OrderedDict(
+            [['a', 1], ['b', 2], ['c', 3], ['d', 4]]
+        )
+
+    def test_asdict_recursive(self):
+        keyed_tuple = self._fixture(
+            [1, 2, self._fixture([3, 4], ['d', 'e'])],
+            ['a', 'b', 'c']
+        )
+        eq_(
+            keyed_tuple._asdict(recursive=True),
+            {'a': 1, 'b': 2, 'c': {'d': 3, 'e': 4}}
+        )
+
+    def test_asdict_impl_recursive(self):
+        keyed_tuple = self._fixture(
+            [1, 2, self._fixture([3, 4], ['d', 'e'])],
+            ['a', 'b', 'c']
+        )
+        dct = keyed_tuple._asdict(impl=OrderedDict, recursive=True)
+        assert dct == OrderedDict(
+            [['a', 1], ['b', 2], ['c', OrderedDict([['d', 3], ['e', 4]])]]
+        )
 
 
 class KeyedTupleTest(_KeyedTupleTest, fixtures.TestBase):
