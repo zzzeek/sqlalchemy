@@ -99,6 +99,18 @@ class DefaultColumnComparatorTest(fixtures.TestBase):
     def test_notequals_true(self):
         self._do_operate_test(operators.ne, True)
 
+    def test_is_distinct_from_true(self):
+        self._do_operate_test(operators.is_distinct_from, True)
+
+    def test_is_distinct_from_false(self):
+        self._do_operate_test(operators.is_distinct_from, False)
+
+    def test_is_distinct_from_null(self):
+        self._do_operate_test(operators.is_distinct_from, None)
+
+    def test_isnot_distinct_from_true(self):
+        self._do_operate_test(operators.isnot_distinct_from, True)
+
     def test_is_true(self):
         self._do_operate_test(operators.is_, True)
 

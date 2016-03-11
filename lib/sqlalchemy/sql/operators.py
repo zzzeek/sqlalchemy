@@ -311,6 +311,22 @@ class ColumnOperators(Operators):
         """
         return self.operate(ne, other)
 
+    def is_distinct_from(self, other):
+        """Implement the ``IS DISTINCT FROM`` operator.
+
+
+
+        """
+        return self.operate(is_distinct_from, other)
+
+    def isnot_distinct_from(self, other):
+        """Implement the ``IS NOT DISTINCT FROM`` operator.
+
+
+
+        """
+        return self.operate(isnot_distinct_from, other)
+
     def __gt__(self, other):
         """Implement the ``>`` operator.
 
@@ -722,6 +738,15 @@ def istrue(a):
 def isfalse(a):
     raise NotImplementedError()
 
+
+def is_distinct_from(a, b):
+    return a.is_distinct_from(b)
+
+
+def isnot_distinct_from(a, b):
+    return a.isnot_distinct_from(b)
+
+
 def is_(a, b):
     return a.is_(b)
 
@@ -931,6 +956,8 @@ _PRECEDENCE = {
 
     eq: 5,
     ne: 5,
+    is_distinct_from: 5,
+    isnot_distinct_from: 5,
     gt: 5,
     lt: 5,
     ge: 5,

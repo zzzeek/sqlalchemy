@@ -32,8 +32,9 @@ def _boolean_compare(expr, op, obj, negate=None, reverse=False,
         # allow x ==/!= True/False to be treated as a literal.
         # this comes out to "== / != true/false" or "1/0" if those
         # constants aren't supported and works on all platforms
-        if op in (operators.eq, operators.ne) and \
-                isinstance(obj, (bool, True_, False_)):
+        if (op in (operators.eq, operators.ne) and \
+                isinstance(obj, (bool, True_, False_))) or \
+                op in (operators.is_distinct_from, operators.isnot_distinct_from):
             return BinaryExpression(expr,
                                     _literal_as_text(obj),
                                     op,
@@ -51,8 +52,9 @@ def _boolean_compare(expr, op, obj, negate=None, reverse=False,
                                         negate=operators.is_)
             else:
                 raise exc.ArgumentError(
-                    "Only '=', '!=', 'is_()', 'isnot()' operators can "
-                    "be used with None/True/False")
+                    "Only '=', '!=', 'is_()', 'isnot()', "
+                    "'is_distinct_from()', 'isnot_distinct_from()' "
+                    "operators can be used with None/True/False")
     else:
         obj = _check_literal(expr, op, obj)
 
@@ -249,6 +251,8 @@ operator_lookup = {
     "gt": (_boolean_compare, operators.le),
     "ge": (_boolean_compare, operators.lt),
     "eq": (_boolean_compare, operators.ne),
+    "is_distinct_from": (_boolean_compare, operators.isnot_distinct_from),
+    "isnot_distinct_from": (_boolean_compare, operators.isnot_distinct_from),
     "like_op": (_boolean_compare, operators.notlike_op),
     "ilike_op": (_boolean_compare, operators.notilike_op),
     "notlike_op": (_boolean_compare, operators.like_op),
