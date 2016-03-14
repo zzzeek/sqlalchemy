@@ -252,7 +252,7 @@ operator_lookup = {
     "ge": (_boolean_compare, operators.lt),
     "eq": (_boolean_compare, operators.ne),
     "is_distinct_from": (_boolean_compare, operators.isnot_distinct_from),
-    "isnot_distinct_from": (_boolean_compare, operators.isnot_distinct_from),
+    "isnot_distinct_from": (_boolean_compare, operators.is_distinct_from),
     "like_op": (_boolean_compare, operators.notlike_op),
     "ilike_op": (_boolean_compare, operators.notilike_op),
     "notlike_op": (_boolean_compare, operators.like_op),
