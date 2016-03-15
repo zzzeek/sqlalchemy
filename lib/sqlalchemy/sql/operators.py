@@ -314,7 +314,8 @@ class ColumnOperators(Operators):
     def is_distinct_from(self, other):
         """Implement the ``IS DISTINCT FROM`` operator.
 
-
+        On databases where the ``IS`` operator supplies the
+        same functionality, e.g. sqlite, produces ``IS NOT``.
 
         """
         return self.operate(is_distinct_from, other)
@@ -322,7 +323,8 @@ class ColumnOperators(Operators):
     def isnot_distinct_from(self, other):
         """Implement the ``IS NOT DISTINCT FROM`` operator.
 
-
+        On databases where the ``IS`` operator supplies the
+        same functionality, e.g. sqlite, produces ``IS``.
 
         """
         return self.operate(isnot_distinct_from, other)
