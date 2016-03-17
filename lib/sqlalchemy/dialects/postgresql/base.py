@@ -1922,39 +1922,23 @@ class PGDialect(default.DefaultDialect):
 
     @reflection.cache
     def get_table_names(self, connection, schema=None, **kw):
-        if schema is not None:
-            current_schema = schema
-        else:
-            current_schema = self.default_schema_name
-
         result = connection.execute(
-            sql.text("SELECT relname FROM pg_class c "
-                     "WHERE relkind = 'r' "
-                     "AND '%s' = (select nspname from pg_namespace n "
-                     "where n.oid = c.relnamespace) " %
-                     current_schema,
-                     typemap={'relname': sqltypes.Unicode}
-                     )
-        )
-        return [row[0] for row in result]
+            sql.text("SELECT c.relname FROM pg_class c "
+                     "JOIN pg_namespace n ON n.oid = c.relnamespace "
+                     "WHERE n.nspname = :schema AND c.relkind = 'r'"
+                     ).columns(relname=sqltypes.Unicode),
+            schema=schema if schema is not None else self.default_schema_name)
+        return [name for name, in result]
 
     @reflection.cache
     def _get_foreign_table_names(self, connection, schema=None, **kw):
-        if schema is not None:
-            current_schema = schema
-        else:
-            current_schema = self.default_schema_name
-
         result = connection.execute(
-            sql.text("SELECT relname FROM pg_class c "
-                     "WHERE relkind = 'f' "
-                     "AND '%s' = (select nspname from pg_namespace n "
-                     "where n.oid = c.relnamespace) " %
-                     current_schema,
-                     typemap={'relname': sqltypes.Unicode}
-                     )
-        )
-        return [row[0] for row in result]
+            sql.text("SELECT c.relname FROM pg_class c "
+                     "JOIN pg_namespace n ON n.oid = c.relnamespace "
+                     "WHERE n.nspname = :schema AND c.relkind = 'f'"
+                     ).columns(relname=sqltypes.Unicode),
+            schema=schema if schema is not None else self.default_schema_name)
+        return [name for name, in result]
 
     @reflection.cache
     def get_view_names(self, connection, schema=None, include=('plain', 'materialized'), **kw):
