@@ -1904,21 +1904,12 @@ class PGDialect(default.DefaultDialect):
 
     @reflection.cache
     def get_schema_names(self, connection, **kw):
-        s = """
-        SELECT nspname
-        FROM pg_namespace
-        ORDER BY nspname
-        """
-        rp = connection.execute(s)
-        # what about system tables?
-
-        if util.py2k:
-            schema_names = [row[0].decode(self.encoding) for row in rp
-                            if not row[0].startswith('pg_')]
-        else:
-            schema_names = [row[0] for row in rp
-                            if not row[0].startswith('pg_')]
-        return schema_names
+        result = connection.execute(
+            sql.text("SELECT nspname FROM pg_namespace "
+                     "WHERE nspname NOT LIKE 'pg_%' "
+                     "ORDER BY nspname"
+            ).columns(nspname=sqltypes.Unicode))
+        return [name for name, in result]
 
     @reflection.cache
     def get_table_names(self, connection, schema=None, **kw):
