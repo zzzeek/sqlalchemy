@@ -1957,61 +1957,40 @@ class PGDialect(default.DefaultDialect):
         return [row[0] for row in result]
 
     @reflection.cache
-    def get_view_names(self, connection, schema=None, **kw):
-        if schema is not None:
-            current_schema = schema
-        else:
-            current_schema = self.default_schema_name
-        s = """
-        SELECT relname
-        FROM pg_class c
-        WHERE relkind IN ('m', 'v')
-          AND '%(schema)s' = (select nspname from pg_namespace n
-          where n.oid = c.relnamespace)
-        """ % dict(schema=current_schema)
-
-        if util.py2k:
-            view_names = [row[0].decode(self.encoding)
-                          for row in connection.execute(s)]
-        else:
-            view_names = [row[0] for row in connection.execute(s)]
-        return view_names
+    def get_view_names(self, connection, schema=None, include=('plain', 'materialized'), **kw):
+        include_kinds = {
+            ('plain', 'materialized'): ('v', 'm'),
+            ('materialized', 'plain'): ('v', 'm'),
+            ('plain',): ('v,',),
+            ('materialized',): ('m',),
+            (): (None,)
+        }
+        try:
+            kinds = include_kinds[include]
+        except KeyError:
+            raise ValueError("include %r unknown, needs to be a tuple containing "
+                             "one or both of 'plain' and 'materialized'" % (include,))
+            
+        result = connection.execute(
+            sql.text("SELECT c.relname FROM pg_class c "
+                     "JOIN pg_namespace n ON n.oid = c.relnamespace "
+                     "WHERE n.nspname = :schema AND c.relkind IN :kinds"
+                     ).columns(relname=sqltypes.Unicode),
+            schema=schema if schema is not None else self.default_schema_name,
+            kinds=kinds)
+        return [name for name, in result]
 
     @reflection.cache
     def get_view_definition(self, connection, view_name, schema=None, **kw):
-        if schema is not None:
-            current_schema = schema
-        else:
-            current_schema = self.default_schema_name
-
-        if self.server_version_info >= (9, 3):
-            s = """
-            SELECT definition FROM pg_views
-            WHERE schemaname = :schema
-            AND viewname = :view_name
-
-            UNION
-
-            SELECT definition FROM pg_matviews
-            WHERE schemaname = :schema
-            AND matviewname = :view_name
-
-            """
-        else:
-            s = """
-            SELECT definition FROM pg_views
-            WHERE schemaname = :schema
-            AND viewname = :view_name
-            """
-
-        rp = connection.execute(sql.text(s),
-                                view_name=view_name, schema=current_schema)
-        if rp:
-            if util.py2k:
-                view_def = rp.scalar().decode(self.encoding)
-            else:
-                view_def = rp.scalar()
-            return view_def
+        view_def = connection.scalar(
+            sql.text("SELECT pg_get_viewdef(c.oid) view_def FROM pg_class c "
+                     "JOIN pg_namespace n ON n.oid = c.relnamespace "
+                     "WHERE n.nspname = :schema AND c.relname = :view_name "
+                     "AND c.relkind IN ('v', 'm')"
+                     ).columns(view_def=sqltypes.Unicode),
+            schema=schema if schema is not None else self.default_schema_name,
+            view_name=view_name)
+        return view_def
 
     @reflection.cache
     def get_columns(self, connection, table_name, schema=None, **kw):
