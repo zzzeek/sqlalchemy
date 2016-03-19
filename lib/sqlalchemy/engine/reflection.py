@@ -312,7 +312,7 @@ class Inspector(object):
                 info_cache=self.info_cache, **kw)
         return {}
 
-    def get_view_names(self, schema=None):
+    def get_view_names(self, schema=None, **kw):
         """Return all view names in `schema`.
 
         :param schema: Optional, retrieve names from a non-default schema.
@@ -321,7 +321,7 @@ class Inspector(object):
         """
 
         return self.dialect.get_view_names(self.bind, schema,
-                                           info_cache=self.info_cache)
+                                           info_cache=self.info_cache, **kw)
 
     def get_view_definition(self, view_name, schema=None):
         """Return definition for `view_name`.
