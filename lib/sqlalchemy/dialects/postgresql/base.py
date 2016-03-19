@@ -1933,15 +1933,9 @@ class PGDialect(default.DefaultDialect):
 
     @reflection.cache
     def get_view_names(self, connection, schema=None, include=('plain', 'materialized'), **kw):
-        include_kinds = {
-            ('plain', 'materialized'): ('v', 'm'),
-            ('materialized', 'plain'): ('v', 'm'),
-            ('plain',): ('v,',),
-            ('materialized',): ('m',),
-            (): (None,)
-        }
+        include_kinds = {'plain': 'v', 'materialized': 'm'}
         try:
-            kinds = include_kinds[include]
+            kinds = tuple(include_kinds[i] for i in include) or (None,)
         except KeyError:
             raise ValueError("include %r unknown, needs to be a tuple containing "
                              "one or both of 'plain' and 'materialized'" % (include,))
