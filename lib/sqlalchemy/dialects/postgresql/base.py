@@ -1933,13 +1933,16 @@ class PGDialect(default.DefaultDialect):
 
     @reflection.cache
     def get_view_names(self, connection, schema=None, include=('plain', 'materialized'), **kw):
-        include_kinds = {'plain': 'v', 'materialized': 'm'}
+        include_kind = {'plain': 'v', 'materialized': 'm'}
         try:
-            kinds = tuple(include_kinds[i] for i in include) or (None,)
+            kinds = tuple(include_kind[i] for i in include)
         except KeyError:
-            raise ValueError("include %r unknown, needs to be a tuple containing "
+            raise ValueError("include %r unknown, needs to be a sequence containing "
                              "one or both of 'plain' and 'materialized'" % (include,))
-            
+        if not kinds:
+            raise ValueError("empty include, needs to be a sequence containing "
+                             "one or both of 'plain' and 'materialized'")
+
         result = connection.execute(
             sql.text("SELECT c.relname FROM pg_class c "
                      "JOIN pg_namespace n ON n.oid = c.relnamespace "
