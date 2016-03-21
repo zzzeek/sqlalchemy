@@ -141,7 +141,7 @@ class MaterializedViewReflectionTest(
 
     def test_get_view_names_empty(self):
         insp = inspect(testing.db)
-        eq_(set(insp.get_view_names(include=())), set([]))
+        assert_raises(ValueError, insp.get_view_names, include=())
 
     def test_get_view_definition(self):
         insp = inspect(testing.db)
