@@ -25,7 +25,8 @@ from . import loading
 
 
 def _bulk_insert(
-        mapper, mappings, session_transaction, isstates, return_defaults):
+        mapper, mappings, session_transaction, isstates, return_defaults,
+        with_none):
     base_mapper = mapper.base_mapper
 
     cached_connections = _cached_connection_dict(base_mapper)
@@ -58,7 +59,7 @@ def _bulk_insert(
             has_all_defaults in _collect_insert_commands(table, (
                 (None, mapping, mapper, connection)
                 for mapping in mappings),
-                bulk=True, return_defaults=return_defaults
+                bulk=True, return_defaults=return_defaults, with_none=with_none
             )
         )
         _emit_insert_statements(base_mapper, None,
@@ -365,7 +366,7 @@ def _organize_states_for_delete(base_mapper, states, uowtransaction):
 
 def _collect_insert_commands(
         table, states_to_insert,
-        bulk=False, return_defaults=False):
+        bulk=False, return_defaults=False, with_none=False):
     """Identify sets of values to use in INSERT statements for a
     list of states.
 
@@ -384,7 +385,7 @@ def _collect_insert_commands(
         for propkey in set(propkey_to_col).intersection(state_dict):
             value = state_dict[propkey]
             col = propkey_to_col[propkey]
-            if value is None and propkey not in eval_none:
+            if value is None and propkey not in eval_none and not with_none:
                 continue
             elif not bulk and isinstance(value, sql.ClauseElement):
                 value_params[col.key] = value
