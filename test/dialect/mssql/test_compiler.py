@@ -625,6 +625,18 @@ class CompileTest(fixtures.TestBase, AssertsCompiledSQL):
             "PRIMARY KEY CLUSTERED (x, y))"
         )
 
+    def test_table_pkc_explicit_nonclustered(self):
+        metadata = MetaData()
+        tbl = Table('test', metadata,
+                    Column('x', Integer, autoincrement=False),
+                    Column('y', Integer, autoincrement=False),
+                    PrimaryKeyConstraint("x", "y", mssql_clustered=False))
+        self.assert_compile(
+            schema.CreateTable(tbl),
+            "CREATE TABLE test (x INTEGER NOT NULL, y INTEGER NOT NULL, "
+            "PRIMARY KEY NONCLUSTERED (x, y))"
+        )
+
     def test_table_uc_clustering(self):
         metadata = MetaData()
         tbl = Table('test', metadata,
