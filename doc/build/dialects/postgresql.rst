@@ -182,28 +182,32 @@ For example::
       )
 
 psycopg2
---------------
+--------
 
 .. automodule:: sqlalchemy.dialects.postgresql.psycopg2
 
 pg8000
---------------
+------
 
 .. automodule:: sqlalchemy.dialects.postgresql.pg8000
 
 psycopg2cffi
---------------
+------------
 
 .. automodule:: sqlalchemy.dialects.postgresql.psycopg2cffi
 
 py-postgresql
---------------------
+-------------
 
 .. automodule:: sqlalchemy.dialects.postgresql.pypostgresql
 
+pygresql
+--------
+
+.. automodule:: sqlalchemy.dialects.postgresql.pygresql
 
 zxjdbc
---------------
+------
 
 .. automodule:: sqlalchemy.dialects.postgresql.zxjdbc
 
