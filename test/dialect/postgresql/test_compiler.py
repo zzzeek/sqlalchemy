@@ -16,6 +16,7 @@ from sqlalchemy.sql import table, column, operators, literal_column
 from sqlalchemy.sql import util as sql_util
 from sqlalchemy.util import u
 from sqlalchemy.dialects.postgresql import aggregate_order_by
+from sqlalchemy.dialects.postgresql.on_conflict import DoNothing, DoUpdate
 
 
 class SequenceTest(fixtures.TestBase, AssertsCompiledSQL):
@@ -89,6 +90,28 @@ class CompileTest(fixtures.TestBase, AssertsCompiledSQL):
             'UPDATE mytable SET name=%(name)s '
             'RETURNING length(mytable.name) AS length_1',
             dialect=dialect)
+
+    def test_insert_on_conflict(self):
+        dialect = postgresql.dialect()
+        table1 = table('mytable',
+                       column('myid', Integer),
+                       column('name', String(128)),
+                       column('description', String(128)),
+                       )
+
+        i = insert(
+            table1,
+            values=dict(
+                name='foo'), postgresql_on_conflict=DoNothing())
+        self.assert_compile(i,
+                            'INSERT INTO mytable (name) VALUES '
+                            '(%(name)s) ON CONFLICT DO NOTHING',
+                            dialect=dialect)
+        i = insert(table1, values=dict(name='foo'), postgresql_on_conflict=DoUpdate(table1.c.myid).with_excluded('foo'))
+        self.assert_compile(i,
+                            'INSERT INTO mytable (name) VALUES '
+                            '(%(name)s) ON CONFLICT (myid) DO UPDATE SET foo = excluded.foo',
+                            dialect=dialect)
 
     def test_insert_returning(self):
         dialect = postgresql.dialect()
