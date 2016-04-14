@@ -91,9 +91,9 @@ class CompileTest(fixtures.TestBase, AssertsCompiledSQL):
             'RETURNING length(mytable.name) AS length_1',
             dialect=dialect)
 
-    def test_insert_on_conflict(self):
+    def test_insert_on_conflict_expressions(self):
         dialect = postgresql.dialect()
-        table1 = table('mytable',
+        table1 = table('mytable', 
                        column('myid', Integer),
                        column('name', String(128)),
                        column('description', String(128)),
@@ -102,15 +102,42 @@ class CompileTest(fixtures.TestBase, AssertsCompiledSQL):
         i = insert(
             table1,
             values=dict(
-                name='foo'), postgresql_on_conflict=DoNothing())
+                name='foo'), postgresql_on_conflict='nothing')
         self.assert_compile(i,
                             'INSERT INTO mytable (name) VALUES '
                             '(%(name)s) ON CONFLICT DO NOTHING',
                             dialect=dialect)
-        i = insert(table1, values=dict(name='foo'), postgresql_on_conflict=DoUpdate(table1.c.myid).with_excluded('foo'))
+
+    def test_insert_on_conflict(self):
+        dialect = postgresql.dialect()
+        md = MetaData()
+        table1 = Table('mytable', md,
+                       Column('myid', Integer, primary_key=True),
+                       Column('name', String(128)),
+                       Column('description', String(128)),
+                       )
+
+        i = insert(
+            table1,
+            values=dict(
+                name='foo'), postgresql_on_conflict='nothing')
         self.assert_compile(i,
-                            'INSERT INTO mytable (name) VALUES '
-                            '(%(name)s) ON CONFLICT (myid) DO UPDATE SET foo = excluded.foo',
+                            'INSERT INTO mytable (myid, name) VALUES '
+                            '(%(myid)s, %(name)s) ON CONFLICT DO NOTHING',
+                            dialect=dialect)
+        i = insert(table1, values=dict(name='foo'), postgresql_on_conflict='update')
+        self.assert_compile(i,
+                            'INSERT INTO mytable (myid, name) VALUES '
+                            '(%(myid)s, %(name)s) ON CONFLICT (myid) DO UPDATE SET name = excluded.name',
+                            dialect=dialect)
+        i = insert(
+            table1, values=dict(name='foo'),
+            postgresql_on_conflict=DoUpdate(table1.c.myid).set_with_excluded('name')
+            )
+        self.assert_compile(i,
+                            'INSERT INTO mytable (myid, name) VALUES '
+                            '(%(myid)s, %(name)s) ON CONFLICT (myid) '
+                            'DO UPDATE SET name = excluded.name',
                             dialect=dialect)
 
     def test_insert_returning(self):

@@ -247,6 +247,46 @@ use the :meth:`._UpdateBase.returning` method on a per-statement basis::
         where(table.c.name=='foo')
     print result.fetchall()
 
+INSERT...ON CONFLICT (Upsert)
+-------------------------
+
+Starting with version 9.5, PostgreSQL allows "upserts" (update or insert)
+of rows into a table via the ``INSERT`` statement's ``ON CONFLICT`` clause.
+PostgreSQL will first attempt to insert a row; if a unique constraint would be
+violated because a row already exists with those unique values, the optional 
+``ON CONFLICT`` clause specifies how to handle the constraint violation: 
+either by skipping the insertion of that row (``ON CONFLICT DO NOTHING``), 
+or by instead performing an update of the already existing row, either with
+values from the row being inserted or literal values.
+
+The dialect recognizes the ``postgresql_on_conflict`` keyword argument
+to :class:`.Insert`, :meth:`.Table.insert`, and other ``INSERT`` expression
+builders. 
+
+Most commonly, ``ON CONFLICT`` is used to perform an update of the already 
+existing row if there is a primary key constraint violated, using each of the 
+column values provided in the ``VALUES`` clause of the ``INSERT``, except
+for the primary key columns. Use the value `'update'` for the keyword argument:
+
+    table.insert(postgresql_on_conflict='update').\\
+        values(key_column='existing_value', other_column='foo')
+
+and the SQL compiler will produce an ``ON CONFLICT`` clause that performs
+``DO UPDATE SET...`` for every column value in the ``VALUES`` clause that
+is not a primary key column. The produced SQL will use the primary key
+columns as the "conflict target" in the ``ON CONFLICT`` clause. 
+
+`ON CONFLICT` is also commonly used to skip inserting a row entirely
+if a conflict occurs. To do this, use the value 'nothing' for the keyword argument:
+
+    table.insert(postgresql_on_conflict='nothing').\\
+        values(key_column='existing_value', other_column='foo')
+
+Other, more sophisticated forms of ``ON CONFLICT`` are possible, but they are
+not yet supported by the dialect. For more information, see the
+``ON CONFLICT` section of the `INSERT` statement in the PostgreSQL docs 
+<http://www.postgresql.org/docs/current/static/sql-insert.html#SQL-ON-CONFLICT>`_.
+
 .. _postgresql_match:
 
 Full Text Search
