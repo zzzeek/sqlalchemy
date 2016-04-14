@@ -62,7 +62,6 @@ class DoUpdate(OnConflictClause):
           These columns will be added to the ``SET`` clause using the `excluded` row's
           values from the same columns. e.g. ``SET colname = excluded.colname``.
         """
-        super(DoUpdate, self).__init__(ConflictTarget(conflict_target))
         for col in columns:
             if not isinstance(col, (ColumnClause, str)):
                 raise ValueError(
@@ -90,7 +89,6 @@ class DoNothing(OnConflictClause):
           If omitted, allows any unique constraint violation to cause
           the row insertion to be skipped.
         """
-        super(DoUpdate, self).__init__(ConflictTarget(conflict_target))
         super(DoNothing, self).__init__(ConflictTarget(conflict_target) if conflict_target else None)
 
 class ConflictTarget(ClauseElement):
