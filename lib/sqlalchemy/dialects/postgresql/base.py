@@ -267,7 +267,7 @@ builders.
 
 Most commonly, ``ON CONFLICT`` is used to perform an update of the already 
 existing row if there is a primary key constraint violated, using the values
-of the row proposed for insert. Use the value `'update'` for the keyword argument::
+of the row proposed for insert. Use the value ``'update'`` for the keyword argument::
 
     table.insert(postgresql_on_conflict='update').\\
         values(key_column='existing_value', other_column='foo')
@@ -279,8 +279,9 @@ columns as the "conflict target" in the ``ON CONFLICT`` clause. This usage
 requires that the targeted table have at least one column participating
 in a :class:`.PrimaryKeyConstraint`.
 
-`ON CONFLICT` is also commonly used to skip inserting a row entirely
-if any conflict occurs. To do this, use the value 'nothing' for the keyword argument::
+``ON CONFLICT`` is also commonly used to skip inserting a row entirely
+if any conflict with a unique or exclusion constraint occurs. 
+To do this, use the value ``'nothing'`` for the keyword argument::
 
     table.insert(postgresql_on_conflict='nothing').\\
         values(key_column='existing_value', other_column='foo')
@@ -295,6 +296,9 @@ to indicate the "conflict target" constraint:
 * a :class:`.PrimaryKeyConstraint`, :class:`.UniqueConstraint`, 
   or :class:`.postgresql.ExcludeConstraint` object representing
   the unique constraint to target.
+* a :class:`.Index` object representing a unique or exclusion
+  constraint on the target table. Useful if you wish to use 
+  a :ref:`partial index <postgresql_partial_indexes>` as your conflict target.
 
 If you use :class:`.postgresql.DoUpdate`, you need to specify which columns on the existing row
 to set with values from the row proposed for insert. Use the
@@ -426,6 +430,8 @@ Postgresql-Specific Index Options
 
 Several extensions to the :class:`.Index` construct are available, specific
 to the PostgreSQL dialect.
+
+.. _postgresql_partial_indexes:
 
 Partial Indexes
 ^^^^^^^^^^^^^^^^

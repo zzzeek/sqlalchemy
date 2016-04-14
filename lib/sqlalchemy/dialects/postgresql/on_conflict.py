@@ -14,7 +14,7 @@ class _EXCLUDED:
 def resolve_on_conflict_option(option_value, crud_columns):
     if option_value is None:
         return None
-    if isinstance(option_value, OnConflictAction):
+    if isinstance(option_value, OnConflictClause):
         return option_value
     if str(option_value) == 'update':
         if not crud_columns:
@@ -31,12 +31,12 @@ def resolve_on_conflict_option(option_value, crud_columns):
     if str(option_value) == 'nothing':
         return DoNothing()
 
-class OnConflictAction(ClauseElement):
+class OnConflictClause(ClauseElement):
     def __init__(self, conflict_target):
-        super(OnConflictAction, self).__init__()
+        super(OnConflictClause, self).__init__()
         self.conflict_target = conflict_target
 
-class DoUpdate(OnConflictAction):
+class DoUpdate(OnConflictClause):
     """
     Represents an ``ON CONFLICT`` clause with a  ``DO UPDATE SET ...`` action.
     """
@@ -45,9 +45,10 @@ class DoUpdate(OnConflictAction):
         :param conflict_target:
           One of the following: A single :class:`.Column` object to string with column name;
           a list or tuple of :class:`.Column` or column name strings;
-          or a single :class:`.PrimaryKeyConstraint`, :class:`.UniqueConstraint`, 
-          or :class:`.postgresql.ExcludeConstraint`.  This value represents the 
-          unique constraint to target for conflict detection.
+          a single :class:`.PrimaryKeyConstraint`, :class:`.UniqueConstraint`, 
+          or :class:`.postgresql.ExcludeConstraint`;
+          or an :class:`.Index` object representing the constraint.  
+          This value represents the unique constraint to target for conflict detection.
         """
         super(DoUpdate, self).__init__(ConflictTarget(conflict_target))
         if not self.conflict_target.contents:
@@ -71,7 +72,7 @@ class DoUpdate(OnConflictAction):
             self.values_to_set[col] = _EXCLUDED
         return self
 
-class DoNothing(OnConflictAction):
+class DoNothing(OnConflictClause):
     """
     Represents an ``ON CONFLICT` clause with a ``DO NOTHING`` action.
     """
@@ -81,8 +82,10 @@ class DoNothing(OnConflictAction):
           Optional argument. If specified, one of the following:
           a single :class:`.Column` object to string with column name;
           a list or tuple of :class:`.Column` or column name strings;
-          or a single :class:`.PrimaryKeyConstraint`, :class:`.UniqueConstraint`, 
-          or :class:`.postgresql.ExcludeConstraint`. This value represents 
+          a single :class:`.PrimaryKeyConstraint`, :class:`.UniqueConstraint`, 
+          or :class:`.postgresql.ExcludeConstraint`; 
+          or an :class:`.Index` object representing a constraint. 
+          This value represents 
           the unique constraint to target for conflict detection.
           If omitted, allows any unique constraint violation to cause
           the row insertion to be skipped.
@@ -94,7 +97,7 @@ class ConflictTarget(ClauseElement):
     """
     A ConflictTarget represents the targeted constraint that will be used to determine
     when a row proposed for insertion is in conflict and should be handled as specified
-    in the OnConflictAction.
+    in the OnConflictClause.
 
     A target can be one of the following:
 
