@@ -117,6 +117,8 @@ class CompileTest(fixtures.TestBase, AssertsCompiledSQL):
                        Column('description', String(128)),
                        )
 
+        unique_constr = schema.UniqueConstraint(table1.c.name, name='uq_name')
+        goofy_index = Index('goofy_index', table1.c.name, postgresql_where=table1.c.name > 'm')
         i = insert(
             table1,
             values=dict(
@@ -137,6 +139,33 @@ class CompileTest(fixtures.TestBase, AssertsCompiledSQL):
         self.assert_compile(i,
                             'INSERT INTO mytable (myid, name) VALUES '
                             '(%(myid)s, %(name)s) ON CONFLICT (myid) '
+                            'DO UPDATE SET name = excluded.name',
+                            dialect=dialect)
+        i = insert(
+            table1, values=dict(name='foo'),
+            postgresql_on_conflict=DoUpdate(table1.primary_key).set_with_excluded('name')
+            )
+        self.assert_compile(i,
+                            'INSERT INTO mytable (myid, name) VALUES '
+                            '(%(myid)s, %(name)s) ON CONFLICT (myid) '
+                            'DO UPDATE SET name = excluded.name',
+                            dialect=dialect)
+        i = insert(
+            table1, values=dict(name='foo'),
+            postgresql_on_conflict=DoUpdate(unique_constr).set_with_excluded('myid')
+            )
+        self.assert_compile(i,
+                            'INSERT INTO mytable (myid, name) VALUES '
+                            '(%(myid)s, %(name)s) ON CONFLICT ON CONSTRAINT uq_name '
+                            'DO UPDATE SET myid = excluded.myid',
+                            dialect=dialect)
+        i = insert(
+            table1, values=dict(name='foo'),
+            postgresql_on_conflict=DoUpdate(goofy_index).set_with_excluded('name')
+            )
+        self.assert_compile(i,
+                            'INSERT INTO mytable (myid, name) VALUES '
+                            "(%(myid)s, %(name)s) ON CONFLICT (name) WHERE name > 'm' "
                             'DO UPDATE SET name = excluded.name',
                             dialect=dialect)
 

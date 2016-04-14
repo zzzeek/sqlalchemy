@@ -67,3 +67,47 @@ class OnConflictTest(fixtures.TestBase, AssertsExecutionResults, AssertsCompiled
                 .execute().fetchall(), [(1, 'name4')])
         finally:
             users.drop()
+
+    @testing.only_if(
+        "postgresql >= 9.5", "requires ON CONFLICT clause support")
+    def test_on_conflict_do_update_exotic_targets(self):
+        meta = MetaData(testing.db)
+        users = Table(
+            'users', meta, 
+            Column('id', Integer, primary_key=True), 
+            Column('name', String(50)), 
+            Column('login_email', String(50)), 
+            Column('lets_index_this', String(50)), 
+            schema='test_schema')
+        unique_constraint = schema.UniqueConstraint(users.c.login_email, name='uq_login_email')
+        bogus_index = schema.Index('idx_special_ops', users.c.lets_index_this, postgresql_where=users.c.lets_index_this > 'm')
+        users.create()
+        try:
+            users.insert().execute(id=1, name='name1', login_email='name1@gmail.com', lets_index_this='not')
+            users.insert().execute(id=2, name='name2', login_email='name2@gmail.com', lets_index_this='not')
+            eq_(users.select().where(users.c.id == 1)
+                .execute().fetchall(), [(1, 'name1', 'name1@gmail.com', 'not')])
+
+            # try primary key constraint: cause an upsert on unique id column
+            poc = DoUpdate(users.primary_key).set_with_excluded(users.c.name, users.c.login_email)
+            users.insert(postgresql_on_conflict=poc).execute(id=1, name='name2', login_email='name1@gmail.com', lets_index_this='not')
+            eq_(users.select().where(users.c.id == 1)
+                .execute().fetchall(), [(1, 'name2', 'name1@gmail.com', 'not')])
+
+            # try unique constraint: cause an upsert on target login_email, not id
+            poc = DoUpdate(unique_constraint).set_with_excluded(users.c.id, users.c.name, users.c.login_email)
+            # note: lets_index_this value totally ignored in SET clause.
+            users.insert(postgresql_on_conflict=poc).execute(id=42, name='nameunique', login_email='name2@gmail.com', lets_index_this='unique')
+            eq_(users.select().where(users.c.login_email == 'name2@gmail.com')
+                .execute().fetchall(), [(42, 'nameunique', 'name2@gmail.com', 'not')])
+
+            # try bogus index
+            try:
+                users.insert(
+                    postgresql_on_conflict=DoUpdate(bogus_index).set_with_excluded(users.c.name, users.c.login_email)
+                    ).execute(id=1, name='namebogus', login_email='bogus@gmail.com', lets_index_this='bogus')
+                raise Exception("Using bogus index should have raised exception")
+            except exc.ProgrammingError:
+                pass # expected exception
+        finally:
+            users.drop()

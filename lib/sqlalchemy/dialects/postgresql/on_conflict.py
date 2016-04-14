@@ -1,6 +1,9 @@
 from ...sql.expression import ClauseElement, ColumnClause, ColumnElement
 from ...ext.compiler import compiles
 from ...exc import CompileError
+from ...schema import UniqueConstraint, PrimaryKeyConstraint, Index
+
+from collections import Iterable
 
 __all__ = ('DoUpdate', 'DoNothing')
 
@@ -24,44 +27,112 @@ def resolve_on_conflict_option(option_value, crud_columns):
     if str(option_value) == 'nothing':
         return DoNothing()
 
-def resolve_columnish_arg(arg):
-    for col in (arg if isinstance(arg, (list, tuple)) else (arg,)):
-        if not isinstance(col, (ColumnClause, str)):
-            raise ValueError("column arguments must be ColumnClause objects or str object with column name: %r" % col)
-    return tuple(arg) if isinstance(arg, (list, tuple)) else (arg,)
-
 class OnConflictAction(ClauseElement):
     def __init__(self, conflict_target):
         super(OnConflictAction, self).__init__()
-        if not isinstance(conflict_target, ConflictTarget):
-            conflict_target = ConflictTarget(conflict_target)
         self.conflict_target = conflict_target
 
 class DoUpdate(OnConflictAction):
     def __init__(self, conflict_target):
-        super(DoUpdate, self).__init__(conflict_target)
+        super(DoUpdate, self).__init__(ConflictTarget(conflict_target))
         if not self.conflict_target.contents:
             raise ValueError("conflict_target may not be None or empty for DoUpdate")
         self.values_to_set = {}
 
     def set_with_excluded(self, *columns):
-        for col in resolve_columnish_arg(columns):
-           self.values_to_set[col] = _EXCLUDED
+        for col in columns:
+            if not isinstance(col, (ColumnClause, str)):
+                raise ValueError("column arguments must be ColumnClause objects or str object with column name: %r" % col)
+            self.values_to_set[col] = _EXCLUDED
         return self
 
 class DoNothing(OnConflictAction):
-    def __init__(self, conflict_target=[]):
-        super(DoNothing, self).__init__(conflict_target)
+    def __init__(self, conflict_target=None):
+        super(DoNothing, self).__init__(ConflictTarget(conflict_target) if conflict_target else None)
 
 class ConflictTarget(ClauseElement):
+    """
+    A ConflictTarget represents the targeted constraint that will be used to determine
+    when a row proposed for insertion is in conflict and should be handled as specified
+    in the OnConflictAction.
+
+    A target can be one of the following:
+
+    - A column or list of columns, either column objects or strings, that together
+      represent a unique or primary key constraint on the table. The compiler
+      will produce a list like `(col1, col2, col3)` as the conflict target SQL clause.
+
+    - A single PrimaryKeyConstraint or UniqueConstraint object representing the constraint
+      used to detect the conflict. If the object has a :attr:`.name` attribute,
+      the compiler will produce `ON CONSTRAINT constraint_name` as the conflict target
+      SQL clause. If the constraint lacks a `.name` attribute, a list of its
+      constituent columns, like `(col1, col2, col3)` will be used.
+
+    - An single :class:`Index` object representing the index used to detect the conflict.
+      Use this in place of the Constraint objects mentioned above if you require
+      the clauses of a conflict target specific to index definitions -- collation,
+      opclass used to detect conflict, and WHERE clauses for partial indexes.
+    """
     def __init__(self, contents):
-        self.contents = resolve_columnish_arg(contents)
+        if isinstance(contents, (str, ColumnClause)):
+            self.contents = (contents,)
+        elif isinstance(contents, (list, tuple)):
+            if not contents:
+                raise ValueError("list of column arguments cannot be empty")
+            for c in contents:
+                if not isinstance(c, (str, ColumnClause)):
+                    raise ValueError("column arguments must be ColumnClause objects or str object with column name: %r" % c)
+            self.contents = tuple(contents)
+        elif isinstance(contents, (PrimaryKeyConstraint, UniqueConstraint, Index)):
+            self.contents = contents
+        else:
+            raise ValueError(
+                "ConflictTarget contents must be single Column/str, "
+                "sequence of Column/str; or a PrimaryKeyConsraint, UniqueConstraint, or Index")
 
 @compiles(ConflictTarget)
 def compile_conflict_target(conflict_target, compiler, **kw):
-    if not conflict_target.contents:
-        return ''
-    return "(" + (", ".join(compiler.preparer.format_column(i) for i in conflict_target.contents)) + ")"
+    target = conflict_target.contents
+    if isinstance(target, (PrimaryKeyConstraint, UniqueConstraint)):
+        fmt_cnst = None
+        if target.name is not None:
+            fmt_cnst = compiler.preparer.format_constraint(target)
+        if fmt_cnst is not None:
+            return "ON CONSTRAINT %s" % fmt_cnst
+        else:
+            return "(" + (", ".join(compiler.preparer.format_column(i) for i in target.columns.values())) + ")"
+    if isinstance(target, (str, ColumnClause)):
+        return "(" + compiler.preparer.format_column(target) + ")"
+    if isinstance(target, (list, tuple)):
+        return "(" + (", ".join(compiler.preparer.format_column(i) for i in target)) + ")"
+    if isinstance(target, Index):
+        # columns required first.
+        ops = target.dialect_options["postgresql"]["ops"]
+        text = "(%s)" \
+                % (
+                    ', '.join([
+                        compiler.process(
+                            expr.self_group()
+                            if not isinstance(expr, ColumnClause)
+                            else expr,
+                            include_table=False, literal_binds=True) +
+                        (
+                            (' ' + ops[expr.key])
+                            if hasattr(expr, 'key')
+                            and expr.key in ops else ''
+                        )
+                        for expr in target.expressions
+                    ])
+                )
+
+        whereclause = target.dialect_options["postgresql"]["where"]
+
+        if whereclause is not None:
+            where_compiled = compiler.process(
+                whereclause, include_table=False,
+                literal_binds=True)
+            text += " WHERE " + where_compiled
+        return text
 
 @compiles(DoUpdate)
 def compile_do_update(do_update, compiler, **kw):
@@ -88,9 +159,8 @@ def compile_do_update(do_update, compiler, **kw):
 
 @compiles(DoNothing)
 def compile_do_nothing(do_nothing, compiler, **kw):
-    compiled_cf = compiler.process(do_nothing.conflict_target)
-    if compiled_cf:
-        return "ON CONFLICT %s DO NOTHING" % compiled_cf
+    if do_nothing.conflict_target is not None:
+        return "ON CONFLICT %s DO NOTHING" % compiler.process(do_nothing.conflict_target)
     else:
         return "ON CONFLICT DO NOTHING"
 
