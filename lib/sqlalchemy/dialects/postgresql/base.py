@@ -267,7 +267,7 @@ builders.
 
 Most commonly, ``ON CONFLICT`` is used to perform an update of the already 
 existing row if there is a primary key constraint violated, using the values
-of the row proposed for insert. Use the value `'update'` for the keyword argument:
+of the row proposed for insert. Use the value `'update'` for the keyword argument::
 
     table.insert(postgresql_on_conflict='update').\\
         values(key_column='existing_value', other_column='foo')
@@ -277,17 +277,17 @@ and the SQL compiler will produce an ``ON CONFLICT`` clause that performs
 is not a primary key column for the target table. The produced SQL will use the primary key
 columns as the "conflict target" in the ``ON CONFLICT`` clause. This usage
 requires that the targeted table have at least one column participating
-in a `PrimaryKeyConstraint`.
+in a :class:`.PrimaryKeyConstraint`.
 
 `ON CONFLICT` is also commonly used to skip inserting a row entirely
-if any conflict occurs. To do this, use the value 'nothing' for the keyword argument:
+if any conflict occurs. To do this, use the value 'nothing' for the keyword argument::
 
     table.insert(postgresql_on_conflict='nothing').\\
         values(key_column='existing_value', other_column='foo')
 
 Less commonly, you may need to specify which of several unique constraints on a table
 should be used to determine if an insert conflict exists. In these cases, use
-the :class:`.DoNothing` or :class:`.DoUpdate` object, and pass one of the following
+the :class:`.postgresql.DoNothing` or :class:`.postgresql.DoUpdate` object, and pass one of the following
 to indicate the "conflict target" constraint:
 
 * a single Column object or string with the column's name
@@ -296,11 +296,11 @@ to indicate the "conflict target" constraint:
   or :class:`.postgresql.ExcludeConstraint` object representing
   the unique constraint to target.
 
-If you use :class:`.DoUpdate`, you need to specify which columns on the existing row
+If you use :class:`.postgresql.DoUpdate`, you need to specify which columns on the existing row
 to set with values from the row proposed for insert. Use the
-:meth:`.DoUpdate.set_with_excluded` chaining method to do so, passing a variable
+:meth:`.postgresql.DoUpdate.set_with_excluded` chaining method to do so, passing a variable
 set of Column or Column name string arguments for the columns to set using
-the special `excluded` alias representing the row proposed for insertion:
+PostgreSQL's special `excluded` alias representing the row proposed for insertion::
 
     from sqlalchemy.dialects.postgresql import DoUpdate, DoNothing
     from sqlalchemy.schema import UniqueConstraint
@@ -317,7 +317,7 @@ not yet supported or documented by the dialect. Use text-based statements
 for more advanced ``ON CONFLICT`` clauses. 
 
 For more information on the PostgreSQL feature, see the
-``ON CONFLICT` section of the `INSERT` statement in the PostgreSQL docs 
+`ON CONFLICT section of the INSERT statement in the PostgreSQL docs 
 <http://www.postgresql.org/docs/current/static/sql-insert.html#SQL-ON-CONFLICT>`_.
 
 .. _postgresql_match:

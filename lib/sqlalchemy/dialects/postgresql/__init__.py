@@ -31,5 +31,5 @@ __all__ = (
     'hstore', 'INT4RANGE', 'INT8RANGE', 'NUMRANGE', 'DATERANGE',
     'TSRANGE', 'TSTZRANGE', 'json', 'JSON', 'JSONB', 'Any', 'All',
     'DropEnumType', 'CreateEnumType', 'ExcludeConstraint',
-    'aggregate_order_by', 'array_agg'
+    'aggregate_order_by', 'array_agg', 'DoNothing', 'DoUpdate'
 )
