@@ -118,6 +118,8 @@ class CompileTest(fixtures.TestBase, AssertsCompiledSQL):
                        )
 
         unique_constr = schema.UniqueConstraint(table1.c.name, name='uq_name')
+        excl_constr = ExcludeConstraint((table1.c.name, '='), (table1.c.description, '&&'), name='excl_thing')
+        excl_constr_anon = ExcludeConstraint((table1.c.name, '='), (table1.c.description, '&&'))
         goofy_index = Index('goofy_index', table1.c.name, postgresql_where=table1.c.name > 'm')
         i = insert(
             table1,
@@ -166,6 +168,24 @@ class CompileTest(fixtures.TestBase, AssertsCompiledSQL):
         self.assert_compile(i,
                             'INSERT INTO mytable (myid, name) VALUES '
                             "(%(myid)s, %(name)s) ON CONFLICT (name) WHERE name > 'm' "
+                            'DO UPDATE SET name = excluded.name',
+                            dialect=dialect)
+        i = insert(
+            table1, values=dict(name='foo'),
+            postgresql_on_conflict=DoUpdate(excl_constr).set_with_excluded('name')
+            )
+        self.assert_compile(i,
+                            'INSERT INTO mytable (myid, name) VALUES '
+                            "(%(myid)s, %(name)s) ON CONFLICT ON CONSTRAINT excl_thing "
+                            'DO UPDATE SET name = excluded.name',
+                            dialect=dialect)
+        i = insert(
+            table1, values=dict(name='foo'),
+            postgresql_on_conflict=DoUpdate(excl_constr_anon).set_with_excluded('name')
+            )
+        self.assert_compile(i,
+                            'INSERT INTO mytable (myid, name) VALUES '
+                            "(%(myid)s, %(name)s) ON CONFLICT (name, description) "
                             'DO UPDATE SET name = excluded.name',
                             dialect=dialect)
 
