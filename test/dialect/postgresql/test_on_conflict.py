@@ -56,7 +56,7 @@ class OnConflictTest(fixtures.TestBase, AssertsExecutionResults, AssertsCompiled
             users.insert(postgresql_on_conflict=DoUpdate(users.c.id).set_with_excluded(users.c.name)).execute(id=1, name='name1')
             eq_(users.select().where(users.c.id == 1)
                 .execute().fetchall(), [(1, 'name1')])
-            users.insert(postgresql_on_conflict=DoUpdate(users.c.id).with_excluded([users.c.id, users.c.name])).execute(id=1, name='name2')
+            users.insert(postgresql_on_conflict=DoUpdate(users.c.id).set_with_excluded(users.c.id, users.c.name)).execute(id=1, name='name2')
             eq_(users.select().where(users.c.id == 1)
                 .execute().fetchall(), [(1, 'name2')])
             users.insert(postgresql_on_conflict='update').execute(id=1, name='name3')
