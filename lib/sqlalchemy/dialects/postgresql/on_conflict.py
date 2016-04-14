@@ -2,6 +2,7 @@ from ...sql.expression import ClauseElement, ColumnClause, ColumnElement
 from ...ext.compiler import compiles
 from ...exc import CompileError
 from ...schema import UniqueConstraint, PrimaryKeyConstraint, Index
+from .ext import ExcludeConstraint
 
 from collections import Iterable
 
@@ -9,8 +10,6 @@ __all__ = ('DoUpdate', 'DoNothing')
 
 class _EXCLUDED:
     pass
-
-ExcludeConstraint = None
 
 def resolve_on_conflict_option(option_value, crud_columns):
     if option_value is None:
@@ -76,9 +75,6 @@ class ConflictTarget(ClauseElement):
       opclass used to detect conflict, and WHERE clauses for partial indexes.
     """
     def __init__(self, contents):
-        global ExcludeConstraint
-        if ExcludeConstraint is None:
-            from .ext import ExcludeConstraint
         if isinstance(contents, (str, ColumnClause)):
             self.contents = (contents,)
         elif isinstance(contents, (list, tuple)):
@@ -97,9 +93,6 @@ class ConflictTarget(ClauseElement):
 
 @compiles(ConflictTarget)
 def compile_conflict_target(conflict_target, compiler, **kw):
-    global ExcludeConstraint
-    if ExcludeConstraint is None:
-        from .ext import ExcludeConstraint
     target = conflict_target.contents
     if isinstance(target, (PrimaryKeyConstraint, UniqueConstraint, ExcludeConstraint)):
         fmt_cnst = None

@@ -18,6 +18,7 @@ from .hstore import HSTORE, hstore
 from .json import JSON, JSONB
 from .array import array, ARRAY, Any, All
 from .ext import aggregate_order_by, ExcludeConstraint, array_agg
+from .on_conflict import DoNothing, DoUpdate
 
 from .ranges import INT4RANGE, INT8RANGE, NUMRANGE, DATERANGE, TSRANGE, \
     TSTZRANGE

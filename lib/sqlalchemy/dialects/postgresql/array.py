@@ -5,7 +5,6 @@
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
-from .base import ischema_names
 from ...sql import expression, operators
 from ...sql.base import SchemaEventTarget
 from ... import types as sqltypes
@@ -311,4 +310,3 @@ class ARRAY(SchemaEventTarget, sqltypes.ARRAY):
                     tuple if self.as_tuple else list)
         return process
 
-ischema_names['_array'] = ARRAY

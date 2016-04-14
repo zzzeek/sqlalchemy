@@ -650,6 +650,7 @@ from ...engine import default, reflection
 from ...sql import compiler, expression, crud
 from ... import types as sqltypes
 from .on_conflict import resolve_on_conflict_option
+from .array import ARRAY
 
 try:
     from uuid import UUID as _python_UUID
@@ -1081,7 +1082,8 @@ ischema_names = {
     'interval': INTERVAL,
     'interval year to month': INTERVAL,
     'interval day to second': INTERVAL,
-    'tsvector': TSVECTOR
+    'tsvector': TSVECTOR,
+    '_array': ARRAY
 }
 
 
