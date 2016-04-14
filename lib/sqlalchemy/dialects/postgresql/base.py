@@ -264,16 +264,15 @@ to :class:`.Insert`, :meth:`.Table.insert`, and other ``INSERT`` expression
 builders. 
 
 Most commonly, ``ON CONFLICT`` is used to perform an update of the already 
-existing row if there is a primary key constraint violated, using each of the 
-column values provided in the ``VALUES`` clause of the ``INSERT``, except
-for the primary key columns. Use the value `'update'` for the keyword argument:
+existing row if there is a primary key constraint violated, using the values
+of the row proposed for insert. Use the value `'update'` for the keyword argument:
 
     table.insert(postgresql_on_conflict='update').\\
         values(key_column='existing_value', other_column='foo')
 
 and the SQL compiler will produce an ``ON CONFLICT`` clause that performs
 ``DO UPDATE SET...`` for every column value in the ``VALUES`` clause that
-is not a primary key column. The produced SQL will use the primary key
+is not a primary key column for the target table. The produced SQL will use the primary key
 columns as the "conflict target" in the ``ON CONFLICT`` clause. 
 
 `ON CONFLICT` is also commonly used to skip inserting a row entirely
@@ -283,7 +282,8 @@ if a conflict occurs. To do this, use the value 'nothing' for the keyword argume
         values(key_column='existing_value', other_column='foo')
 
 Other, more sophisticated forms of ``ON CONFLICT`` are possible, but they are
-not yet supported by the dialect. For more information, see the
+not yet supported or documented by the dialect. Use text-based statements 
+for more advanced ``ON CONFLICT`` clauses. For more information, see the
 ``ON CONFLICT` section of the `INSERT` statement in the PostgreSQL docs 
 <http://www.postgresql.org/docs/current/static/sql-insert.html#SQL-ON-CONFLICT>`_.
 
