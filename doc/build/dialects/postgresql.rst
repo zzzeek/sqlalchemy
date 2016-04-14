@@ -181,6 +181,15 @@ For example::
           ExcludeConstraint(('room', '='), ('during', '&&')),
       )
 
+PostgreSQL ON CONFLICT Actions
+---------------------------------
+
+.. autoclass:: DoNothing
+   :members: __init__
+
+.. autoclass:: DoUpdate
+   :members: __init__, set_with_excluded
+
 psycopg2
 --------------
 

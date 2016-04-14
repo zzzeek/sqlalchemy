@@ -16,6 +16,7 @@ from sqlalchemy.sql import table, column, operators, literal_column
 from sqlalchemy.sql import util as sql_util
 from sqlalchemy.util import u
 from sqlalchemy.dialects.postgresql import aggregate_order_by
+from sqlalchemy.dialects.postgresql.on_conflict import DoNothing, DoUpdate
 
 
 class SequenceTest(fixtures.TestBase, AssertsCompiledSQL):
@@ -89,6 +90,104 @@ class CompileTest(fixtures.TestBase, AssertsCompiledSQL):
             'UPDATE mytable SET name=%(name)s '
             'RETURNING length(mytable.name) AS length_1',
             dialect=dialect)
+
+    def test_insert_on_conflict_expressions(self):
+        dialect = postgresql.dialect()
+        table1 = table('mytable', 
+                       column('myid', Integer),
+                       column('name', String(128)),
+                       column('description', String(128)),
+                       )
+
+        i = insert(
+            table1,
+            values=dict(
+                name='foo'), postgresql_on_conflict='nothing')
+        self.assert_compile(i,
+                            'INSERT INTO mytable (name) VALUES '
+                            '(%(name)s) ON CONFLICT DO NOTHING',
+                            dialect=dialect)
+
+    def test_insert_on_conflict(self):
+        dialect = postgresql.dialect()
+        md = MetaData()
+        table1 = Table('mytable', md,
+                       Column('myid', Integer, primary_key=True),
+                       Column('name', String(128)),
+                       Column('description', String(128)),
+                       )
+
+        unique_constr = schema.UniqueConstraint(table1.c.name, name='uq_name')
+        excl_constr = ExcludeConstraint((table1.c.name, '='), (table1.c.description, '&&'), name='excl_thing')
+        excl_constr_anon = ExcludeConstraint((table1.c.name, '='), (table1.c.description, '&&'))
+        goofy_index = Index('goofy_index', table1.c.name, postgresql_where=table1.c.name > 'm')
+        i = insert(
+            table1,
+            values=dict(
+                name='foo'), postgresql_on_conflict='nothing')
+        self.assert_compile(i,
+                            'INSERT INTO mytable (myid, name) VALUES '
+                            '(%(myid)s, %(name)s) ON CONFLICT DO NOTHING',
+                            dialect=dialect)
+        i = insert(table1, values=dict(name='foo'), postgresql_on_conflict='update')
+        self.assert_compile(i,
+                            'INSERT INTO mytable (myid, name) VALUES '
+                            '(%(myid)s, %(name)s) ON CONFLICT (myid) DO UPDATE SET name = excluded.name',
+                            dialect=dialect)
+        i = insert(
+            table1, values=dict(name='foo'),
+            postgresql_on_conflict=DoUpdate(table1.c.myid).set_with_excluded('name')
+            )
+        self.assert_compile(i,
+                            'INSERT INTO mytable (myid, name) VALUES '
+                            '(%(myid)s, %(name)s) ON CONFLICT (myid) '
+                            'DO UPDATE SET name = excluded.name',
+                            dialect=dialect)
+        i = insert(
+            table1, values=dict(name='foo'),
+            postgresql_on_conflict=DoUpdate(table1.primary_key).set_with_excluded('name')
+            )
+        self.assert_compile(i,
+                            'INSERT INTO mytable (myid, name) VALUES '
+                            '(%(myid)s, %(name)s) ON CONFLICT (myid) '
+                            'DO UPDATE SET name = excluded.name',
+                            dialect=dialect)
+        i = insert(
+            table1, values=dict(name='foo'),
+            postgresql_on_conflict=DoUpdate(unique_constr).set_with_excluded('myid')
+            )
+        self.assert_compile(i,
+                            'INSERT INTO mytable (myid, name) VALUES '
+                            '(%(myid)s, %(name)s) ON CONFLICT ON CONSTRAINT uq_name '
+                            'DO UPDATE SET myid = excluded.myid',
+                            dialect=dialect)
+        i = insert(
+            table1, values=dict(name='foo'),
+            postgresql_on_conflict=DoUpdate(goofy_index).set_with_excluded('name')
+            )
+        self.assert_compile(i,
+                            'INSERT INTO mytable (myid, name) VALUES '
+                            "(%(myid)s, %(name)s) ON CONFLICT (name) WHERE name > 'm' "
+                            'DO UPDATE SET name = excluded.name',
+                            dialect=dialect)
+        i = insert(
+            table1, values=dict(name='foo'),
+            postgresql_on_conflict=DoUpdate(excl_constr).set_with_excluded('name')
+            )
+        self.assert_compile(i,
+                            'INSERT INTO mytable (myid, name) VALUES '
+                            "(%(myid)s, %(name)s) ON CONFLICT ON CONSTRAINT excl_thing "
+                            'DO UPDATE SET name = excluded.name',
+                            dialect=dialect)
+        i = insert(
+            table1, values=dict(name='foo'),
+            postgresql_on_conflict=DoUpdate(excl_constr_anon).set_with_excluded('name')
+            )
+        self.assert_compile(i,
+                            'INSERT INTO mytable (myid, name) VALUES '
+                            "(%(myid)s, %(name)s) ON CONFLICT (name, description) "
+                            'DO UPDATE SET name = excluded.name',
+                            dialect=dialect)
 
     def test_insert_returning(self):
         dialect = postgresql.dialect()

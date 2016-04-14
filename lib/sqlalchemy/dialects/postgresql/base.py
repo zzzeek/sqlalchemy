@@ -247,6 +247,83 @@ use the :meth:`._UpdateBase.returning` method on a per-statement basis::
         where(table.c.name=='foo')
     print result.fetchall()
 
+.. _postgresql_insert_on_conflict:
+
+INSERT...ON CONFLICT (Upsert)
+------------------------------
+
+Starting with version 9.5, PostgreSQL allows "upserts" (update or insert)
+of rows into a table via the ``INSERT`` statement's ``ON CONFLICT`` clause.
+PostgreSQL will first attempt to insert a row; if a unique constraint would be
+violated because a row already exists with those unique values, the optional 
+``ON CONFLICT`` clause specifies how to handle the constraint violation: 
+either by skipping the insertion of that row (``ON CONFLICT DO NOTHING``), 
+or by instead performing an update of the already existing row, either with
+values from the row being inserted or literal values.
+
+The dialect recognizes the ``postgresql_on_conflict`` keyword argument
+to :class:`.Insert`, :meth:`.Table.insert`, and other ``INSERT`` expression
+builders. 
+
+Most commonly, ``ON CONFLICT`` is used to perform an update of the already 
+existing row if there is a primary key constraint violated, using the values
+of the row proposed for insert. Use the value ``'update'`` for the keyword argument::
+
+    table.insert(postgresql_on_conflict='update').\\
+        values(key_column='existing_value', other_column='foo')
+
+and the SQL compiler will produce an ``ON CONFLICT`` clause that performs
+``DO UPDATE SET...`` for every column value in the ``VALUES`` clause that
+is not a primary key column for the target table. The produced SQL will use the primary key
+columns as the "conflict target" in the ``ON CONFLICT`` clause. This usage
+requires that the targeted table have at least one column participating
+in a :class:`.PrimaryKeyConstraint`.
+
+``ON CONFLICT`` is also commonly used to skip inserting a row entirely
+if any conflict with a unique or exclusion constraint occurs. 
+To do this, use the value ``'nothing'`` for the keyword argument::
+
+    table.insert(postgresql_on_conflict='nothing').\\
+        values(key_column='existing_value', other_column='foo')
+
+Less commonly, you may need to specify which of several unique constraints on a table
+should be used to determine if an insert conflict exists. In these cases, use
+the :class:`.postgresql.DoNothing` or :class:`.postgresql.DoUpdate` object, and pass one of the following
+to indicate the "conflict target" constraint:
+
+* a single Column object or string with the column's name
+* a list or tuple of several Column objects or name strings
+* a :class:`.PrimaryKeyConstraint`, :class:`.UniqueConstraint`, 
+  or :class:`.postgresql.ExcludeConstraint` object representing
+  the unique constraint to target.
+* a :class:`.Index` object representing a unique or exclusion
+  constraint on the target table. Useful if you wish to use 
+  a :ref:`partial index <postgresql_partial_indexes>` as your conflict target.
+
+If you use :class:`.postgresql.DoUpdate`, you need to specify which columns on the existing row
+to set with values from the row proposed for insert. Use the
+:meth:`.postgresql.DoUpdate.set_with_excluded` chaining method to do so, passing a variable
+set of Column or Column name string arguments for the columns to set using
+PostgreSQL's special `excluded` alias representing the row proposed for insertion::
+
+    from sqlalchemy.dialects.postgresql import DoUpdate, DoNothing
+    from sqlalchemy.schema import UniqueConstraint
+
+    unique_constr = UniqueConstraint(table.c.username)
+    update_action = DoUpdate(unique_constr).set_with_excluded('key_column', 'other_column')
+
+    table.insert(postgresql_on_conflict=update_action).\\
+        .values(key_column='existing_value', other_column='foo')
+
+Other, more sophisticated forms of ``ON CONFLICT`` are possible, especially
+in what can be put in `SET ...` clauses, but they are
+not yet supported or documented by the dialect. Use text-based statements 
+for more advanced ``ON CONFLICT`` clauses. 
+
+For more information on the PostgreSQL feature, see the
+`ON CONFLICT section of the INSERT statement in the PostgreSQL docs 
+<http://www.postgresql.org/docs/current/static/sql-insert.html#SQL-ON-CONFLICT>`_.
+
 .. _postgresql_match:
 
 Full Text Search
@@ -353,6 +430,8 @@ Postgresql-Specific Index Options
 
 Several extensions to the :class:`.Index` construct are available, specific
 to the PostgreSQL dialect.
+
+.. _postgresql_partial_indexes:
 
 Partial Indexes
 ^^^^^^^^^^^^^^^^
@@ -607,8 +686,10 @@ import datetime as dt
 
 from ... import sql, schema, exc, util
 from ...engine import default, reflection
-from ...sql import compiler, expression
+from ...sql import compiler, expression, crud
 from ... import types as sqltypes
+from .on_conflict import resolve_on_conflict_option
+from .array import ARRAY
 
 try:
     from uuid import UUID as _python_UUID
@@ -1040,11 +1121,113 @@ ischema_names = {
     'interval': INTERVAL,
     'interval year to month': INTERVAL,
     'interval day to second': INTERVAL,
-    'tsvector': TSVECTOR
+    'tsvector': TSVECTOR,
+    '_array': ARRAY
 }
 
 
 class PGCompiler(compiler.SQLCompiler):
+
+    def visit_insert(self, insert_stmt, asfrom=False, **kw):
+        toplevel = not self.stack
+
+        self.stack.append(
+            {'correlate_froms': set(),
+             "asfrom_froms": set(),
+             "selectable": insert_stmt})
+
+        crud_params = crud._setup_crud_params(
+            self, insert_stmt, crud.ISINSERT, **kw)
+
+        if not crud_params and \
+                not self.dialect.supports_default_values and \
+                not self.dialect.supports_empty_insert:
+            raise exc.CompileError("The '%s' dialect with current database "
+                                   "version settings does not support empty "
+                                   "inserts." %
+                                   self.dialect.name)
+
+        if insert_stmt._has_multi_parameters:
+            if not self.dialect.supports_multivalues_insert:
+                raise exc.CompileError(
+                    "The '%s' dialect with current database "
+                    "version settings does not support "
+                    "in-place multirow inserts." %
+                    self.dialect.name)
+            crud_params_single = crud_params[0]
+        else:
+            crud_params_single = crud_params
+
+        preparer = self.preparer
+        supports_default_values = self.dialect.supports_default_values
+
+        text = "INSERT "
+
+        if insert_stmt._prefixes:
+            text += self._generate_prefixes(insert_stmt,
+                                            insert_stmt._prefixes, **kw)
+
+        text += "INTO "
+        table_text = preparer.format_table(insert_stmt.table)
+
+        if insert_stmt._hints:
+            dialect_hints, table_text = self._setup_crud_hints(
+                insert_stmt, table_text)
+        else:
+            dialect_hints = None
+
+        text += table_text
+
+        if crud_params_single or not supports_default_values:
+            text += " (%s)" % ', '.join([preparer.format_column(c[0])
+                                         for c in crud_params_single])
+
+
+        if self.returning or insert_stmt._returning:
+            returning_clause = self.returning_clause(
+                insert_stmt, self.returning or insert_stmt._returning)
+
+            if self.returning_precedes_values:
+                text += " " + returning_clause
+        else:
+            returning_clause = None
+
+        if insert_stmt.select is not None:
+            text += " %s" % self.process(self._insert_from_select, **kw)
+        elif not crud_params and supports_default_values:
+            text += " DEFAULT VALUES"
+        elif insert_stmt._has_multi_parameters:
+            text += " VALUES %s" % (
+                ", ".join(
+                    "(%s)" % (
+                        ', '.join(c[1] for c in crud_param_set)
+                    )
+                    for crud_param_set in crud_params
+                )
+            )
+        else:
+            text += " VALUES (%s)" % \
+                ', '.join([c[1] for c in crud_params])
+
+        on_conflict_option = resolve_on_conflict_option(
+            insert_stmt.dialect_options['postgresql']['on_conflict'], 
+            crud_params_single
+            )
+        if on_conflict_option is not None:
+            text += " " + self.process(on_conflict_option)
+
+        if returning_clause and not self.returning_precedes_values:
+            text += " " + returning_clause
+
+        if self.ctes and toplevel:
+            text = self._render_cte_clause() + text
+
+        self.stack.pop(-1)
+
+        if asfrom:
+            return "(" + text + ")"
+        else:
+            return text
 
     def visit_array(self, element, **kw):
         return "ARRAY[%s]" % self.visit_clauselist(element, **kw)
@@ -1639,7 +1822,10 @@ class PGDialect(default.DefaultDialect):
             "with_oids": None,
             "on_commit": None,
             "inherits": None
-        })
+        }),
+        (expression.Insert, { 
+            "on_conflict": None 
+        }),
     ]
 
     reflection_options = ('postgresql_ignore_search_path', )
