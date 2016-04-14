@@ -250,7 +250,7 @@ use the :meth:`._UpdateBase.returning` method on a per-statement basis::
 .. _postgresql_insert_on_conflict:
 
 INSERT...ON CONFLICT (Upsert)
--------------------------
+------------------------------
 
 Starting with version 9.5, PostgreSQL allows "upserts" (update or insert)
 of rows into a table via the ``INSERT`` statement's ``ON CONFLICT`` clause.
