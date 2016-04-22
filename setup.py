@@ -75,8 +75,8 @@ class Distribution(_Distribution):
 
 
 class PyTest(TestCommand):
-    # from https://pytest.org/latest/goodpractises.html\
-    # #integration-with-setuptools-test-commands
+    # from http://pytest.org/latest/goodpractices.html\
+    # #integrating-with-setuptools-python-setup-py-test-pytest-runner
     user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
 
     default_options = ["-n", "4", "-q"]
