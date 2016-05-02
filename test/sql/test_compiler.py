@@ -2196,20 +2196,23 @@ class SelectTest(fixtures.TestBase, AssertsCompiledSQL):
     def test_over(self):
         self.assert_compile(
             func.row_number().over(),
-            "row_number() OVER ()"
+            "row_number() OVER "
+            "(RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)"
         )
         self.assert_compile(
             func.row_number().over(
                 order_by=[table1.c.name, table1.c.description]
             ),
-            "row_number() OVER (ORDER BY mytable.name, mytable.description)"
+            "row_number() OVER (ORDER BY mytable.name, mytable.description "
+            "RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW"
+            ")"
         )
         self.assert_compile(
             func.row_number().over(
                 partition_by=[table1.c.name, table1.c.description]
             ),
-            "row_number() OVER (PARTITION BY mytable.name, "
-            "mytable.description)"
+            "row_number() OVER (PARTITION BY mytable.name, mytable.description"
+            " RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)"
         )
         self.assert_compile(
             func.row_number().over(
@@ -2217,7 +2220,8 @@ class SelectTest(fixtures.TestBase, AssertsCompiledSQL):
                 order_by=[table1.c.description]
             ),
             "row_number() OVER (PARTITION BY mytable.name "
-            "ORDER BY mytable.description)"
+            "ORDER BY mytable.description "
+            "RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)"
         )
         self.assert_compile(
             func.row_number().over(
@@ -2225,7 +2229,8 @@ class SelectTest(fixtures.TestBase, AssertsCompiledSQL):
                 order_by=table1.c.description
             ),
             "row_number() OVER (PARTITION BY mytable.name "
-            "ORDER BY mytable.description)"
+            "ORDER BY mytable.description "
+            "RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)"
         )
 
         self.assert_compile(
@@ -2234,7 +2239,8 @@ class SelectTest(fixtures.TestBase, AssertsCompiledSQL):
                 order_by=[table1.c.name, table1.c.description]
             ),
             "row_number() OVER (PARTITION BY mytable.name "
-            "ORDER BY mytable.name, mytable.description)"
+            "ORDER BY mytable.name, mytable.description "
+            "RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)"
         )
 
         self.assert_compile(
@@ -2242,7 +2248,9 @@ class SelectTest(fixtures.TestBase, AssertsCompiledSQL):
                 partition_by=[],
                 order_by=[table1.c.name, table1.c.description]
             ),
-            "row_number() OVER (ORDER BY mytable.name, mytable.description)"
+            "row_number() OVER (ORDER BY mytable.name, mytable.description "
+            "RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW"
+            ")"
         )
 
         self.assert_compile(
@@ -2251,7 +2259,8 @@ class SelectTest(fixtures.TestBase, AssertsCompiledSQL):
                 order_by=[]
             ),
             "row_number() OVER (PARTITION BY mytable.name, "
-            "mytable.description)"
+            "mytable.description "
+            "RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)"
         )
 
         self.assert_compile(
@@ -2259,14 +2268,15 @@ class SelectTest(fixtures.TestBase, AssertsCompiledSQL):
                 partition_by=[],
                 order_by=[]
             ),
-            "row_number() OVER ()"
+            "row_number() OVER (RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)"
         )
         self.assert_compile(
             select([func.row_number().over(
                 order_by=table1.c.description
             ).label('foo')]),
-            "SELECT row_number() OVER (ORDER BY mytable.description) "
-            "AS foo FROM mytable"
+            "SELECT row_number() OVER (ORDER BY mytable.description "
+            "RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW"
+            ") AS foo FROM mytable"
         )
 
         # test from_obj generation.
@@ -2277,8 +2287,9 @@ class SelectTest(fixtures.TestBase, AssertsCompiledSQL):
                     partition_by=['description']
                 )
             ]),
-            "SELECT max(mytable.name) OVER (PARTITION BY mytable.description) "
-            "AS anon_1 FROM mytable"
+            "SELECT max(mytable.name) OVER (PARTITION BY mytable.description "
+            "RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW"
+            ") AS anon_1 FROM mytable"
         )
         # from partition_by
         self.assert_compile(
@@ -2287,8 +2298,9 @@ class SelectTest(fixtures.TestBase, AssertsCompiledSQL):
                     partition_by=[table1.c.name]
                 )
             ]),
-            "SELECT row_number() OVER (PARTITION BY mytable.name) "
-            "AS anon_1 FROM mytable"
+            "SELECT row_number() OVER (PARTITION BY mytable.name "
+            "RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW"
+            ") AS anon_1 FROM mytable"
         )
         # from order_by
         self.assert_compile(
@@ -2297,15 +2309,17 @@ class SelectTest(fixtures.TestBase, AssertsCompiledSQL):
                     order_by=table1.c.name
                 )
             ]),
-            "SELECT row_number() OVER (ORDER BY mytable.name) "
-            "AS anon_1 FROM mytable"
+            "SELECT row_number() OVER (ORDER BY mytable.name "
+            "RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW"
+            ") AS anon_1 FROM mytable"
         )
 
         # this tests that _from_objects
         # concantenates OK
         self.assert_compile(
             select([column("x") + over(func.foo())]),
-            "SELECT x + foo() OVER () AS anon_1"
+            "SELECT x + foo() OVER "
+            "(RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS anon_1"
         )
 
         # test a reference to a label that in the referecned selectable;
@@ -2314,8 +2328,9 @@ class SelectTest(fixtures.TestBase, AssertsCompiledSQL):
         stmt = select([expr]).alias()
         self.assert_compile(
             select([stmt.c.sum, func.row_number().over(order_by=stmt.c.sum)]),
-            "SELECT anon_1.sum, row_number() OVER (ORDER BY anon_1.sum) "
-            "AS anon_2 FROM (SELECT mytable.myid + :myid_1 AS sum "
+            "SELECT anon_1.sum, row_number() OVER (ORDER BY anon_1.sum "
+            "RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW"
+            ") AS anon_2 FROM (SELECT mytable.myid + :myid_1 AS sum "
             "FROM mytable) AS anon_1"
         )
 
@@ -2326,7 +2341,39 @@ class SelectTest(fixtures.TestBase, AssertsCompiledSQL):
             select([expr, func.row_number().over(order_by=expr)]),
             "SELECT mytable.myid + :myid_1 AS sum, "
             "row_number() OVER "
-            "(ORDER BY mytable.myid + :myid_1) AS anon_1 FROM mytable"
+            "(ORDER BY mytable.myid + :myid_1 "
+            "RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW"
+            ") AS anon_1 FROM mytable"
+        )
+
+        # frame specification
+        expr = table1.c.myid
+        self.assert_compile(
+            select([func.row_number().over(order_by=expr, rows={'preceding': 0, 'following': None})]),
+            "SELECT row_number() OVER "
+            "(ORDER BY mytable.myid ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)"
+            " AS anon_1 FROM mytable"
+        )
+
+        self.assert_compile(
+            select([func.row_number().over(order_by=expr, rows={'following': None})]),
+            "SELECT row_number() OVER "
+            "(ORDER BY mytable.myid ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)"
+            " AS anon_1 FROM mytable"
+        )
+
+        self.assert_compile(
+            select([func.row_number().over(order_by=expr, range={'preceding': None, 'following': 0})]),
+            "SELECT row_number() OVER "
+            "(ORDER BY mytable.myid RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)"
+            " AS anon_1 FROM mytable"
+        )
+
+        self.assert_compile(
+            select([func.row_number().over(order_by=expr, rows={})]),
+            "SELECT row_number() OVER "
+            "(ORDER BY mytable.myid ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)"
+            " AS anon_1 FROM mytable"
         )
 
     def test_date_between(self):
