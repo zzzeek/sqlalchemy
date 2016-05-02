@@ -1423,7 +1423,22 @@ OVER clause, using the :meth:`.FunctionElement.over` method:
     ...         func.row_number().over(order_by=users.c.name)
     ...     ])
     >>> print(s)
-    SELECT users.id, row_number() OVER (ORDER BY users.name) AS anon_1
+    SELECT users.id, row_number() OVER (ORDER BY users.name RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS anon_1
+    FROM users
+
+.. versionadded:: 1.2
+
+   You can provide a window frame specification using either the ``rows`` or
+   ``range`` parameter:
+
+.. sourcecode:: pycon+sql
+
+    >>> s = select([
+    ...         users.c.id,
+    ...         func.row_number().over(order_by=users.c.name, rows={'preceding': 2, 'following': 3})
+    ...     ])
+    >>> print(s)
+    SELECT users.id, row_number() OVER (ORDER BY users.name ROWS BETWEEN 2 PRECEDING and 3 FOLLOWING) AS anon_1
     FROM users
 
 .. seealso::

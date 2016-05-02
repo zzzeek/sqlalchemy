@@ -3071,7 +3071,8 @@ class Over(ColumnElement):
     order_by = None
     partition_by = None
 
-    def __init__(self, element, partition_by=None, order_by=None):
+    def __init__(
+        self, element, partition_by=None, order_by=None, range=None, rows=None):
         """Produce an :class:`.Over` object against a function.
 
         Used against aggregate or so-called "window" functions,
@@ -3114,6 +3115,44 @@ class Over(ColumnElement):
             self.partition_by = ClauseList(
                 *util.to_list(partition_by),
                 _literal_as_text=_literal_as_label_reference)
+
+        if range is not None and rows is not None:
+            raise ValueError(
+                'Must provide either RANGE specification or '
+                'ROWS specification, not both'
+            )
+
+        if range is None and rows is None:
+            range = {}
+
+        self.frame_kind = 'ROWS' if rows is not None else 'RANGE'
+        frame = rows if rows is not None else range
+
+        assert frame is not None
+
+        if frozenset(frame) - frozenset(('preceding', 'following')):
+            raise ValueError(
+                'Found additional keys in frame specification dict'
+            )
+        self.preceding = Over._format_frame_clause(
+            frame, 'preceding', 'UNBOUNDED PRECEDING'
+        )
+        self.following = Over._format_frame_clause(
+            frame, 'following', 'CURRENT ROW'
+        )
+
+    @staticmethod
+    def _format_frame_clause(frame, key, default):
+        value = frame.get(key, default)
+
+        if value == default:
+            return default
+        elif value is None:
+            return 'UNBOUNDED %s' % key.upper()
+        elif value == 0:
+            return 'CURRENT ROW'
+        else:
+            return '%d %s' % (value, key.upper())
 
     @property
     def func(self):

@@ -684,7 +684,8 @@ class OrderByLabelResolutionTest(fixtures.TestBase, AssertsCompiledSQL):
 
         self.assert_compile(
             stmt,
-            "SELECT row_number() OVER (PARTITION BY bar ORDER BY foo) "
+            "SELECT row_number() OVER (PARTITION BY bar ORDER BY foo "
+            "RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) "
             "AS anon_1 FROM (SELECT foo, bar)"
         )
 

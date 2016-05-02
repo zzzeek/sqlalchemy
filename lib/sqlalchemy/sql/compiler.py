@@ -812,12 +812,23 @@ class SQLCompiler(Compiled):
         return "%s OVER (%s)" % (
             over.element._compiler_dispatch(self, **kwargs),
             ' '.join(
-                '%s BY %s' % (word, clause._compiler_dispatch(self, **kwargs))
-                for word, clause in (
-                    ('PARTITION', over.partition_by),
-                    ('ORDER', over.order_by)
+                itertools.chain(
+                    (
+                        '%s BY %s' % (
+                            word, clause._compiler_dispatch(self, **kwargs)
+                        )
+                        for word, clause in (
+                            ('PARTITION', over.partition_by),
+                            ('ORDER', over.order_by)
+                        )
+                        if clause is not None and len(clause)
+                    ),
+                    [
+                        '%s BETWEEN %s AND %s' % (
+                            over.frame_kind, over.preceding, over.following
+                        )
+                    ]
                 )
-                if clause is not None and len(clause)
             )
         )
 
