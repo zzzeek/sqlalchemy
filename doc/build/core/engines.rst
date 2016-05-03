@@ -160,7 +160,7 @@ And for an absolute file path, the three slashes are followed by the absolute pa
     #Windows alternative using raw string
     engine = create_engine(r'sqlite:///C:\path\to\foo.db')
 
-To use a SQLite ``:memory:`` database, specify an empty URL::
+To use an SQLite ``:memory:`` database, specify an empty URL::
 
     engine = create_engine('sqlite://')
 

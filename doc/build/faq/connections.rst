@@ -94,10 +94,10 @@ a COMMIT as any connection is returned to the pool::
     engine = create_engine('mssql://scott:tiger@mydsn', pool=QueuePool(reset_on_return='commit'))
 
 
-I am using multiple connections with a SQLite database (typically to test transaction operation), and my test program is not working!
+I am using multiple connections with an SQLite database (typically to test transaction operation), and my test program is not working!
 ----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-If using a SQLite ``:memory:`` database, or a version of SQLAlchemy prior
+If using an SQLite ``:memory:`` database, or a version of SQLAlchemy prior
 to version 0.7, the default connection pool is the :class:`.SingletonThreadPool`,
 which maintains exactly one SQLite connection per thread.  So two
 connections in use in the same thread will actually be the same SQLite

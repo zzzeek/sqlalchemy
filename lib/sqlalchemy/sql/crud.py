@@ -343,7 +343,7 @@ def _append_param_insert_pk_returning(compiler, stmt, c, values, kw):
 
     If the column has a Python-side default, we will create a bound
     parameter for it and "pre-execute" the Python function.  If
-    the column has a SQL expression default, or is a sequence,
+    the column has an SQL expression default, or is a sequence,
     we will add it directly into the INSERT statement and add a
     RETURNING element to get the new value.  If the column has a
     server side default or is marked as the "autoincrement" column,

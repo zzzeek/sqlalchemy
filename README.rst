@@ -103,7 +103,7 @@ SQLAlchemy's philosophy:
   commit() is called.  SQLAlchemy encourages applications
   to create a consistent means of delineating
   the start and end of a series of operations.
-* Never render a literal value in a SQL statement.
+* Never render a literal value in an SQL statement.
   Bound parameters are used to the greatest degree
   possible, allowing query optimizers to cache 
   query plans effectively and making SQL injection

@@ -198,7 +198,7 @@ UnmappedColumnError = None
 
 
 class StatementError(SQLAlchemyError):
-    """An error occurred during execution of a SQL statement.
+    """An error occurred during execution of an SQL statement.
 
     :class:`StatementError` wraps the exception raised
     during execution, and features :attr:`.statement`
@@ -265,7 +265,7 @@ class DBAPIError(StatementError):
     and :attr:`~.StatementError.params` attributes which supply context
     regarding the specifics of the statement which had an issue, for the
     typical case when the error was raised within the context of
-    emitting a SQL statement.
+    emitting an SQL statement.
 
     The wrapped exception object is available in the
     :attr:`~.StatementError.orig` attribute. Its type and properties are

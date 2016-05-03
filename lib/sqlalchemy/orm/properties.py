@@ -88,7 +88,7 @@ class ColumnProperty(StrategizedProperty):
 
         :param expire_on_flush=True:
             Disable expiry on flush.   A column_property() which refers
-            to a SQL expression (and not a single table-bound column)
+            to an SQL expression (and not a single table-bound column)
             is considered to be a "read only" property; populating it
             has no effect on the state of data, and it can only return
             database state.   For this reason a column_property()'s value

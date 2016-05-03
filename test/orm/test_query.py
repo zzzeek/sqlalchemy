@@ -844,34 +844,34 @@ class InvalidGenerationsTest(QueryTest, AssertsCompiledSQL):
 
         assert_raises_message(
             sa_exc.ArgumentError,
-            "Object .*User.* is not legal as a SQL literal value",
+            "Object .*User.* is not legal as an SQL literal value",
             distinct, User
         )
 
         ua = aliased(User)
         assert_raises_message(
             sa_exc.ArgumentError,
-            "Object .*User.* is not legal as a SQL literal value",
+            "Object .*User.* is not legal as an SQL literal value",
             distinct, ua
         )
 
         s = Session()
         assert_raises_message(
             sa_exc.ArgumentError,
-            "Object .*User.* is not legal as a SQL literal value",
+            "Object .*User.* is not legal as an SQL literal value",
             lambda: s.query(User).filter(User.name == User)
         )
 
         u1 = User()
         assert_raises_message(
             sa_exc.ArgumentError,
-            "Object .*User.* is not legal as a SQL literal value",
+            "Object .*User.* is not legal as an SQL literal value",
             distinct, u1
         )
 
         assert_raises_message(
             sa_exc.ArgumentError,
-            "Object .*User.* is not legal as a SQL literal value",
+            "Object .*User.* is not legal as an SQL literal value",
             lambda: s.query(User).filter(User.name == u1)
         )
 
@@ -3261,7 +3261,7 @@ class TextTest(QueryTest, AssertsCompiledSQL):
         # so in general the changing of the query structure with string labels
         # is dangerous.
         #
-        # the queries here are again "invalid" from a SQL perspective, as the
+        # the queries here are again "invalid" from SQL perspective, as the
         # "name" field isn't matched up to anything.
         #
         with expect_warnings("Can't resolve label reference 'name';"):

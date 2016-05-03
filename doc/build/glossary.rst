@@ -58,7 +58,7 @@ Glossary
         of :class:`.InstrumentedAttribute`, which are descriptors that
         provide the above mentioned ``__get__()``, ``__set__()`` and
         ``__delete__()`` methods.   The :class:`.InstrumentedAttribute`
-        will generate a SQL expression when used at the class level::
+        will generate an SQL expression when used at the class level::
 
             >>> print MyClass.data == 5
             data = :data_1
@@ -628,7 +628,7 @@ Glossary
 
         The relationship from ``department`` to ``employee`` is
         one to many, since many employee records can be associated with a
-        single department.  A SQLAlchemy mapping might look like::
+        single department.  An SQLAlchemy mapping might look like::
 
             class Department(Base):
                 __tablename__ = 'department'
@@ -679,7 +679,7 @@ Glossary
 
         The relationship from ``employee`` to ``department`` is
         many to one, since many employee records can be associated with a
-        single department.  A SQLAlchemy mapping might look like::
+        single department.  An SQLAlchemy mapping might look like::
 
             class Department(Base):
                 __tablename__ = 'department'
@@ -873,7 +873,7 @@ Glossary
                 FOREIGN KEY project_id REFERENCES project(id)
             )
 
-        A SQLAlchemy declarative mapping for the above might look like::
+        An SQLAlchemy declarative mapping for the above might look like::
 
             class Employee(Base):
                 __tablename__ = 'employee'

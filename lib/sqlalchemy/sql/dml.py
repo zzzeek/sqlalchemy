@@ -643,7 +643,7 @@ class Update(ValuesBase):
          For databases which support this, an ``UPDATE FROM`` clause will
          be generated, or on MySQL, a multi-table update.  The statement
          will fail on databases that don't have support for multi-table
-         update statements.  A SQL-standard method of referring to
+         update statements.  An SQL-standard method of referring to
          additional tables in the WHERE clause is to use a correlated
          subquery::
 
@@ -705,7 +705,7 @@ class Update(ValuesBase):
         The values referred to in ``values`` are typically:
 
         * a literal data value (i.e. string, number, etc.)
-        * a SQL expression, such as a related :class:`.Column`,
+        * an SQL expression, such as a related :class:`.Column`,
           a scalar-returning :func:`.select` construct,
           etc.
 

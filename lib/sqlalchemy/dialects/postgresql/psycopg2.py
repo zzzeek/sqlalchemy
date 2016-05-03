@@ -188,7 +188,7 @@ one of these characters in its name.  One is to specify the
     )
 
 Above, an INSERT statement such as ``measurement.insert()`` will use
-``size_meters`` as the parameter name, and a SQL expression such as
+``size_meters`` as the parameter name, and an SQL expression such as
 ``measurement.c.size_meters > 10`` will derive the bound parameter name
 from the ``size_meters`` key as well.
 

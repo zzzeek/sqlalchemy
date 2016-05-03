@@ -96,7 +96,7 @@ class PoolListener(object):
         """Called once for each new DB-API connection or Pool's ``creator()``.
 
         dbapi_con
-          A newly connected raw DB-API connection (not a SQLAlchemy
+          A newly connected raw DB-API connection (not an SQLAlchemy
           ``Connection`` wrapper).
 
         con_record
@@ -108,7 +108,7 @@ class PoolListener(object):
         """Called exactly once for the first DB-API connection.
 
         dbapi_con
-          A newly connected raw DB-API connection (not a SQLAlchemy
+          A newly connected raw DB-API connection (not an SQLAlchemy
           ``Connection`` wrapper).
 
         con_record

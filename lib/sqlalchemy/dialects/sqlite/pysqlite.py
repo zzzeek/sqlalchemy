@@ -37,7 +37,7 @@ Connect Strings
 ---------------
 
 The file specification for the SQLite database is taken as the "database"
-portion of the URL.  Note that the format of a SQLAlchemy url is::
+portion of the URL.  Note that the format of an SQLAlchemy url is::
 
     driver://user:pass@host/database
 

@@ -16,7 +16,7 @@ Date and Time Types
 
 SQLite does not have built-in DATE, TIME, or DATETIME types, and pysqlite does
 not provide out of the box functionality for translating values between Python
-`datetime` objects and a SQLite-supported format. SQLAlchemy's own
+`datetime` objects and an SQLite-supported format. SQLAlchemy's own
 :class:`~sqlalchemy.types.DateTime` and related types provide date formatting
 and parsing functionality when SQlite is used. The implementation classes are
 :class:`~.sqlite.DATETIME`, :class:`~.sqlite.DATE` and :class:`~.sqlite.TIME`.
@@ -153,7 +153,7 @@ with an error.
 This behavior becomes more critical when used in conjunction with the
 SQLAlchemy ORM.  SQLAlchemy's :class:`.Session` object by default runs
 within a transaction, and with its autoflush model, may emit DML preceding
-any SELECT statement.   This may lead to a SQLite database that locks
+any SELECT statement.   This may lead to an SQLite database that locks
 more quickly than is expected.   The locking mode of SQLite and the pysqlite
 driver can be manipulated to some degree, however it should be noted that
 achieving a high degree of write-concurrency with SQLite is a losing battle.

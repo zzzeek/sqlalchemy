@@ -355,7 +355,7 @@ class M2ODontOverwriteFKTest(fixtures.MappedTest):
 class DirectSelfRefFKTest(fixtures.MappedTest, AssertsCompiledSQL):
 
     """Tests the ultimate join condition, a single column
-    that points to itself, e.g. within a SQL function or similar.
+    that points to itself, e.g. within an SQL function or similar.
     The test is against a materialized path setup.
 
     this is an **extremely** unusual case::

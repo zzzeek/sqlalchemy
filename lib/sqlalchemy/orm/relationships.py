@@ -438,7 +438,7 @@ class RelationshipProperty(StrategizedProperty):
                construct a non-standard join condition, which makes use of
                columns or expressions that do not normally refer to their
                "parent" column, such as a join condition expressed by a
-               complex comparison using a SQL function.
+               complex comparison using an SQL function.
 
           The :func:`.relationship` construct will raise informative
           error messages that suggest the use of the
@@ -672,7 +672,7 @@ class RelationshipProperty(StrategizedProperty):
               :ref:`post_update` - Introductory documentation and examples.
 
         :param primaryjoin:
-          a SQL expression that will be used as the primary
+          an SQL expression that will be used as the primary
           join of this child object against the parent object, or in a
           many-to-many relationship the join of the primary object to the
           association table. By default, this value is computed based on the
@@ -727,7 +727,7 @@ class RelationshipProperty(StrategizedProperty):
             relationship loaders.
 
         :param secondaryjoin:
-          a SQL expression that will be used as the join of
+          an SQL expression that will be used as the join of
           an association table to the child object. By default, this value is
           computed based on the foreign key relationships of the association
           and child tables.

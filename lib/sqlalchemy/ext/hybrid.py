@@ -124,7 +124,7 @@ Defining Expression Behavior Distinct from Attribute Behavior
 Our usage of the ``&`` and ``|`` bitwise operators above was
 fortunate, considering our functions operated on two boolean values to
 return a new one.   In many cases, the construction of an in-Python
-function and a SQLAlchemy SQL expression have enough differences that
+function and an SQLAlchemy SQL expression have enough differences that
 two separate Python expressions should be defined.  The
 :mod:`~sqlalchemy.ext.hybrid` decorators define the
 :meth:`.hybrid_property.expression` modifier for this purpose.   As an
@@ -416,7 +416,7 @@ previous ``CaseInsensitiveComparator`` class with a new
         "Label to apply to Query tuple results"
 
 Above, the ``CaseInsensitiveWord`` object represents ``self.word``,
-which may be a SQL function, or may be a Python native.   By
+which may be an SQL function, or may be a Python native.   By
 overriding ``operate()`` and ``__clause_element__()`` to work in terms
 of ``self.word``, all comparison operations will work against the
 "converted" form of ``word``, whether it be SQL side or Python side.
@@ -765,7 +765,7 @@ class hybrid_property(interfaces.InspectionAttrInfo):
         return self
 
     def expression(self, expr):
-        """Provide a modifying decorator that defines a SQL-expression
+        """Provide a modifying decorator that defines an SQL-expression
         producing method."""
 
         self.expr = expr

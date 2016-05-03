@@ -277,7 +277,7 @@ class TypeEngine(Visitable):
     def column_expression(self, colexpr):
         """Given a SELECT column expression, return a wrapping SQL expression.
 
-        This is typically a SQL function that wraps a column expression
+        This is typically an SQL function that wraps a column expression
         as rendered in the columns clause of a SELECT statement.
         It is used for special data types that require
         columns to be wrapped in some special database function in order
@@ -310,9 +310,9 @@ class TypeEngine(Visitable):
 
     def bind_expression(self, bindvalue):
         """"Given a bind value (i.e. a :class:`.BindParameter` instance),
-        return a SQL expression in its place.
+        return an SQL expression in its place.
 
-        This is typically a SQL function that wraps the existing bound
+        This is typically an SQL function that wraps the existing bound
         parameter within the statement.  It is used for special data types
         that require literals being wrapped in some special database function
         in order to coerce an application-level value into a database-specific
@@ -501,7 +501,7 @@ class TypeEngine(Visitable):
         to return a type which the value should be coerced into.
 
         The default behavior here is conservative; if the right-hand
-        side is already coerced into a SQL type based on its
+        side is already coerced into an SQL type based on its
         Python type, it is usually left alone.
 
         End-user functionality extension here should generally be via
@@ -1046,7 +1046,7 @@ class TypeDecorator(SchemaEventTarget, TypeEngine):
         :meth:`process_bind_param` here.
 
         User-defined code can override this method directly,
-        though its likely best to use :meth:`process_bind_param` so that
+        although it's likely best to use :meth:`process_bind_param` so that
         the processing provided by ``self.impl`` is maintained.
 
         :param dialect: Dialect instance in use.
@@ -1092,7 +1092,7 @@ class TypeDecorator(SchemaEventTarget, TypeEngine):
         :meth:`process_result_value` here.
 
         User-defined code can override this method directly,
-        though its likely best to use :meth:`process_result_value` so that
+        although it's likely best to use :meth:`process_result_value` so that
         the processing provided by ``self.impl`` is maintained.
 
         :param dialect: Dialect instance in use.
@@ -1124,7 +1124,7 @@ class TypeDecorator(SchemaEventTarget, TypeEngine):
         By default, returns self.   This method is called by
         the expression system when an object using this type is
         on the left or right side of an expression against a plain Python
-        object which does not yet have a SQLAlchemy type assigned::
+        object which does not yet have an SQLAlchemy type assigned::
 
             expr = table.c.somecolumn + 35
 

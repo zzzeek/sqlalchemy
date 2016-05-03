@@ -185,7 +185,7 @@ as :class:`.NullType` is used to refer to any expression of unknown
 type.
 
 Additionally, the treatment of a so-called "unhashable" type is slightly
-different than its been in previous releases; internally we are using
+different than it's been in previous releases; internally we are using
 the ``id()`` function to get a "hash value" from these structures, just
 as we would any ordinary mapped object.   This replaces the previous
 approach which applied a counter to the object.
@@ -212,11 +212,11 @@ string value::
     >>> some_user = User()
     >>> q = s.query(User).filter(User.name == some_user)
     ...
-    sqlalchemy.exc.ArgumentError: Object <__main__.User object at 0x103167e90> is not legal as a SQL literal value
+    sqlalchemy.exc.ArgumentError: Object <__main__.User object at 0x103167e90> is not legal as an SQL literal value
 
 The exception is now immediate when the comparison is made between
 ``User.name == some_user``.  Previously, a comparison like the above
-would produce a SQL expression that would only fail once resolved
+would produce an SQL expression that would only fail once resolved
 into a DBAPI execution call; the mapped ``User`` object would
 ultimately become a bound parameter that would be rejected by the
 DBAPI.
@@ -1239,7 +1239,7 @@ this CHECK constraint can now be disabled using the new
 Large parameter and row values are now truncated in logging and exception displays
 ----------------------------------------------------------------------------------
 
-A large value present as a bound parameter for a SQL statement, as well as a
+A large value present as a bound parameter for an SQL statement, as well as a
 large value present in a result row, will now be truncated during display
 within logging, exception reporting, as well as ``repr()`` of the row itself::
 
@@ -1364,7 +1364,7 @@ JSON "null" is inserted as expected with ORM operations, regardless of column de
 The :class:`.types.JSON` type and its descendant types :class:`.postgresql.JSON`
 and :class:`.mysql.JSON` have a flag :paramref:`.types.JSON.none_as_null` which
 when set to True indicates that the Python value ``None`` should translate
-into a SQL NULL rather than a JSON NULL value.  This flag defaults to False,
+into an SQL NULL rather than a JSON NULL value.  This flag defaults to False,
 which means that the column should *never* insert SQL NULL or fall back
 to a default unless the :func:`.null` constant were used.  However, this would
 fail in the ORM under two circumstances; one is when the column also contained
@@ -1415,7 +1415,7 @@ New JSON.NULL Constant Added
 To ensure that an application can always have full control at the value level
 of whether a :class:`.types.JSON`, :class:`.postgresql.JSON`, :class:`.mysql.JSON`,
 or :class:`.postgresql.JSONB` column
-should receive a SQL NULL or JSON ``"null"`` value, the constant
+should receive an SQL NULL or JSON ``"null"`` value, the constant
 :attr:`.types.JSON.NULL` has been added, which in conjunction with
 :func:`.null` can be used to determine fully between SQL NULL and
 JSON ``"null"``, regardless of what :paramref:`.types.JSON.none_as_null` is set
@@ -1697,7 +1697,7 @@ Above, in the :paramref:`.relationship.primaryjoin` expression, we are
 using :func:`.type_coerce` to handle bound parameters passed via
 lazyloading as integers, since we already know these will come from
 our ``StringAsInt`` type which maintains the value as an integer in
-Python. We are then using :func:`.cast` so that as a SQL expression,
+Python. We are then using :func:`.cast` so that as an SQL expression,
 the VARCHAR "id"  column will be CAST to an integer for a regular non-
 converted join as with :meth:`.Query.join` or :func:`.orm.joinedload`.
 That is, a joinedload of ``.pets`` looks like::
@@ -1839,7 +1839,7 @@ This includes:
 
 * The SQL type assigned to indexed access of an :class:`~.postgresql.ARRAY` takes into
   account the number of dimensions configured.   An :class:`~.postgresql.ARRAY` with three
-  dimensions will return a SQL expression with a type of :class:`~.postgresql.ARRAY` of
+  dimensions will return an SQL expression with a type of :class:`~.postgresql.ARRAY` of
   one less dimension.  Given a column with type ``ARRAY(Integer, dimensions=3)``,
   we can now perform this expression::
 

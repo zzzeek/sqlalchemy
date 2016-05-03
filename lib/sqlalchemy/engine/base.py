@@ -365,7 +365,7 @@ class Connection(Connectable):
         actual level on the underlying DBAPI connection regardless of how
         this state was set.  Compare to the
         :attr:`.Connection.default_isolation_level` accessor
-        which returns the dialect-level setting without performing a SQL
+        which returns the dialect-level setting without performing an SQL
         query.
 
         .. versionadded:: 0.9.9
@@ -877,7 +877,7 @@ class Connection(Connectable):
         return self.execute(object, *multiparams, **params).scalar()
 
     def execute(self, object, *multiparams, **params):
-        """Executes the a SQL statement construct and returns a
+        """Executes the SQL statement construct and returns a
         :class:`.ResultProxy`.
 
         :param object: The statement to be executed.  May be

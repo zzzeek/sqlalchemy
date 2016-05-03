@@ -156,7 +156,7 @@ usable with :class:`.Query`. To provide these, we instead use the
             self._email = email
 
 The ``.email`` attribute, in addition to providing getter/setter behavior when we have an
-instance of ``EmailAddress``, also provides a SQL expression when used at the class level,
+instance of ``EmailAddress``, also provides an SQL expression when used at the class level,
 that is, from the ``EmailAddress`` class directly:
 
 .. sourcecode:: python+sql
@@ -210,7 +210,7 @@ logic::
 
         @email.expression
         def email(cls):
-            """Produce a SQL expression that represents the value
+            """Produce an SQL expression that represents the value
             of the _email column, minus the last twelve characters."""
 
             return func.substr(cls._email, 0, func.length(cls._email) - 12)
@@ -218,7 +218,7 @@ logic::
 Above, accessing the ``email`` property of an instance of ``EmailAddress``
 will return the value of the ``_email`` attribute, removing or adding the
 hostname ``@example.com`` from the value. When we query against the ``email``
-attribute, a SQL function is rendered which produces the same effect:
+attribute, an SQL function is rendered which produces the same effect:
 
 .. sourcecode:: python+sql
 

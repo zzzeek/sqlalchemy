@@ -10,8 +10,8 @@ Performance
 
 .. _faq_how_to_profile:
 
-How can I profile a SQLAlchemy powered application?
----------------------------------------------------
+How can I profile an SQLAlchemy powered application?
+----------------------------------------------------
 
 Looking for performance issues typically involves two stratgies.  One
 is query profiling, and the other is code profiling.
@@ -22,7 +22,7 @@ Query Profiling
 Sometimes just plain SQL logging (enabled via python's logging module
 or via the ``echo=True`` argument on :func:`.create_engine`) can give an
 idea how long things are taking.  For example, if you log something
-right after a SQL operation, you'd see something like this in your
+right after an SQL operation, you'd see something like this in your
 log::
 
     17:37:48,325 INFO  [sqlalchemy.engine.base.Engine.0x...048c] SELECT ...

@@ -11,7 +11,7 @@ SQL Expressions
 How do I render SQL expressions as strings, possibly with bound parameters inlined?
 ------------------------------------------------------------------------------------
 
-The "stringification" of a SQLAlchemy statement or Query in the vast majority
+The "stringification" of an SQLAlchemy statement or Query in the vast majority
 of cases is as simple as::
 
     print(str(statement))

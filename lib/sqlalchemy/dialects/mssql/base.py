@@ -425,7 +425,7 @@ Compatibility Levels
 --------------------
 MSSQL supports the notion of setting compatibility levels at the
 database level. This allows, for instance, to run a database that
-is compatible with SQL2000 while running on a SQL2005 database
+is compatible with SQL2000 while running on an SQL2005 database
 server. ``server_version_info`` will always return the database
 server version information (in this case SQL2005) and not the
 compatibility level information. Because of this, if running under

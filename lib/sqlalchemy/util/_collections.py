@@ -863,7 +863,7 @@ class LRUCache(dict):
     recently used items.
 
     Note that either get() or [] should be used here, but
-    generally its not safe to do an "in" check first as the dictionary
+    generally it's not safe to do an "in" check first as the dictionary
     can change subsequent to that call.
 
     """

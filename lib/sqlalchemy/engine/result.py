@@ -742,7 +742,7 @@ class ResultProxy(object):
 
         This is a DBAPI specific method and is only functional
         for those backends which support it, for statements
-        where it is appropriate.  It's behavior is not
+        where it is appropriate.  Its behavior is not
         consistent across backends.
 
         Usage of this method is normally unnecessary when

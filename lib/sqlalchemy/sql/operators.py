@@ -240,7 +240,7 @@ class ColumnOperators(Operators):
     :meth:`.operate` or :meth:`.reverse_operate`,
     passing in the appropriate operator function from the
     Python builtin ``operator`` module or
-    a SQLAlchemy-specific operator function from
+    an SQLAlchemy-specific operator function from
     :mod:`sqlalchemy.expression.operators`.   For example
     the ``__eq__`` function::
 

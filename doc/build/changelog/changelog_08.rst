@@ -2101,7 +2101,7 @@
 
       It was the "aliasing" behavior of the latter use case that was
       getting in the way of the former use case.   The method now
-      specifically considers a SQL expression like
+      specifically considers an SQL expression like
       :func:`.expression.select` or :func:`.expression.alias`
       separately from a mapped entity like a :func:`.aliased`
       construct.

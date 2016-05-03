@@ -1918,7 +1918,7 @@ class ColumnDefault(DefaultGenerator):
     """A plain default value on a column.
 
     This could correspond to a constant, a callable function,
-    or a SQL clause.
+    or an SQL clause.
 
     :class:`.ColumnDefault` is generated automatically
     whenever the ``default``, ``onupdate`` arguments of
@@ -1946,7 +1946,7 @@ class ColumnDefault(DefaultGenerator):
          * a plain non-callable Python value, such as a
            string, integer, boolean, or other simple type.
            The default value will be used as is each time.
-         * a SQL expression, that is one which derives from
+         * an SQL expression, that is one which derives from
            :class:`.ColumnElement`.  The SQL expression will
            be rendered into the INSERT or UPDATE statement,
            or in the case of a primary key column when
@@ -2025,7 +2025,7 @@ class Sequence(DefaultGenerator):
 
     The :class:`.Sequence` object represents the name and configurational
     parameters of a database sequence.   It also represents
-    a construct that can be "executed" by a SQLAlchemy :class:`.Engine`
+    a construct that can be "executed" by an SQLAlchemy :class:`.Engine`
     or :class:`.Connection`, rendering the appropriate "next value" function
     for the target database and returning a result.
 
@@ -2351,7 +2351,7 @@ class Constraint(DialectKWArgs, SchemaItem):
     def __init__(self, name=None, deferrable=None, initially=None,
                  _create_rule=None, info=None, _type_bound=False,
                  **dialect_kw):
-        """Create a SQL constraint.
+        """Create an SQL constraint.
 
         :param name:
           Optional, the in-database name of this ``Constraint``.
@@ -2606,7 +2606,7 @@ class CheckConstraint(ColumnCollectionConstraint):
 
         :param sqltext:
           A string containing the constraint definition, which will be used
-          verbatim, or a SQL expression construct.   If given as a string,
+          verbatim, or an SQL expression construct.   If given as a string,
           the object is converted to a :class:`.Text` object.   If the textual
           string includes a colon character, escape this using a backslash::
 

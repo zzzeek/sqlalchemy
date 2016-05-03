@@ -7,7 +7,7 @@ Working with Engines and Connections
 .. module:: sqlalchemy.engine
 
 This section details direct usage of the :class:`.Engine`,
-:class:`.Connection`, and related objects. Its important to note that when
+:class:`.Connection`, and related objects. It's important to note that when
 using the SQLAlchemy ORM, these objects are not generally accessed; instead,
 the :class:`.Session` object is used as the interface to the database.
 However, for applications that are built around direct usage of textual SQL
@@ -295,7 +295,7 @@ Explicit, connectionless execution delivers the expression to the
 
 Implicit execution is also connectionless, and makes usage of the :meth:`~.Executable.execute` method
 on the expression itself.   This method is provided as part of the
-:class:`.Executable` class, which refers to a SQL statement that is sufficient
+:class:`.Executable` class, which refers to an SQL statement that is sufficient
 for being invoked against the database.    The method makes usage of
 the assumption that either an
 :class:`~sqlalchemy.engine.Engine` or

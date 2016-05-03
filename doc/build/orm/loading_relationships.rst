@@ -15,7 +15,7 @@ Using Loader Strategies: Lazy Loading, Eager Loading
 By default, all inter-object relationships are **lazy loading**. The scalar or
 collection attribute associated with a :func:`~sqlalchemy.orm.relationship`
 contains a trigger which fires the first time the attribute is accessed.  This
-trigger, in all but one case, issues a SQL call at the point of access
+trigger, in all but one case, issues an SQL call at the point of access
 in order to load the related object or objects:
 
 .. sourcecode:: python+sql

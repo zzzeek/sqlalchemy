@@ -913,7 +913,7 @@ class Session(_SessionClassMethods):
             return conn
 
     def execute(self, clause, params=None, mapper=None, bind=None, **kw):
-        """Execute a SQL expression construct or string statement within
+        """Execute an SQL expression construct or string statement within
         the current transaction.
 
         Returns a :class:`.ResultProxy` representing
@@ -2443,7 +2443,7 @@ class Session(_SessionClassMethods):
           cases, the attribute is assumed to have a change, even if there is
           ultimately no net change against its database value. SQLAlchemy in
           most cases does not need the "old" value when a set event occurs, so
-          it skips the expense of a SQL call if the old value isn't present,
+          it skips the expense of an SQL call if the old value isn't present,
           based on the assumption that an UPDATE of the scalar value is
           usually needed, and in those few cases where it isn't, is less
           expensive on average than issuing a defensive SELECT.

@@ -80,7 +80,7 @@ class ShardedSession(Session):
         """Construct a ShardedSession.
 
         :param shard_chooser: A callable which, passed a Mapper, a mapped
-          instance, and possibly a SQL clause, returns a shard ID.  This id
+          instance, and possibly an SQL clause, returns a shard ID.  This id
           may be based off of the attributes present within the object, or on
           some round-robin scheme. If the scheme is based on a selection, it
           should set whatever state on the instance to mark it in the future as

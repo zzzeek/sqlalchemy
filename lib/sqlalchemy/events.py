@@ -697,7 +697,7 @@ class ConnectionEvents(event.Events):
         closing the cursor, rolling back of the transaction in the
         case of connectionless execution, and disposing of the entire
         connection pool if a "disconnect" was detected.   The
-        exception is then wrapped in a SQLAlchemy DBAPI exception
+        exception is then wrapped in an SQLAlchemy DBAPI exception
         wrapper and re-thrown.
 
         :param conn: :class:`.Connection` object

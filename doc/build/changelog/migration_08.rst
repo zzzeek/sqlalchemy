@@ -734,7 +734,7 @@ functionality, except on the database side::
             Column('data', LowerString)
     )
 
-Above, the ``LowerString`` type defines a SQL expression that will be emitted
+Above, the ``LowerString`` type defines an SQL expression that will be emitted
 whenever the ``test_table.c.data`` column is rendered in the columns
 clause of a SELECT statement::
 

@@ -266,7 +266,7 @@ class Mapper(InspectionAttr):
 
             :ref:`inheritance_toplevel`
 
-        :param inherit_condition: For joined table inheritance, a SQL
+        :param inherit_condition: For joined table inheritance, an SQL
            expression which will
            define how the two tables are joined; defaults to a natural join
            between the two tables.
@@ -396,7 +396,7 @@ class Mapper(InspectionAttr):
                 }
 
           It may also be specified
-          as a SQL expression, as in this example where we
+          as an SQL expression, as in this example where we
           use the :func:`.case` construct to provide a conditional
           approach::
 
@@ -436,7 +436,7 @@ class Mapper(InspectionAttr):
                     }
 
           .. versionchanged:: 0.7.4
-              ``polymorphic_on`` may be specified as a SQL expression,
+              ``polymorphic_on`` may be specified as an SQL expression,
               or refer to any attribute configured with
               :func:`.column_property`, or to the string name of one.
 
