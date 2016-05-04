@@ -7,7 +7,7 @@ Additional Persistence Techniques
 Embedding SQL Insert/Update Expressions into a Flush
 =====================================================
 
-This feature allows the value of a database column to be set to a SQL
+This feature allows the value of a database column to be set to an SQL
 expression instead of a literal value. It's especially useful for atomic
 updates, calling stored procedures, etc. All you do is assign an expression to
 an attribute::
@@ -18,7 +18,7 @@ an attribute::
 
     someobject = session.query(SomeClass).get(5)
 
-    # set 'value' attribute to a SQL expression adding one
+    # set 'value' attribute to an SQL expression adding one
     someobject.value = some_table.c.value + 1
 
     # issues "UPDATE some_table SET value=value+1"
@@ -48,7 +48,7 @@ This is most easily accomplished using the
     # execute a string statement
     result = session.execute("select * from table where id=:id", {'id':7})
 
-    # execute a SQL expression construct
+    # execute an SQL expression construct
     result = session.execute(select([mytable]).where(mytable.c.id==7))
 
 The current :class:`~sqlalchemy.engine.Connection` held by the

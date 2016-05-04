@@ -202,7 +202,7 @@ class RelationshipCache(MapperOption):
     def process_query_conditionally(self, query):
         """Process a Query that is used within a lazy loader.
 
-        (the process_query_conditionally() method is a SQLAlchemy
+        (the process_query_conditionally() method is an SQLAlchemy
         hook invoked only within lazyload.)
 
         """

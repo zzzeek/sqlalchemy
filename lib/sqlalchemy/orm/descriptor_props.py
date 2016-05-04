@@ -628,7 +628,7 @@ class ComparableProperty(DescriptorProperty):
             the :mod:`~sqlalchemy.ext.hybrid` extension.  See the example
             at :ref:`hybrid_custom_comparators`.
 
-        Allows any Python descriptor to behave like a SQL-enabled
+        Allows any Python descriptor to behave like an SQL-enabled
         attribute when used at the class level in queries, allowing
         redefinition of expression operator behavior.
 

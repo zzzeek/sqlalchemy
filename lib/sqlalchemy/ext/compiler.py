@@ -115,7 +115,7 @@ SQL and DDL constructs are each compiled using different base compilers -
 ``SQLCompiler`` and ``DDLCompiler``.   A common need is to access the
 compilation rules of SQL expressions from within a DDL expression. The
 ``DDLCompiler`` includes an accessor ``sql_compiler`` for this reason, such as
-below where we generate a CHECK constraint that embeds a SQL expression::
+below where we generate a CHECK constraint that embeds an SQL expression::
 
     @compiles(MyConstraint)
     def compile_my_constraint(constraint, ddlcompiler, **kw):
@@ -252,7 +252,7 @@ A synopsis is as follows:
           type = TIMESTAMP()
 
 * :class:`~sqlalchemy.sql.functions.FunctionElement` - This is a hybrid of a
-  ``ColumnElement`` and a "from clause" like object, and represents a SQL
+  ``ColumnElement`` and a "from clause" like object, and represents an SQL
   function or stored procedure type of call. Since most databases support
   statements along the line of "SELECT FROM <some function>"
   ``FunctionElement`` adds in the ability to be used in the FROM clause of a

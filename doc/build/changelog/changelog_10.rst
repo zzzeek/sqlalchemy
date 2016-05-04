@@ -612,7 +612,7 @@
 
         Fixed two issues regarding Sybase reflection, allowing tables
         without primary keys to be reflected as well as ensured that
-        a SQL statement involved in foreign key detection is pre-fetched up
+        an SQL statement involved in foreign key detection is pre-fetched up
         front to avoid driver issues upon nested queries.  Fixes here
         courtesy Eugene Zapolsky; note that we cannot currently test
         Sybase to locally verify these changes.
@@ -1171,8 +1171,8 @@
         :tickets: 3402
 
         Fixed regression within the flush process when an attribute were
-        set to a SQL expression for an UPDATE, and the SQL expression when
-        compared to the previous value of the attribute would produce a SQL
+        set to an SQL expression for an UPDATE, and the SQL expression when
+        compared to the previous value of the attribute would produce an SQL
         comparison other than ``==`` or ``!=``, the exception "Boolean value
         of this clause is not defined" would raise.   The fix ensures that
         the unit of work will not interpret the SQL expression in this way.
@@ -1358,7 +1358,7 @@
         there's no data being referenced).
 
         In order to maintain the new feature of :ticket:`3282` while still
-        allowing a SQLite DROP operation to maintain ordering, we now
+        allowing an SQLite DROP operation to maintain ordering, we now
         do the sort with full FKs taken under consideration, and if we encounter
         an unresolvable cycle, only *then* do we forego attempting to sort
         the tables; we instead emit a warning and go with the unsorted list.
@@ -1972,7 +1972,7 @@
         :pullreq: github:150
 
         The type of expression is reported when an object passed to a
-        SQL expression unit can't be interpreted as a SQL fragment;
+        SQL expression unit can't be interpreted as an SQL fragment;
         pull request courtesy Ryan P. Kelly.
 
     .. change::

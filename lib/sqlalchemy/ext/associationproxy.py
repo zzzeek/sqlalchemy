@@ -483,7 +483,7 @@ class _AssociationCollection(object):
 
         lazy_collection
           A callable returning a list-based collection of entities (usually an
-          object attribute managed by a SQLAlchemy relationship())
+          object attribute managed by an SQLAlchemy relationship())
 
         creator
           A function that creates new target entities.  Given one parameter:

@@ -1949,7 +1949,7 @@ class ExpressionTest(
 
         assert_raises_message(
             exc.ArgumentError,
-            r"Object some_sqla_thing\(\) is not legal as a SQL literal value",
+            r"Object some_sqla_thing\(\) is not legal as an SQL literal value",
             lambda: column('a', String) == SomeSQLAThing()
         )
 

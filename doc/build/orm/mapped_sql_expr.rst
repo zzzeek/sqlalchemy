@@ -75,7 +75,7 @@ needs to be present inside the hybrid, using the ``if`` statement in Python and 
 Using column_property
 ---------------------
 
-The :func:`.orm.column_property` function can be used to map a SQL
+The :func:`.orm.column_property` function can be used to map an SQL
 expression in a manner similar to a regularly mapped :class:`.Column`.
 With this technique, the attribute is loaded
 along with all other column-mapped attributes at load time.  This is in some
@@ -176,7 +176,7 @@ here with a classical mapping::
 Using a plain descriptor
 -------------------------
 
-In cases where a SQL query more elaborate than what :func:`.orm.column_property`
+In cases where an SQL query more elaborate than what :func:`.orm.column_property`
 or :class:`.hybrid_property` can provide must be emitted, a regular Python
 function accessed as an attribute can be used, assuming the expression
 only needs to be available on an already-loaded instance.   The function
@@ -204,5 +204,5 @@ which is then used to emit a query::
 
 The plain descriptor approach is useful as a last resort, but is less performant
 in the usual case than both the hybrid and column property approaches, in that
-it needs to emit a SQL query upon each access.
+it needs to emit an SQL query upon each access.
 

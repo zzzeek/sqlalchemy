@@ -601,7 +601,7 @@ to not support this behavior; third party dialects may also need modification
 in order to take advantage of the new behavior.  A dialect which currently
 uses the ``._limit`` or ``._offset`` attributes will continue to function
 for those cases where the limit/offset was specified as a simple integer value.
-However, when a SQL expression is specified, these two attributes will
+However, when an SQL expression is specified, these two attributes will
 instead raise a :class:`.CompileError` on access.  A third-party dialect which
 wishes to support the new feature should now call upon the ``._limit_clause``
 and ``._offset_clause`` attributes to receive the full SQL expression, rather
@@ -634,7 +634,7 @@ does not support ALTER, in the case that during a DROP, the given tables have
 an unresolvable cycle; in this case a warning is emitted, and the tables
 are dropped with **no** ordering, which is usually fine on SQLite unless
 constraints are enabled. To resolve the warning and proceed with at least
-a partial ordering on a SQLite database, particuarly one where constraints
+a partial ordering on an SQLite database, particuarly one where constraints
 are enabled, re-apply "use_alter" flags to those
 :class:`.ForeignKey` and :class:`.ForeignKeyConstraint` objects which should
 be explicitly omitted from the sort.
@@ -862,7 +862,7 @@ Column server defaults now render literal values
 
 The "literal binds" compiler flag is switched on when a
 :class:`.DefaultClause`, set up by :paramref:`.Column.server_default`
-is present as a SQL expression to be compiled.  This allows literals
+is present as an SQL expression to be compiled.  This allows literals
 embedded in SQL to render correctly, such as::
 
     from sqlalchemy import Table, Column, MetaData, Text
@@ -1841,7 +1841,7 @@ full SQL string to :meth:`.Connection.execute`, but that you can send strings
 with SQL expressions into many functions, such as :meth:`.Select.where`,
 :meth:`.Query.filter`, and :meth:`.Select.order_by`.
 
-Note that by "SQL expressions" we mean a **full fragment of a SQL string**,
+Note that by "SQL expressions" we mean a **full fragment of an SQL string**,
 such as::
 
     # the argument sent to where() is a full SQL expression

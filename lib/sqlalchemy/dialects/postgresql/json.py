@@ -242,7 +242,7 @@ class JSONB(JSON):
 
         def has_key(self, other):
             """Boolean expression.  Test for presence of a key.  Note that the
-            key may be a SQLA expression.
+            key may be an SQLA expression.
             """
             return self.operate(HAS_KEY, other, result_type=sqltypes.Boolean)
 

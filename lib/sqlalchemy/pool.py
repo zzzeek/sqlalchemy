@@ -906,7 +906,7 @@ class SingletonThreadPool(Pool):
 
        :class:`.SingletonThreadPool` may be improved in a future release,
        however in its current status it is generally used only for test
-       scenarios using a SQLite ``:memory:`` database and is not recommended
+       scenarios using an SQLite ``:memory:`` database and is not recommended
        for production use.
 
 

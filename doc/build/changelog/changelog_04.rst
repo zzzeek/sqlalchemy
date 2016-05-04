@@ -765,7 +765,7 @@
       The case() function now also takes a dictionary as its
       whens parameter.  It also interprets the "THEN"
       expressions as values by default, meaning case([(x==y,
-      "foo")]) will interpret "foo" as a bound value, not a SQL
+      "foo")]) will interpret "foo" as a bound value, not an SQL
       expression.  use text(expr) for literal SQL expressions in
       this case.  For the criterion itself, these may be literal
       strings only if the "value" keyword is present, otherwise
@@ -2785,7 +2785,7 @@
         :tickets: 818
 
       removed __len__ from "dynamic" collection as it would require issuing
-      a SQL "count()" operation, thus forcing all list evaluations to issue
+      an SQL "count()" operation, thus forcing all list evaluations to issue
       redundant SQL
 
     .. change::
@@ -3182,7 +3182,7 @@
       during an executemany()-style call. inline=True flag on any insert/update
       statement also forces the same behavior with a single execute().
       result.postfetch_cols() is a collection of columns for which the previous
-      single insert or update statement contained a SQL-side default expression.
+      single insert or update statement contained an SQL-side default expression.
 
     .. change::
         :tags: 

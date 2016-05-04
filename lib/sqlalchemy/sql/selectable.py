@@ -357,7 +357,7 @@ class FromClause(Selectable):
          may also be a selectable-compatible object such as an ORM-mapped
          class.
 
-        :param onclause: a SQL expression representing the ON clause of the
+        :param onclause: an SQL expression representing the ON clause of the
          join.  If left at ``None``, :meth:`.FromClause.join` will attempt to
          join the two tables based on a foreign key relationship.
 
@@ -402,7 +402,7 @@ class FromClause(Selectable):
          may also be a selectable-compatible object such as an ORM-mapped
          class.
 
-        :param onclause: a SQL expression representing the ON clause of the
+        :param onclause: an SQL expression representing the ON clause of the
          join.  If left at ``None``, :meth:`.FromClause.join` will attempt to
          join the two tables based on a foreign key relationship.
 
@@ -767,7 +767,7 @@ class Join(FromClause):
          may also be a selectable-compatible object such as an ORM-mapped
          class.
 
-        :param onclause: a SQL expression representing the ON clause of the
+        :param onclause: an SQL expression representing the ON clause of the
          join.  If left at ``None``, :meth:`.FromClause.join` will attempt to
          join the two tables based on a foreign key relationship.
 
@@ -1124,7 +1124,7 @@ class Alias(FromClause):
     """Represents an table or selectable alias (AS).
 
     Represents an alias, as typically applied to any table or
-    sub-select within a SQL statement using the ``AS`` keyword (or
+    sub-select within an SQL statement using the ``AS`` keyword (or
     without the keyword on certain databases such as Oracle).
 
     This object is constructed from the :func:`~.expression.alias` module
@@ -1316,7 +1316,7 @@ class HasCTE(object):
     def cte(self, name=None, recursive=False):
         """Return a new :class:`.CTE`, or Common Table Expression instance.
 
-        Common table expressions are a SQL standard whereby SELECT
+        Common table expressions are an SQL standard whereby SELECT
         statements can draw upon secondary statements specified along
         with the primary statement, using a clause called "WITH".
         Special semantics regarding UNION can also be employed to
@@ -1939,14 +1939,14 @@ class GenerativeSelect(SelectBase):
     @property
     def _simple_int_limit(self):
         """True if the LIMIT clause is a simple integer, False
-        if it is not present or is a SQL expression.
+        if it is not present or is an SQL expression.
         """
         return isinstance(self._limit_clause, _OffsetLimitParam)
 
     @property
     def _simple_int_offset(self):
         """True if the OFFSET clause is a simple integer, False
-        if it is not present or is a SQL expression.
+        if it is not present or is an SQL expression.
         """
         return isinstance(self._offset_clause, _OffsetLimitParam)
 
@@ -1973,7 +1973,7 @@ class GenerativeSelect(SelectBase):
         .. versionchanged:: 1.0.0 - :meth:`.Select.limit` can now
            accept arbitrary SQL expressions as well as integer values.
 
-        :param limit: an integer LIMIT parameter, or a SQL expression
+        :param limit: an integer LIMIT parameter, or an SQL expression
          that provides an integer result.
 
         """
@@ -1995,7 +1995,7 @@ class GenerativeSelect(SelectBase):
         .. versionchanged:: 1.0.0 - :meth:`.Select.offset` can now
            accept arbitrary SQL expressions as well as integer values.
 
-        :param offset: an integer OFFSET parameter, or a SQL expression
+        :param offset: an integer OFFSET parameter, or an SQL expression
          that provides an integer result.
 
         """
@@ -3360,40 +3360,40 @@ class Select(HasPrefixes, HasSuffixes, GenerativeSelect):
         return FromGrouping(self)
 
     def union(self, other, **kwargs):
-        """return a SQL UNION of this select() construct against the given
+        """return an SQL UNION of this select() construct against the given
         selectable."""
 
         return CompoundSelect._create_union(self, other, **kwargs)
 
     def union_all(self, other, **kwargs):
-        """return a SQL UNION ALL of this select() construct against the given
+        """return an SQL UNION ALL of this select() construct against the given
         selectable.
 
         """
         return CompoundSelect._create_union_all(self, other, **kwargs)
 
     def except_(self, other, **kwargs):
-        """return a SQL EXCEPT of this select() construct against the given
+        """return an SQL EXCEPT of this select() construct against the given
         selectable."""
 
         return CompoundSelect._create_except(self, other, **kwargs)
 
     def except_all(self, other, **kwargs):
-        """return a SQL EXCEPT ALL of this select() construct against the
+        """return an SQL EXCEPT ALL of this select() construct against the
         given selectable.
 
         """
         return CompoundSelect._create_except_all(self, other, **kwargs)
 
     def intersect(self, other, **kwargs):
-        """return a SQL INTERSECT of this select() construct against the given
+        """return an SQL INTERSECT of this select() construct against the given
         selectable.
 
         """
         return CompoundSelect._create_intersect(self, other, **kwargs)
 
     def intersect_all(self, other, **kwargs):
-        """return a SQL INTERSECT ALL of this select() construct against the
+        """return an SQL INTERSECT ALL of this select() construct against the
         given selectable.
 
         """

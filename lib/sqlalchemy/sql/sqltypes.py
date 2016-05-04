@@ -1636,7 +1636,7 @@ class Interval(_DateAffinity, TypeDecorator):
 
 
 class JSON(Indexable, TypeEngine):
-    """Represent a SQL JSON type.
+    """Represent an SQL JSON type.
 
     .. note::  :class:`.types.JSON` is provided as a facade for vendor-specific
        JSON types.  Since it supports JSON SQL operations, it only
@@ -1850,7 +1850,7 @@ class JSON(Indexable, TypeEngine):
 
 
 class ARRAY(Indexable, Concatenable, TypeEngine):
-    """Represent a SQL Array type.
+    """Represent an SQL Array type.
 
     .. note::  This type serves as the basis for all ARRAY operations.
        However, currently **only the Postgresql backend has support
@@ -2077,7 +2077,7 @@ class ARRAY(Indexable, Concatenable, TypeEngine):
         :param as_tuple=False: Specify whether return results
           should be converted to tuples from lists.  This parameter is
           not generally needed as a Python list corresponds well
-          to a SQL array.
+          to an SQL array.
 
         :param dimensions: if non-None, the ARRAY will assume a fixed
          number of dimensions.   This impacts how the array is declared
@@ -2370,7 +2370,7 @@ def _resolve_value_to_type(value):
                 insp.__class__ in inspection._registrars
         ):
             raise exc.ArgumentError(
-                "Object %r is not legal as a SQL literal value" % value)
+                "Object %r is not legal as an SQL literal value" % value)
         return NULLTYPE
     else:
         return _result_type

@@ -171,7 +171,7 @@ But why isn't the one automatic call to ROLLBACK enough?  Why must I ROLLBACK ag
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This is again a matter of the :class:`.Session` providing a consistent interface and
-refusing to guess about what context its being used. For example, the
+refusing to guess about what context it's being used in. For example, the
 :class:`.Session` supports "framing" above within multiple levels. Such as, suppose
 you had a decorator ``@with_session()``, which did this::
 
@@ -227,7 +227,7 @@ comes into play if you want to SAVEPOINT- you might call ``begin_nested()``
 several times, and the ``commit()``/``rollback()`` calls each resolve the most
 recent ``begin_nested()``. The meaning of ``rollback()`` or ``commit()`` is
 dependent upon which enclosing block it is called, and you might have any
-sequence of ``rollback()``/``commit()`` in any order, and its the level of nesting
+sequence of ``rollback()``/``commit()`` in any order, and it's the level of nesting
 that determines their behavior.
 
 In both of the above cases, if ``flush()`` broke the nesting of transaction
@@ -275,7 +275,7 @@ Query has no ``__len__()``, why not?
 
 The Python ``__len__()`` magic method applied to an object allows the ``len()``
 builtin to be used to determine the length of the collection. It's intuitive
-that a SQL query object would link ``__len__()`` to the :meth:`.Query.count`
+that an SQL query object would link ``__len__()`` to the :meth:`.Query.count`
 method, which emits a `SELECT COUNT`. The reason this is not possible is
 because evaluating the query as a list would incur two SQL calls instead of
 one::

@@ -321,7 +321,7 @@ use case, add the flag ``optional=True`` to the
 provides no other option for generating primary key identifiers.
 
 The :class:`~sqlalchemy.schema.Sequence` object also has the ability to be
-executed standalone like a SQL expression, which has the effect of calling its
+executed standalone like an SQL expression, which has the effect of calling its
 "next value" function::
 
     seq = Sequence('some_sequence')

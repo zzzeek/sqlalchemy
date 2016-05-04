@@ -10,7 +10,7 @@ Baked Queries
 construction and string-compilation steps.  This means that for a
 particular :class:`~.query.Query` building scenario that is used more than
 once, all of the Python function invocation involved in building the query
-from its initial construction up through generating a SQL string will only
+from its initial construction up through generating an SQL string will only
 occur **once**, rather than for each time that query is built up and executed.
 
 The rationale for this system is to greatly reduce Python interpreter
@@ -155,7 +155,7 @@ as being impacted by this particular form of overhead.
 
 .. topic:: Measure twice, cut once
 
-    For background on how to profile a SQLAlchemy application, please see
+    For background on how to profile an SQLAlchemy application, please see
     the section :ref:`faq_performance`.  It is essential that performance
     measurement techniques are used when attempting to improve the performance
     of an application.

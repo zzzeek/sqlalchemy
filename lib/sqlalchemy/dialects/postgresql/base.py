@@ -901,7 +901,7 @@ class ENUM(sqltypes.Enum):
          or :meth:`~.postgresql.ENUM.drop`
          are called directly.
          Setting to ``False`` is helpful
-         when invoking a creation scheme to a SQL file
+         when invoking a creation scheme to an SQL file
          without access to the actual database -
          the :meth:`~.postgresql.ENUM.create` and
          :meth:`~.postgresql.ENUM.drop` methods can

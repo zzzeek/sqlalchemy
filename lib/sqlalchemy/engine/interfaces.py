@@ -197,7 +197,7 @@ class Dialect(object):
         Allows dialects to configure options based on server version info or
         other properties.
 
-        The connection passed here is a SQLAlchemy Connection object,
+        The connection passed here is an SQLAlchemy Connection object,
         with full capabilities.
 
         The initialize() method of the base dialect should be called via

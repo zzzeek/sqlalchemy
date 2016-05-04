@@ -681,7 +681,7 @@ initiated by calling the :meth:`~.Session.begin` method.
    construct within the :class:`.Session` itself which may be
    maintaining zero or more actual database (DBAPI) transactions.  An individual
    DBAPI connection begins participation in the "transaction" as it is first
-   used to execute a SQL statement, then remains present until the session-level
+   used to execute an SQL statement, then remains present until the session-level
    "transaction" is completed.  See :ref:`unitofwork_transaction` for
    further detail.
 

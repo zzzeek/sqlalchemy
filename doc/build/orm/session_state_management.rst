@@ -416,7 +416,7 @@ Refreshing / Expiring
 
 :term:`Expiring` means that the database-persisted data held inside a series
 of object attributes is erased, in such a way that when those attributes
-are next accessed, a SQL query is emitted which will refresh that data from
+are next accessed, an SQL query is emitted which will refresh that data from
 the database.
 
 When we talk about expiration of data we are usually talking about an object
@@ -599,7 +599,7 @@ may have occurred.
     can't fully predict when the same SELECT statement, emitted a second time,
     will definitely return the data we already have, or will return new data.
     So as a best guess, it assumes that within the scope of a transaction, unless
-    it is known that a SQL expression has been emitted to modify a particular row,
+    it is known that an SQL expression has been emitted to modify a particular row,
     there's no need to refresh a row unless explicitly told to do so.
 
 The :meth:`.Session.expire` and :meth:`.Session.refresh` methods are used in

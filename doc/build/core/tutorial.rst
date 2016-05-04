@@ -248,7 +248,7 @@ Executing
 
 The interesting part of an :class:`~sqlalchemy.sql.expression.Insert` is
 executing it. In this tutorial, we will generally focus on the most explicit
-method of executing a SQL construct, and later touch upon some "shortcut" ways
+method of executing an SQL construct, and later touch upon some "shortcut" ways
 to do it. The ``engine`` object we created is a repository for database
 connections capable of issuing SQL to the database. To acquire a connection,
 we use the ``connect()`` method::
@@ -552,7 +552,7 @@ some of its capabilities. We've seen how to equate two columns to each other:
     >>> print(users.c.id == addresses.c.user_id)
     users.id = addresses.user_id
 
-If we use a literal value (a literal meaning, not a SQLAlchemy clause object),
+If we use a literal value (a literal meaning, not an SQLAlchemy clause object),
 we get a bind parameter:
 
 .. sourcecode:: pycon+sql
@@ -569,7 +569,7 @@ we did with the :class:`~sqlalchemy.sql.expression.Insert` object to see it:
     >>> (users.c.id == 7).compile().params
     {u'id_1': 7}
 
-Most Python operators, as it turns out, produce a SQL expression here, like
+Most Python operators, as it turns out, produce an SQL expression here, like
 equals, not equals, etc.:
 
 .. sourcecode:: pycon+sql

@@ -46,7 +46,7 @@ with any type whose target Python type may be mutable, including
 :class:`.PickleType`, :class:`.postgresql.ARRAY`, etc.
 
 When using the :mod:`sqlalchemy.ext.mutable` extension, the value itself
-tracks all parents which reference it.  Below, we illustrate the a simple
+tracks all parents which reference it.  Below, we illustrate a simple
 version of the :class:`.MutableDict` dictionary object, which applies
 the :class:`.Mutable` mixin to a plain Python dictionary::
 
@@ -551,7 +551,7 @@ class Mutable(MutableBase):
 
     @classmethod
     def as_mutable(cls, sqltype):
-        """Associate a SQL type with this mutable Python type.
+        """Associate an SQL type with this mutable Python type.
 
         This establishes listeners that will detect ORM mappings against
         the given type, adding mutation event trackers to those mappings.
@@ -596,7 +596,7 @@ class Mutable(MutableBase):
 
 class MutableComposite(MutableBase):
     """Mixin that defines transparent propagation of change
-    events on a SQLAlchemy "composite" object to its
+    events on an SQLAlchemy "composite" object to its
     owning parent or parents.
 
     See the example in :ref:`mutable_composites` for usage information.

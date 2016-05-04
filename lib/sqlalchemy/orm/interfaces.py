@@ -109,7 +109,7 @@ class MapperProperty(_MappedAttribute, InspectionAttr, util.MemoizedSlots):
         return {}
 
     def setup(self, context, entity, path, adapter, **kwargs):
-        """Called by Query for the purposes of constructing a SQL statement.
+        """Called by Query for the purposes of constructing an SQL statement.
 
         Each MapperProperty associated with the target mapper processes the
         statement referenced by the query context, adding columns and/or

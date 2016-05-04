@@ -245,7 +245,7 @@ all queries.   The consequence of this is that any query that limits rows
 using ``LIMIT`` or ``OFFSET`` should **always** specify an ``ORDER BY``.
 Otherwise, it is not deterministic which rows will actually be returned.
 
-When we use a SQLAlchemy method like :meth:`.Query.first`, we are in fact
+When we use an SQLAlchemy method like :meth:`.Query.first`, we are in fact
 applying a ``LIMIT`` of one to the query, so without an explicit ordering
 it is not deterministic what row we actually get back.
 While we may not notice this for simple queries on databases that usually
@@ -294,7 +294,7 @@ the two queries may not see the same results:
     ORDER BY anon_1.users_id
 
 Depending on database specifics, there is
-a chance we may get the a result like the following for the two queries::
+a chance we may get a result like the following for the two queries::
 
     -- query #1
     +--------+

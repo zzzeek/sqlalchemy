@@ -3519,7 +3519,7 @@
       makes SQLA's SQLite date type compatible with datetimes that
       were saved directly using Pysqlite (which just calls str()).
       Note that this is incompatible with the existing microseconds
-      values in a SQLA 0.4 generated SQLite database file.
+      values in an SQLA 0.4 generated SQLite database file.
       
       To get the old behavior globally:
       

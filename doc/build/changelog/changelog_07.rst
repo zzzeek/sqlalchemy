@@ -526,7 +526,7 @@
         :tickets: 2568
 
       Adjusted a very old bugfix which attempted
-      to work around a SQLite issue that itself was
+      to work around an SQLite issue that itself was
       "fixed" as of sqlite 3.6.14, regarding quotes
       surrounding a table name when using
       the "foreign_key_list" pragma.  The fix has been
@@ -923,7 +923,7 @@
         :tickets: 2467
 
       Fixed bug whereby if cast() is used
-      on a SQL expression whose type is not supported
+      on an SQL expression whose type is not supported
       by cast() and therefore CAST isn't rendered by
       the dialect, the order of evaluation could change
       if the casted expression required that it be
@@ -4265,7 +4265,7 @@
         :tags: orm
         :tickets: 2018
 
-      the aliased() function, if passed a SQL FromClause element
+      the aliased() function, if passed an SQL FromClause element
       (i.e. not a mapped class), will return element.alias()
       instead of raising an error on AliasedClass.
 
@@ -4405,7 +4405,7 @@
         :tags: orm
         :tickets: 1995
 
-      Fixed bug where a column with a SQL or server side default
+      Fixed bug where a column with an SQL or server side default
       that was excluded from a mapping with include_properties
       or exclude_properties would result in UnmappedColumnError. (also in 0.6.7)
 

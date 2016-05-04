@@ -192,7 +192,7 @@ except SQLite and Firebird.  The names are::
 
 Please refer to your vendor documentation for the proper syntax to create
 these namespaces - the database user must have permission to create and drop
-tables within these schemas.  Its perfectly fine to run the test suite
+tables within these schemas.  It's perfectly fine to run the test suite
 without these namespaces present, it only means that a handful of tests which
 expect them to be present will fail.
 

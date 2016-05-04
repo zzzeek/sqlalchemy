@@ -895,7 +895,7 @@ def join(
     left and right selectables may be not only core selectable
     objects such as :class:`.Table`, but also mapped classes or
     :class:`.AliasedClass` instances.   The "on" clause can
-    be a SQL expression, or an attribute or string name
+    be an SQL expression, or an attribute or string name
     referencing a configured :func:`.relationship`.
 
     :func:`.orm.join` is not commonly needed in modern usage,

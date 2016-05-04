@@ -426,7 +426,7 @@
         :tags: orm
         :tickets: 1995
 
-      Fixed bug where a column with a SQL or server side default
+      Fixed bug where a column with an SQL or server side default
       that was excluded from a mapping with include_properties
       or exclude_properties would result in UnmappedColumnError.
 
@@ -3460,7 +3460,7 @@
       The type/expression system now does a more complete job
       of determining the return type from an expression
       as well as the adaptation of the Python operator into
-      a SQL operator, based on the full left/right/operator
+      an SQL operator, based on the full left/right/operator
       of the given expression.  In particular
       the date/time/interval system created for Postgresql
       EXTRACT in has now been generalized into

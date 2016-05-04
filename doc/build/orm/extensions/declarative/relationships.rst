@@ -130,7 +130,7 @@ as well, passing the string name of the table as defined in the
         id = Column(Integer, primary_key=True)
         keywords = relationship("Keyword", secondary="keywords")
 
-As with traditional mapping, its generally not a good idea to use
+As with traditional mapping, it's generally not a good idea to use
 a :class:`.Table` as the "secondary" argument which is also mapped to
 a class, unless the :func:`.relationship` is declared with ``viewonly=True``.
 Otherwise, the unit-of-work system may attempt duplicate INSERT and

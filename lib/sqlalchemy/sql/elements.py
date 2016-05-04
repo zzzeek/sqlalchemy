@@ -198,7 +198,7 @@ class ClauseElement(Visitable):
         """return the 'constructor' for this ClauseElement.
 
         This is for the purposes for creating a new object of
-        this type.   Usually, its just the element's __class__.
+        this type.   Usually, it's just the element's __class__.
         However, the "Annotated" version of the object overrides
         to return the class of its proxied element.
 
@@ -494,7 +494,7 @@ class ColumnElement(operators.ColumnOperators, ClauseElement):
 
     While the most familiar kind of :class:`.ColumnElement` is the
     :class:`.Column` object, :class:`.ColumnElement` serves as the basis
-    for any unit that may be present in a SQL expression, including
+    for any unit that may be present in an SQL expression, including
     the expressions themselves, SQL functions, bound parameters,
     literal expressions, keywords such as ``NULL``, etc.
     :class:`.ColumnElement` is the ultimate base class for all such elements.
@@ -865,7 +865,7 @@ class BindParameter(ColumnElement):
 
         The return value is an instance of :class:`.BindParameter`; this
         is a :class:`.ColumnElement` subclass which represents a so-called
-        "placeholder" value in a SQL expression, the value of which is
+        "placeholder" value in an SQL expression, the value of which is
         supplied at the point at which the statement in executed against a
         database connection.
 
@@ -874,7 +874,7 @@ class BindParameter(ColumnElement):
         used at expression time.  In this way, it serves not just as
         a "placeholder" for eventual population, but also as a means of
         representing so-called "unsafe" values which should not be rendered
-        directly in a SQL statement, but rather should be passed along
+        directly in an SQL statement, but rather should be passed along
         to the :term:`DBAPI` as values which need to be correctly escaped
         and potentially handled for type-safety.
 
@@ -1034,7 +1034,7 @@ class BindParameter(ColumnElement):
 
         :param quote:
           True if this parameter name requires quoting and is not
-          currently known as a SQLAlchemy reserved word; this currently
+          currently known as an SQLAlchemy reserved word; this currently
           only applies to the Oracle backend, where bound names must
           sometimes be quoted.
 
@@ -1161,7 +1161,7 @@ class BindParameter(ColumnElement):
 
 
 class TypeClause(ClauseElement):
-    """Handle a type keyword in a SQL statement.
+    """Handle a type keyword in an SQL statement.
 
     Used by the ``Case`` statement.
 
@@ -1610,7 +1610,7 @@ class TextClause(Executable, ClauseElement):
 
 
 class Null(ColumnElement):
-    """Represent the NULL keyword in a SQL statement.
+    """Represent the NULL keyword in an SQL statement.
 
     :class:`.Null` is accessed as a constant via the
     :func:`.null` function.
@@ -1634,7 +1634,7 @@ class Null(ColumnElement):
 
 
 class False_(ColumnElement):
-    """Represent the ``false`` keyword, or equivalent, in a SQL statement.
+    """Represent the ``false`` keyword, or equivalent, in an SQL statement.
 
     :class:`.False_` is accessed as a constant via the
     :func:`.false` function.
@@ -1693,7 +1693,7 @@ class False_(ColumnElement):
 
 
 class True_(ColumnElement):
-    """Represent the ``true`` keyword, or equivalent, in a SQL statement.
+    """Represent the ``true`` keyword, or equivalent, in an SQL statement.
 
     :class:`.True_` is accessed as a constant via the
     :func:`.true` function.
@@ -1966,7 +1966,7 @@ or_ = BooleanClauseList.or_
 
 
 class Tuple(ClauseList, ColumnElement):
-    """Represent a SQL tuple."""
+    """Represent an SQL tuple."""
 
     def __init__(self, *clauses, **kw):
         """Return a :class:`.Tuple`.
@@ -2306,7 +2306,7 @@ class Cast(ColumnElement):
         with a specific type, but does not render the ``CAST`` expression
         in SQL.
 
-        :param expression: A SQL expression, such as a :class:`.ColumnElement`
+        :param expression: An SQL expression, such as a :class:`.ColumnElement`
          expression or a Python string which will be coerced into a bound
          literal value.
 
@@ -2354,7 +2354,7 @@ class TypeCoerce(ColumnElement):
     __visit_name__ = 'type_coerce'
 
     def __init__(self, expression, type_):
-        """Associate a SQL expression with a particular type, without rendering
+        """Associate an SQL expression with a particular type, without rendering
         ``CAST``.
 
         E.g.::
@@ -2402,7 +2402,7 @@ class TypeCoerce(ColumnElement):
         except that it does not render the ``CAST`` expression in the resulting
         statement.
 
-        :param expression: A SQL expression, such as a :class:`.ColumnElement`
+        :param expression: An SQL expression, such as a :class:`.ColumnElement`
          expression or a Python string which will be coerced into a bound
          literal value.
 
@@ -2439,7 +2439,7 @@ class TypeCoerce(ColumnElement):
 
 
 class Extract(ColumnElement):
-    """Represent a SQL EXTRACT clause, ``extract(field FROM expr)``."""
+    """Represent an SQL EXTRACT clause, ``extract(field FROM expr)``."""
 
     __visit_name__ = 'extract'
 
@@ -3706,7 +3706,7 @@ class ColumnClause(Immutable, ColumnElement):
     def _make_proxy(self, selectable, name=None, attach=True,
                     name_is_truncatable=False, **kw):
         # propagate the "is_literal" flag only if we are keeping our name,
-        # otherwise its considered to be a label
+        # otherwise it's considered to be a label
         is_literal = self.is_literal and (name is None or name == self.name)
         c = self._constructor(
             _as_truncated(name or self.name) if
@@ -3751,7 +3751,7 @@ class ReleaseSavepointClause(_IdentifiedClause):
 
 
 class quoted_name(util.MemoizedSlots, util.text_type):
-    """Represent a SQL identifier combined with quoting preferences.
+    """Represent an SQL identifier combined with quoting preferences.
 
     :class:`.quoted_name` is a Python unicode/str subclass which
     represents a particular identifier name along with a
@@ -4125,7 +4125,7 @@ def _no_literals(element):
         return element.__clause_element__()
     elif not isinstance(element, Visitable):
         raise exc.ArgumentError("Ambiguous literal: %r.  Use the 'text()' "
-                                "function to indicate a SQL expression "
+                                "function to indicate an SQL expression "
                                 "literal, or 'literal()' to indicate a "
                                 "bound value." % element)
     else:

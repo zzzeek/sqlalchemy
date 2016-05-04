@@ -648,7 +648,7 @@ class Query(object):
         """A readonly attribute which returns the current WHERE criterion for
         this Query.
 
-        This returned value is a SQL expression construct, or ``None`` if no
+        This returned value is an SQL expression construct, or ``None`` if no
         criterion has been established.
 
         """
@@ -1686,7 +1686,7 @@ class Query(object):
         )
 
     def join(self, *props, **kwargs):
-        """Create a SQL JOIN against this :class:`.Query` object's criterion
+        """Create an SQL JOIN against this :class:`.Query` object's criterion
         and apply generatively, returning the newly resulting :class:`.Query`.
 
         **Simple Relationship Joins**

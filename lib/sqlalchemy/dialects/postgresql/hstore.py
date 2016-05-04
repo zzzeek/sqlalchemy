@@ -137,7 +137,7 @@ class HSTORE(sqltypes.Indexable, sqltypes.Concatenable, sqltypes.TypeEngine):
 
         def has_key(self, other):
             """Boolean expression.  Test for presence of a key.  Note that the
-            key may be a SQLA expression.
+            key may be an SQLA expression.
             """
             return self.operate(HAS_KEY, other, result_type=sqltypes.Boolean)
 
@@ -169,13 +169,13 @@ class HSTORE(sqltypes.Indexable, sqltypes.Concatenable, sqltypes.TypeEngine):
 
         def defined(self, key):
             """Boolean expression.  Test for presence of a non-NULL value for
-            the key.  Note that the key may be a SQLA expression.
+            the key.  Note that the key may be an SQLA expression.
             """
             return _HStoreDefinedFunction(self.expr, key)
 
         def delete(self, key):
             """HStore expression.  Returns the contents of this hstore with the
-            given key deleted.  Note that the key may be a SQLA expression.
+            given key deleted.  Note that the key may be an SQLA expression.
             """
             if isinstance(key, dict):
                 key = _serialize_hstore(key)
@@ -246,7 +246,7 @@ ischema_names['hstore'] = HSTORE
 
 
 class hstore(sqlfunc.GenericFunction):
-    """Construct an hstore value within a SQL expression using the
+    """Construct an hstore value within an SQL expression using the
     Postgresql ``hstore()`` function.
 
     The :class:`.hstore` function accepts one or two arguments as described

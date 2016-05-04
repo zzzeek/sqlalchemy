@@ -369,7 +369,7 @@ func = _FunctionGenerator()
    In a few exception cases, the :data:`.func` accessor
    will redirect a name to a built-in expression such as :func:`.cast`
    or :func:`.extract`, as these names have well-known meaning
-   but are not exactly the same as "functions" from a SQLAlchemy
+   but are not exactly the same as "functions" from an SQLAlchemy
    perspective.
 
    .. versionadded:: 0.8 :data:`.func` can return non-function expression

@@ -18,7 +18,7 @@ def load_name_range(start, end, invalidate=False):
     The cache option we set up is called "name_range", indicating
     a range of names for the Person class.
 
-    The `Person.addresses` collections are also cached.  Its basically
+    The `Person.addresses` collections are also cached.  It's basically
     another level of tuning here, as that particular cache option
     can be transparently replaced with joinedload(Person.addresses).
     The effect is that each Person and their Address collection

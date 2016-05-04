@@ -771,7 +771,7 @@
         :tickets: 3159
 
         Fixed bug where Postgresql JSON type was not able to persist or
-        otherwise render a SQL NULL column value, rather than a JSON-encoded
+        otherwise render an SQL NULL column value, rather than a JSON-encoded
         ``'null'``.  To support this case, changes are as follows:
 
         * The value :func:`.null` can now be specified, which will always
@@ -875,7 +875,7 @@
         :tickets: 3130
         :versions: 1.0.0b1
 
-        Fixed a SQLite join rewriting issue where a subquery that is embedded
+        Fixed an SQLite join rewriting issue where a subquery that is embedded
         as a scalar subquery such as within an IN would receive inappropriate
         substitutions from the enclosing query, if the same table were present
         inside the subquery as were in the enclosing query such as in a
