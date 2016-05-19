@@ -2216,7 +2216,7 @@ class DDLCompiler(Compiled):
         text = "\nCREATE "
         if table._prefixes:
             text += " ".join(table._prefixes) + " "
-        text += "TABLE " + preparer.format_table(table) + " " + self.table_options(table) + " ("
+        text += "TABLE " + preparer.format_table(table) + " " + self.table_options(table) + "("
 
         separator = "\n"
 
