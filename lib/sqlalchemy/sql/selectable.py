@@ -183,6 +183,25 @@ def lateral(selectable, name=None):
     return selectable.lateral(name=name)
 
 
+def tablesample(selectable, sampling, name=None, seed=None):
+    """Return a :class:`.TableSample` object.
+
+    :class:`.TableSample` is an :class:`.Alias` subclass that represents
+    a table with the TABLESAMPLE clause applied to it.
+
+    The TABLESAMPLE clause allows selecting a randomly selected approximate
+    percentage of rows from a table. It supports multiple sampling methods,
+    most commonly BERNOULLI and SYSTEM.
+
+    :param sampling: a ``float`` percentage between 0 and 100 or
+        :class:`.functions.Function`.
+
+    :param seed: any real-valued SQL expression.
+
+    """
+    return selectable.sample(sampling, name=name, seed=seed)
+
+
 class Selectable(ClauseElement):
     """mark a class as being selectable"""
     __visit_name__ = 'selectable'
@@ -449,6 +468,15 @@ class FromClause(Selectable):
 
         """
         return Lateral(self, name)
+
+    def sample(self, sampling, name=None, seed=None):
+        """Return a TABLESAMPLE alias of this :class:`.FromClause`.
+
+        The return value is the :class:`.TableSample` construct also
+        provided by the top-level :func:`~.expression.tablesample` function.
+
+        """
+        return TableSample(self, sampling, name, seed)
 
     def is_derived_from(self, fromclause):
         """Return True if this FromClause is 'derived' from the given
@@ -1242,6 +1270,32 @@ class Lateral(Alias):
     """
 
     __visit_name__ = 'lateral'
+
+
+class TableSample(Alias):
+    """Represent a TABLESAMPLE clause.
+
+    This object is constructed from the :func:`~.expression.tablesample` module
+    level function as well as the :meth:`.FromClause.sample` method available
+    on all :class:`.FromClause` subclasses.
+
+    """
+
+    __visit_name__ = 'tablesample'
+
+    def __init__(self, selectable, sampling,
+                 name=None,
+                 seed=None):
+        self.sampling = sampling
+        self.seed = seed
+        super(TableSample, self).__init__(selectable, name=name)
+
+    @util.dependencies("sqlalchemy.sql.functions")
+    def _get_method(self, functions):
+        if isinstance(self.sampling, functions.Function):
+            return self.sampling
+        else:
+            return functions.func.system(self.sampling)
 
 
 class CTE(Generative, HasSuffixes, Alias):
