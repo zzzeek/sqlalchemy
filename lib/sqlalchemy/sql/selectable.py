@@ -183,6 +183,27 @@ def lateral(selectable, name=None):
     return selectable.lateral(name=name)
 
 
+def tablesample(selectable, arg, name=None, method=None, seed=None):
+    """Return a :class:`.TableSample` object.
+
+    :class:`.TableSample` is an :class:`.Alias` subclass that represents
+    a table with the TABLESAMPLE clause applied to it.
+
+    The TABLESAMPLE clause allows selecting a randomly selected approximate
+    percentage of rows from a table. It supports multiple sampling methods,
+    most commonly BERNOULLI and SYSTEM.
+
+    :param arg: a ``float`` percentage between 0 and 100.
+
+    :param method: string name of the method to use.
+        Commonly accepted methods are ``"BERNOULLI"`` and ``"SYSTEM"``.
+
+    :param seed: any real-valued SQL expression.
+
+    """
+    return selectable.sample(arg, name=name, method=method, seed=seed)
+
+
 class Selectable(ClauseElement):
     """mark a class as being selectable"""
     __visit_name__ = 'selectable'
@@ -449,6 +470,15 @@ class FromClause(Selectable):
 
         """
         return Lateral(self, name)
+
+    def sample(self, arg, name=None, method=None, seed=None):
+        """Return a TABLESAMPLE alias of this :class:`.FromClause`.
+
+        The return value is the :class:`.TableSample` construct also
+        provided by the top-level :func:`~.expression.tablesample` function.
+
+        """
+        return TableSample(self, arg, name, method, seed)
 
     def is_derived_from(self, fromclause):
         """Return True if this FromClause is 'derived' from the given
@@ -1242,6 +1272,27 @@ class Lateral(Alias):
     """
 
     __visit_name__ = 'lateral'
+
+
+class TableSample(Alias):
+    """Represent a TABLESAMPLE clause.
+
+    This object is constructed from the :func:`~.expression.tablesample` module
+    level function as well as the :meth:`.FromClause.sample` method available
+    on all :class:`.FromClause` subclasses.
+
+    """
+
+    __visit_name__ = 'tablesample'
+
+    def __init__(self, selectable, arg,
+                 name=None,
+                 method=None,
+                 seed=None):
+        self.arg = arg
+        self.method = method or 'SYSTEM'
+        self.seed = seed
+        super(TableSample, self).__init__(selectable, name=name)
 
 
 class CTE(Generative, HasSuffixes, Alias):
