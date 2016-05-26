@@ -1325,10 +1325,9 @@ class SQLCompiler(Compiled):
         return "LATERAL %s" % self.visit_alias(lateral, **kw)
 
     def visit_tablesample(self, tablesample, asfrom=False, **kw):
-        text = "%s TABLESAMPLE %s(%s)" % (
+        text = "%s TABLESAMPLE %s" % (
             self.visit_alias(tablesample, asfrom=True, **kw),
-            tablesample.method,
-            tablesample.arg)
+            tablesample._get_method()._compiler_dispatch(self, **kw))
 
         if tablesample.seed is not None:
             text += " REPEATABLE (%s)" % (

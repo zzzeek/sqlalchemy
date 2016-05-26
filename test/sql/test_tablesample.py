@@ -1,6 +1,6 @@
 from sqlalchemy.testing import fixtures
 from sqlalchemy.testing import AssertsCompiledSQL, assert_raises_message
-from sqlalchemy.sql import select, func
+from sqlalchemy.sql import select, func, text
 from sqlalchemy.engine import default
 from sqlalchemy import exc
 from sqlalchemy import Table, Integer, String, Column
@@ -28,26 +28,26 @@ class TableSampleTest(fixtures.TablesTest, AssertsCompiledSQL):
         # context of a FROM clause
         self.assert_compile(
             tablesample(table1, 1, name='alias'),
-            'people AS alias TABLESAMPLE SYSTEM(1)'
+            'people AS alias TABLESAMPLE system(:system_1)'
         )
 
         self.assert_compile(
             table1.sample(1, name='alias'),
-            'people AS alias TABLESAMPLE SYSTEM(1)'
+            'people AS alias TABLESAMPLE system(:system_1)'
         )
 
         self.assert_compile(
-            tablesample(table1, 1, name='alias', method='BERNOULLI',
+            tablesample(table1, func.bernoulli(1), name='alias',
                         seed=func.random()),
-            'people AS alias TABLESAMPLE BERNOULLI(1) REPEATABLE (random())'
+            'people AS alias TABLESAMPLE bernoulli(:bernoulli_1) REPEATABLE (random())'
         )
 
     def test_select_from(self):
         table1 = self.tables.people
 
         self.assert_compile(
-            select([table1.sample(1, name='alias').c.people_id]),
+            select([table1.sample(text('1'), name='alias').c.people_id]),
             'SELECT alias.people_id FROM '
-            'people AS alias TABLESAMPLE SYSTEM(1)'
+            'people AS alias TABLESAMPLE system(1)'
         )
 
