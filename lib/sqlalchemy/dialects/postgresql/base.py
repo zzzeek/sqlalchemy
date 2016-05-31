@@ -1159,6 +1159,8 @@ class PGCompiler(compiler.SQLCompiler):
 
         if select._for_update_arg.read:
             tmp = " FOR SHARE"
+        elif select._for_update_arg.no_key:
+            tmp = " FOR NO KEY UPDATE"
         else:
             tmp = " FOR UPDATE"
 

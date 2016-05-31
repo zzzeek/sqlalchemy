@@ -1388,6 +1388,12 @@ class Query(object):
          * ``'read'`` - translates to ``LOCK IN SHARE MODE`` (for MySQL),
            and ``FOR SHARE`` (for PostgreSQL)
 
+         * ``'no_key'`` - translates to ``FOR NO KEY UPDATE`` (for PostgreSQL),
+           and ``FOR UPDATE`` on other backends
+
+         * ``'no_key_nowait'`` - translates to ``FOR NO KEY UPDATE NOWAIT`` (for PostgreSQL),
+           and ``FOR UPDATE`` on other backends
+
         .. seealso::
 
             :meth:`.Query.with_for_update` - improved API for
@@ -1397,7 +1403,7 @@ class Query(object):
         self._for_update_arg = LockmodeArg.parse_legacy_query(mode)
 
     @_generative()
-    def with_for_update(self, read=False, nowait=False, of=None):
+    def with_for_update(self, read=False, nowait=False, of=None, no_key=None):
         """return a new :class:`.Query` with the specified options for the
         ``FOR UPDATE`` clause.
 
@@ -1411,10 +1417,12 @@ class Query(object):
         E.g.::
 
             q = sess.query(User).with_for_update(nowait=True, of=User)
+            q = sess.query(User).with_for_update(nowait=True, no_key=True)
 
-        The above query on a Postgresql backend will render like::
+        The above queries on a Postgresql backend will render like, accordingly::
 
             SELECT users.id AS users_id FROM users FOR UPDATE OF users NOWAIT
+            SELECT users.id AS users_id FROM users FOR NO KEY UPDATE NOWAIT
 
         .. versionadded:: 0.9.0 :meth:`.Query.with_for_update` supersedes
            the :meth:`.Query.with_lockmode` method.
@@ -1425,7 +1433,7 @@ class Query(object):
             full argument and behavioral description.
 
         """
-        self._for_update_arg = LockmodeArg(read=read, nowait=nowait, of=of)
+        self._for_update_arg = LockmodeArg(read=read, nowait=nowait, of=of, no_key=no_key)
 
     @_generative()
     def params(self, *args, **kwargs):
@@ -3411,6 +3419,7 @@ class LockmodeArg(ForUpdateArg):
         if mode in (None, False):
             return None
 
+        no_key = nowait = read = False
         if mode == "read":
             read = True
             nowait = False
@@ -3419,11 +3428,15 @@ class LockmodeArg(ForUpdateArg):
         elif mode == "update_nowait":
             nowait = True
             read = False
+        elif mode == "no_key":
+            no_key = True
+        elif mode == "no_key_nowait":
+            no_key = nowait = True
         else:
             raise sa_exc.ArgumentError(
                 "Unknown with_lockmode argument: %r" % mode)
 
-        return LockmodeArg(read=read, nowait=nowait)
+        return LockmodeArg(read=read, nowait=nowait, no_key=no_key)
 
 
 class _QueryEntity(object):

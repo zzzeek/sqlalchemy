@@ -602,6 +602,43 @@ class CompileTest(fixtures.TestBase, AssertsCompiledSQL):
             "FROM mytable WHERE mytable.myid = %(myid_1)s "
             "FOR SHARE OF mytable NOWAIT")
 
+        self.assert_compile(
+            table1.select(table1.c.myid == 7).
+            with_for_update(no_key=True, nowait=True,
+                            of=[table1.c.myid, table1.c.name]),
+            "SELECT mytable.myid, mytable.name, mytable.description "
+            "FROM mytable WHERE mytable.myid = %(myid_1)s "
+            "FOR NO KEY UPDATE OF mytable NOWAIT")
+
+        self.assert_compile(
+            table1.select(table1.c.myid == 7).
+            with_for_update(no_key=True,
+                            of=[table1.c.myid, table1.c.name]),
+            "SELECT mytable.myid, mytable.name, mytable.description "
+            "FROM mytable WHERE mytable.myid = %(myid_1)s "
+            "FOR NO KEY UPDATE OF mytable")
+
+        self.assert_compile(
+            table1.select(table1.c.myid == 7).
+            with_for_update(no_key=True),
+            "SELECT mytable.myid, mytable.name, mytable.description "
+            "FROM mytable WHERE mytable.myid = %(myid_1)s "
+            "FOR NO KEY UPDATE")
+
+        self.assert_compile(
+            table1.select(table1.c.myid == 7).
+            with_for_update(no_key=True),
+            "SELECT mytable.myid, mytable.name, mytable.description "
+            "FROM mytable WHERE mytable.myid = %(myid_1)s "
+            "FOR NO KEY UPDATE")
+
+        assert_raises(
+            exc.ArgumentError,
+            table1.select(table1.c.myid == 7).with_for_update,
+            no_key=True,
+            read=True
+        )
+
         ta = table1.alias()
         self.assert_compile(
             ta.select(ta.c.myid == 7).

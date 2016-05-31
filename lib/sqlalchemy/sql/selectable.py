@@ -1673,7 +1673,7 @@ class ForUpdateArg(ClauseElement):
 
     @classmethod
     def parse_legacy_select(self, arg):
-        """Parse the for_update arugment of :func:`.select`.
+        """Parse the for_update argument of :func:`.select`.
 
         :param mode: Defines the lockmode to use.
 
@@ -1688,6 +1688,12 @@ class ForUpdateArg(ClauseElement):
             ``'read'`` - translates to ``LOCK IN SHARE MODE`` (for MySQL),
             and ``FOR SHARE`` (for PostgreSQL)
 
+            ``'no_key'`` - translates to ``FOR NO KEY UPDATE`` (for PostgreSQL),
+            and ``FOR UPDATE`` on other backends
+
+            ``'no_key_nowait'`` - translates to ``FOR NO KEY UPDATE NOWAIT`` (for PostgreSQL),
+            and ``FOR UPDATE`` on other backends
+
             ``'read_nowait'`` - translates to ``FOR SHARE NOWAIT``
             (supported by PostgreSQL). ``FOR SHARE`` and
             ``FOR SHARE NOWAIT`` (PostgreSQL).
@@ -1696,17 +1702,21 @@ class ForUpdateArg(ClauseElement):
         if arg in (None, False):
             return None
 
-        nowait = read = False
+        nowait = read = no_key = False
         if arg == 'nowait':
             nowait = True
         elif arg == 'read':
             read = True
         elif arg == 'read_nowait':
             read = nowait = True
+        elif arg == 'no_key':
+            no_key = True
+        elif arg == 'no_key_nowait':
+            no_key = nowait = True
         elif arg is not True:
             raise exc.ArgumentError("Unknown for_update argument: %r" % arg)
 
-        return ForUpdateArg(read=read, nowait=nowait)
+        return ForUpdateArg(read=read, nowait=nowait, no_key=no_key)
 
     @property
     def legacy_for_update_value(self):
@@ -1723,7 +1733,7 @@ class ForUpdateArg(ClauseElement):
         if self.of is not None:
             self.of = [clone(col, **kw) for col in self.of]
 
-    def __init__(self, nowait=False, read=False, of=None):
+    def __init__(self, nowait=False, read=False, of=None, no_key=None):
         """Represents arguments specified to :meth:`.Select.for_update`.
 
         .. versionadded:: 0.9.0
@@ -1731,11 +1741,15 @@ class ForUpdateArg(ClauseElement):
 
         self.nowait = nowait
         self.read = read
+        self.no_key = no_key
         if of is not None:
             self.of = [_interpret_as_column_or_from(elem)
                        for elem in util.to_list(of)]
         else:
             self.of = None
+
+        if self.read and self.no_key:
+            raise exc.ArgumentError("Bad argument values: 'no_key' and 'read' cannot be True together.")
 
 
 class SelectBase(HasCTE, Executable, FromClause):
@@ -1873,19 +1887,23 @@ class GenerativeSelect(SelectBase):
         self._for_update_arg = ForUpdateArg.parse_legacy_select(value)
 
     @_generative
-    def with_for_update(self, nowait=False, read=False, of=None):
+    def with_for_update(self, nowait=False, read=False, of=None, no_key=None):
         """Specify a ``FOR UPDATE`` clause for this :class:`.GenerativeSelect`.
 
         E.g.::
 
-            stmt = select([table]).with_for_update(nowait=True)
+            stmt = select([table]).with_for_update(nowait=True, no_key=True)
 
-        On a database like Postgresql or Oracle, the above would render a
+        On a database like Postgresql, the above would render a
         statement like::
+
+            SELECT table.a, table.b FROM table FOR NO KEY UPDATE NOWAIT
+
+        on Oracle::
 
             SELECT table.a, table.b FROM table FOR UPDATE NOWAIT
 
-        on other backends, the ``nowait`` option is ignored and instead
+        on other backends, the ``nowait`` and ``no_key`` options is ignored and instead
         would produce::
 
             SELECT table.a, table.b FROM table FOR UPDATE
@@ -1911,7 +1929,7 @@ class GenerativeSelect(SelectBase):
         .. versionadded:: 0.9.0
 
         """
-        self._for_update_arg = ForUpdateArg(nowait=nowait, read=read, of=of)
+        self._for_update_arg = ForUpdateArg(nowait=nowait, read=read, of=of, no_key=no_key)
 
     @_generative
     def apply_labels(self):
