@@ -16,7 +16,7 @@ class LegacyLockModeTest(_fixtures.FixtureTest):
         User, users = cls.classes.User, cls.tables.users
         mapper(User, users)
 
-    def _assert_legacy(self, arg, read=False, nowait=False):
+    def _assert_legacy(self, arg, read=False, nowait=False, no_key=False):
         User = self.classes.User
         s = Session()
         q = s.query(User).with_lockmode(arg)
@@ -29,9 +29,11 @@ class LegacyLockModeTest(_fixtures.FixtureTest):
 
         assert q._for_update_arg.read is read
         assert q._for_update_arg.nowait is nowait
+        assert q._for_update_arg.no_key is no_key
 
         assert sel._for_update_arg.read is read
         assert sel._for_update_arg.nowait is nowait
+        assert sel._for_update_arg.no_key is no_key
 
     def test_false_legacy(self):
         self._assert_legacy(None)
@@ -41,6 +43,12 @@ class LegacyLockModeTest(_fixtures.FixtureTest):
 
     def test_nowait_legacy(self):
         self._assert_legacy("update_nowait", nowait=True)
+
+    def test_no_key_nowait_legacy(self):
+        self._assert_legacy("no_key_nowait", nowait=True, no_key=True)
+
+    def test_no_key_legacy(self):
+        self._assert_legacy("no_key", no_key=True)
 
     def test_read_legacy(self):
         self._assert_legacy("read", read=True)
@@ -53,17 +61,18 @@ class LegacyLockModeTest(_fixtures.FixtureTest):
             sess.query(User.id).with_lockmode, 'unknown_mode'
         )
 
+
 class ForUpdateTest(_fixtures.FixtureTest):
     @classmethod
     def setup_mappers(cls):
         User, users = cls.classes.User, cls.tables.users
         mapper(User, users)
 
-    def _assert(self, read=False, nowait=False, of=None,
+    def _assert(self, read=False, nowait=False, of=None, no_key=None,
                     assert_q_of=None, assert_sel_of=None):
         User = self.classes.User
         s = Session()
-        q = s.query(User).with_for_update(read=read, nowait=nowait, of=of)
+        q = s.query(User).with_for_update(read=read, nowait=nowait, of=of, no_key=no_key)
         sel = q._compile_context().statement
 
         assert q._for_update_arg.read is read
@@ -72,8 +81,14 @@ class ForUpdateTest(_fixtures.FixtureTest):
         assert q._for_update_arg.nowait is nowait
         assert sel._for_update_arg.nowait is nowait
 
+        assert q._for_update_arg.no_key is no_key
+        assert sel._for_update_arg.no_key is no_key
+
         eq_(q._for_update_arg.of, assert_q_of)
         eq_(sel._for_update_arg.of, assert_sel_of)
+
+    def test_no_key(self):
+        self._assert(no_key=True)
 
     def test_read(self):
         self._assert(read=True)
@@ -169,6 +184,22 @@ class CompileTest(_fixtures.FixtureTest, AssertsCompiledSQL):
                 with_for_update(of=[User, Address]),
             "SELECT users.id AS users_id, addresses.id AS addresses_id "
             "FROM users, addresses FOR UPDATE OF users, addresses",
+            dialect="postgresql"
+        )
+
+    def test_postgres_for_no_key_update(self):
+        User = self.classes.User
+        sess = Session()
+        self.assert_compile(sess.query(User.id).with_for_update(no_key=True),
+            "SELECT users.id AS users_id FROM users FOR NO KEY UPDATE",
+            dialect="postgresql"
+        )
+
+    def test_postgres_for_no_key_nowait_update(self):
+        User = self.classes.User
+        sess = Session()
+        self.assert_compile(sess.query(User.id).with_for_update(no_key=True, nowait=True),
+            "SELECT users.id AS users_id FROM users FOR NO KEY UPDATE NOWAIT",
             dialect="postgresql"
         )
 
