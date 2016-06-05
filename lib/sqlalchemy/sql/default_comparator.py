@@ -146,6 +146,7 @@ def _in_impl(expr, op, seq_or_selectable, negate_op, **kw):
         # appropriately, i.e. "not (x IN ())" should not return NULL
         # values for x.
 
+        assert False, 'empty in'
         util.warn('The IN-predicate on "%s" was invoked with an '
                   'empty sequence. This results in a '
                   'contradiction, which nonetheless can be '
