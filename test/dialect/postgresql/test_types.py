@@ -14,7 +14,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.dialects.postgresql import HSTORE, hstore, array, \
     INT4RANGE, INT8RANGE, NUMRANGE, DATERANGE, TSRANGE, TSTZRANGE, \
-    JSON, JSONB
+    JSON, JSONB, CHAR, VARCHAR, TEXT
 import decimal
 from sqlalchemy import util
 from sqlalchemy.testing.util import round_decimal
@@ -2400,6 +2400,86 @@ class DateTimeTZRangeTests(_RangeTypeMixin, fixtures.TablesTest):
 
     def _data_obj(self):
         return self.extras().DateTimeTZRange(*self.tstzs())
+
+
+class RegexpTest(AssertsCompiledSQL, fixtures.TestBase):
+    __dialect__ = 'postgresql'
+
+    def setup(self):
+        metadata = MetaData()
+        self.test_table = Table('test_table', metadata,
+                                Column('id', Integer, primary_key=True),
+                                Column('char_col', CHAR),
+                                Column('varchar_col', VARCHAR),
+                                Column('text_col', TEXT))
+
+    def _test_where(self, whereclause, expected):
+        stmt = select([self.test_table]).where(whereclause)
+        self.assert_compile(
+            stmt,
+            "SELECT test_table.id, test_table.char_col, test_table."
+            "varchar_col, test_table.text_col FROM test_table WHERE %s" %
+            expected)
+
+    def test_char_regexp(self):
+        self._test_where(
+            self.test_table.c.char_col.regexp('.*'),
+            "(test_table.char_col ~ %(char_col_1)s)")
+
+    def test_varchar_regexp(self):
+        self._test_where(
+            self.test_table.c.varchar_col.regexp('.*'),
+            "(test_table.varchar_col ~ %(varchar_col_1)s)")
+
+    def test_text_regexp(self):
+        self._test_where(
+            self.test_table.c.text_col.regexp('.*'),
+            "(test_table.text_col ~ %(text_col_1)s)")
+
+    def test_char_iregexp(self):
+        self._test_where(
+            self.test_table.c.char_col.iregexp('.*'),
+            "(test_table.char_col ~* %(char_col_1)s)")
+
+    def test_varchar_iregexp(self):
+        self._test_where(
+            self.test_table.c.varchar_col.iregexp('.*'),
+            "(test_table.varchar_col ~* %(varchar_col_1)s)")
+
+    def test_text_iregexp(self):
+        self._test_where(
+            self.test_table.c.text_col.iregexp('.*'),
+            "(test_table.text_col ~* %(text_col_1)s)")
+
+    def test_char_not_regexp(self):
+        self._test_where(
+            ~self.test_table.c.char_col.regexp('.*'),
+            "(test_table.char_col !~ %(char_col_1)s)")
+
+    def test_varchar_not_regexp(self):
+        self._test_where(
+            ~self.test_table.c.varchar_col.regexp('.*'),
+            "(test_table.varchar_col !~ %(varchar_col_1)s)")
+
+    def test_text_not_regexp(self):
+        self._test_where(
+            ~self.test_table.c.text_col.regexp('.*'),
+            "(test_table.text_col !~ %(text_col_1)s)")
+
+    def test_char_not_iregexp(self):
+        self._test_where(
+            ~self.test_table.c.char_col.iregexp('.*'),
+            "(test_table.char_col !~* %(char_col_1)s)")
+
+    def test_varchar_not_iregexp(self):
+        self._test_where(
+            ~self.test_table.c.varchar_col.iregexp('.*'),
+            "(test_table.varchar_col !~* %(varchar_col_1)s)")
+
+    def test_text_not_iregexp(self):
+        self._test_where(
+            ~self.test_table.c.text_col.iregexp('.*'),
+            "(test_table.text_col !~* %(text_col_1)s)")
 
 
 class JSONTest(AssertsCompiledSQL, fixtures.TestBase):

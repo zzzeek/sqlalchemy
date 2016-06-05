@@ -44,6 +44,8 @@ construction arguments, are as follows:
 .. autoclass:: BYTEA
     :members: __init__
 
+.. autoclass:: CHAR
+
 .. autoclass:: CIDR
 
 
@@ -85,11 +87,20 @@ construction arguments, are as follows:
 .. autoclass:: REAL
     :members: __init__
 
+.. autoclass:: TEXT
+
 .. autoclass:: TSVECTOR
     :members: __init__
 
 .. autoclass:: UUID
     :members: __init__
+
+.. autoclass:: VARCHAR
+
+The string types get additional functionality from the following mixin:
+
+.. autoclass:: sqlalchemy.dialects.postgresql.base._PGStringOps
+    :members: Comparator
 
 
 Range Types
