@@ -619,7 +619,7 @@ import datetime as dt
 
 from ... import sql, schema, exc, util
 from ...engine import default, reflection
-from ...sql import compiler, expression
+from ...sql import compiler, default_comparator, expression
 from ... import types as sqltypes
 
 try:
@@ -627,8 +627,7 @@ try:
 except ImportError:
     _python_UUID = None
 
-from sqlalchemy.types import INTEGER, BIGINT, SMALLINT, VARCHAR, \
-    CHAR, TEXT, FLOAT, NUMERIC, \
+from sqlalchemy.types import INTEGER, BIGINT, SMALLINT, FLOAT, NUMERIC, \
     DATE, BOOLEAN, REAL
 
 RESERVED_WORDS = set(
@@ -652,6 +651,67 @@ RESERVED_WORDS = set(
 _DECIMAL_TYPES = (1231, 1700)
 _FLOAT_TYPES = (700, 701, 1021, 1022)
 _INT_TYPES = (20, 21, 23, 26, 1005, 1007, 1016)
+
+
+def regexp_op(a, b):
+    raise NotImplementedError()
+
+
+def iregexp_op(a, b):
+    raise NotImplementedError()
+
+
+def notregexp_op(a, b):
+    raise NotImplementedError()
+
+
+def notiregexp_op(a, b):
+    raise NotImplementedError()
+
+
+class _PGStringOps(object):
+    """This mixin provides functionality for the POSIX regular expresssion
+    operators listed in Table 9-12 of the postgres documentation. It is
+    used by all the string types provided in the postgres dialect.
+    """
+    class Comparator(sqltypes.String.Comparator):
+        """Define comparison operations for string types."""
+        def regexp(self, other):
+            """Boolean expression. Returns true if the column text matches
+            the given regular expression (case sensitive).
+            """
+            return default_comparator._boolean_compare(
+                self.expr, regexp_op, other, negate=notregexp_op)
+
+        def iregexp(self, other):
+            """Boolean expression. Returns true if the column text matches
+            the given regular expression (case insensitive).
+            """
+            return default_comparator._boolean_compare(
+                self.expr, iregexp_op, other, negate=notiregexp_op)
+
+    comparator_factory = Comparator
+
+
+class CHAR(_PGStringOps, sqltypes.CHAR):
+    """Implement the CHAR type, adding in Postgresql-specific string
+    operators.
+
+    """
+
+
+class VARCHAR(_PGStringOps, sqltypes.VARCHAR):
+    """Implement the VARCHAR type, adding in Postgresql-specific string
+    operators.
+
+    """
+
+
+class TEXT(_PGStringOps, sqltypes.TEXT):
+    """Implement the TEXT type, adding in Postgresql-specific string
+    operators.
+
+    """
 
 
 class BYTEA(sqltypes.LargeBinary):
@@ -1088,6 +1148,24 @@ class PGCompiler(compiler.SQLCompiler):
             self.process(element.target, **kw),
             self.process(element.order_by, **kw)
         )
+
+    def visit_regexp_op_binary(self, binary, operator, **kw):
+        return self._binary_op(binary, "~", **kw)
+
+    def visit_iregexp_op_binary(self, binary, operator, **kw):
+        return self._binary_op(binary, "~*", **kw)
+
+    def visit_notregexp_op_binary(self, binary, operator, **kw):
+        return self._binary_op(binary, "!~", **kw)
+
+    def visit_notiregexp_op_binary(self, binary, operator, **kw):
+        return self._binary_op(binary, "!~*", **kw)
+
+    def _binary_op(self, binary, opstring, **kw):
+        return "%s %s %s" % (
+                        self.process(binary.left, **kw),
+                        opstring,
+                        self.process(binary.right, **kw))
 
     def visit_match_op_binary(self, binary, operator, **kw):
         if "postgresql_regconfig" in binary.modifiers:
