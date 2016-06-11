@@ -486,6 +486,15 @@ class CreateTable(_CreateDropBase):
                         ]
         self.include_foreign_key_constraints = include_foreign_key_constraints
 
+        if element.comment is not None:
+            event.listen(element, 'after_create',
+                         SetTableComment(element, element.comment))
+
+        for col in element.columns:
+            if col.comment is not None:
+                event.listen(element, 'after_create',
+                             SetColumnComment(col, col.comment))
+
 
 class _DropView(_CreateDropBase):
     """Semi-public 'DROP VIEW' construct.
@@ -659,6 +668,42 @@ class DropConstraint(_CreateDropBase):
         super(DropConstraint, self).__init__(element, **kw)
         element._create_rule = util.portable_instancemethod(
             self._create_rule_disable)
+
+
+class SetTableComment(_CreateDropBase):
+    """Represent a COMMENT ON TABLE IS statement."""
+
+    __visit_name__ = "set_table_comment"
+
+    def __init__(self, element, comment, **kw):
+        self.comment = comment
+        super(SetTableComment, self).__init__(element, **kw)
+        element._create_rule = util.portable_instancemethod(
+            self._create_rule_disable)
+
+
+class DropTableComment(_CreateDropBase):
+    """Represent a COMMENT ON TABLE IS NULL statement."""
+
+    __visit_name__ = "drop_table_comment"
+
+
+class SetColumnComment(_CreateDropBase):
+    """Represent a COMMENT ON COLUMN IS statement."""
+
+    __visit_name__ = "set_column_comment"
+
+    def __init__(self, element, comment, **kw):
+        self.comment = comment
+        super(SetColumnComment, self).__init__(element, **kw)
+        element._create_rule = util.portable_instancemethod(
+            self._create_rule_disable)
+
+
+class DropColumnComment(_CreateDropBase):
+    """Represent a COMMENT ON COLUMN IS NULL statement."""
+
+    __visit_name__ = "drop_column_comment"
 
 
 class DDLBase(SchemaVisitor):

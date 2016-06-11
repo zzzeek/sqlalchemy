@@ -1294,6 +1294,17 @@ class OracleDialect(default.DefaultDialect):
         return columns
 
     @reflection.cache
+    def get_table_comment(self, connection, table_name, schema=None, **kw):
+        COMMENT_SQL = """
+            SELECT table_name, comments
+            FROM all_tab_comments
+            WHERE table_name = :table_name
+        """
+
+        c = connection.execute(sql.text(COMMENT_SQL), table_name=table_name)
+        return c.scalar()
+
+    @reflection.cache
     def get_indexes(self, connection, table_name, schema=None,
                     resolve_synonyms=False, dblink='', **kw):
 

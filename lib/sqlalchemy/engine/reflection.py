@@ -506,6 +506,10 @@ class Inspector(object):
         return self.dialect.get_unique_constraints(
             self.bind, table_name, schema, info_cache=self.info_cache, **kw)
 
+    def get_table_comment(self, table_name, schema=None, **kw):
+        return self.dialect.get_table_comment(
+            self.bind, table_name, schema, info_cache=self.info_cache, **kw)
+
     def get_check_constraints(self, table_name, schema=None, **kw):
         """Return information about check constraints in `table_name`.
 
@@ -616,6 +620,8 @@ class Inspector(object):
             table_name, schema, table, cols_by_orig_name,
             include_columns, exclude_columns, reflection_options)
 
+        table.comment = self.get_table_comment(table_name, schema)
+
     def _reflect_column(
         self, table, col_d, include_columns,
             exclude_columns, cols_by_orig_name):
@@ -635,7 +641,7 @@ class Inspector(object):
 
         col_kw = dict(
             (k, col_d[k])
-            for k in ['nullable', 'autoincrement', 'quote', 'info', 'key']
+            for k in ['nullable', 'autoincrement', 'quote', 'info', 'key', 'comment']
             if k in col_d
         )
 

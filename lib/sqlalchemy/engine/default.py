@@ -36,6 +36,7 @@ class DefaultDialect(interfaces.Dialect):
     type_compiler = compiler.GenericTypeCompiler
     preparer = compiler.IdentifierPreparer
     supports_alter = True
+    supports_comments = True
 
     # the first value we'd get for an autoincrement
     # column.
