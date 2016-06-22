@@ -710,8 +710,8 @@ class DATETIMEOFFSET(sqltypes.TypeEngine):
     
     def bind_processor(self, dialect):
         def process(value):
-            mstz = value.strftime("%z")[:3] + ':' + value.strftime("%z")[3:]
-            return value.strftime("%Y-%m-%d %H:%M:%S.%f") + mstz
+            _mstz = value.strftime("%z")[:3] + ':' + value.strftime("%z")[3:]
+            return value.strftime("%Y-%m-%d %H:%M:%S.%f") + _mstz
         return process
 
     def result_processor(self, dialect, coltype):
