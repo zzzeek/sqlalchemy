@@ -2256,3 +2256,13 @@ class TestClassProperty(fixtures.TestBase):
         eq_(B.something, {'foo': 1, 'bazz': 2})
 
 
+class TestProperties(fixtures.TestBase):
+
+    def test_pickle(self):
+        data = {'hello': 'bla'}
+        props = util.Properties(data)
+        for protocol in -1, 0, 1, 2:
+            print(protocol)
+            s = util.pickle.dumps(props, protocol)
+            p = util.pickle.loads(s)
+            assert props._data == p._data
