@@ -246,7 +246,7 @@ class _stateful_declared_attr(declared_attr):
 def declarative_base(bind=None, metadata=None, mapper=None, cls=object,
                      name='Base', constructor=_declarative_constructor,
                      class_registry=None,
-                     metaclass=DeclarativeMeta):
+                     metaclass=DeclarativeMeta, doc=None):
     """Construct a base class for declarative class definitions.
 
     The new base class will be given a metaclass that produces
@@ -321,6 +321,8 @@ def declarative_base(bind=None, metadata=None, mapper=None, cls=object,
         class_dict['__init__'] = constructor
     if mapper:
         class_dict['__mapper_cls__'] = mapper
+    if doc:
+        class_dict['__doc__'] = doc
 
     return metaclass(name, bases, class_dict)
 
@@ -358,6 +360,7 @@ def as_declarative(**kw):
     def decorate(cls):
         kw['cls'] = cls
         kw['name'] = cls.__name__
+        kw['doc'] = cls.__doc__
         return declarative_base(**kw)
 
     return decorate
