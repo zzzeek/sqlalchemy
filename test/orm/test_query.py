@@ -1574,6 +1574,17 @@ class ExpressionTest(QueryTest, AssertsCompiledSQL):
                     User(id=7, name='jack'),
                     Address(email_address='jack@bean.com', user_id=7, id=1))])
 
+    def test_group_by(self):
+        User = self.classes.User
+        s = create_session()
+
+        q1 = s.query(User.id, User.name).group_by(User.name)
+        self.assert_compile(
+            select([q1]),
+            "SELECT users_id, users_name FROM (SELECT users.id AS users_id, "
+            "users.name AS users_name FROM users GROUP BY users.name)"
+        )
+
 
 class ColumnPropertyTest(_fixtures.FixtureTest, AssertsCompiledSQL):
     __dialect__ = 'default'
