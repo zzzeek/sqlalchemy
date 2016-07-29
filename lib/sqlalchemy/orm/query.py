@@ -1549,7 +1549,17 @@ class Query(object):
     @_generative(_no_statement_condition, _no_limit_offset)
     def group_by(self, *criterion):
         """apply one or more GROUP BY criterion to the query and return
-        the newly resulting :class:`.Query`"""
+        the newly resulting :class:`.Query`
+
+        All existing GROUP BY settings can be suppressed by passing
+        ``None``.
+
+        """
+
+        if len(criterion) == 1:
+            if criterion[0] is None:
+                self._group_by = False
+                return
 
         criterion = list(chain(*[_orm_columns(c) for c in criterion]))
         criterion = self._adapt_col_list(criterion)
