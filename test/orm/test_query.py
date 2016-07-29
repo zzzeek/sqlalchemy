@@ -1585,6 +1585,13 @@ class ExpressionTest(QueryTest, AssertsCompiledSQL):
             "users.name AS users_name FROM users GROUP BY users.name)"
         )
 
+        # test append something to group_by
+        self.assert_compile(
+            select([q1.group_by(User.id)]),
+            "SELECT users_id, users_name FROM (SELECT users.id AS users_id, "
+            "users.name AS users_name FROM users GROUP BY users.name, users.id)"
+        )
+
 
 class ColumnPropertyTest(_fixtures.FixtureTest, AssertsCompiledSQL):
     __dialect__ = 'default'
