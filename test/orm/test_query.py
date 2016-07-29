@@ -1592,6 +1592,20 @@ class ExpressionTest(QueryTest, AssertsCompiledSQL):
             "users.name AS users_name FROM users GROUP BY users.name, users.id)"
         )
 
+        # test cancellation by using None, replacement with something else
+        self.assert_compile(
+            select([q1.group_by(None).group_by(User.id)]),
+            "SELECT users_id, users_name FROM (SELECT users.id AS users_id, "
+            "users.name AS users_name FROM users GROUP BY users.id)"
+        )
+
+        # test cancellation by using None, replacement with nothing
+        self.assert_compile(
+            select([q1.group_by(None)]),
+            "SELECT users_id, users_name FROM (SELECT users.id AS users_id, "
+            "users.name AS users_name FROM users)"
+        )
+
 
 class ColumnPropertyTest(_fixtures.FixtureTest, AssertsCompiledSQL):
     __dialect__ = 'default'
