@@ -2826,10 +2826,10 @@ def configure_mappers():
             for mapper in list(_mapper_registry):
                 if getattr(mapper, '_configure_failed', False):
                     e = sa_exc.InvalidRequestError(
-                        "One or more mappers failed to initialize - "
+                        "One (%s) or more mappers failed to initialize - "
                         "can't proceed with initialization of other "
-                        "mappers.  Original exception was: %s"
-                        % mapper._configure_failed)
+                        "mappers. Original exception was: %s"
+                        % (mapper, mapper._configure_failed))
                     e._configure_failed = mapper._configure_failed
                     raise e
                 if not mapper.configured:
