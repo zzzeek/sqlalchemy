@@ -153,10 +153,10 @@ class MapperTest(_fixtures.FixtureTest, AssertsCompiledSQL):
 
         for i in range(3):
             assert_raises_message(sa.exc.InvalidRequestError,
-                                  "^One or more mappers failed to "
-                                  "initialize - can't proceed with "
-                                  "initialization of other mappers.  "
-                                  "Original exception was: Class "
+                                  "^One (Mapper|Address|addresses) or more "
+                                  "mappers failed to initialize - can't "
+                                  "proceed with initialization of other "
+                                  "mappers. Original exception was: Class "
                                   "'test.orm._fixtures.User' is not mapped$",
                                   configure_mappers)
 
