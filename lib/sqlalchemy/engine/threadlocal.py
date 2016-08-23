@@ -64,6 +64,8 @@ class TLEngine(base.Engine):
                     self.pool.connect, connection),
                 **kw)
             self._connections.conn = weakref.ref(connection)
+        else:
+            connection.should_close_with_result = kw.get('close_with_result', False)
 
         return connection._increment_connect()
 
@@ -81,11 +83,9 @@ class TLEngine(base.Engine):
             self.contextual_connect().begin_nested())
         return self
 
-    def begin(self):
-        if not hasattr(self._connections, 'trans'):
-            self._connections.trans = []
-        self._connections.trans.append(self.contextual_connect().begin())
-        return self
+    def begin(self, close_with_result=False):
+        conn = self.contextual_connect()
+        return base.Engine._trans_ctx(conn, conn.begin(), close_with_result)
 
     def __enter__(self):
         return self
