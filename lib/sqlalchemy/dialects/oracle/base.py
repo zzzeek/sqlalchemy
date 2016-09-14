@@ -962,6 +962,7 @@ class OracleDialect(default.DefaultDialect):
     execution_ctx_cls = OracleExecutionContext
 
     reflection_options = ('oracle_resolve_synonyms', )
+    exclude_tablespaces = ('SYSTEM', 'SYSAUX', )
 
     construct_arguments = [
         (sa_schema.Table, {
@@ -1166,11 +1167,14 @@ class OracleDialect(default.DefaultDialect):
         # note that table_names() isn't loading DBLINKed or synonym'ed tables
         if schema is None:
             schema = self.default_schema_name
+        if self.exclude_tablespaces:
+            et = "nvl(tablespace_name, 'no tablespace') NOT IN (%s) AND "
+            et %= ', '.join(["'%s'" % ts for ts in self.exclude_tablespaces])
+        else:
+            et = ""
         s = sql.text(
             "SELECT table_name FROM all_tables "
-            "WHERE nvl(tablespace_name, 'no tablespace') NOT IN "
-            "('SYSTEM', 'SYSAUX') "
-            "AND OWNER = :owner "
+            "WHERE " + et + "OWNER = :owner "
             "AND IOT_NAME IS NULL "
             "AND DURATION IS NULL")
         cursor = connection.execute(s, owner=schema)
@@ -1179,11 +1183,14 @@ class OracleDialect(default.DefaultDialect):
     @reflection.cache
     def get_temp_table_names(self, connection, **kw):
         schema = self.denormalize_name(self.default_schema_name)
+        if self.exclude_tablespaces:
+            et = "nvl(tablespace_name, 'no tablespace') NOT IN (%s) AND "
+            et %= ', '.join(["'%s'" % ts for ts in self.exclude_tablespaces])
+        else:
+            et = ""
         s = sql.text(
             "SELECT table_name FROM all_tables "
-            "WHERE nvl(tablespace_name, 'no tablespace') NOT IN "
-            "('SYSTEM', 'SYSAUX') "
-            "AND OWNER = :owner "
+            "WHERE " + et + "OWNER = :owner "
             "AND IOT_NAME IS NULL "
             "AND DURATION IS NOT NULL")
         cursor = connection.execute(s, owner=schema)

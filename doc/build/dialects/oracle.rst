@@ -53,6 +53,11 @@ construction arguments, are as follows:
   :members: __init__
 
 
+Note that table introspection on Oracle excludes tables in the
+SYSTEM or SYSAUX tablespaces by default. To change this behaviour,
+change the ``exclude_tablespaces`` parameter on the dialect.
+
+
 cx_Oracle
 ----------
 
