@@ -1122,7 +1122,7 @@ class Session(_SessionClassMethods):
             insp = inspect(key)
         except sa_exc.NoInspectionAvailable:
             if not isinstance(key, type):
-                raise exc.ArgumentError(
+                raise as_exc.ArgumentError(
                             "Not acceptable bind target: %s" %
                             key)
             else:
@@ -1135,7 +1135,7 @@ class Session(_SessionClassMethods):
                 for selectable in insp._all_tables:
                     self.__binds[selectable] = bind
             else:
-                raise exc.ArgumentError(
+                raise sa_exc.ArgumentError(
                             "Not acceptable bind target: %s" %
                             key)
 
