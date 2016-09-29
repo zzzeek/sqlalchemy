@@ -1643,13 +1643,14 @@ class Session(_SessionClassMethods):
                 self.transaction._deleted[state] = True
 
             self.identity_map.safe_discard(state)
+            obj = state.obj()
             self._deleted.pop(state, None)
             state._deleted = True
             # can't call state._detach() here, because this state
             # is still in the transaction snapshot and needs to be
             # tracked as part of that
             if persistent_to_deleted is not None:
-                persistent_to_deleted(self, state.obj())
+                persistent_to_deleted(self, obj)
 
     def add(self, instance, _warn=True):
         """Place an object in the ``Session``.
