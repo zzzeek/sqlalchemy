@@ -1051,7 +1051,8 @@ class Column(SchemaItem, ColumnClause):
         :param nullable: If set to the default of ``True``, indicates the
             column will be rendered as allowing NULL, else it's rendered as
             NOT NULL. This parameter is only used when issuing CREATE TABLE
-            statements.
+            statements. If not explicitly set and ``primary_key=True``, then
+            the column is non-nullable by default.
 
         :param onupdate: A scalar, Python callable, or
             :class:`~sqlalchemy.sql.expression.ClauseElement` representing a
