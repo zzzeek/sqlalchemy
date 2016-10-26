@@ -1948,6 +1948,7 @@ class PGDialect(default.DefaultDialect):
     execution_ctx_cls = PGExecutionContext
     inspector = PGInspector
     isolation_level = None
+    supports_isolation_level = False
 
     construct_arguments = [
         (schema.Index, {
@@ -2032,11 +2033,14 @@ class PGDialect(default.DefaultDialect):
         cursor.close()
 
     def get_isolation_level(self, connection):
-        cursor = connection.cursor()
-        cursor.execute('show transaction isolation level')
-        val = cursor.fetchone()[0]
-        cursor.close()
-        return val.upper()
+        if self.supports_isolation_level:
+            cursor = connection.cursor()
+            cursor.execute('show transaction isolation level')
+            val = cursor.fetchone()[0]
+            cursor.close()
+            return val.upper()
+        else:
+            return 'READ COMMITTED'
 
     def do_begin_twophase(self, connection, xid):
         self.do_begin(connection.connection)
@@ -2191,9 +2195,10 @@ class PGDialect(default.DefaultDialect):
     def _get_server_version_info(self, connection):
         v = connection.execute("select version()").scalar()
         m = re.match(
-            '.*(?:PostgreSQL|EnterpriseDB) '
+            '.*(?:PostgreSQL|EnterpriseDB|Teiid) '
             '(\d+)\.(\d+)(?:\.(\d+))?(?:\.\d+)?(?:devel)?',
             v)
+        self.supports_isolation_level = not bool('Teiid' in v)
         if not m:
             raise AssertionError(
                 "Could not determine version from string '%s'" % v)
