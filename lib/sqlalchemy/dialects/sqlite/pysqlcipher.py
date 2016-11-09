@@ -15,6 +15,8 @@
     ``pysqlcipher`` is a fork of the standard ``pysqlite`` driver to make
     use of the `SQLCipher <https://www.zetetic.net/sqlcipher>`_ backend.
 
+    ``pysqlcipher3`` is a fork of ``pysqlcipher`` for Python 3.
+
     .. versionadded:: 0.9.9
 
 Driver
@@ -25,6 +27,9 @@ driver, which makes use of the SQLCipher engine.  This system essentially
 introduces new PRAGMA commands to SQLite which allows the setting of a
 passphrase and other encryption parameters, allowing the database
 file to be encrypted.
+
+`pysqlcipher3` is a fork of `pysqlcipher` with support for Python 3,
+the driver is the same.
 
 Connect Strings
 ---------------
@@ -80,7 +85,13 @@ class SQLiteDialect_pysqlcipher(SQLiteDialect_pysqlite):
 
     @classmethod
     def dbapi(cls):
-        from pysqlcipher import dbapi2 as sqlcipher
+        try:
+            from pysqlcipher import dbapi2 as sqlcipher
+        except ImportError as e:
+            try:
+                from pysqlcipher3 import dbapi2 as sqlcipher
+            except ImportError:
+                raise e
         return sqlcipher
 
     @classmethod
