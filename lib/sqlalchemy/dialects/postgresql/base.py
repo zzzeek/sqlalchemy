@@ -852,6 +852,10 @@ RESERVED_WORDS = set(
      "notnull", "outer", "over", "overlaps", "right", "similar", "verbose"
      ])
 
+AUTOCOMMIT_RE = re.compile(
+    r'\s*(?:UPDATE|INSERT|CREATE|DELETE|DROP|ALTER|REFRESH)',
+    re.I | re.UNICODE)
+
 _DECIMAL_TYPES = (1231, 1700)
 _FLOAT_TYPES = (700, 701, 1021, 1022)
 _INT_TYPES = (20, 21, 23, 26, 1005, 1007, 1016)
@@ -1918,6 +1922,9 @@ class PGExecutionContext(default.DefaultExecutionContext):
                 return self._execute_scalar(exc, column.type)
 
         return super(PGExecutionContext, self).get_insert_default(column)
+
+    def should_autocommit_text(self, statement):
+        return AUTOCOMMIT_RE.match(statement)
 
 
 class PGDialect(default.DefaultDialect):
