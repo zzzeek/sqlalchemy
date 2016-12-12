@@ -1445,7 +1445,7 @@ class OracleDialect(default.DefaultDialect):
             "\nall_cons_columns%(dblink)s loc,"\
             "\nall_cons_columns%(dblink)s rem"\
             "\nWHERE ac.table_name = :table_name"\
-            "\nAND ac.constraint_type IN ('R','P')"
+            "\nAND ac.constraint_type IN ('R','P', 'U')"
 
         if schema is not None:
             params['owner'] = schema
