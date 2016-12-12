@@ -1445,7 +1445,7 @@ class OracleDialect(default.DefaultDialect):
             "\nall_cons_columns%(dblink)s loc,"\
             "\nall_cons_columns%(dblink)s rem"\
             "\nWHERE ac.table_name = :table_name"\
-            "\nAND ac.constraint_type IN ('R','P')"
+            "\nAND ac.constraint_type IN ('R','P', 'U')"
 
         if schema is not None:
             params['owner'] = schema
@@ -1569,6 +1569,33 @@ class OracleDialect(default.DefaultDialect):
                 remote_cols.append(remote_column)
 
         return list(fkeys.values())
+
+    @reflection.cache
+    def get_unique_constraints(self, connection, table_name, schema=None, **kw):
+        resolve_synonyms = kw.get('oracle_resolve_synonyms', False)
+        dblink = kw.get('dblink', '')
+        info_cache = kw.get('info_cache')
+
+        (table_name, schema, dblink, synonym) = \
+            self._prepare_reflection_args(connection, table_name, schema,
+                                          resolve_synonyms, dblink,
+                                          info_cache=info_cache)
+
+        constraint_data = self._get_constraint_data(
+            connection, table_name, schema, dblink,
+            info_cache=kw.get('info_cache'))
+
+        unique_keys = filter(lambda x: x[1] == 'U', constraint_data)
+        from itertools import groupby
+        uniques_group = groupby(unique_keys, lambda x: x[0])
+
+        return [
+            {
+                'name': self.normalize_name(name),
+                'column_names': cols,
+                'duplicates_index': self.normalize_name(name),
+            }
+            for name, cols in [[i[0],[self.normalize_name(x[2]) for x in i[1]]] for i in uniques_group]]
 
     @reflection.cache
     def get_view_definition(self, connection, view_name, schema=None,
