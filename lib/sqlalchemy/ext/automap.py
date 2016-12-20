@@ -584,7 +584,7 @@ def name_for_collection_relationship(
 
     The default implementation is::
 
-        return referred_cls.__name__.lower() + "_collection"
+        return referred_cls.__name__.lower() + '_'+constraint.table.name.lower() + "_collection"
 
     Alternate implementations
     can be specified using the
@@ -601,7 +601,7 @@ def name_for_collection_relationship(
      inspected to produce this relationship.
 
     """
-    return referred_cls.__name__.lower() + "_collection"
+    return referred_cls.__name__.lower() + '_'+constraint.table.name.lower() + "_collection"
 
 
 def generate_relationship(
