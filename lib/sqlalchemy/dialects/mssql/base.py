@@ -1052,7 +1052,7 @@ class MSExecutionContext(default.DefaultExecutionContext):
                                      self)
             # fetchall() ensures the cursor is consumed without closing it
             row = self.cursor.fetchall()[0]
-            self._lastrowid = int(row[0])
+            self._lastrowid = int(row[0]) if row[0] else None
 
         if (self.isinsert or self.isupdate or self.isdelete) and \
                 self.compiled.returning:

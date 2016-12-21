@@ -241,7 +241,7 @@ class MSExecutionContext_pyodbc(MSExecutionContext):
                     # so we need to just keep flipping
                     self.cursor.nextset()
 
-            self._lastrowid = int(row[0])
+            self._lastrowid = int(row[0]) if row[0] else None
         else:
             super(MSExecutionContext_pyodbc, self).post_exec()
 
