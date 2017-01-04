@@ -311,6 +311,7 @@ class SessionStateTest(_fixtures.FixtureTest):
         u = User()
         u.name = 'ed'
         sess.add(u)
+
         def go(obj):
             assert u not in sess.query(User).all()
         testing.run_as_contextmanager(sess.no_autoflush, go)
