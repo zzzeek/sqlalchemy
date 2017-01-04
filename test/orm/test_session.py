@@ -19,6 +19,7 @@ from test.orm import _fixtures
 from sqlalchemy import event, ForeignKey
 from sqlalchemy.util.compat import inspect_getargspec
 
+import pytest
 
 class ExecutionTest(_fixtures.FixtureTest):
     run_inserts = None
@@ -317,6 +318,17 @@ class SessionStateTest(_fixtures.FixtureTest):
         assert u in sess.query(User).all()
         assert u not in sess.new
 
+    def test_with_no_autoflush_after_exception(self):
+        sess = Session(autoflush=True)
+
+        def go(obj):
+            try:
+                1 / 0
+            except ZeroDivisionError:
+                raise
+        with pytest.raises(ZeroDivisionError):
+            testing.run_as_contextmanager(sess.no_autoflush, go)
+        assert sess.autoflush == True
 
     def test_deleted_flag(self):
         users, User = self.tables.users, self.classes.User
