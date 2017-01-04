@@ -1,3 +1,4 @@
+import pytest
 from sqlalchemy.testing import eq_, assert_raises, \
     assert_raises_message, assertions
 from sqlalchemy.testing.util import gc_collect
@@ -18,8 +19,6 @@ from sqlalchemy.testing import fixtures
 from test.orm import _fixtures
 from sqlalchemy import event, ForeignKey
 from sqlalchemy.util.compat import inspect_getargspec
-
-import pytest
 
 class ExecutionTest(_fixtures.FixtureTest):
     run_inserts = None
