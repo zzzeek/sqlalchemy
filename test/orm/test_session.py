@@ -1,4 +1,3 @@
-import pytest
 from sqlalchemy.testing import eq_, assert_raises, \
     assert_raises_message, assertions
 from sqlalchemy.testing.util import gc_collect
@@ -326,8 +325,14 @@ class SessionStateTest(_fixtures.FixtureTest):
                 1 / 0
             except ZeroDivisionError:
                 raise
-        with pytest.raises(ZeroDivisionError):
-            testing.run_as_contextmanager(sess.no_autoflush, go)
+
+        assert_raises(
+            ZeroDivisionError,
+            testing.run_as_contextmanager,
+            sess.no_autoflush,
+            go
+        )
+
         assert sess.autoflush == True
 
     def test_deleted_flag(self):
