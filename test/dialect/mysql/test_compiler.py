@@ -17,6 +17,7 @@ from sqlalchemy import testing
 from sqlalchemy.sql import table, column
 import re
 
+
 class CompileTest(fixtures.TestBase, AssertsCompiledSQL):
 
     __dialect__ = mysql.dialect()
