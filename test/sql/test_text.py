@@ -253,7 +253,8 @@ class BindParamTest(fixtures.TestBase, AssertsCompiledSQL):
     def test_missing_bind_kw(self):
         assert_raises_message(
             exc.ArgumentError,
-            "This text\(\) construct doesn't define a bound parameter named 'bar'",
+            "This text\(\) construct doesn't define a bound parameter named "
+            "'bar'",
             text(":foo").bindparams,
             foo=5,
             bar=7)
@@ -261,7 +262,8 @@ class BindParamTest(fixtures.TestBase, AssertsCompiledSQL):
     def test_missing_bind_posn(self):
         assert_raises_message(
             exc.ArgumentError,
-            "This text\(\) construct doesn't define a bound parameter named 'bar'",
+            "This text\(\) construct doesn't define a bound parameter named "
+            "'bar'",
             text(":foo").bindparams,
             bindparam(
                 'foo',
