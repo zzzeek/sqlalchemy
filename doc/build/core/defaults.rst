@@ -334,7 +334,7 @@ the SQL commandline, we can use the :paramref:`.Column.server_default`
 parameter in conjunction with the value-generation function of the
 sequence, available from the :meth:`.Sequence.next_value` method::
 
-    cart_id_seq = Sequence('cart_id_seq')
+    cart_id_seq = Sequence('cart_id_seq', metadata=Base.metadata)
     table = Table("cartitems", meta,
         Column(
             "cart_id", Integer, cart_id_seq,
@@ -342,6 +342,16 @@ sequence, available from the :meth:`.Sequence.next_value` method::
         Column("description", String(40)),
         Column("createdate", DateTime())
     )
+
+or with the ORM::
+
+    class CartItem(Base):
+        __tablename__ = 'cartitems'
+
+        cart_id_seq = Sequence('cart_id_seq', metadata=Base.metadata)
+        cart_id = Column(Integer, server_default=cart_id_seq.next_value(), primary_key=True)
+        description = Column(String(40))
+        createdate = Column(DateTime)
 
 The above metadata will generate a CREATE TABLE statement on PostgreSQL as::
 
