@@ -1440,8 +1440,8 @@ class OracleDialect(default.DefaultDialect):
             "\nrem.column_name AS remote_column,"\
             "\nrem.owner AS remote_owner,"\
             "\nloc.position as loc_pos,"\
-            "\nrem.position as rem_pos"\
-            "\nac.search_condition,"\
+            "\nrem.position as rem_pos,"\
+            "\nac.search_condition"\
             "\nFROM all_constraints%(dblink)s ac,"\
             "\nall_cons_columns%(dblink)s loc,"\
             "\nall_cons_columns%(dblink)s rem"\
