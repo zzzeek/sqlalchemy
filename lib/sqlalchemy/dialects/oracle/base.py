@@ -1617,7 +1617,7 @@ class OracleDialect(default.DefaultDialect):
                 'name': self.normalize_name(cons[0]),
                 'sqltext': cons[8],
             }
-            for cons in check_constraints
+            for cons in check_constraints]
 
 
 class _OuterJoinColumn(sql.ClauseElement):
