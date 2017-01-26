@@ -1441,11 +1441,12 @@ class OracleDialect(default.DefaultDialect):
             "\nrem.owner AS remote_owner,"\
             "\nloc.position as loc_pos,"\
             "\nrem.position as rem_pos"\
+            "\nac.search_condition,"\
             "\nFROM all_constraints%(dblink)s ac,"\
             "\nall_cons_columns%(dblink)s loc,"\
             "\nall_cons_columns%(dblink)s rem"\
             "\nWHERE ac.table_name = :table_name"\
-            "\nAND ac.constraint_type IN ('R','P')"
+            "\nAND ac.constraint_type IN ('R','P', 'C')"
 
         if schema is not None:
             params['owner'] = schema
@@ -1593,6 +1594,30 @@ class OracleDialect(default.DefaultDialect):
             return rp
         else:
             return None
+
+    @reflection.cache
+    def get_check_constraints(self, connection, table_name, schema=None, **kw):
+        resolve_synonyms = kw.get('oracle_resolve_synonyms', False)
+        dblink = kw.get('dblink', '')
+        info_cache = kw.get('info_cache')
+
+        (table_name, schema, dblink, synonym) = \
+            self._prepare_reflection_args(connection, table_name, schema,
+                                          resolve_synonyms, dblink,
+                                          info_cache=info_cache)
+
+        constraint_data = self._get_constraint_data(
+            connection, table_name, schema, dblink,
+            info_cache=kw.get('info_cache'))
+
+        check_constraints = filter(lambda x: x[1] == 'C', constraint_data)
+
+        return [
+            {
+                'name': self.normalize_name(cons[0]),
+                'sqltext': cons[8],
+            }
+            for cons in check_constraints
 
 
 class _OuterJoinColumn(sql.ClauseElement):
