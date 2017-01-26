@@ -327,7 +327,8 @@ class DefaultRequirements(SuiteRequirements):
     def check_constraint_reflection(self):
         return fails_on_everything_except(
                     "postgresql",
-                    "sqlite"
+                    "sqlite",
+                    "oracle"
                 )
 
     @property
