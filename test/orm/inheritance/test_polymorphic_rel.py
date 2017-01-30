@@ -95,8 +95,7 @@ class _PolymorphicTestBase(object):
                 sess.query(Person).with_polymorphic('*')
                 .options(joinedload(Engineer.machines))
                 .limit(2).offset(1).with_labels().subquery()
-            ).scalar(),
-            2)
+            ).scalar(), 2)
 
     def test_get_one(self):
         """
