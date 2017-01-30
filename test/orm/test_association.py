@@ -14,15 +14,17 @@ class AssociationTest(fixtures.MappedTest):
     @classmethod
     def define_tables(cls, metadata):
         Table('items', metadata,
-            Column('item_id', Integer, primary_key=True, test_needs_autoincrement=True),
-            Column('name', String(40)))
+              Column('item_id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
+              Column('name', String(40)))
         Table('item_keywords', metadata,
-            Column('item_id', Integer, ForeignKey('items.item_id')),
-            Column('keyword_id', Integer, ForeignKey('keywords.keyword_id')),
-            Column('data', String(40)))
+              Column('item_id', Integer, ForeignKey('items.item_id')),
+              Column('keyword_id', Integer, ForeignKey('keywords.keyword_id')),
+              Column('data', String(40)))
         Table('keywords', metadata,
-            Column('keyword_id', Integer, primary_key=True, test_needs_autoincrement=True),
-            Column('name', String(40)))
+              Column('keyword_id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
+              Column('name', String(40)))
 
     @classmethod
     def setup_classes(cls):
@@ -53,8 +55,8 @@ class AssociationTest(fixtures.MappedTest):
     @classmethod
     def setup_mappers(cls):
         KeywordAssociation, Item, Keyword = (cls.classes.KeywordAssociation,
-                                cls.classes.Item,
-                                cls.classes.Keyword)
+                                             cls.classes.Item,
+                                             cls.classes.Keyword)
 
         items, item_keywords, keywords = cls.tables.get_all(
             'items', 'item_keywords', 'keywords')
@@ -62,41 +64,44 @@ class AssociationTest(fixtures.MappedTest):
         mapper(Keyword, keywords)
         mapper(KeywordAssociation, item_keywords, properties={
             'keyword': relationship(Keyword, lazy='joined')},
-               primary_key=[item_keywords.c.item_id, item_keywords.c.keyword_id])
+            primary_key=[item_keywords.c.item_id, item_keywords.c.keyword_id])
 
         mapper(Item, items, properties={
             'keywords': relationship(KeywordAssociation,
-                                  order_by=item_keywords.c.data,
-                                  cascade="all, delete-orphan")
+                                     order_by=item_keywords.c.data,
+                                     cascade="all, delete-orphan")
         })
 
     def test_insert(self):
         KeywordAssociation, Item, Keyword = (self.classes.KeywordAssociation,
-                                self.classes.Item,
-                                self.classes.Keyword)
+                                             self.classes.Item,
+                                             self.classes.Keyword)
 
         sess = create_session()
         item1 = Item('item1')
         item2 = Item('item2')
-        item1.keywords.append(KeywordAssociation(Keyword('blue'), 'blue_assoc'))
+        item1.keywords.append(KeywordAssociation(
+            Keyword('blue'), 'blue_assoc'))
         item1.keywords.append(KeywordAssociation(Keyword('red'), 'red_assoc'))
-        item2.keywords.append(KeywordAssociation(Keyword('green'), 'green_assoc'))
+        item2.keywords.append(KeywordAssociation(
+            Keyword('green'), 'green_assoc'))
         sess.add_all((item1, item2))
         sess.flush()
         saved = repr([item1, item2])
         sess.expunge_all()
-        l = sess.query(Item).all()
-        loaded = repr(l)
+        result = sess.query(Item).all()
+        loaded = repr(result)
         eq_(saved, loaded)
 
     def test_replace(self):
         KeywordAssociation, Item, Keyword = (self.classes.KeywordAssociation,
-                                self.classes.Item,
-                                self.classes.Keyword)
+                                             self.classes.Item,
+                                             self.classes.Keyword)
 
         sess = create_session()
         item1 = Item('item1')
-        item1.keywords.append(KeywordAssociation(Keyword('blue'), 'blue_assoc'))
+        item1.keywords.append(KeywordAssociation(
+            Keyword('blue'), 'blue_assoc'))
         item1.keywords.append(KeywordAssociation(Keyword('red'), 'red_assoc'))
         sess.add(item1)
         sess.flush()
@@ -107,21 +112,23 @@ class AssociationTest(fixtures.MappedTest):
         sess.flush()
         saved = repr([item1])
         sess.expunge_all()
-        l = sess.query(Item).all()
-        loaded = repr(l)
+        result = sess.query(Item).all()
+        loaded = repr(result)
         eq_(saved, loaded)
 
     def test_modify(self):
         KeywordAssociation, Item, Keyword = (self.classes.KeywordAssociation,
-                                self.classes.Item,
-                                self.classes.Keyword)
+                                             self.classes.Item,
+                                             self.classes.Keyword)
 
         sess = create_session()
         item1 = Item('item1')
         item2 = Item('item2')
-        item1.keywords.append(KeywordAssociation(Keyword('blue'), 'blue_assoc'))
+        item1.keywords.append(KeywordAssociation(
+            Keyword('blue'), 'blue_assoc'))
         item1.keywords.append(KeywordAssociation(Keyword('red'), 'red_assoc'))
-        item2.keywords.append(KeywordAssociation(Keyword('green'), 'green_assoc'))
+        item2.keywords.append(KeywordAssociation(
+            Keyword('green'), 'green_assoc'))
         sess.add_all((item1, item2))
         sess.flush()
 
@@ -130,29 +137,34 @@ class AssociationTest(fixtures.MappedTest):
         del item1.keywords[0]
         purple_keyword = Keyword('purple')
         item1.keywords.append(KeywordAssociation(red_keyword, 'new_red_assoc'))
-        item2.keywords.append(KeywordAssociation(purple_keyword, 'purple_item2_assoc'))
-        item1.keywords.append(KeywordAssociation(purple_keyword, 'purple_item1_assoc'))
-        item1.keywords.append(KeywordAssociation(Keyword('yellow'), 'yellow_assoc'))
+        item2.keywords.append(KeywordAssociation(
+            purple_keyword, 'purple_item2_assoc'))
+        item1.keywords.append(KeywordAssociation(
+            purple_keyword, 'purple_item1_assoc'))
+        item1.keywords.append(KeywordAssociation(
+            Keyword('yellow'), 'yellow_assoc'))
 
         sess.flush()
         saved = repr([item1, item2])
         sess.expunge_all()
-        l = sess.query(Item).all()
-        loaded = repr(l)
+        result = sess.query(Item).all()
+        loaded = repr(result)
         eq_(saved, loaded)
 
     def test_delete(self):
-        KeywordAssociation, Item, item_keywords, Keyword = (self.classes.KeywordAssociation,
-                                self.classes.Item,
-                                self.tables.item_keywords,
-                                self.classes.Keyword)
+        KeywordAssociation = self.classes.KeywordAssociation
+        Item = self.classes.Item
+        item_keywords = self.tables.item_keywords
+        Keyword = self.classes.Keyword
 
         sess = create_session()
         item1 = Item('item1')
         item2 = Item('item2')
-        item1.keywords.append(KeywordAssociation(Keyword('blue'), 'blue_assoc'))
+        item1.keywords.append(KeywordAssociation(
+            Keyword('blue'), 'blue_assoc'))
         item1.keywords.append(KeywordAssociation(Keyword('red'), 'red_assoc'))
-        item2.keywords.append(KeywordAssociation(Keyword('green'), 'green_assoc'))
+        item2.keywords.append(KeywordAssociation(
+            Keyword('green'), 'green_assoc'))
         sess.add_all((item1, item2))
         sess.flush()
         eq_(select([func.count('*')]).select_from(item_keywords).scalar(), 3)
@@ -161,5 +173,3 @@ class AssociationTest(fixtures.MappedTest):
         sess.delete(item2)
         sess.flush()
         eq_(select([func.count('*')]).select_from(item_keywords).scalar(), 0)
-
-
