@@ -1,7 +1,7 @@
 from sqlalchemy import func, desc, select
-from sqlalchemy.orm import interfaces, create_session, joinedload, joinedload_all, \
-    subqueryload, subqueryload_all, aliased,\
-    class_mapper, with_polymorphic
+from sqlalchemy.orm import (interfaces, create_session, joinedload,
+                            joinedload_all, subqueryload, subqueryload_all,
+                            aliased, class_mapper, with_polymorphic)
 from sqlalchemy import exc as sa_exc
 
 from sqlalchemy import testing
@@ -23,7 +23,7 @@ class _PolymorphicTestBase(object):
         global companies, paperwork, machines
         people, engineers, managers, boss,\
             companies, paperwork, machines = \
-        cls.tables.people, cls.tables.engineers, \
+            cls.tables.people, cls.tables.engineers, \
             cls.tables.managers, cls.tables.boss,\
             cls.tables.companies, cls.tables.paperwork, cls.tables.machines
 
@@ -35,7 +35,7 @@ class _PolymorphicTestBase(object):
         global c1, c2, e1, e2, e3, b1, m1
         c1, c2, all_employees, c1_employees, c2_employees = \
             cls.c1, cls.c2, cls.all_employees, \
-                cls.c1_employees, cls.c2_employees
+            cls.c1_employees, cls.c2_employees
         e1, e2, e3, b1, m1 = \
             cls.e1, cls.e2, cls.e3, cls.b1, cls.m1
 
@@ -96,7 +96,7 @@ class _PolymorphicTestBase(object):
                 .options(joinedload(Engineer.machines))
                 .limit(2).offset(1).with_labels().subquery()
             ).scalar(),
-        2)
+            2)
 
     def test_get_one(self):
         """
@@ -525,8 +525,8 @@ class _PolymorphicTestBase(object):
         from sqlalchemy.orm import defer
         sess = create_session()
         dilbert = sess.query(Person).\
-                options(defer(Engineer.machines, Machine.name)).\
-                filter(Person.name == 'dilbert').first()
+            options(defer(Engineer.machines, Machine.name)).\
+            filter(Person.name == 'dilbert').first()
         m = dilbert.machines[0]
         assert 'name' not in m.__dict__
         eq_(m.name, 'IBM ThinkPad')
@@ -574,7 +574,7 @@ class _PolymorphicTestBase(object):
         def go():
             eq_(sess.query(Person)
                     .with_polymorphic(Engineer).
-                    order_by(Person.person_id).all(),
+                order_by(Person.person_id).all(),
                 self._emps_wo_relationships_fixture())
         self.assert_sql_count(testing.db, go, 3)
 
@@ -606,11 +606,11 @@ class _PolymorphicTestBase(object):
         sess = create_session()
 
         assert_raises(sa_exc.InvalidRequestError,
-            sess.query(Person).with_polymorphic, Paperwork)
+                      sess.query(Person).with_polymorphic, Paperwork)
         assert_raises(sa_exc.InvalidRequestError,
-            sess.query(Engineer).with_polymorphic, Boss)
+                      sess.query(Engineer).with_polymorphic, Boss)
         assert_raises(sa_exc.InvalidRequestError,
-            sess.query(Engineer).with_polymorphic, Person)
+                      sess.query(Engineer).with_polymorphic, Person)
 
     def test_with_polymorphic_seven(self):
         sess = create_session()
@@ -646,7 +646,7 @@ class _PolymorphicTestBase(object):
                 expected)
 
         # in the old case, we would get this
-        #count = {'':7, 'Polymorphic':1}.get(self.select_type, 2)
+        # count = {'':7, 'Polymorphic':1}.get(self.select_type, 2)
 
         # query one is company->Person/Engineer->Machines
         # query two is managers + boss for row #3
@@ -701,7 +701,7 @@ class _PolymorphicTestBase(object):
                     .with_polymorphic('*')
                     .options(joinedload(Engineer.machines))
                     .filter(Person.name == 'dilbert').all(),
-              expected)
+                expected)
         self.assert_sql_count(testing.db, go, 1)
 
     def test_subqueryload_on_subclass(self):
@@ -722,7 +722,7 @@ class _PolymorphicTestBase(object):
                     .with_polymorphic('*')
                     .options(subqueryload(Engineer.machines))
                     .filter(Person.name == 'dilbert').all(),
-              expected)
+                expected)
         self.assert_sql_count(testing.db, go, 2)
 
     def test_query_subclass_join_to_base_relationship(self):
@@ -1040,7 +1040,7 @@ class _PolymorphicTestBase(object):
                 primary_language='java',
                 person_id=1,
                 type='engineer'),
-            'MegaCorp, Inc.'),
+             'MegaCorp, Inc.'),
             (Engineer(
                 status='regular engineer',
                 engineer_name='wally',
@@ -1049,7 +1049,7 @@ class _PolymorphicTestBase(object):
                 primary_language='c++',
                 person_id=2,
                 type='engineer'),
-            'MegaCorp, Inc.'),
+             'MegaCorp, Inc.'),
             (Engineer(
                 status='elbonian engineer',
                 engineer_name='vlad',
@@ -1058,7 +1058,7 @@ class _PolymorphicTestBase(object):
                 primary_language='cobol',
                 person_id=5,
                 type='engineer'),
-            'Elbonia, Inc.')]
+             'Elbonia, Inc.')]
         eq_(sess.query(Engineer, Company.name)
                 .join(Company.employees)
                 .order_by(Person.person_id)
@@ -1380,7 +1380,8 @@ class PolymorphicTest(_PolymorphicTestBase, _Polymorphic):
         pass
 
 
-class PolymorphicPolymorphicTest(_PolymorphicTestBase, _PolymorphicPolymorphic):
+class PolymorphicPolymorphicTest(
+        _PolymorphicTestBase, _PolymorphicPolymorphic):
     __dialect__ = 'default'
 
     def test_aliased_not_polluted_by_join(self):
@@ -1390,19 +1391,17 @@ class PolymorphicPolymorphicTest(_PolymorphicTestBase, _PolymorphicPolymorphic):
         sess = create_session()
         palias = aliased(Person)
         self.assert_compile(
-            sess.query(palias, Company.name)
-                .order_by(palias.person_id)
-                .join(Person, Company.employees)
-                .filter(palias.name == 'dilbert'),
+            sess.query(palias, Company.name).order_by(palias.person_id).
+            join(Person, Company.employees).filter(palias.name == 'dilbert'),
             "SELECT anon_1.people_person_id AS anon_1_people_person_id, "
             "anon_1.people_company_id AS anon_1_people_company_id, "
             "anon_1.people_name AS anon_1_people_name, "
             "anon_1.people_type AS anon_1_people_type, "
             "anon_1.engineers_person_id AS anon_1_engineers_person_id, "
             "anon_1.engineers_status AS anon_1_engineers_status, "
-            "anon_1.engineers_engineer_name AS anon_1_engineers_engineer_name, "
+            "anon_1.engineers_engineer_name AS anon_1_engineers_engineer_name, "  # noqa
             "anon_1.engineers_primary_language AS "
-                "anon_1_engineers_primary_language, "
+            "anon_1_engineers_primary_language, "
             "anon_1.managers_person_id AS anon_1_managers_person_id, "
             "anon_1.managers_status AS anon_1_managers_status, "
             "anon_1.managers_manager_name AS anon_1_managers_manager_name, "
@@ -1410,42 +1409,39 @@ class PolymorphicPolymorphicTest(_PolymorphicTestBase, _PolymorphicPolymorphic):
             "anon_1.boss_golf_swing AS anon_1_boss_golf_swing, "
             "companies.name AS companies_name "
             "FROM (SELECT people.person_id AS people_person_id, "
-                "people.company_id AS people_company_id, "
-                "people.name AS people_name, people.type AS people_type, "
-                "engineers.person_id AS engineers_person_id, "
-                "engineers.status AS engineers_status, "
-                "engineers.engineer_name AS engineers_engineer_name, "
-                "engineers.primary_language AS engineers_primary_language, "
-                "managers.person_id AS managers_person_id, "
-                "managers.status AS managers_status, "
-                "managers.manager_name AS managers_manager_name, "
-                "boss.boss_id AS boss_boss_id, "
-                "boss.golf_swing AS boss_golf_swing "
-                "FROM people LEFT OUTER JOIN engineers "
-                "ON people.person_id = engineers.person_id "
-                "LEFT OUTER JOIN managers "
-                "ON people.person_id = managers.person_id LEFT OUTER JOIN boss "
-                "ON managers.person_id = boss.boss_id) AS anon_1, "
-                "companies JOIN "
-                "(people LEFT OUTER JOIN engineers "
-                    "ON people.person_id = engineers.person_id "
-                    "LEFT OUTER JOIN managers "
-                    "ON people.person_id = managers.person_id "
-                    "LEFT OUTER JOIN boss ON managers.person_id = boss.boss_id) "
-                "ON companies.company_id = people.company_id "
-                "WHERE anon_1.people_name = :people_name_1 "
-                "ORDER BY anon_1.people_person_id"
-            )
+            "people.company_id AS people_company_id, "
+            "people.name AS people_name, people.type AS people_type, "
+            "engineers.person_id AS engineers_person_id, "
+            "engineers.status AS engineers_status, "
+            "engineers.engineer_name AS engineers_engineer_name, "
+            "engineers.primary_language AS engineers_primary_language, "
+            "managers.person_id AS managers_person_id, "
+            "managers.status AS managers_status, "
+            "managers.manager_name AS managers_manager_name, "
+            "boss.boss_id AS boss_boss_id, "
+            "boss.golf_swing AS boss_golf_swing "
+            "FROM people LEFT OUTER JOIN engineers "
+            "ON people.person_id = engineers.person_id "
+            "LEFT OUTER JOIN managers "
+            "ON people.person_id = managers.person_id LEFT OUTER JOIN boss "
+            "ON managers.person_id = boss.boss_id) AS anon_1, "
+            "companies JOIN "
+            "(people LEFT OUTER JOIN engineers "
+            "ON people.person_id = engineers.person_id "
+            "LEFT OUTER JOIN managers "
+            "ON people.person_id = managers.person_id "
+            "LEFT OUTER JOIN boss ON managers.person_id = boss.boss_id) "
+            "ON companies.company_id = people.company_id "
+            "WHERE anon_1.people_name = :people_name_1 "
+            "ORDER BY anon_1.people_person_id")
 
     def test_flat_aliased_w_select_from(self):
         sess = create_session()
         palias = aliased(Person, flat=True)
         self.assert_compile(
-            sess.query(palias, Company.name)
-                .select_from(palias)
-                .order_by(palias.person_id)
-                .join(Person, Company.employees)
-                .filter(palias.name == 'dilbert'),
+            sess.query(palias, Company.name).
+            select_from(palias).order_by(palias.person_id).join(
+                Person, Company.employees).filter(palias.name == 'dilbert'),
             "SELECT people_1.person_id AS people_1_person_id, "
             "people_1.company_id AS people_1_company_id, "
             "people_1.name AS people_1_name, people_1.type AS people_1_type, "
@@ -1468,11 +1464,11 @@ class PolymorphicPolymorphicTest(_PolymorphicTestBase, _PolymorphicPolymorphic):
             "ON managers_1.person_id = boss_1.boss_id, "
             "companies JOIN (people LEFT OUTER JOIN engineers "
             "ON people.person_id = engineers.person_id "
-            "LEFT OUTER JOIN managers ON people.person_id = managers.person_id "
+            "LEFT OUTER JOIN managers "
+            "ON people.person_id = managers.person_id "
             "LEFT OUTER JOIN boss ON managers.person_id = boss.boss_id) "
             "ON companies.company_id = people.company_id "
-            "WHERE people_1.name = :name_1 ORDER BY people_1.person_id"
-        )
+            "WHERE people_1.name = :name_1 ORDER BY people_1.person_id")
 
 
 class PolymorphicUnionsTest(_PolymorphicTestBase, _PolymorphicUnions):
@@ -1482,7 +1478,8 @@ class PolymorphicUnionsTest(_PolymorphicTestBase, _PolymorphicUnions):
         super(PolymorphicUnionsTest, self).test_correlation_one()
 
 
-class PolymorphicAliasedJoinsTest(_PolymorphicTestBase, _PolymorphicAliasedJoins):
+class PolymorphicAliasedJoinsTest(
+        _PolymorphicTestBase, _PolymorphicAliasedJoins):
     @testing.fails()
     def test_correlation_one(self):
         super(PolymorphicAliasedJoinsTest, self).test_correlation_one()
