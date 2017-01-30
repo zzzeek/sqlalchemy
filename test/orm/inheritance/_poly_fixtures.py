@@ -55,56 +55,56 @@ class _PolymorphicFixtureBase(fixtures.MappedTest, AssertsCompiledSQL):
         global companies, paperwork, machines
 
         companies = Table('companies', metadata,
-            Column('company_id', Integer,
-                primary_key=True,
-                test_needs_autoincrement=True),
-            Column('name', String(50)))
+                          Column('company_id', Integer,
+                                 primary_key=True,
+                                 test_needs_autoincrement=True),
+                          Column('name', String(50)))
 
         people = Table('people', metadata,
-            Column('person_id', Integer,
-                primary_key=True,
-                test_needs_autoincrement=True),
-            Column('company_id', Integer,
-                ForeignKey('companies.company_id')),
-            Column('name', String(50)),
-            Column('type', String(30)))
+                       Column('person_id', Integer,
+                              primary_key=True,
+                              test_needs_autoincrement=True),
+                       Column('company_id', Integer,
+                              ForeignKey('companies.company_id')),
+                       Column('name', String(50)),
+                       Column('type', String(30)))
 
         engineers = Table('engineers', metadata,
-            Column('person_id', Integer,
-                ForeignKey('people.person_id'),
-                primary_key=True),
-            Column('status', String(30)),
-            Column('engineer_name', String(50)),
-            Column('primary_language', String(50)))
+                          Column('person_id', Integer,
+                                 ForeignKey('people.person_id'),
+                                 primary_key=True),
+                          Column('status', String(30)),
+                          Column('engineer_name', String(50)),
+                          Column('primary_language', String(50)))
 
         machines = Table('machines', metadata,
-             Column('machine_id',
-                 Integer, primary_key=True,
-                 test_needs_autoincrement=True),
-             Column('name', String(50)),
-             Column('engineer_id', Integer,
-            ForeignKey('engineers.person_id')))
+                         Column('machine_id',
+                                Integer, primary_key=True,
+                                test_needs_autoincrement=True),
+                         Column('name', String(50)),
+                         Column('engineer_id', Integer,
+                                ForeignKey('engineers.person_id')))
 
         managers = Table('managers', metadata,
-            Column('person_id', Integer,
-                ForeignKey('people.person_id'),
-                primary_key=True),
-            Column('status', String(30)),
-            Column('manager_name', String(50)))
+                         Column('person_id', Integer,
+                                ForeignKey('people.person_id'),
+                                primary_key=True),
+                         Column('status', String(30)),
+                         Column('manager_name', String(50)))
 
         boss = Table('boss', metadata,
-            Column('boss_id', Integer,
-                ForeignKey('managers.person_id'),
-                primary_key=True),
-            Column('golf_swing', String(30)))
+                     Column('boss_id', Integer,
+                            ForeignKey('managers.person_id'),
+                            primary_key=True),
+                     Column('golf_swing', String(30)))
 
         paperwork = Table('paperwork', metadata,
-            Column('paperwork_id', Integer,
-                primary_key=True,
-                test_needs_autoincrement=True),
-            Column('description', String(50)),
-            Column('person_id', Integer,
-                ForeignKey('people.person_id')))
+                          Column('paperwork_id', Integer,
+                                 primary_key=True,
+                                 test_needs_autoincrement=True),
+                          Column('description', String(50)),
+                          Column('person_id', Integer,
+                                 ForeignKey('people.person_id')))
 
     @classmethod
     def insert_data(cls):
@@ -251,10 +251,10 @@ class _PolymorphicFixtureBase(fixtures.MappedTest, AssertsCompiledSQL):
     @classmethod
     def setup_mappers(cls):
         mapper(Company, companies,
-            properties={
-                'employees': relationship(
-                    Person,
-                    order_by=people.c.person_id)})
+               properties={
+                   'employees': relationship(
+                       Person,
+                       order_by=people.c.person_id)})
 
         mapper(Machine, machines)
 
@@ -262,30 +262,30 @@ class _PolymorphicFixtureBase(fixtures.MappedTest, AssertsCompiledSQL):
             manager_with_polymorphic = cls._get_polymorphics()
 
         mapper(Person, people,
-            with_polymorphic=person_with_polymorphic,
-            polymorphic_on=people.c.type,
-            polymorphic_identity='person',
-            properties={
-                'paperwork': relationship(
-                    Paperwork,
-                    order_by=paperwork.c.paperwork_id)})
+               with_polymorphic=person_with_polymorphic,
+               polymorphic_on=people.c.type,
+               polymorphic_identity='person',
+               properties={
+                   'paperwork': relationship(
+                       Paperwork,
+                       order_by=paperwork.c.paperwork_id)})
 
         mapper(Engineer, engineers,
-            inherits=Person,
-            polymorphic_identity='engineer',
-            properties={
-                'machines': relationship(
-                    Machine,
-                    order_by=machines.c.machine_id)})
+               inherits=Person,
+               polymorphic_identity='engineer',
+               properties={
+                   'machines': relationship(
+                       Machine,
+                       order_by=machines.c.machine_id)})
 
         mapper(Manager, managers,
-            with_polymorphic=manager_with_polymorphic,
-            inherits=Person,
-            polymorphic_identity='manager')
+               with_polymorphic=manager_with_polymorphic,
+               inherits=Person,
+               polymorphic_identity='manager')
 
         mapper(Boss, boss,
-            inherits=Manager,
-            polymorphic_identity='boss')
+               inherits=Manager,
+               polymorphic_identity='boss')
 
         mapper(Paperwork, paperwork)
 
@@ -315,8 +315,8 @@ class _PolymorphicUnions(_PolymorphicFixtureBase):
             cls.tables.people, cls.tables.engineers, \
             cls.tables.managers, cls.tables.boss
         person_join = polymorphic_union({
-                'engineer': people.join(engineers),
-                'manager': people.join(managers)},
+            'engineer': people.join(engineers),
+            'manager': people.join(managers)},
             None, 'pjoin')
         manager_join = people.join(managers).outerjoin(boss)
         person_with_polymorphic = (
