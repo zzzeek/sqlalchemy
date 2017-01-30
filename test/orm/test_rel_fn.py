@@ -7,6 +7,7 @@ from sqlalchemy import MetaData, Table, Column, ForeignKey, Integer, \
 from sqlalchemy.orm.interfaces import ONETOMANY, MANYTOONE, MANYTOMANY
 from sqlalchemy.testing import mock
 
+
 class _JoinFixtures(object):
     @classmethod
     def setup_class(cls):
@@ -280,7 +281,7 @@ class _JoinFixtures(object):
             self.right,
             self.left,
             self.right,
-            primaryjoin=(self.left.c.x + self.left.c.y) == \
+            primaryjoin=(self.left.c.x + self.left.c.y) ==
                             relationships.remote(relationships.foreign(
                                 self.right.c.x * self.right.c.y
                             )),
@@ -293,7 +294,7 @@ class _JoinFixtures(object):
             self.right,
             self.left,
             self.right,
-            primaryjoin=(self.left.c.x + self.left.c.y) == \
+            primaryjoin=(self.left.c.x + self.left.c.y) ==
                             relationships.foreign(
                                 self.right.c.x * self.right.c.y
                             ),
@@ -306,7 +307,7 @@ class _JoinFixtures(object):
             self.right,
             self.left,
             self.right,
-            primaryjoin=(self.left.c.x + self.left.c.y) == \
+            primaryjoin=(self.left.c.x + self.left.c.y) ==
                             (
                                 self.right.c.x * self.right.c.y
                             ),
@@ -324,7 +325,7 @@ class _JoinFixtures(object):
             right,
             self.base_w_sub_rel,
             self.rel_sub,
-            primaryjoin=self.base_w_sub_rel.c.sub_id == \
+            primaryjoin=self.base_w_sub_rel.c.sub_id ==
                         self.rel_sub.c.id,
             **kw
         )
@@ -387,7 +388,7 @@ class _JoinFixtures(object):
             right,
             self.right_w_base_rel,
             self.right_w_base_rel,
-            primaryjoin=self.right_w_base_rel.c.base_id == \
+            primaryjoin=self.right_w_base_rel.c.base_id ==
                 func.foo(self.base.c.id)
         )
 
@@ -437,7 +438,6 @@ class _JoinFixtures(object):
                     **kw
                 )
 
-
         cls.left = Table('lft', m,
             Column('id', Integer, primary_key=True),
             Column('x', Integer),
@@ -468,8 +468,7 @@ class _JoinFixtures(object):
                     self.purely_single_col,
                     self.purely_single_col,
                     support_sync=False,
-                    primaryjoin=
-                        self.purely_single_col.c.path.like(
+                    primaryjoin=self.purely_single_col.c.path.like(
                             remote(
                                 foreign(
                                     self.purely_single_col.c.path.concat('%')
@@ -485,8 +484,7 @@ class _JoinFixtures(object):
                     self.purely_single_col,
                     self.purely_single_col,
                     support_sync=False,
-                    primaryjoin=
-                        remote(self.purely_single_col.c.path).like(
+                    primaryjoin=remote(self.purely_single_col.c.path).like(
                             foreign(self.purely_single_col.c.path.concat('%'))
                         )
                 )
@@ -752,7 +750,6 @@ class ColumnCollectionsTest(_JoinFixtures, fixtures.TestBase,
             set([self.right.c.x, self.right.c.y])
         )
 
-
     def test_determine_remote_columns_o2m(self):
         joincond = self._join_fixture_o2m()
         eq_(
@@ -893,7 +890,6 @@ class ColumnCollectionsTest(_JoinFixtures, fixtures.TestBase,
             set([self.m2msecondary.c.lid, self.m2msecondary.c.rid])
         )
 
-
     def test_determine_remote_columns_m2o_selfref(self):
         joincond = self._join_fixture_m2o_selfref()
         eq_(
@@ -941,6 +937,7 @@ class ColumnCollectionsTest(_JoinFixtures, fixtures.TestBase,
             set([self.base.c.flag, self.sub_w_sub_rel.c.sub_id])
         )
 
+
 class DirectionTest(_JoinFixtures, fixtures.TestBase, AssertsCompiledSQL):
     def test_determine_direction_compound_2(self):
         joincond = self._join_fixture_compound_expression_2(
@@ -981,6 +978,7 @@ class DirectionTest(_JoinFixtures, fixtures.TestBase, AssertsCompiledSQL):
     def test_determine_direction_purely_single_m2o(self):
         joincond = self._join_fixture_purely_single_m2o()
         is_(joincond.direction, MANYTOONE)
+
 
 class DetermineJoinTest(_JoinFixtures, fixtures.TestBase, AssertsCompiledSQL):
     __dialect__ = 'default'
@@ -1056,7 +1054,6 @@ class DetermineJoinTest(_JoinFixtures, fixtures.TestBase, AssertsCompiledSQL):
                     self.selfref,
         )
 
-
     def test_determine_join_ambiguous_fks_m2m(self):
 
         self._assert_raises_ambig_join(
@@ -1103,6 +1100,7 @@ class DetermineJoinTest(_JoinFixtures, fixtures.TestBase, AssertsCompiledSQL):
                 "m2mrgt.id = m2msecondary_ambig_fks.rid1"
         )
 
+
 class AdaptedJoinTest(_JoinFixtures, fixtures.TestBase, AssertsCompiledSQL):
     __dialect__ = 'default'
 
@@ -1125,7 +1123,6 @@ class AdaptedJoinTest(_JoinFixtures, fixtures.TestBase, AssertsCompiledSQL):
         self.assert_compile(
             pj, "selfref.id = pj.sid"
         )
-
 
     def test_join_targets_o2m_plain(self):
         joincond = self._join_fixture_o2m()
@@ -1185,6 +1182,7 @@ class AdaptedJoinTest(_JoinFixtures, fixtures.TestBase, AssertsCompiledSQL):
             "AND pj.id = composite_selfref.parent_id"
         )
 
+
 class LazyClauseTest(_JoinFixtures, fixtures.TestBase, AssertsCompiledSQL):
     __dialect__ = 'default'
 
@@ -1223,7 +1221,7 @@ class LazyClauseTest(_JoinFixtures, fixtures.TestBase, AssertsCompiledSQL):
         self.assert_compile(
             lazywhere,
             "lft.id = :param_1 AND lft.x = :x_1",
-            checkparams= {'param_1': None, 'x_1': 5}
+            checkparams={'param_1': None, 'x_1': 5}
         )
 
     def test_lazy_clause_remote_local_multiple_ref(self):

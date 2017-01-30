@@ -220,7 +220,7 @@ class NaturalPKTest(fixtures.MappedTest):
             sess.flush()
         if not passive_updates:
             # test passive_updates=False;
-            #load addresses, update user, update 2 addresses
+            # load addresses, update user, update 2 addresses
             self.assert_sql_count(testing.db, go, 3)
         else:
             # test passive_updates=True; update user

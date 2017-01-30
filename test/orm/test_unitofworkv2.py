@@ -1315,6 +1315,7 @@ class RowswitchAccountingTest(fixtures.MappedTest):
 
         sess.close()
 
+
 class RowswitchM2OTest(fixtures.MappedTest):
     # tests for #3060 and related issues
 
@@ -2320,6 +2321,7 @@ class EagerDefaultsTest(fixtures.MappedTest):
                 dialect='postgresql'
             )
         )
+
 
 class TypeWoBoolTest(fixtures.MappedTest, testing.AssertsExecutionResults):
     """test support for custom datatypes that return a non-__bool__ value

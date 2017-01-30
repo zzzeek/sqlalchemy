@@ -18,7 +18,6 @@ class DeferredTest(AssertsCompiledSQL, _fixtures.FixtureTest):
 
         Order, orders = self.classes.Order, self.tables.orders
 
-
         mapper(Order, orders, properties={
             'description': deferred(orders.c.description)})
 
@@ -26,6 +25,7 @@ class DeferredTest(AssertsCompiledSQL, _fixtures.FixtureTest):
         self.assert_(o.description is None)
 
         q = create_session().query(Order).order_by(Order.id)
+
         def go():
             l = q.all()
             o2 = l[2]
@@ -39,13 +39,12 @@ class DeferredTest(AssertsCompiledSQL, _fixtures.FixtureTest):
              "FROM orders ORDER BY orders.id", {}),
             ("SELECT orders.description AS orders_description "
              "FROM orders WHERE orders.id = :param_1",
-             {'param_1':3})])
+             {'param_1': 3})])
 
     def test_defer_primary_key(self):
         """what happens when we try to defer the primary key?"""
 
         Order, orders = self.classes.Order, self.tables.orders
-
 
         mapper(Order, orders, properties={
             'id': deferred(orders.c.id)})
@@ -58,12 +57,10 @@ class DeferredTest(AssertsCompiledSQL, _fixtures.FixtureTest):
             q.first
         )
 
-
     def test_unsaved(self):
         """Deferred loading does not kick in when just PK cols are set."""
 
         Order, orders = self.classes.Order, self.tables.orders
-
 
         mapper(Order, orders, properties={
             'description': deferred(orders.c.description)})
@@ -72,6 +69,7 @@ class DeferredTest(AssertsCompiledSQL, _fixtures.FixtureTest):
         o = Order()
         sess.add(o)
         o.id = 7
+
         def go():
             o.description = "some description"
         self.sql_count_(0, go)
@@ -80,8 +78,8 @@ class DeferredTest(AssertsCompiledSQL, _fixtures.FixtureTest):
         orders, Order = self.tables.orders, self.classes.Order
 
         mapper(Order, orders, properties={
-            'isopen':synonym('_isopen', map_column=True),
-            'description':deferred(orders.c.description, group='foo')
+            'isopen': synonym('_isopen', map_column=True),
+            'description': deferred(orders.c.description, group='foo')
         })
 
         sess = create_session()
@@ -97,6 +95,7 @@ class DeferredTest(AssertsCompiledSQL, _fixtures.FixtureTest):
         sess = create_session()
         o = Order()
         sess.add(o)
+
         def go():
             o.description = "some description"
         self.sql_count_(0, go)
@@ -106,7 +105,6 @@ class DeferredTest(AssertsCompiledSQL, _fixtures.FixtureTest):
 
         orders, Order = self.tables.orders, self.classes.Order
 
-
         mapper(Order, orders, properties=dict(
             description=deferred(orders.c.description, group='primary'),
             opened=deferred(orders.c.isopen, group='primary')))
@@ -115,6 +113,7 @@ class DeferredTest(AssertsCompiledSQL, _fixtures.FixtureTest):
         o = Order()
         sess.add(o)
         o.id = 7
+
         def go():
             o.description = "some description"
         self.sql_count_(0, go)
@@ -129,6 +128,7 @@ class DeferredTest(AssertsCompiledSQL, _fixtures.FixtureTest):
         sess = create_session()
         o = Order()
         sess.add(o)
+
         def go():
             o.description = "some description"
         self.sql_count_(0, go)
@@ -158,6 +158,7 @@ class DeferredTest(AssertsCompiledSQL, _fixtures.FixtureTest):
 
         sess = create_session()
         q = sess.query(Order).order_by(Order.id)
+
         def go():
             l = q.all()
             o2 = l[2]
@@ -173,12 +174,13 @@ class DeferredTest(AssertsCompiledSQL, _fixtures.FixtureTest):
              "orders.description AS orders_description, "
              "orders.isopen AS orders_isopen "
              "FROM orders WHERE orders.id = :param_1",
-             {'param_1':3})])
+             {'param_1': 3})])
 
         o2 = q.all()[2]
         eq_(o2.description, 'order 3')
         assert o2 not in sess.dirty
         o2.description = 'order 3'
+
         def go():
             sess.flush()
         self.sql_count_(0, go)
@@ -188,7 +190,7 @@ class DeferredTest(AssertsCompiledSQL, _fixtures.FixtureTest):
 
         orders, Order = self.tables.orders, self.classes.Order
 
-        mapper(Order, orders, properties = {
+        mapper(Order, orders, properties={
             'userident': deferred(orders.c.user_id, group='primary'),
             'description': deferred(orders.c.description, group='primary'),
             'opened': deferred(orders.c.isopen, group='primary')
@@ -198,6 +200,7 @@ class DeferredTest(AssertsCompiledSQL, _fixtures.FixtureTest):
         assert 'userident' not in o.__dict__
         o.description = 'somenewdescription'
         eq_(o.description, 'somenewdescription')
+
         def go():
             eq_(o.opened, 1)
         self.assert_sql_count(testing.db, go, 1)
@@ -213,7 +216,7 @@ class DeferredTest(AssertsCompiledSQL, _fixtures.FixtureTest):
 
         orders, Order = self.tables.orders, self.classes.Order
 
-        mapper(Order, orders, properties = {
+        mapper(Order, orders, properties={
             'userident': deferred(orders.c.user_id, group='primary'),
             'description': deferred(orders.c.description, group='primary'),
             'opened': deferred(orders.c.isopen, group='primary')})
@@ -237,7 +240,6 @@ class DeferredTest(AssertsCompiledSQL, _fixtures.FixtureTest):
 
         Order, orders = self.classes.Order, self.tables.orders
 
-
         order_select = sa.select([
                         orders.c.id,
                         orders.c.user_id,
@@ -245,7 +247,7 @@ class DeferredTest(AssertsCompiledSQL, _fixtures.FixtureTest):
                         orders.c.description,
                         orders.c.isopen]).alias()
         mapper(Order, order_select, properties={
-            'description':deferred(order_select.c.description)
+            'description': deferred(order_select.c.description)
         })
 
         sess = Session()
@@ -261,7 +263,6 @@ class DeferredOptionsTest(AssertsCompiledSQL, _fixtures.FixtureTest):
         """Options on a mapper to create deferred and undeferred columns"""
 
         orders, Order = self.tables.orders, self.classes.Order
-
 
         mapper(Order, orders)
 
@@ -279,7 +280,7 @@ class DeferredOptionsTest(AssertsCompiledSQL, _fixtures.FixtureTest):
              "FROM orders ORDER BY orders.id", {}),
             ("SELECT orders.user_id AS orders_user_id "
              "FROM orders WHERE orders.id = :param_1",
-             {'param_1':1})])
+             {'param_1': 1})])
         sess.expunge_all()
 
         q2 = q.options(undefer('user_id'))
@@ -304,6 +305,7 @@ class DeferredOptionsTest(AssertsCompiledSQL, _fixtures.FixtureTest):
 
         sess = create_session()
         q = sess.query(Order).order_by(Order.id)
+
         def go():
             l = q.options(undefer_group('primary')).all()
             o2 = l[2]
@@ -332,6 +334,7 @@ class DeferredOptionsTest(AssertsCompiledSQL, _fixtures.FixtureTest):
 
         sess = create_session()
         q = sess.query(Order).order_by(Order.id)
+
         def go():
             l = q.options(
                 undefer_group('primary'), undefer_group('secondary')).all()
@@ -361,6 +364,7 @@ class DeferredOptionsTest(AssertsCompiledSQL, _fixtures.FixtureTest):
 
         sess = create_session()
         q = sess.query(Order).order_by(Order.id)
+
         def go():
             l = q.options(
                 Load(Order).undefer_group('primary').undefer_group('secondary')).all()
@@ -404,7 +408,6 @@ class DeferredOptionsTest(AssertsCompiledSQL, _fixtures.FixtureTest):
 
         orders, Order = self.tables.orders, self.classes.Order
 
-
         mapper(Order, orders, properties={
             'description': deferred(orders.c.description)})
 
@@ -412,6 +415,7 @@ class DeferredOptionsTest(AssertsCompiledSQL, _fixtures.FixtureTest):
         o1 = (sess.query(Order).
               order_by(Order.id).
               add_column(orders.c.description).first())[0]
+
         def go():
             eq_(o1.description, 'order 1')
         # prior to 1.0 we'd search in the result for this column
@@ -430,7 +434,6 @@ class DeferredOptionsTest(AssertsCompiledSQL, _fixtures.FixtureTest):
 
         orders, Order = self.tables.orders, self.classes.Order
 
-
         mapper(Order, orders, properties={
             'description': deferred(orders.c.description)})
 
@@ -438,6 +441,7 @@ class DeferredOptionsTest(AssertsCompiledSQL, _fixtures.FixtureTest):
         stmt = sa.select([Order]).order_by(Order.id)
         o1 = (sess.query(Order).
               from_statement(stmt).all())[0]
+
         def go():
             eq_(o1.description, 'order 1')
         # prior to 1.0 we'd search in the result for this column
@@ -464,6 +468,7 @@ class DeferredOptionsTest(AssertsCompiledSQL, _fixtures.FixtureTest):
         q = sess.query(User).order_by(User.id)
         l = q.all()
         item = l[0].orders[1].items[1]
+
         def go():
             eq_(item.description, 'item 4')
         self.sql_count_(1, go)
@@ -472,6 +477,7 @@ class DeferredOptionsTest(AssertsCompiledSQL, _fixtures.FixtureTest):
         sess.expunge_all()
         l = q.options(undefer('orders.items.description')).all()
         item = l[0].orders[1].items[1]
+
         def go():
             eq_(item.description, 'item 4')
         self.sql_count_(0, go)
@@ -512,7 +518,6 @@ class DeferredOptionsTest(AssertsCompiledSQL, _fixtures.FixtureTest):
 
         q = sess.query(User).options(defer(User.orders, Order.items, Item.description))
         self.assert_compile(q, exp)
-
 
     def test_chained_multi_col_options(self):
         users, User = self.tables.users, self.classes.User
@@ -609,12 +614,12 @@ class DeferredOptionsTest(AssertsCompiledSQL, _fixtures.FixtureTest):
         else:
             opt = defaultload(User.addresses).load_only("id", "email_address")
         q = sess.query(User).options(opt).filter(User.id.in_([7, 8]))
+
         def go():
             for user in q:
                 user.addresses
 
         self.sql_eq_(go, expected)
-
 
     def test_load_only_parent_specific(self):
         User = self.classes.User
@@ -822,7 +827,6 @@ class InheritanceTest(_Polymorphic):
             "FROM companies JOIN (people JOIN managers ON people.person_id = "
             "managers.person_id) ON companies.company_id = people.company_id"
         )
-
 
     def test_defer_on_wildcard_subclass(self):
         # pretty much the same as load_only except doesn't

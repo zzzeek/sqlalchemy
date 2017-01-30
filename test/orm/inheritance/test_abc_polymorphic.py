@@ -8,6 +8,7 @@ from test.orm import _fixtures
 from sqlalchemy.testing import eq_
 from sqlalchemy.testing.schema import Table, Column
 
+
 class ABCTest(fixtures.MappedTest):
     @classmethod
     def define_tables(cls, metadata):
@@ -26,9 +27,11 @@ class ABCTest(fixtures.MappedTest):
 
     def _make_test(fetchtype):
         def test_roundtrip(self):
-            class A(fixtures.ComparableEntity):pass
-            class B(A):pass
-            class C(B):pass
+            class A(fixtures.ComparableEntity): pass
+
+            class B(A): pass
+
+            class C(B): pass
 
             if fetchtype == 'union':
                 abc = a.outerjoin(b).outerjoin(c)
@@ -54,7 +57,7 @@ class ABCTest(fixtures.MappedTest):
             sess.flush()
             sess.expunge_all()
 
-            #for obj in sess.query(A).all():
+            # for obj in sess.query(A).all():
             #    print obj
             eq_(
                 [

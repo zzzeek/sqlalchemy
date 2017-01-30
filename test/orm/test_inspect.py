@@ -8,19 +8,19 @@ from sqlalchemy.orm import class_mapper, synonym, Session, aliased
 from sqlalchemy.orm.attributes import instance_state, NO_VALUE
 from sqlalchemy import testing
 
+
 class TestORMInspection(_fixtures.FixtureTest):
     @classmethod
     def setup_mappers(cls):
         cls._setup_stock_mapping()
         inspect(cls.classes.User).add_property(
-            "name_syn",synonym("name")
+            "name_syn", synonym("name")
         )
 
     def test_class_mapper(self):
         User = self.classes.User
 
         assert inspect(User) is class_mapper(User)
-
 
     def test_column_collection_iterate(self):
         User = self.classes.User
@@ -64,8 +64,10 @@ class TestORMInspection(_fixtures.FixtureTest):
 
     def test_mapper_selectable_fixed(self):
         from sqlalchemy.orm import mapper
+
         class Foo(object):
             pass
+
         class Bar(Foo):
             pass
         user_table = self.tables.users
@@ -237,7 +239,6 @@ class TestORMInspection(_fixtures.FixtureTest):
 
         assert not hasattr(prop, 'columns')
         assert hasattr(prop, 'expression')
-
 
     def test_extension_types(self):
         from sqlalchemy.ext.associationproxy import \

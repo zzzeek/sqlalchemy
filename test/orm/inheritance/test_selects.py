@@ -6,6 +6,7 @@ from sqlalchemy import testing
 from sqlalchemy.testing import fixtures, eq_
 from sqlalchemy.testing.schema import Table, Column
 
+
 class InheritingSelectablesTest(fixtures.MappedTest):
     @classmethod
     def define_tables(cls, metadata):
@@ -26,8 +27,10 @@ class InheritingSelectablesTest(fixtures.MappedTest):
 
         class Foo(fixtures.ComparableEntity):
             pass
+
         class Bar(Foo):
             pass
+
         class Baz(Foo):
             pass
 
@@ -74,6 +77,7 @@ class JoinFromSelectPersistenceTest(fixtures.MappedTest):
     def setup_classes(cls):
         class Base(cls.Comparable):
             pass
+
         class Child(Base):
             pass
 

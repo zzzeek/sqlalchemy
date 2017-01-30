@@ -1987,8 +1987,7 @@ class SelectFromTest(QueryTest, AssertsCompiledSQL):
     def test_join_relname_from_selected_from(self):
         User, Address = self.classes.User, self.classes.Address
         users, addresses = self.tables.users, self.tables.addresses
-        mapper(User, users, properties=
-            {'addresses': relationship(mapper(Address, addresses),
+        mapper(User, users, properties={'addresses': relationship(mapper(Address, addresses),
                 backref='user')})
 
         sess = create_session()
@@ -2002,8 +2001,7 @@ class SelectFromTest(QueryTest, AssertsCompiledSQL):
     def test_filter_by_selected_from(self):
         User, Address = self.classes.User, self.classes.Address
         users, addresses = self.tables.users, self.tables.addresses
-        mapper(User, users, properties=
-            {'addresses': relationship(mapper(Address, addresses))})
+        mapper(User, users, properties={'addresses': relationship(mapper(Address, addresses))})
 
         sess = create_session()
 
@@ -2018,8 +2016,7 @@ class SelectFromTest(QueryTest, AssertsCompiledSQL):
     def test_join_ent_selected_from(self):
         User, Address = self.classes.User, self.classes.Address
         users, addresses = self.tables.users, self.tables.addresses
-        mapper(User, users, properties=
-            {'addresses': relationship(mapper(Address, addresses))})
+        mapper(User, users, properties={'addresses': relationship(mapper(Address, addresses))})
 
         sess = create_session()
 
@@ -2028,7 +2025,6 @@ class SelectFromTest(QueryTest, AssertsCompiledSQL):
             "SELECT users.id AS users_id, users.name AS users_name "
             "FROM addresses JOIN users ON users.id = addresses.user_id"
         )
-
 
     def test_join(self):
         users, Address, addresses, User = (

@@ -38,29 +38,33 @@ class PointTest(fixtures.MappedTest):
             def __init__(self, x, y):
                 self.x = x
                 self.y = y
+
             def __composite_values__(self):
                 return [self.x, self.y]
             __hash__ = None
+
             def __eq__(self, other):
                 return isinstance(other, Point) and \
                         other.x == self.x and \
                         other.y == self.y
+
             def __ne__(self, other):
                 return not isinstance(other, Point) or \
                         not self.__eq__(other)
 
         class Graph(cls.Comparable):
             pass
+
         class Edge(cls.Comparable):
             def __init__(self, *args):
                 if args:
                     self.start, self.end = args
 
         mapper(Graph, graphs, properties={
-            'edges':relationship(Edge)
+            'edges': relationship(Edge)
         })
         mapper(Edge, edges, properties={
-            'start':sa.orm.composite(Point, edges.c.x1, edges.c.y1),
+            'start': sa.orm.composite(Point, edges.c.x1, edges.c.y1),
             'end': sa.orm.composite(Point, edges.c.x2, edges.c.y2)
         })
 
@@ -86,7 +90,6 @@ class PointTest(fixtures.MappedTest):
 
     def test_round_trip(self):
         Graph, Point = self.classes.Graph, self.classes.Point
-
 
         sess = self._fixture()
 
@@ -205,7 +208,7 @@ class PointTest(fixtures.MappedTest):
         from sqlalchemy.orm.attributes import get_history
 
         e1 = Edge()
-        e1.start = Point(1,2)
+        e1.start = Point(1, 2)
         eq_(
             get_history(e1, 'start'),
             ([Point(x=1, y=2)], (), [Point(x=None, y=None)])
@@ -309,6 +312,7 @@ class PointTest(fixtures.MappedTest):
         e = Edge()
         eq_(e.start, None)
 
+
 class PrimaryKeyTest(fixtures.MappedTest):
     @classmethod
     def define_tables(cls, metadata):
@@ -326,13 +330,16 @@ class PrimaryKeyTest(fixtures.MappedTest):
             def __init__(self, id, version):
                 self.id = id
                 self.version = version
+
             def __composite_values__(self):
                 return (self.id, self.version)
             __hash__ = None
+
             def __eq__(self, other):
                 return isinstance(other, Version) and \
                                 other.id == self.id and \
                                 other.version == self.version
+
             def __ne__(self, other):
                 return not self.__eq__(other)
 
@@ -341,9 +348,8 @@ class PrimaryKeyTest(fixtures.MappedTest):
                 self.version = version
 
         mapper(Graph, graphs, properties={
-            'version':sa.orm.composite(Version, graphs.c.id,
+            'version': sa.orm.composite(Version, graphs.c.id,
                                        graphs.c.version_id)})
-
 
     def _fixture(self):
         Graph, Version = self.classes.Graph, self.classes.Version
@@ -356,7 +362,6 @@ class PrimaryKeyTest(fixtures.MappedTest):
 
     def test_get_by_col(self):
         Graph = self.classes.Graph
-
 
         sess = self._fixture()
         g = sess.query(Graph).first()
@@ -400,6 +405,7 @@ class PrimaryKeyTest(fixtures.MappedTest):
         g2 = sess.query(Graph).filter_by(version=Version(2, None)).one()
         eq_(g.version, g2.version)
 
+
 class DefaultsTest(fixtures.MappedTest):
 
     @classmethod
@@ -426,16 +432,20 @@ class DefaultsTest(fixtures.MappedTest):
                 self.x2 = x2
                 self.x3 = x3
                 self.x4 = x4
+
             def __composite_values__(self):
                 return self.goofy_x1, self.x2, self.x3, self.x4
             __hash__ = None
+
             def __eq__(self, other):
                 return other.goofy_x1 == self.goofy_x1 and \
                         other.x2 == self.x2 and \
                         other.x3 == self.x3 and \
                         other.x4 == self.x4
+
             def __ne__(self, other):
                 return not self.__eq__(other)
+
             def __repr__(self):
                 return "FBComposite(%r, %r, %r, %r)" % (
                     self.goofy_x1, self.x2, self.x3, self.x4
@@ -450,7 +460,6 @@ class DefaultsTest(fixtures.MappedTest):
 
     def test_attributes_with_defaults(self):
         Foobar, FBComposite = self.classes.Foobar, self.classes.FBComposite
-
 
         sess = Session()
         f1 = Foobar()
@@ -544,9 +553,9 @@ class MappedSelectTest(fixtures.MappedTest):
 
         session = Session()
         d = Descriptions(
-            custom_descriptions = CustomValues('Color', 'Number'),
-            values =[
-                Values(custom_values = CustomValues('Red', '5')),
+            custom_descriptions=CustomValues('Color', 'Number'),
+            values=[
+                Values(custom_values=CustomValues('Red', '5')),
                 Values(custom_values=CustomValues('Blue', '1'))
             ]
         )
@@ -561,6 +570,7 @@ class MappedSelectTest(fixtures.MappedTest):
             testing.db.execute(values.select()).fetchall(),
             [(1, 1, 'Red', '5'), (2, 1, 'Blue', '1')]
         )
+
 
 class ManyToOneTest(fixtures.MappedTest):
     @classmethod
@@ -585,6 +595,7 @@ class ManyToOneTest(fixtures.MappedTest):
 
         class A(cls.Comparable):
             pass
+
         class B(cls.Comparable):
             pass
 
@@ -600,10 +611,9 @@ class ManyToOneTest(fixtures.MappedTest):
                     other.b1 == self.b1 and \
                     other.b2 == self.b2
 
-
         mapper(A, a, properties={
-            'b2':relationship(B),
-            'c':composite(C, 'b1', 'b2')
+            'b2': relationship(B),
+            'c': composite(C, 'b1', 'b2')
         })
         mapper(B, b)
 
@@ -612,7 +622,6 @@ class ManyToOneTest(fixtures.MappedTest):
         # expression before configure_mappers()
         A = self.classes.A
         A.c.__clause_element__()
-
 
     def test_persist(self):
         A, C, B = (self.classes.A,
@@ -661,6 +670,7 @@ class ManyToOneTest(fixtures.MappedTest):
             a2
         )
 
+
 class ConfigurationTest(fixtures.MappedTest):
     @classmethod
     def define_tables(cls, metadata):
@@ -679,12 +689,15 @@ class ConfigurationTest(fixtures.MappedTest):
             def __init__(self, x, y):
                 self.x = x
                 self.y = y
+
             def __composite_values__(self):
                 return [self.x, self.y]
+
             def __eq__(self, other):
                 return isinstance(other, Point) and \
                         other.x == self.x and \
                         other.y == self.y
+
             def __ne__(self, other):
                 return not isinstance(other, Point) or \
                     not self.__eq__(other)
@@ -711,7 +724,7 @@ class ConfigurationTest(fixtures.MappedTest):
                                 self.classes.Point)
 
         mapper(Edge, edge, properties={
-            'start':sa.orm.composite(Point, edge.c.x1, edge.c.y1),
+            'start': sa.orm.composite(Point, edge.c.x1, edge.c.y1),
             'end': sa.orm.composite(Point, edge.c.x2, edge.c.y2)
         })
 
@@ -744,7 +757,7 @@ class ConfigurationTest(fixtures.MappedTest):
                                 self.classes.Edge,
                                 self.classes.Point)
         mapper(Edge, edge, properties={
-            'start':sa.orm.composite(Point, edge.c.x1, edge.c.y1,
+            'start': sa.orm.composite(Point, edge.c.x1, edge.c.y1,
                                             deferred=True, group='s'),
             'end': sa.orm.composite(Point, edge.c.x2, edge.c.y2,
                                             deferred=True)
@@ -769,6 +782,7 @@ class ConfigurationTest(fixtures.MappedTest):
             configure_mappers
         )
 
+
 class ComparatorTest(fixtures.MappedTest, testing.AssertsCompiledSQL):
     __dialect__ = 'default'
 
@@ -789,12 +803,15 @@ class ComparatorTest(fixtures.MappedTest, testing.AssertsCompiledSQL):
             def __init__(self, x, y):
                 self.x = x
                 self.y = y
+
             def __composite_values__(self):
                 return [self.x, self.y]
+
             def __eq__(self, other):
                 return isinstance(other, Point) and \
                         other.x == self.x and \
                         other.y == self.y
+
             def __ne__(self, other):
                 return not isinstance(other, Point) or \
                     not self.__eq__(other)
@@ -851,15 +868,15 @@ class ComparatorTest(fixtures.MappedTest, testing.AssertsCompiledSQL):
         sess.commit()
 
         assert sess.query(Edge).\
-                    filter(Edge.start==Point(3, 4)).one() is \
+                    filter(Edge.start == Point(3, 4)).one() is \
                     e1
 
         assert sess.query(Edge).\
-                    filter(Edge.start!=Point(3, 4)).first() is \
+                    filter(Edge.start != Point(3, 4)).first() is \
                     e2
 
         eq_(
-            sess.query(Edge).filter(Edge.start==None).all(),
+            sess.query(Edge).filter(Edge.start == None).all(),
             []
         )
 

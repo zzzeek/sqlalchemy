@@ -32,7 +32,7 @@ class EagerTest(fixtures.MappedTest):
 
         cls.other['false'] = false
 
-        Table('owners', metadata ,
+        Table('owners', metadata,
               Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
               Column('data', String(30)))
 
@@ -40,14 +40,14 @@ class EagerTest(fixtures.MappedTest):
               Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
               Column('name', String(20)))
 
-        Table('tests', metadata ,
+        Table('tests', metadata,
               Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
               Column('owner_id', Integer, ForeignKey('owners.id'),
                      nullable=False),
               Column('category_id', Integer, ForeignKey('categories.id'),
                      nullable=False))
 
-        Table('options', metadata ,
+        Table('options', metadata,
               Column('test_id', Integer, ForeignKey('tests.id'), primary_key=True),
               Column('owner_id', Integer, ForeignKey('owners.id'), primary_key=True),
               Column('someoption', sa.Boolean, server_default=false, nullable=False))
@@ -131,10 +131,10 @@ class EagerTest(fixtures.MappedTest):
         # not orm style correct query
         print("Obtaining correct results without orm")
         result = sa.select(
-            [tests.c.id,categories.c.name],
+            [tests.c.id, categories.c.name],
             sa.and_(tests.c.owner_id == 1,
-                    sa.or_(options.c.someoption==None,
-                           options.c.someoption==False)),
+                    sa.or_(options.c.someoption == None,
+                           options.c.someoption == False)),
             order_by=[tests.c.id],
             from_obj=[tests.join(categories).outerjoin(options, sa.and_(
                 tests.c.id == options.c.test_id,
@@ -153,11 +153,11 @@ class EagerTest(fixtures.MappedTest):
                                          sa.and_(tests.c.id == options.c.test_id,
                                                  tests.c.owner_id ==
                                                  options.c.owner_id))).
-             filter(sa.and_(tests.c.owner_id==1,
-                            sa.or_(options.c.someoption==None,
-                                   options.c.someoption==False))))
+             filter(sa.and_(tests.c.owner_id == 1,
+                            sa.or_(options.c.someoption == None,
+                                   options.c.someoption == False))))
 
-        result = ["%d %s" % ( t.id,t.category.name ) for t in l]
+        result = ["%d %s" % (t.id, t.category.name) for t in l]
         eq_(result, ['1 Some Category', '3 Some Category'])
 
     def test_withjoinedload(self):
@@ -173,18 +173,18 @@ class EagerTest(fixtures.MappedTest):
                                 self.tables.options)
 
         s = create_session()
-        q=s.query(Thing).options(sa.orm.joinedload('category'))
+        q = s.query(Thing).options(sa.orm.joinedload('category'))
 
-        l=(q.select_from(tests.outerjoin(options,
+        l = (q.select_from(tests.outerjoin(options,
                                          sa.and_(tests.c.id ==
                                                  options.c.test_id,
                                                  tests.c.owner_id ==
                                                  options.c.owner_id))).
            filter(sa.and_(tests.c.owner_id == 1,
-                          sa.or_(options.c.someoption==None,
-                                 options.c.someoption==False))))
+                          sa.or_(options.c.someoption == None,
+                                 options.c.someoption == False))))
 
-        result = ["%d %s" % ( t.id,t.category.name ) for t in l]
+        result = ["%d %s" % (t.id, t.category.name) for t in l]
         eq_(result, ['1 Some Category', '3 Some Category'])
 
     def test_dslish(self):
@@ -196,13 +196,13 @@ class EagerTest(fixtures.MappedTest):
 
         s = create_session()
         q = s.query(Thing).options(sa.orm.joinedload('category'))
-        l = q.filter (
+        l = q.filter(
             sa.and_(tests.c.owner_id == 1,
                     sa.or_(options.c.someoption == None,
                            options.c.someoption == False))
             ).outerjoin('owner_option')
 
-        result = ["%d %s" % ( t.id,t.category.name ) for t in l]
+        result = ["%d %s" % (t.id, t.category.name) for t in l]
         eq_(result, ['1 Some Category', '3 Some Category'])
 
     @testing.crashes('sybase', 'FIXME: unknown, verify not fails_on')
@@ -214,11 +214,11 @@ class EagerTest(fixtures.MappedTest):
         s = create_session()
         q = s.query(Thing).options(sa.orm.joinedload('category'))
         l = (q.filter(
-            (tests.c.owner_id==1) &
+            (tests.c.owner_id == 1) &
             text('options.someoption is null or options.someoption=%s' % false)).
              join('owner_option'))
 
-        result = ["%d %s" % ( t.id,t.category.name ) for t in l]
+        result = ["%d %s" % (t.id, t.category.name) for t in l]
         eq_(result, ['3 Some Category'])
 
     def test_withoutouterjoin(self):
@@ -229,11 +229,11 @@ class EagerTest(fixtures.MappedTest):
         s = create_session()
         q = s.query(Thing).options(sa.orm.joinedload('category'))
         l = q.filter(
-            (tests.c.owner_id==1) &
-            ((options.c.someoption==None) | (options.c.someoption==False))
+            (tests.c.owner_id == 1) &
+            ((options.c.someoption == None) | (options.c.someoption == False))
                     ).join('owner_option')
 
-        result = ["%d %s" % ( t.id,t.category.name ) for t in l]
+        result = ["%d %s" % (t.id, t.category.name) for t in l]
         eq_(result, ['3 Some Category'])
 
 
@@ -245,7 +245,7 @@ class EagerTest2(fixtures.MappedTest):
             Column('data', String(50), primary_key=True))
 
         Table('middle', metadata,
-            Column('id', Integer, primary_key = True, test_needs_autoincrement=True),
+            Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
             Column('data', String(50)))
 
         Table('right', metadata,
@@ -281,7 +281,7 @@ class EagerTest2(fixtures.MappedTest):
         mapper(Middle, middle, properties=dict(
             left=relationship(Left,
                           lazy='joined',
-                          backref=backref('middle',lazy='joined')),
+                          backref=backref('middle', lazy='joined')),
             right=relationship(Right,
                            lazy='joined',
                            backref=backref('middle', lazy='joined')))),
@@ -319,13 +319,13 @@ class EagerTest3(fixtures.MappedTest):
               Column('a', Integer, nullable=False))
 
         Table('foo', metadata,
-              Column('data_id', Integer, ForeignKey('datas.id'),primary_key=True),
+              Column('data_id', Integer, ForeignKey('datas.id'), primary_key=True),
               Column('bar', Integer))
 
         Table('stats', metadata,
               Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
               Column('data_id', Integer, ForeignKey('datas.id')),
-              Column('somedata', Integer, nullable=False ))
+              Column('somedata', Integer, nullable=False))
 
     @classmethod
     def setup_classes(cls):
@@ -348,10 +348,10 @@ class EagerTest3(fixtures.MappedTest):
 
         mapper(Data, datas)
         mapper(Foo, foo, properties={
-            'data': relationship(Data,backref=backref('foo',uselist=False))})
+            'data': relationship(Data, backref=backref('foo', uselist=False))})
 
         mapper(Stat, stats, properties={
-            'data':relationship(Data)})
+            'data': relationship(Data)})
 
         session = create_session()
 
@@ -379,7 +379,7 @@ class EagerTest3(fixtures.MappedTest):
         arb_result = arb_data.execute().fetchall()
 
         # order the result list descending based on 'max'
-        arb_result.sort(key = lambda a: a['max'], reverse=True)
+        arb_result.sort(key=lambda a: a['max'], reverse=True)
 
         # extract just the "data_id" from it
         arb_result = [row['data_id'] for row in arb_result]
@@ -398,6 +398,7 @@ class EagerTest3(fixtures.MappedTest):
         verify_result = [d.id for d in q]
 
         eq_(verify_result, arb_result)
+
 
 class EagerTest4(fixtures.MappedTest):
 
@@ -616,7 +617,6 @@ class EagerTest6(fixtures.MappedTest):
                 Design, lazy='joined',
                 backref=backref("parts", cascade="all, delete-orphan")))
 
-
         d = Design()
         sess = create_session()
         sess.add(d)
@@ -634,12 +634,12 @@ class EagerTest7(fixtures.MappedTest):
               Column('company_name', String(40)))
 
         Table('addresses', metadata,
-              Column('address_id', Integer, primary_key=True,test_needs_autoincrement=True),
+              Column('address_id', Integer, primary_key=True, test_needs_autoincrement=True),
               Column('company_id', Integer, ForeignKey("companies.company_id")),
               Column('address', String(40)))
 
         Table('phone_numbers', metadata,
-              Column('phone_id', Integer, primary_key=True,test_needs_autoincrement=True),
+              Column('phone_id', Integer, primary_key=True, test_needs_autoincrement=True),
               Column('address_id', Integer, ForeignKey('addresses.address_id')),
               Column('type', String(20)),
               Column('number', String(10)))
@@ -682,7 +682,7 @@ class EagerTest7(fixtures.MappedTest):
         mapper(Address, addresses)
 
         mapper(Company, companies, properties={
-            'addresses' : relationship(Address, lazy='joined')})
+            'addresses': relationship(Address, lazy='joined')})
 
         mapper(Invoice, invoices, properties={
             'company': relationship(Company, lazy='joined')})
@@ -691,7 +691,6 @@ class EagerTest7(fixtures.MappedTest):
         a2 = Address(address='a2 address')
         c1 = Company(company_name='company 1', addresses=[a1, a2])
         i1 = Invoice(date=datetime.datetime.now(), company=c1)
-
 
         session = create_session()
         session.add(i1)
@@ -712,14 +711,13 @@ class EagerTest7(fixtures.MappedTest):
         self.assert_sql_count(testing.db, go, 0)
 
 
-
 class EagerTest8(fixtures.MappedTest):
 
     @classmethod
     def define_tables(cls, metadata):
         Table('prj', metadata,
               Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
-              Column('created', sa.DateTime ),
+              Column('created', sa.DateTime),
               Column('title', sa.String(100)))
 
         Table('task', metadata,
@@ -727,9 +725,9 @@ class EagerTest8(fixtures.MappedTest):
               Column('status_id', Integer,
                      ForeignKey('task_status.id'), nullable=False),
               Column('title', sa.String(100)),
-              Column('task_type_id', Integer ,
+              Column('task_type_id', Integer,
                      ForeignKey('task_type.id'), nullable=False),
-              Column('prj_id', Integer , ForeignKey('prj.id'), nullable=False))
+              Column('prj_id', Integer, ForeignKey('prj.id'), nullable=False))
 
         Table('task_status', metadata,
               Column('id', Integer, primary_key=True, test_needs_autoincrement=True))
@@ -785,10 +783,10 @@ class EagerTest8(fixtures.MappedTest):
 
         mapper(Task_Type, task_type)
 
-        tsk_cnt_join = sa.outerjoin(prj, task, task.c.prj_id==prj.c.id)
+        tsk_cnt_join = sa.outerjoin(prj, task, task.c.prj_id == prj.c.id)
 
-        j   = sa.outerjoin(task, msg, task.c.id==msg.c.task_id)
-        jj  = sa.select([ task.c.id.label('task_id'),
+        j = sa.outerjoin(task, msg, task.c.id == msg.c.task_id)
+        jj = sa.select([task.c.id.label('task_id'),
                           sa.func.count(msg.c.id).label('props_cnt')],
                         from_obj=[j],
                         group_by=[task.c.id]).alias('prop_c_s')

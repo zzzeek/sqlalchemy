@@ -33,10 +33,10 @@ class InheritTest(fixtures.MappedTest):
                    ForeignKey('principals.principal_id'), primary_key=True))
 
         user_group_map = Table('prin_user_group_map', metadata,
-            Column('user_id', Integer, ForeignKey( "prin_users.principal_id"),
-                   primary_key=True ),
-            Column('group_id', Integer, ForeignKey( "prin_groups.principal_id"),
-                   primary_key=True ),
+            Column('user_id', Integer, ForeignKey("prin_users.principal_id"),
+                   primary_key=True),
+            Column('group_id', Integer, ForeignKey("prin_groups.principal_id"),
+                   primary_key=True),
             )
 
     def test_basic(self):
@@ -66,6 +66,7 @@ class InheritTest(fixtures.MappedTest):
         sess.flush()
         # TODO: put an assertion
 
+
 class InheritTest2(fixtures.MappedTest):
     """deals with inheritance and many-to-many relationships"""
     @classmethod
@@ -90,7 +91,8 @@ class InheritTest2(fixtures.MappedTest):
         class Foo(object):
             def __init__(self, data=None):
                 self.data = data
-        class Bar(Foo):pass
+
+        class Bar(Foo): pass
 
         mapper(Foo, foo)
         mapper(Bar, bar, inherits=Foo)
@@ -112,6 +114,7 @@ class InheritTest2(fixtures.MappedTest):
                 self.data = data
 
         mapper(Foo, foo)
+
         class Bar(Foo):
             pass
 
@@ -137,8 +140,9 @@ class InheritTest2(fixtures.MappedTest):
         print(l[0].foos)
         self.assert_unordered_result(l, Bar,
 #            {'id':1, 'data':'barfoo', 'bid':1, 'foos':(Foo, [{'id':2,'data':'subfoo1'}, {'id':3,'data':'subfoo2'}])},
-            {'id':b.id, 'data':'barfoo', 'foos':(Foo, [{'id':f1.id,'data':'subfoo1'}, {'id':f2.id,'data':'subfoo2'}])},
+            {'id': b.id, 'data': 'barfoo', 'foos': (Foo, [{'id': f1.id, 'data': 'subfoo1'}, {'id': f2.id, 'data': 'subfoo2'}])},
             )
+
 
 class InheritTest3(fixtures.MappedTest):
     """deals with inheritance and many-to-many relationships"""
@@ -176,6 +180,7 @@ class InheritTest3(fixtures.MappedTest):
         class Foo(object):
             def __init__(self, data=None):
                 self.data = data
+
             def __repr__(self):
                 return "Foo id %d, data %s" % (self.id, self.data)
         mapper(Foo, foo)
@@ -185,7 +190,7 @@ class InheritTest3(fixtures.MappedTest):
                 return "Bar id %d, data %s" % (self.id, self.data)
 
         mapper(Bar, bar, inherits=Foo, properties={
-            'foos' :relationship(Foo, secondary=bar_foo, lazy='select')
+            'foos': relationship(Foo, secondary=bar_foo, lazy='select')
         })
 
         sess = create_session()
@@ -205,6 +210,7 @@ class InheritTest3(fixtures.MappedTest):
         class Foo(object):
             def __init__(self, data=None):
                 self.data = data
+
             def __repr__(self):
                 return "Foo id %d, data %s" % (self.id, self.data)
         mapper(Foo, foo)

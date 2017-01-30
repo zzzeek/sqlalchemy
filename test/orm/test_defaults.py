@@ -74,7 +74,6 @@ class TriggerDefaultsTest(fixtures.MappedTest):
 
         event.listen(dt, 'before_drop', sa.DDL("DROP TRIGGER dt_up"))
 
-
     @classmethod
     def setup_classes(cls):
         class Default(cls.Comparable):
@@ -88,7 +87,6 @@ class TriggerDefaultsTest(fixtures.MappedTest):
 
     def test_insert(self):
         Default = self.classes.Default
-
 
         d1 = Default(id=1)
 
@@ -122,6 +120,7 @@ class TriggerDefaultsTest(fixtures.MappedTest):
         eq_(d1.col2, 'ins')
         eq_(d1.col3, 'up')
         eq_(d1.col4, 'up')
+
 
 class ExcludedDefaultsTest(fixtures.MappedTest):
     @classmethod

@@ -18,11 +18,11 @@ class ImmediateTest(_fixtures.FixtureTest):
 
         mapper(Address, addresses)
         mapper(User, users, properties={
-            'addresses':relationship(Address)
+            'addresses': relationship(Address)
         })
         sess = create_session()
 
-        l = sess.query(User).options(immediateload(User.addresses)).filter(users.c.id==7).all()
+        l = sess.query(User).options(immediateload(User.addresses)).filter(users.c.id == 7).all()
         eq_(len(sess.identity_map), 2)
 
         sess.close()
@@ -32,7 +32,6 @@ class ImmediateTest(_fixtures.FixtureTest):
             l
         )
 
-
     def test_basic(self):
         Address, addresses, users, User = (self.classes.Address,
                                 self.tables.addresses,
@@ -41,11 +40,11 @@ class ImmediateTest(_fixtures.FixtureTest):
 
         mapper(Address, addresses)
         mapper(User, users, properties={
-            'addresses':relationship(Address, lazy='immediate')
+            'addresses': relationship(Address, lazy='immediate')
         })
         sess = create_session()
 
-        l = sess.query(User).filter(users.c.id==7).all()
+        l = sess.query(User).filter(users.c.id == 7).all()
         eq_(len(sess.identity_map), 2)
         sess.close()
 

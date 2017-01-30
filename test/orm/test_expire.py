@@ -14,6 +14,7 @@ from sqlalchemy.testing import fixtures
 from test.orm import _fixtures
 from sqlalchemy.sql import select
 
+
 class ExpireTest(_fixtures.FixtureTest):
 
     def test_expire(self):
@@ -23,7 +24,7 @@ class ExpireTest(_fixtures.FixtureTest):
                                 self.classes.User)
 
         mapper(User, users, properties={
-            'addresses':relationship(Address, backref='user'),
+            'addresses': relationship(Address, backref='user'),
             })
         mapper(Address, addresses)
 
@@ -44,7 +45,7 @@ class ExpireTest(_fixtures.FixtureTest):
         u.name = 'foo'
         sess.flush()
         # change the value in the DB
-        users.update(users.c.id==7, values=dict(name='jack')).execute()
+        users.update(users.c.id == 7, values=dict(name='jack')).execute()
         sess.expire(u)
         # object isn't refreshed yet, using dict to bypass trigger
         assert u.__dict__.get('name') != 'jack'
@@ -81,9 +82,11 @@ class ExpireTest(_fixtures.FixtureTest):
         def go():
             u = s.query(User).get(10)  # get() refreshes
         self.assert_sql_count(testing.db, go, 1)
+
         def go():
             eq_(u.name, 'chuck')  # attributes unexpired
         self.assert_sql_count(testing.db, go, 0)
+
         def go():
             u = s.query(User).get(10)  # expire flag reset, so not expired
         self.assert_sql_count(testing.db, go, 0)
@@ -96,12 +99,12 @@ class ExpireTest(_fixtures.FixtureTest):
         u = s.query(User).get(10)
 
         s.expire_all()
-        s.execute(users.delete().where(User.id==10))
+        s.execute(users.delete().where(User.id == 10))
 
         # object is gone, get() returns None, removes u from session
         assert u in s
         assert s.query(User).get(10) is None
-        assert u not in s # and expunges
+        assert u not in s  # and expunges
 
     def test_refresh_on_deleted_raises(self):
         users, User = self.tables.users, self.classes.User
@@ -112,7 +115,7 @@ class ExpireTest(_fixtures.FixtureTest):
         s.expire_all()
 
         s.expire_all()
-        s.execute(users.delete().where(User.id==10))
+        s.execute(users.delete().where(User.id == 10))
 
         # raises ObjectDeletedError
         assert_raises_message(
@@ -129,7 +132,7 @@ class ExpireTest(_fixtures.FixtureTest):
         s = create_session(autocommit=False)
         u = s.query(User).get(10)
         s.expire_all()
-        s.execute(users.delete().where(User.id==10))
+        s.execute(users.delete().where(User.id == 10))
 
         # do a get()/remove u from session
         assert s.query(User).get(10) is None
@@ -148,9 +151,8 @@ class ExpireTest(_fixtures.FixtureTest):
 
         Order, orders = self.classes.Order, self.tables.orders
 
-
         mapper(Order, orders, properties={
-                    'description':deferred(orders.c.description)})
+                    'description': deferred(orders.c.description)})
 
         s = create_session()
         o1 = s.query(Order).first()
@@ -164,13 +166,13 @@ class ExpireTest(_fixtures.FixtureTest):
         users, User = self.tables.users, self.classes.User
 
         mapper(User, users, properties={
-            'name':deferred(users.c.name)
+            'name': deferred(users.c.name)
         })
         s = create_session(autocommit=False)
         u = s.query(User).get(10)
 
         assert 'name' not in u.__dict__
-        s.execute(users.delete().where(User.id==10))
+        s.execute(users.delete().where(User.id == 10))
         assert_raises_message(
             sa.orm.exc.ObjectDeletedError,
             "Instance '<User at .*?>' has been "
@@ -185,7 +187,7 @@ class ExpireTest(_fixtures.FixtureTest):
                                 self.classes.User)
 
         mapper(User, users, properties={
-            'addresses':relationship(Address,
+            'addresses': relationship(Address,
                     order_by=addresses.c.email_address)
         })
         mapper(Address, addresses)
@@ -215,9 +217,8 @@ class ExpireTest(_fixtures.FixtureTest):
                                 self.tables.addresses,
                                 self.classes.User)
 
-
         mapper(User, users, properties={
-            'addresses':relationship(Address, order_by=addresses.c.email_address)
+            'addresses': relationship(Address, order_by=addresses.c.email_address)
         })
         mapper(Address, addresses)
         s = create_session(autoflush=True, autocommit=False)
@@ -253,6 +254,7 @@ class ExpireTest(_fixtures.FixtureTest):
         u = sess.query(User).get(7)
 
         sess.expire(u, attribute_names=['name'])
+
         def go():
             u.name = 'somenewname'
         self.assert_sql_count(testing.db, go, 0)
@@ -316,12 +318,10 @@ class ExpireTest(_fixtures.FixtureTest):
         sess.add(u)
         assert_raises(sa_exc.InvalidRequestError, getattr, u, 'name')
 
-
     def test_expire_preserves_changes(self):
         """test that the expire load operation doesn't revert post-expire changes"""
 
         Order, orders = self.classes.Order, self.tables.orders
-
 
         mapper(Order, orders)
         sess = create_session()
@@ -329,6 +329,7 @@ class ExpireTest(_fixtures.FixtureTest):
         sess.expire(o)
 
         o.description = "order 3 modified"
+
         def go():
             assert o.isopen == 1
         self.assert_sql_count(testing.db, go, 1)
@@ -343,7 +344,7 @@ class ExpireTest(_fixtures.FixtureTest):
 
         assert o.description is None
 
-        o.isopen=15
+        o.isopen = 15
         sess.expire(o, ['isopen', 'description'])
         o.description = 'some new description'
         sess.query(Order).all()
@@ -353,11 +354,12 @@ class ExpireTest(_fixtures.FixtureTest):
         sess.expire(o, ['isopen', 'description'])
         sess.query(Order).all()
         del o.isopen
+
         def go():
             assert o.isopen is None
         self.assert_sql_count(testing.db, go, 0)
 
-        o.isopen=14
+        o.isopen = 14
         sess.expire(o)
         o.description = 'another new description'
         sess.query(Order).all()
@@ -378,6 +380,7 @@ class ExpireTest(_fixtures.FixtureTest):
         orders.update().execute(description='order 3 modified')
         assert o.isopen == 1
         assert attributes.instance_state(o).dict['description'] == 'order 3 modified'
+
         def go():
             sess.flush()
         self.assert_sql_count(testing.db, go, 0)
@@ -389,7 +392,7 @@ class ExpireTest(_fixtures.FixtureTest):
                                 self.classes.User)
 
         mapper(User, users, properties={
-            'addresses':relationship(Address, cascade="all, refresh-expire")
+            'addresses': relationship(Address, cascade="all, refresh-expire")
         })
         mapper(Address, addresses)
         s = create_session()
@@ -407,7 +410,7 @@ class ExpireTest(_fixtures.FixtureTest):
                                 self.classes.User)
 
         mapper(User, users, properties={
-            'addresses':relationship(Address, cascade="all, refresh-expire")
+            'addresses': relationship(Address, cascade="all, refresh-expire")
         })
         mapper(Address, addresses)
         s = create_session()
@@ -441,7 +444,7 @@ class ExpireTest(_fixtures.FixtureTest):
                                 self.classes.User)
 
         mapper(User, users, properties={
-            'addresses':relationship(Address, cascade=cascade)
+            'addresses': relationship(Address, cascade=cascade)
         })
         mapper(Address, addresses)
         s = create_session()
@@ -469,7 +472,7 @@ class ExpireTest(_fixtures.FixtureTest):
                                 self.classes.User)
 
         mapper(User, users, properties={
-            'addresses':relationship(Address, backref='user'),
+            'addresses': relationship(Address, backref='user'),
             })
         mapper(Address, addresses)
 
@@ -495,7 +498,7 @@ class ExpireTest(_fixtures.FixtureTest):
                                 self.classes.User)
 
         mapper(User, users, properties={
-            'addresses':relationship(Address, backref='user', lazy='joined'),
+            'addresses': relationship(Address, backref='user', lazy='joined'),
             })
         mapper(Address, addresses)
 
@@ -534,7 +537,7 @@ class ExpireTest(_fixtures.FixtureTest):
                                 self.classes.User)
 
         mapper(User, users, properties={
-            'addresses':relationship(Address, backref='user', lazy='joined'),
+            'addresses': relationship(Address, backref='user', lazy='joined'),
             })
         mapper(Address, addresses)
         sess = create_session()
@@ -564,7 +567,7 @@ class ExpireTest(_fixtures.FixtureTest):
         # "figure out" that the operation should be aborted right now.
 
         mapper(User, users, properties={
-            'addresses':relationship(Address, backref='user', lazy='joined'),
+            'addresses': relationship(Address, backref='user', lazy='joined'),
             })
         mapper(Address, addresses)
         sess = create_session()
@@ -590,7 +593,7 @@ class ExpireTest(_fixtures.FixtureTest):
         sess.expire(u)
         assert 'name' not in u.__dict__
 
-        users.update(users.c.id==7).execute(name='jack2')
+        users.update(users.c.id == 7).execute(name='jack2')
         assert u.name == 'jack2'
         assert u.uname == 'jack2'
         assert 'name' in u.__dict__
@@ -614,7 +617,7 @@ class ExpireTest(_fixtures.FixtureTest):
         assert 'description' not in o.__dict__
         assert attributes.instance_state(o).dict['isopen'] == 1
 
-        orders.update(orders.c.id==3).execute(description='order 3 modified')
+        orders.update(orders.c.id == 3).execute(description='order 3 modified')
 
         def go():
             assert o.description == 'order 3 modified'
@@ -641,6 +644,7 @@ class ExpireTest(_fixtures.FixtureTest):
         assert 'id' not in o.__dict__
         assert 'isopen' not in o.__dict__
         assert 'description' not in o.__dict__
+
         def go():
             assert o.description == 'order 3 modified'
             assert o.id == 3
@@ -654,7 +658,7 @@ class ExpireTest(_fixtures.FixtureTest):
                                 self.classes.User)
 
         mapper(User, users, properties={
-            'addresses':relationship(Address, backref='user'),
+            'addresses': relationship(Address, backref='user'),
             })
         mapper(Address, addresses)
 
@@ -668,7 +672,7 @@ class ExpireTest(_fixtures.FixtureTest):
         # hit the lazy loader.  just does the lazy load,
         # doesn't do the overall refresh
         def go():
-            assert u.addresses[0].email_address=='ed@wood.com'
+            assert u.addresses[0].email_address == 'ed@wood.com'
         self.assert_sql_count(testing.db, go, 1)
 
         assert 'name' not in u.__dict__
@@ -676,6 +680,7 @@ class ExpireTest(_fixtures.FixtureTest):
         # check that mods to expired lazy-load attributes
         # only do the lazy load
         sess.expire(u, ['name', 'addresses'])
+
         def go():
             u.addresses = [Address(id=10, email_address='foo@bar.com')]
         self.assert_sql_count(testing.db, go, 1)
@@ -686,7 +691,7 @@ class ExpireTest(_fixtures.FixtureTest):
         # so the addresses collection got committed and is
         # longer expired
         def go():
-            assert u.addresses[0].email_address=='foo@bar.com'
+            assert u.addresses[0].email_address == 'foo@bar.com'
             assert len(u.addresses) == 1
         self.assert_sql_count(testing.db, go, 0)
 
@@ -703,7 +708,7 @@ class ExpireTest(_fixtures.FixtureTest):
                                 self.classes.User)
 
         mapper(User, users, properties={
-            'addresses':relationship(Address, backref='user', lazy='joined'),
+            'addresses': relationship(Address, backref='user', lazy='joined'),
             })
         mapper(Address, addresses)
 
@@ -715,12 +720,13 @@ class ExpireTest(_fixtures.FixtureTest):
         assert 'addresses' not in u.__dict__
 
         def go():
-            assert u.addresses[0].email_address=='ed@wood.com'
+            assert u.addresses[0].email_address == 'ed@wood.com'
         self.assert_sql_count(testing.db, go, 1)
 
         # check that mods to expired eager-load attributes
         # do the refresh
         sess.expire(u, ['name', 'addresses'])
+
         def go():
             u.addresses = [Address(id=10, email_address='foo@bar.com')]
         self.assert_sql_count(testing.db, go, 1)
@@ -729,7 +735,7 @@ class ExpireTest(_fixtures.FixtureTest):
         # this should ideally trigger the whole load
         # but currently it works like the lazy case
         def go():
-            assert u.addresses[0].email_address=='foo@bar.com'
+            assert u.addresses[0].email_address == 'foo@bar.com'
             assert len(u.addresses) == 1
         self.assert_sql_count(testing.db, go, 0)
 
@@ -748,7 +754,7 @@ class ExpireTest(_fixtures.FixtureTest):
                                 self.classes.User)
 
         mapper(User, users, properties={
-            'addresses':relationship(Address, backref='user'),
+            'addresses': relationship(Address, backref='user'),
             })
         mapper(Address, addresses)
 
@@ -791,6 +797,7 @@ class ExpireTest(_fixtures.FixtureTest):
         assert 'description' not in o.__dict__
         # test that the deferred attribute triggers the full
         # reload
+
         def go():
             assert o.description == 'order 3'
             assert o.isopen == 1
@@ -829,6 +836,7 @@ class ExpireTest(_fixtures.FixtureTest):
         assert 'description' not in o.__dict__
         # test that the deferred attribute triggers the full
         # reload
+
         def go():
             assert o.description == 'order 3'
             assert o.isopen == 1
@@ -841,7 +849,7 @@ class ExpireTest(_fixtures.FixtureTest):
                                 self.classes.User)
 
         mapper(User, users, properties={
-            'addresses':relationship(Address, backref='user', lazy='joined'),
+            'addresses': relationship(Address, backref='user', lazy='joined'),
             })
         mapper(Address, addresses)
 
@@ -862,7 +870,7 @@ class ExpireTest(_fixtures.FixtureTest):
                                 self.classes.User)
 
         mapper(User, users, properties={
-            'addresses':relationship(Address, backref='user', lazy='joined',
+            'addresses': relationship(Address, backref='user', lazy='joined',
                                     order_by=addresses.c.id),
             })
         mapper(Address, addresses)
@@ -873,7 +881,7 @@ class ExpireTest(_fixtures.FixtureTest):
         eq_(len(list(sess)), 9)
         sess.expire_all()
         gc_collect()
-        eq_(len(list(sess)), 4) # since addresses were gc'ed
+        eq_(len(list(sess)), 4)  # since addresses were gc'ed
 
         userlist = sess.query(User).order_by(User.id).all()
         u = userlist[1]
@@ -1013,6 +1021,7 @@ class ExpireTest(_fixtures.FixtureTest):
         assert 'addresses' not in attributes.instance_state(u1).expired_attributes
         assert 'addresses' not in attributes.instance_state(u1).callables
 
+
 class PolymorphicExpireTest(fixtures.MappedTest):
     run_inserts = 'once'
     run_deletes = None
@@ -1036,6 +1045,7 @@ class PolymorphicExpireTest(fixtures.MappedTest):
     def setup_classes(cls):
         class Person(cls.Basic):
             pass
+
         class Engineer(Person):
             pass
 
@@ -1044,13 +1054,13 @@ class PolymorphicExpireTest(fixtures.MappedTest):
         people, engineers = cls.tables.people, cls.tables.engineers
 
         people.insert().execute(
-            {'person_id':1, 'name':'person1', 'type':'person'},
-            {'person_id':2, 'name':'engineer1', 'type':'engineer'},
-            {'person_id':3, 'name':'engineer2', 'type':'engineer'},
+            {'person_id': 1, 'name': 'person1', 'type': 'person'},
+            {'person_id': 2, 'name': 'engineer1', 'type': 'engineer'},
+            {'person_id': 3, 'name': 'engineer2', 'type': 'engineer'},
         )
         engineers.insert().execute(
-            {'person_id':2, 'status':'new engineer'},
-            {'person_id':3, 'status':'old engineer'},
+            {'person_id': 2, 'status': 'new engineer'},
+            {'person_id': 3, 'status': 'old engineer'},
         )
 
     @classmethod
@@ -1067,7 +1077,6 @@ class PolymorphicExpireTest(fixtures.MappedTest):
         Person, people, Engineer = (self.classes.Person,
                                 self.tables.people,
                                 self.classes.Engineer)
-
 
         sess = create_session()
         [p1, e1, e2] = sess.query(Person).order_by(people.c.person_id).all()
@@ -1101,11 +1110,10 @@ class PolymorphicExpireTest(fixtures.MappedTest):
             assert e1.status == 'new engineer'
             assert e2.status == 'old engineer'
         self.assert_sql_count(testing.db, go, 2)
-        eq_(Engineer.name.get_history(e1), (['new engineer name'],(), ['engineer1']))
+        eq_(Engineer.name.get_history(e1), (['new engineer name'], (), ['engineer1']))
 
     def test_no_instance_key(self):
         Engineer = self.classes.Engineer
-
 
         sess = create_session()
         e1 = sess.query(Engineer).get(2)
@@ -1146,7 +1154,7 @@ class ExpiredPendingTest(_fixtures.FixtureTest):
                                 self.classes.User)
 
         mapper(User, users, properties={
-            'addresses':relationship(Address, backref='user'),
+            'addresses': relationship(Address, backref='user'),
             })
         mapper(Address, addresses)
 
@@ -1204,8 +1212,10 @@ class LifecycleTest(fixtures.MappedTest):
     def setup_classes(cls):
         class Data(cls.Comparable):
             pass
+
         class DataFetched(cls.Comparable):
             pass
+
         class DataDefer(cls.Comparable):
             pass
 
@@ -1230,6 +1240,7 @@ class LifecycleTest(fixtures.MappedTest):
         # so its not in dict, but also when we hit it, it isn't
         # expired because there's no column default on it or anything like that
         assert 'data' not in d1.__dict__
+
         def go():
             eq_(d1.data, None)
 
@@ -1272,6 +1283,7 @@ class LifecycleTest(fixtures.MappedTest):
         sess.flush()
 
         assert 'data' not in d1.__dict__
+
         def go():
             eq_(d1.data, None)
 
@@ -1329,6 +1341,7 @@ class LifecycleTest(fixtures.MappedTest):
             testing.db, go, 1
         )
 
+
 class RefreshTest(_fixtures.FixtureTest):
 
     def test_refresh(self):
@@ -1338,7 +1351,7 @@ class RefreshTest(_fixtures.FixtureTest):
                                 self.classes.User)
 
         mapper(User, users, properties={
-            'addresses':relationship(mapper(Address, addresses), backref='user')
+            'addresses': relationship(mapper(Address, addresses), backref='user')
         })
         s = create_session()
         u = s.query(User).get(7)
@@ -1401,11 +1414,11 @@ class RefreshTest(_fixtures.FixtureTest):
                                 self.tables.addresses,
                                 self.tables.users)
 
-
         s = create_session()
-        mapper(User, users, properties={'addresses':relationship(mapper(Address, addresses))})
+        mapper(User, users, properties={'addresses': relationship(mapper(Address, addresses))})
         q = s.query(User).options(sa.orm.lazyload('addresses'))
-        u = q.filter(users.c.id==8).first()
+        u = q.filter(users.c.id == 8).first()
+
         def go():
             s.refresh(u)
         self.assert_sql_count(testing.db, go, 1)
@@ -1418,9 +1431,8 @@ class RefreshTest(_fixtures.FixtureTest):
                                 self.tables.addresses,
                                 self.classes.User)
 
-
         mapper(User, users, properties={
-            'addresses':relationship(mapper(Address, addresses), lazy='joined')
+            'addresses': relationship(mapper(Address, addresses), lazy='joined')
         })
 
         s = create_session()
@@ -1484,21 +1496,20 @@ class RefreshTest(_fixtures.FixtureTest):
                                 self.tables.users,
                                 self.classes.User)
 
-
         s = create_session()
         mapper(Address, addresses)
 
-        mapper(User, users, properties = dict(addresses=relationship(Address,cascade="all, delete-orphan",lazy='joined')) )
+        mapper(User, users, properties=dict(addresses=relationship(Address, cascade="all, delete-orphan", lazy='joined')))
 
         u = User()
-        u.name='Justin'
+        u.name = 'Justin'
         a = Address(id=10, email_address='lala')
         u.addresses.append(a)
 
         s.add(u)
         s.flush()
         s.expunge_all()
-        u = s.query(User).filter(User.name=='Justin').one()
+        u = s.query(User).filter(User.name == 'Justin').one()
 
         s.expire(u)
         assert u.name == 'Justin'

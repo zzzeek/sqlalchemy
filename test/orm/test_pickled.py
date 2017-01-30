@@ -57,13 +57,12 @@ class PickleTest(fixtures.MappedTest):
               test_needs_fk=True
         )
 
-
     def test_transient(self):
         users, addresses = (self.tables.users,
                                 self.tables.addresses)
 
         mapper(User, users, properties={
-            'addresses':relationship(Address, backref="user")
+            'addresses': relationship(Address, backref="user")
         })
         mapper(Address, addresses)
 
@@ -82,7 +81,6 @@ class PickleTest(fixtures.MappedTest):
     def test_no_mappers(self):
         users = self.tables.users
 
-
         umapper = mapper(User, users)
         u1 = User(name='ed')
         u1_pickled = pickle.dumps(u1, -1)
@@ -97,7 +95,6 @@ class PickleTest(fixtures.MappedTest):
     def test_no_instrumentation(self):
         users = self.tables.users
 
-
         umapper = mapper(User, users)
         u1 = User(name='ed')
         u1_pickled = pickle.dumps(u1, -1)
@@ -110,7 +107,6 @@ class PickleTest(fixtures.MappedTest):
         # this fails unless the InstanceState
         # compiles the mapper
         eq_(str(u1), "User(name='ed')")
-
 
     def test_class_deferred_cols(self):
         addresses, users = (self.tables.addresses,
@@ -210,7 +206,7 @@ class PickleTest(fixtures.MappedTest):
                                 self.tables.addresses)
 
         mapper(User, users, properties={
-            'addresses':relationship(Address, backref="user")
+            'addresses': relationship(Address, backref="user")
         })
         mapper(Address, addresses)
 
@@ -257,7 +253,7 @@ class PickleTest(fixtures.MappedTest):
                                 self.tables.addresses)
 
         mapper(User, users, properties={
-            'addresses':relationship(Address, backref="user")
+            'addresses': relationship(Address, backref="user")
         })
         mapper(Address, addresses)
 
@@ -311,10 +307,10 @@ class PickleTest(fixtures.MappedTest):
                                 self.tables.dingalings)
 
         mapper(User, users, properties={
-            'addresses':relationship(Address, backref="user")
+            'addresses': relationship(Address, backref="user")
         })
         mapper(Address, addresses, properties={
-            'dingaling':relationship(Dingaling)
+            'dingaling': relationship(Dingaling)
         })
         mapper(Dingaling, dingalings)
         sess = create_session()
@@ -355,8 +351,8 @@ class PickleTest(fixtures.MappedTest):
         )
 
         mapper(Parent, p, properties={
-            'children1':relationship(Child1),
-            'children2':relationship(Child2)
+            'children1': relationship(Child1),
+            'children2': relationship(Child2)
         })
         mapper(Child1, c1)
         mapper(Child2, c2)
@@ -386,15 +382,14 @@ class PickleTest(fixtures.MappedTest):
         users, addresses = self.tables.users, self.tables.addresses
 
         mapper(User, users, properties={
-            'addresses':relationship(
+            'addresses': relationship(
                             Address,
-                            collection_class=
-                            attribute_mapped_collection('email_address')
+                            collection_class=attribute_mapped_collection('email_address')
                         )
         })
         mapper(Address, addresses)
         u1 = User()
-        u1.addresses = {"email1":Address(email_address="email1")}
+        u1.addresses = {"email1": Address(email_address="email1")}
         for loads, dumps in picklers():
             repickled = loads(dumps(u1))
             eq_(u1.addresses, repickled.addresses)
@@ -405,18 +400,17 @@ class PickleTest(fixtures.MappedTest):
         users, addresses = self.tables.users, self.tables.addresses
 
         mapper(User, users, properties={
-            'addresses':relationship(
+            'addresses': relationship(
                             Address,
-                            collection_class=
-                            column_mapped_collection(
+                            collection_class=column_mapped_collection(
                                 addresses.c.email_address)
                         )
         })
         mapper(Address, addresses)
         u1 = User()
         u1.addresses = {
-            "email1":Address(email_address="email1"),
-            "email2":Address(email_address="email2")
+            "email1": Address(email_address="email1"),
+            "email2": Address(email_address="email2")
         }
         for loads, dumps in picklers():
             repickled = loads(dumps(u1))
@@ -428,10 +422,9 @@ class PickleTest(fixtures.MappedTest):
         users, addresses = self.tables.users, self.tables.addresses
 
         mapper(User, users, properties={
-            'addresses':relationship(
+            'addresses': relationship(
                             Address,
-                            collection_class=
-                            column_mapped_collection([
+                            collection_class=column_mapped_collection([
                                 addresses.c.id,
                                 addresses.c.email_address])
                         )
@@ -439,14 +432,15 @@ class PickleTest(fixtures.MappedTest):
         mapper(Address, addresses)
         u1 = User()
         u1.addresses = {
-            (1, "email1"):Address(id=1, email_address="email1"),
-            (2, "email2"):Address(id=2, email_address="email2")
+            (1, "email1"): Address(id=1, email_address="email1"),
+            (2, "email2"): Address(id=2, email_address="email2")
         }
         for loads, dumps in picklers():
             repickled = loads(dumps(u1))
             eq_(u1.addresses, repickled.addresses)
             eq_(repickled.addresses[(1, 'email1')],
                     Address(id=1, email_address="email1"))
+
 
 class PolymorphicDeferredTest(fixtures.MappedTest):
     @classmethod
@@ -458,7 +452,6 @@ class PolymorphicDeferredTest(fixtures.MappedTest):
         Table('email_users', metadata,
             Column('id', Integer, ForeignKey('users.id'), primary_key=True),
             Column('email_address', String(30)))
-
 
     def test_polymorphic_deferred(self):
         email_users, users = (self.tables.email_users,
@@ -481,6 +474,7 @@ class PolymorphicDeferredTest(fixtures.MappedTest):
         assert 'email_address' not in eu2.__dict__
         eq_(eu2.email_address, 'foo@bar.com')
 
+
 class TupleLabelTest(_fixtures.FixtureTest):
     @classmethod
     def setup_classes(cls):
@@ -490,12 +484,12 @@ class TupleLabelTest(_fixtures.FixtureTest):
     def setup_mappers(cls):
         users, addresses, orders = cls.tables.users, cls.tables.addresses, cls.tables.orders
         mapper(User, users, properties={
-            'addresses':relationship(Address, backref='user', order_by=addresses.c.id),
-            'orders':relationship(Order, backref='user', order_by=orders.c.id), # o2m, m2o
+            'addresses': relationship(Address, backref='user', order_by=addresses.c.id),
+            'orders': relationship(Order, backref='user', order_by=orders.c.id),  # o2m, m2o
         })
         mapper(Address, addresses)
         mapper(Order, orders, properties={
-            'address':relationship(Address),  # m2o
+            'address': relationship(Address),  # m2o
         })
 
     def test_tuple_labeling(self):
@@ -551,6 +545,7 @@ class TupleLabelTest(_fixtures.FixtureTest):
                 ret = sess.query(User, Address).join(User.addresses).all()
                 pickle.loads(pickle.dumps(ret, pickled))
 
+
 class CustomSetupTeardownTest(fixtures.MappedTest):
     @classmethod
     def define_tables(cls, metadata):
@@ -568,6 +563,7 @@ class CustomSetupTeardownTest(fixtures.MappedTest):
               test_needs_acid=True,
               test_needs_fk=True
         )
+
     def test_rebuild_state(self):
         """not much of a 'test', but illustrate how to
         remove instance-level state before pickling.

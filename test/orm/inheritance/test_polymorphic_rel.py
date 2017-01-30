@@ -12,6 +12,7 @@ from ._poly_fixtures import Company, Person, Engineer, Manager, Boss, \
     _PolymorphicPolymorphic, _PolymorphicUnions, _PolymorphicJoins,\
     _PolymorphicAliasedJoins
 
+
 class _PolymorphicTestBase(object):
     __backend__ = True
 
@@ -38,7 +39,6 @@ class _PolymorphicTestBase(object):
         e1, e2, e3, b1, m1 = \
             cls.e1, cls.e2, cls.e3, cls.b1, cls.m1
 
-
     def test_loads_at_once(self):
         """
         Test that all objects load from the full query, when
@@ -46,11 +46,12 @@ class _PolymorphicTestBase(object):
         """
 
         sess = create_session()
+
         def go():
             eq_(
                 sess.query(Person).order_by(Person.person_id).all(),
                 all_employees)
-        count = {'':14, 'Polymorphic':9}.get(self.select_type, 10)
+        count = {'': 14, 'Polymorphic': 9}.get(self.select_type, 10)
         self.assert_sql_count(testing.db, go, count)
 
     def test_primary_eager_aliasing_one(self):
@@ -58,20 +59,22 @@ class _PolymorphicTestBase(object):
         # not loading the subclass table, the joinedload doesn't happen.
 
         sess = create_session()
+
         def go():
             eq_(sess.query(Person).order_by(Person.person_id)
                     .options(joinedload(Engineer.machines))[1:3],
                 all_employees[1:3])
-        count = {'':6, 'Polymorphic':3}.get(self.select_type, 4)
+        count = {'': 6, 'Polymorphic': 3}.get(self.select_type, 4)
         self.assert_sql_count(testing.db, go, count)
 
     def test_primary_eager_aliasing_two(self):
         sess = create_session()
+
         def go():
             eq_(sess.query(Person).order_by(Person.person_id)
                     .options(subqueryload(Engineer.machines)).all(),
                 all_employees)
-        count = {'':14, 'Polymorphic':7}.get(self.select_type, 8)
+        count = {'': 14, 'Polymorphic': 7}.get(self.select_type, 8)
         self.assert_sql_count(testing.db, go, count)
 
     def test_primary_eager_aliasing_three(self):
@@ -79,6 +82,7 @@ class _PolymorphicTestBase(object):
         # assert the JOINs don't over JOIN
 
         sess = create_session()
+
         def go():
             eq_(sess.query(Person).with_polymorphic('*')
                     .order_by(Person.person_id)
@@ -270,7 +274,6 @@ class _PolymorphicTestBase(object):
                 .filter(Person.name.like('%dog%'))
                 .filter(Paperwork.description.like('%#2%')).all(),
             [m1])
-
 
     def test_join_from_with_polymorphic_aliased_one(self):
         sess = create_session()
@@ -518,7 +521,6 @@ class _PolymorphicTestBase(object):
                 .all(),
             expected)
 
-
     def test_subclass_option_pathing(self):
         from sqlalchemy.orm import defer
         sess = create_session()
@@ -549,6 +551,7 @@ class _PolymorphicTestBase(object):
 
     def test_with_polymorphic_one(self):
         sess = create_session()
+
         def go():
             eq_(sess.query(Person)
                     .with_polymorphic(Engineer)
@@ -556,9 +559,9 @@ class _PolymorphicTestBase(object):
                 self._emps_wo_relationships_fixture()[0:1])
         self.assert_sql_count(testing.db, go, 1)
 
-
     def test_with_polymorphic_two(self):
         sess = create_session()
+
         def go():
             eq_(sess.query(Person)
                     .with_polymorphic('*').order_by(Person.person_id).all(),
@@ -567,6 +570,7 @@ class _PolymorphicTestBase(object):
 
     def test_with_polymorphic_three(self):
         sess = create_session()
+
         def go():
             eq_(sess.query(Person)
                     .with_polymorphic(Engineer).
@@ -576,6 +580,7 @@ class _PolymorphicTestBase(object):
 
     def test_with_polymorphic_four(self):
         sess = create_session()
+
         def go():
             eq_(sess.query(Person)
                     .with_polymorphic(
@@ -588,6 +593,7 @@ class _PolymorphicTestBase(object):
 
     def test_with_polymorphic_five(self):
         sess = create_session()
+
         def go():
             # limit the polymorphic join down to just "Person",
             # overriding select_table
@@ -614,19 +620,20 @@ class _PolymorphicTestBase(object):
             order_by(Person.person_id).all(),
             self._emps_wo_relationships_fixture())
 
-
     def test_relationship_to_polymorphic_one(self):
         expected = self._company_with_emps_machines_fixture()
         sess = create_session()
+
         def go():
             # test load Companies with lazy load to 'employees'
             eq_(sess.query(Company).all(), expected)
-        count = {'':10, 'Polymorphic':5}.get(self.select_type, 6)
+        count = {'': 10, 'Polymorphic': 5}.get(self.select_type, 6)
         self.assert_sql_count(testing.db, go, count)
 
     def test_relationship_to_polymorphic_two(self):
         expected = self._company_with_emps_machines_fixture()
         sess = create_session()
+
         def go():
             # with #2438, of_type() is recognized.  This
             # overrides the with_polymorphic of the mapper
@@ -652,6 +659,7 @@ class _PolymorphicTestBase(object):
         sess = create_session()
 
         sess = create_session()
+
         def go():
             eq_(sess.query(Company)
                     .options(subqueryload_all(
@@ -662,7 +670,7 @@ class _PolymorphicTestBase(object):
 
         # the old case where subqueryload_all
         # didn't work with of_tyoe
-        #count = { '':8, 'Joins':4, 'Unions':4, 'Polymorphic':3,
+        # count = { '':8, 'Joins':4, 'Unions':4, 'Polymorphic':3,
         #    'AliasedJoins':4}[self.select_type]
 
         # query one is company->Person/Engineer->Machines
@@ -674,7 +682,6 @@ class _PolymorphicTestBase(object):
         # query five is managers for row #4
         count = 5
         self.assert_sql_count(testing.db, go, count)
-
 
     def test_joinedload_on_subclass(self):
         sess = create_session()
@@ -708,6 +715,7 @@ class _PolymorphicTestBase(object):
                 machines=[
                     Machine(name="IBM ThinkPad"),
                     Machine(name="IPhone")])]
+
         def go():
             # test load People with subqueryload to engineers + machines
             eq_(sess.query(Person)
@@ -776,7 +784,6 @@ class _PolymorphicTestBase(object):
                 .join(Engineer.machines)
                 .filter(Machine.name.ilike("%thinkpad%")).all(),
             [c1])
-
 
     def test_join_to_subclass_eight(self):
         sess = create_session()
@@ -940,7 +947,6 @@ class _PolymorphicTestBase(object):
                 .join('paperwork', from_joinpoint=True, aliased=True)
                 .filter(Paperwork.description.like('%#%')).all(),
             [c1, c2])
-
 
     def test_explicit_polymorphic_join_one(self):
         sess = create_session()
@@ -1183,7 +1189,7 @@ class _PolymorphicTestBase(object):
                 .order_by(Company.name).all(),
             expected)
 
-    #def test_mixed_entities(self):
+    # def test_mixed_entities(self):
     #    sess = create_session()
         # TODO: I think raise error on these for now.  different
         # inheritance/loading schemes have different results here,
@@ -1193,7 +1199,7 @@ class _PolymorphicTestBase(object):
         #    sess.query(Person.name, Engineer.primary_language).all(),
         #    [])
 
-    #def test_mixed_entities(self):
+    # def test_mixed_entities(self):
     #    sess = create_session()
         # eq_(sess.query(
         #             Person.name,
@@ -1314,6 +1320,7 @@ class _PolymorphicTestBase(object):
                     filter(Company.company_id == paliased.company_id).
                     correlate(paliased).as_scalar() == "Elbonia, Inc.").all(),
             [(e3.name, )])
+
 
 class PolymorphicTest(_PolymorphicTestBase, _Polymorphic):
     def test_join_to_subclass_four(self):
@@ -1479,6 +1486,7 @@ class PolymorphicAliasedJoinsTest(_PolymorphicTestBase, _PolymorphicAliasedJoins
     @testing.fails()
     def test_correlation_one(self):
         super(PolymorphicAliasedJoinsTest, self).test_correlation_one()
+
 
 class PolymorphicJoinsTest(_PolymorphicTestBase, _PolymorphicJoins):
     pass

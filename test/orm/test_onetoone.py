@@ -25,9 +25,9 @@ class O2OTest(fixtures.MappedTest):
     def setup_mappers(cls):
         class Jack(cls.Basic):
             pass
+
         class Port(cls.Basic):
             pass
-
 
     def test_basic(self):
         Port, port, jack, Jack = (self.classes.Port,
@@ -50,15 +50,15 @@ class O2OTest(fixtures.MappedTest):
         p = Port(name='fa0/1')
         session.add(p)
 
-        j.port=p
+        j.port = p
         session.flush()
         jid = j.id
         pid = p.id
 
-        j=session.query(Jack).get(jid)
-        p=session.query(Port).get(pid)
+        j = session.query(Jack).get(jid)
+        p = session.query(Port).get(pid)
         assert p.jack is not None
-        assert p.jack is  j
+        assert p.jack is j
         assert j.port is not None
         p.jack = None
         assert j.port is None
@@ -68,7 +68,7 @@ class O2OTest(fixtures.MappedTest):
         j = session.query(Jack).get(jid)
         p = session.query(Port).get(pid)
 
-        j.port=None
+        j.port = None
         self.assert_(p.jack is None)
         session.flush()
 

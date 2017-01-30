@@ -257,8 +257,6 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
                 "ORDER BY email_address"
             )
 
-
-
     def test_deferred_fk_col(self):
         users, Dingaling, User, dingalings, Address, addresses = (
             self.tables.users,
@@ -934,7 +932,6 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
                 {'param_1': 8})
             )
 
-
     def test_manytoone_limit(self):
         """test that the subquery wrapping only occurs with
         limit/offset and m2m or o2m joins present."""
@@ -1317,6 +1314,7 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
             orders=relationship(Order, lazy=False, order_by=orders.c.id),
         ))
         q = create_session().query(User)
+
         def go():
             eq_(self.static.user_all_result, q.order_by(User.id).all())
         self.assert_sql_count(testing.db, go, 1)
@@ -1735,7 +1733,6 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
             "ON users.id = orders_1.user_id JOIN addresses AS addresses_1 "
             "ON users.id = addresses_1.user_id"
         )
-
 
     def test_catch_the_right_target(self):
         # test eager join chaining to the "nested" join on the left,
@@ -3258,7 +3255,7 @@ class MixedSelfReferentialEagerTest(fixtures.MappedTest):
                 B,
                 remote_side=[b_table.c.id],
                 primaryjoin=(b_table.c.parent_b2_id == b_table.c.id),
-                order_by = b_table.c.id
+                order_by=b_table.c.id
             )
         })
 
@@ -4288,6 +4285,7 @@ class EntityViaMultiplePathTestOne(fixtures.DeclarativeMappedTest):
         # ensure 'd' key was populated in dict.  Varies based on
         # PYTHONHASHSEED
         in_('d', a1.c.__dict__)
+
 
 class EntityViaMultiplePathTestTwo(fixtures.DeclarativeMappedTest):
     """test for [ticket:3431]"""

@@ -11,20 +11,35 @@ from sqlalchemy import testing
 from sqlalchemy.testing.schema import Table, Column
 from sqlalchemy.testing import assert_raises, eq_
 
+
 class Company(fixtures.ComparableEntity):
     pass
+
+
 class Person(fixtures.ComparableEntity):
     pass
+
+
 class Engineer(Person):
     pass
+
+
 class Manager(Person):
     pass
+
+
 class Boss(Manager):
     pass
+
+
 class Machine(fixtures.ComparableEntity):
     pass
+
+
 class MachineType(fixtures.ComparableEntity):
     pass
+
+
 class Paperwork(fixtures.ComparableEntity):
     pass
 
@@ -237,7 +252,7 @@ class _PolymorphicFixtureBase(fixtures.MappedTest, AssertsCompiledSQL):
     def setup_mappers(cls):
         mapper(Company, companies,
             properties={
-                'employees':relationship(
+                'employees': relationship(
                     Person,
                     order_by=people.c.person_id)})
 
@@ -251,7 +266,7 @@ class _PolymorphicFixtureBase(fixtures.MappedTest, AssertsCompiledSQL):
             polymorphic_on=people.c.type,
             polymorphic_identity='person',
             properties={
-                'paperwork':relationship(
+                'paperwork': relationship(
                     Paperwork,
                     order_by=paperwork.c.paperwork_id)})
 
@@ -259,7 +274,7 @@ class _PolymorphicFixtureBase(fixtures.MappedTest, AssertsCompiledSQL):
             inherits=Person,
             polymorphic_identity='engineer',
             properties={
-                'machines':relationship(
+                'machines': relationship(
                     Machine,
                     order_by=machines.c.machine_id)})
 
@@ -274,14 +289,18 @@ class _PolymorphicFixtureBase(fixtures.MappedTest, AssertsCompiledSQL):
 
         mapper(Paperwork, paperwork)
 
+
 class _Polymorphic(_PolymorphicFixtureBase):
     select_type = ""
+
     @classmethod
     def _get_polymorphics(cls):
         return None, None
 
+
 class _PolymorphicPolymorphic(_PolymorphicFixtureBase):
     select_type = "Polymorphic"
+
     @classmethod
     def _get_polymorphics(cls):
         return '*', '*'
@@ -296,8 +315,8 @@ class _PolymorphicUnions(_PolymorphicFixtureBase):
             cls.tables.people, cls.tables.engineers, \
             cls.tables.managers, cls.tables.boss
         person_join = polymorphic_union({
-                'engineer':people.join(engineers),
-                'manager':people.join(managers)},
+                'engineer': people.join(engineers),
+                'manager': people.join(managers)},
             None, 'pjoin')
         manager_join = people.join(managers).outerjoin(boss)
         person_with_polymorphic = (

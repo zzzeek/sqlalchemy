@@ -95,7 +95,6 @@ class QueryAlternativesTest(fixtures.MappedTest):
             (3, 2, 'ed@foo.bar', 'Personal', 0),
             (4, 3, 'fred@the.fred', 'Personal', 10)))
 
-
     ######################################################################
 
     def test_override_get(self):
@@ -109,6 +108,7 @@ class QueryAlternativesTest(fixtures.MappedTest):
 
         from sqlalchemy.orm.query import Query
         cache = {}
+
         class MyQuery(Query):
             def get(self, ident, **kwargs):
                 if ident in cache:
@@ -132,11 +132,9 @@ class QueryAlternativesTest(fixtures.MappedTest):
 
         Address = self.classes.Address
 
-
         session = create_session()
         ad1 = session.query(Address).populate_existing().get(1)
         assert bool(ad1)
-
 
     def test_apply_max(self):
         """Query.apply_max(col)
@@ -230,7 +228,7 @@ class QueryAlternativesTest(fixtures.MappedTest):
         assert num == 3, num
 
         num = (session.query(User).join('addresses').
-               filter(Address.purpose=='Personal')).count()
+               filter(Address.purpose == 'Personal')).count()
         assert num == 3, num
 
     def test_count_whereclause(self):
@@ -279,11 +277,11 @@ class QueryAlternativesTest(fixtures.MappedTest):
         assert user.name == 'ed'
 
         user = (session.query(User).join('addresses').
-                filter(Address.email_address=='fred@the.fred')).first()
+                filter(Address.email_address == 'fred@the.fred')).first()
         assert user.name == 'fred'
 
         user = session.query(User).filter(
-            User.addresses.any(Address.email_address=='fred@the.fred')).first()
+            User.addresses.any(Address.email_address == 'fred@the.fred')).first()
         assert user.name == 'fred'
 
     def test_instances_entities(self):
@@ -316,7 +314,6 @@ class QueryAlternativesTest(fixtures.MappedTest):
 
         session = create_session()
 
-
     def test_join_to(self):
         """Query.join_to(key)
 
@@ -325,7 +322,6 @@ class QueryAlternativesTest(fixtures.MappedTest):
 
         session = create_session()
 
-
     def test_join_via(self):
         """Query.join_via(keys)
 
@@ -333,7 +329,6 @@ class QueryAlternativesTest(fixtures.MappedTest):
         """
 
         session = create_session()
-
 
     def test_list(self):
         """Query.list()
@@ -360,8 +355,8 @@ class QueryAlternativesTest(fixtures.MappedTest):
 
         session = create_session()
 
-        user = session.query(User).filter(User.id==1).first()
-        assert user.id==1
+        user = session.query(User).filter(User.id == 1).first()
+        assert user.id == 1
 
     def test_select(self):
         """Query.select(arg=None, **kwargs)
@@ -394,7 +389,7 @@ class QueryAlternativesTest(fixtures.MappedTest):
         users = session.query(User).filter_by(name='fred').all()
         assert len(users) == 1
 
-        users = session.query(User).filter(User.name=='fred').all()
+        users = session.query(User).filter(User.name == 'fred').all()
         assert len(users) == 1
 
         users = (session.query(User).join('addresses').
@@ -528,7 +523,7 @@ class QueryAlternativesTest(fixtures.MappedTest):
 
         session = create_session()
 
-        users = session.query(User).filter(User.name=='ed').all()
+        users = session.query(User).filter(User.name == 'ed').all()
         assert len(users) == 1 and users[0].name == 'ed'
 
         users = session.query(User).filter(text("name='ed'")).all()

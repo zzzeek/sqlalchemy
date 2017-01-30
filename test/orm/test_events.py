@@ -1825,8 +1825,6 @@ class SessionLifecycleEventsTest(_RemoveListeners, _fixtures.FixtureTest):
              ]
          )
 
-
-
     def test_detached_to_persistent(self):
         sess, User, start_events = self._fixture()
 

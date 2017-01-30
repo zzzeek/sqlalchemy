@@ -33,7 +33,7 @@ class PolymorphicCircularTest(fixtures.MappedTest):
             Column('data', String(30))
             )
 
-        #join = polymorphic_union(
+        # join = polymorphic_union(
         #    {
         #    'table3' : table1.join(table3),
         #    'table2' : table1.join(table2),
@@ -48,6 +48,7 @@ class PolymorphicCircularTest(fixtures.MappedTest):
                 self.name = name
                 if data is not None:
                     self.data = data
+
             def __repr__(self):
                 return "%s(%s, %s, %s)" % (self.__class__.__name__, self.id, repr(str(self.name)), repr(self.data))
 
@@ -63,6 +64,7 @@ class PolymorphicCircularTest(fixtures.MappedTest):
         class Data(object):
             def __init__(self, data):
                 self.data = data
+
             def __repr__(self):
                 return "%s(%s, %s)" % (self.__class__.__name__, self.id, repr(str(self.data)))
 
@@ -75,8 +77,8 @@ class PolymorphicCircularTest(fixtures.MappedTest):
                                    properties={
                                     'nxt': relationship(Table1,
                                         backref=backref('prev', foreignkey=join.c.id, uselist=False),
-                                        uselist=False, primaryjoin=join.c.id==join.c.related_id),
-                                    'data':relationship(mapper(Data, data))
+                                        uselist=False, primaryjoin=join.c.id == join.c.related_id),
+                                    'data': relationship(mapper(Data, data))
                                     })
             configure_mappers()
             assert False
@@ -91,14 +93,14 @@ class PolymorphicCircularTest(fixtures.MappedTest):
         # gets an exception instead of it silently not eager loading.
         # NOTE: using "nxt" instead of "next" to avoid 2to3 turning it into __next__() for some reason.
         table1_mapper = mapper(Table1, table1,
-                               #select_table=join,
+                               # select_table=join,
                                polymorphic_on=table1.c.type,
                                polymorphic_identity='table1',
                                properties={
                                'nxt': relationship(Table1,
                                    backref=backref('prev', remote_side=table1.c.id, uselist=False),
-                                   uselist=False, primaryjoin=table1.c.id==table1.c.related_id),
-                               'data':relationship(mapper(Data, data), lazy='joined', order_by=data.c.id)
+                                   uselist=False, primaryjoin=table1.c.id == table1.c.related_id),
+                               'data': relationship(mapper(Data, data), lazy='joined', order_by=data.c.id)
                                 }
                         )
 
@@ -131,7 +133,7 @@ class PolymorphicCircularTest(fixtures.MappedTest):
                 ])
 
     def _testlist(self, classes):
-        sess = create_session( )
+        sess = create_session()
 
         # create objects in a linked list
         count = 1
@@ -163,11 +165,10 @@ class PolymorphicCircularTest(fixtures.MappedTest):
             node = n
         original = repr(assertlist)
 
-
         # clear and query forwards
         sess.expunge_all()
         node = sess.query(Table1).order_by(Table1.id).\
-            filter(Table1.id==t.id).first()
+            filter(Table1.id == t.id).first()
         assertlist = []
         while (node):
             assertlist.append(node)
@@ -180,7 +181,7 @@ class PolymorphicCircularTest(fixtures.MappedTest):
         # clear and query backwards
         sess.expunge_all()
         node = sess.query(Table1).order_by(Table1.id).\
-            filter(Table1.id==obj.id).first()
+            filter(Table1.id == obj.id).first()
         assertlist = []
         while (node):
             assertlist.insert(0, node)

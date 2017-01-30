@@ -72,8 +72,7 @@ class ConcreteTest(fixtures.MappedTest):
             companies, employees_table
         companies = Table('companies', metadata, Column('id', Integer,
                           primary_key=True,
-                          test_needs_autoincrement=True), Column('name'
-                          , String(50)))
+                          test_needs_autoincrement=True), Column('name', String(50)))
         employees_table = Table('employees', metadata,
                                 Column('employee_id', Integer,
                                 primary_key=True,
@@ -111,8 +110,7 @@ class ConcreteTest(fixtures.MappedTest):
             )
 
     def test_basic(self):
-        pjoin = polymorphic_union({'manager': managers_table, 'engineer'
-                                  : engineers_table}, 'type', 'pjoin')
+        pjoin = polymorphic_union({'manager': managers_table, 'engineer': engineers_table}, 'type', 'pjoin')
         employee_mapper = mapper(Employee, pjoin,
                                  polymorphic_on=pjoin.c.type)
         manager_mapper = mapper(Manager, managers_table,
@@ -140,9 +138,7 @@ class ConcreteTest(fixtures.MappedTest):
         eq_(manager.manager_data, 'knows how to manage things')
 
     def test_multi_level_no_base(self):
-        pjoin = polymorphic_union({'manager': managers_table, 'engineer'
-                                  : engineers_table, 'hacker'
-                                  : hackers_table}, 'type', 'pjoin')
+        pjoin = polymorphic_union({'manager': managers_table, 'engineer': engineers_table, 'hacker': hackers_table}, 'type', 'pjoin')
         pjoin2 = polymorphic_union({'engineer': engineers_table,
                                    'hacker': hackers_table}, 'type',
                                    'pjoin2')
@@ -308,8 +304,7 @@ class ConcreteTest(fixtures.MappedTest):
         hacker = Hacker('Kurt', 'Badass', 'knows how to hack')
         session.add_all((jdoe, tom, jerry, hacker))
         session.flush()
-        eq_(len(testing.db.execute(session.query(Employee).with_polymorphic('*'
-            , pjoin,
+        eq_(len(testing.db.execute(session.query(Employee).with_polymorphic('*', pjoin,
             pjoin.c.type).with_labels().statement).fetchall()), 4)
         eq_(session.query(Employee).get(jdoe.employee_id), jdoe)
         eq_(session.query(Engineer).get(jerry.employee_id), jerry)
@@ -323,16 +318,14 @@ class ConcreteTest(fixtures.MappedTest):
             set(['Manager Tom knows how to manage things']))
         eq_(set([repr(x) for x in
             session.query(Engineer).with_polymorphic('*', pjoin2,
-            pjoin2.c.type)]), set(['Engineer Jerry knows how to program'
-            , "Hacker Kurt 'Badass' knows how to hack"]))
+            pjoin2.c.type)]), set(['Engineer Jerry knows how to program', "Hacker Kurt 'Badass' knows how to hack"]))
         eq_(set([repr(x) for x in session.query(Hacker)]),
             set(["Hacker Kurt 'Badass' knows how to hack"]))
 
         # test adaption of the column by wrapping the query in a
         # subquery
 
-        eq_(len(testing.db.execute(session.query(Engineer).with_polymorphic('*'
-            , pjoin2,
+        eq_(len(testing.db.execute(session.query(Engineer).with_polymorphic('*', pjoin2,
             pjoin2.c.type).from_self().statement).fetchall()), 2)
         eq_(set([repr(x) for x in
             session.query(Engineer).with_polymorphic('*', pjoin2,
@@ -341,10 +334,8 @@ class ConcreteTest(fixtures.MappedTest):
             "Hacker Kurt 'Badass' knows how to hack"]))
 
     def test_relationship(self):
-        pjoin = polymorphic_union({'manager': managers_table, 'engineer'
-                                  : engineers_table}, 'type', 'pjoin')
-        mapper(Company, companies, properties={'employees'
-               : relationship(Employee)})
+        pjoin = polymorphic_union({'manager': managers_table, 'engineer': engineers_table}, 'type', 'pjoin')
+        mapper(Company, companies, properties={'employees': relationship(Employee)})
         employee_mapper = mapper(Employee, pjoin,
                                  polymorphic_on=pjoin.c.type)
         manager_mapper = mapper(Manager, managers_table,
@@ -455,7 +446,7 @@ class PropertyInheritanceTest(fixtures.MappedTest):
                                 self.tables.dest_table)
 
         mapper(A, a_table, properties={
-                'some_dest': relationship(Dest,back_populates='many_a')
+                'some_dest': relationship(Dest, back_populates='many_a')
             })
         mapper(B, b_table, inherits=A, concrete=True,
                properties={
@@ -463,8 +454,8 @@ class PropertyInheritanceTest(fixtures.MappedTest):
                 })
 
         mapper(Dest, dest_table, properties={
-                    'many_a': relationship(A,back_populates='some_dest'),
-                    'many_b': relationship(B,back_populates='some_dest')
+                    'many_a': relationship(A, back_populates='some_dest'),
+                    'many_b': relationship(B, back_populates='some_dest')
                 })
         sess = sessionmaker()()
         dest1 = Dest(name='c1')
@@ -524,7 +515,6 @@ class PropertyInheritanceTest(fixtures.MappedTest):
         mapper(Dest, dest_table)
         configure_mappers()
 
-
     def test_polymorphic_backref(self):
         """test multiple backrefs to the same polymorphically-loading
         attribute."""
@@ -538,9 +528,8 @@ class PropertyInheritanceTest(fixtures.MappedTest):
                                 self.classes.Dest,
                                 self.tables.dest_table)
 
-
-        ajoin = polymorphic_union({'a': a_table, 'b': b_table, 'c':c_table},
-                                'type','ajoin')
+        ajoin = polymorphic_union({'a': a_table, 'b': b_table, 'c': c_table},
+                                'type', 'ajoin')
         mapper(
             A,
             a_table,
@@ -623,8 +612,8 @@ class PropertyInheritanceTest(fixtures.MappedTest):
                                 self.classes.Dest,
                                 self.tables.dest_table)
 
-        ajoin = polymorphic_union({'a': a_table, 'b': b_table, 'c':c_table},
-                                'type','ajoin')
+        ajoin = polymorphic_union({'a': a_table, 'b': b_table, 'c': c_table},
+                                'type', 'ajoin')
         mapper(
             A,
             a_table,
@@ -680,6 +669,7 @@ class PropertyInheritanceTest(fixtures.MappedTest):
         eq_(merged_c1.some_dest.name, 'd2')
         eq_(merged_c1.some_dest_id, c1.some_dest_id)
 
+
 class ManyToManyTest(fixtures.MappedTest):
 
     @classmethod
@@ -709,7 +699,6 @@ class ManyToManyTest(fixtures.MappedTest):
 
         class Related(cls.Comparable):
             pass
-
 
     def test_selective_relationships(self):
         sub, base_mtom, Related, Base, related, sub_mtom, base, Sub = (self.tables.sub,
@@ -747,8 +736,7 @@ class ColKeysTest(fixtures.MappedTest):
     @classmethod
     def define_tables(cls, metadata):
         global offices_table, refugees_table
-        refugees_table = Table('refugee', metadata, Column('refugee_fid'
-                               , Integer, primary_key=True,
+        refugees_table = Table('refugee', metadata, Column('refugee_fid', Integer, primary_key=True,
                                test_needs_autoincrement=True),
                                Column('refugee_name', String(30),
                                key='name'))
@@ -767,8 +755,7 @@ class ColKeysTest(fixtures.MappedTest):
                 name='office1'), dict(office_fid=2, name='office2'))
 
     def test_keys(self):
-        pjoin = polymorphic_union({'refugee': refugees_table, 'office'
-                                  : offices_table}, 'type', 'pjoin')
+        pjoin = polymorphic_union({'refugee': refugees_table, 'office': offices_table}, 'type', 'pjoin')
 
         class Location(object):
             pass
@@ -778,7 +765,6 @@ class ColKeysTest(fixtures.MappedTest):
 
         class Office(Location):
             pass
-
 
         location_mapper = mapper(Location, pjoin,
                                  polymorphic_on=pjoin.c.type,

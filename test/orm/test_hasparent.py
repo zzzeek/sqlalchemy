@@ -46,6 +46,7 @@ class ParentRemovalTest(fixtures.MappedTest):
     def setup_classes(cls):
         class User(cls.Comparable):
             pass
+
         class Address(cls.Comparable):
             pass
 
@@ -53,7 +54,7 @@ class ParentRemovalTest(fixtures.MappedTest):
     def setup_mappers(cls):
         mapper(cls.classes.Address, cls.tables.addresses)
         mapper(cls.classes.User, cls.tables.users, properties={
-           'addresses':relationship(cls.classes.Address,
+           'addresses': relationship(cls.classes.Address,
                             cascade='all, delete-orphan'),
 
         })
@@ -168,7 +169,7 @@ class ParentRemovalTest(fixtures.MappedTest):
         # so the remove will unset the hasparent flag.
         # this is what has occurred historically in any case.
         self._assert_not_hasparent(a1)
-        #self._assert_hasparent(a1)
+        # self._assert_hasparent(a1)
 
     @testing.requires.predictable_gc
     def test_stale_state_negative(self):

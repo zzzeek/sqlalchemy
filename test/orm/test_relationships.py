@@ -1621,7 +1621,6 @@ class ManualBackrefTest(_fixtures.FixtureTest):
                               configure_mappers)
 
 
-
 class NoLoadBackPopulates(_fixtures.FixtureTest):
 
     """test the noload stratgegy which unlike others doesn't use

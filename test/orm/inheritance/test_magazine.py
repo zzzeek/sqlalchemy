@@ -6,15 +6,20 @@ from sqlalchemy.testing.util import function_named
 from sqlalchemy.testing import fixtures
 from sqlalchemy.testing.schema import Table, Column
 
+
 class BaseObject(object):
     def __init__(self, *args, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
+
+
 class Publication(BaseObject):
     pass
 
+
 class Issue(BaseObject):
     pass
+
 
 class Location(BaseObject):
     def __repr__(self):
@@ -25,7 +30,7 @@ class Location(BaseObject):
 
     def _set_name(self, name):
         session = create_session()
-        s = session.query(LocationName).filter(LocationName.name==name).first()
+        s = session.query(LocationName).filter(LocationName.name == name).first()
         session.expunge_all()
         if s is not None:
             self._name = s
@@ -46,25 +51,31 @@ class Location(BaseObject):
 
     name = property(_get_name, _set_name)
 
+
 class LocationName(BaseObject):
     def __repr__(self):
         return "%s()" % (self.__class__.__name__)
+
 
 class PageSize(BaseObject):
     def __repr__(self):
         return "%s(%sx%s, %s)" % (self.__class__.__name__, self.width, self.height, self.name)
 
+
 class Magazine(BaseObject):
     def __repr__(self):
         return "%s(%s, %s)" % (self.__class__.__name__, repr(self.location), repr(self.size))
+
 
 class Page(BaseObject):
     def __repr__(self):
         return "%s(%s)" % (self.__class__.__name__, str(self.page_no))
 
+
 class MagazinePage(Page):
     def __repr__(self):
         return "%s(%s, %s)" % (self.__class__.__name__, str(self.page_no), repr(self.magazine))
+
 
 class ClassifiedPage(MagazinePage):
     pass
@@ -121,24 +132,25 @@ class MagazineTest(fixtures.MappedTest):
             Column('name', String(45), default=''),
         )
 
+
 def _generate_round_trip_test(use_unions=False, use_joins=False):
     def test_roundtrip(self):
         publication_mapper = mapper(Publication, publication_table)
 
-        issue_mapper = mapper(Issue, issue_table, properties = {
+        issue_mapper = mapper(Issue, issue_table, properties={
             'publication': relationship(Publication, backref=backref('issues', cascade="all, delete-orphan")),
         })
 
         location_name_mapper = mapper(LocationName, location_name_table)
 
-        location_mapper = mapper(Location, location_table, properties = {
+        location_mapper = mapper(Location, location_table, properties={
             'issue': relationship(Issue, backref=backref('locations', lazy='joined', cascade="all, delete-orphan")),
             '_name': relationship(LocationName),
         })
 
         page_size_mapper = mapper(PageSize, page_size_table)
 
-        magazine_mapper = mapper(Magazine, magazine_table, properties = {
+        magazine_mapper = mapper(Magazine, magazine_table, properties={
             'location': relationship(Location, backref=backref('magazine', uselist=False)),
             'size': relationship(PageSize),
         })
@@ -148,7 +160,7 @@ def _generate_round_trip_test(use_unions=False, use_joins=False):
                 {
                     'm': page_table.join(magazine_page_table),
                     'c': page_table.join(magazine_page_table).join(classified_page_table),
-                    'p': page_table.select(page_table.c.type=='p'),
+                    'p': page_table.select(page_table.c.type == 'p'),
                 }, None, 'page_join')
             page_mapper = mapper(Page, page_table, with_polymorphic=('*', page_join), polymorphic_on=page_join.c.type, polymorphic_identity='p')
         elif use_joins:
@@ -182,22 +194,20 @@ def _generate_round_trip_test(use_unions=False, use_joins=False):
                                     polymorphic_identity='c',
                                     primary_key=[page_table.c.id])
 
-
         session = create_session()
 
         pub = Publication(name='Test')
-        issue = Issue(issue=46,publication=pub)
-        location = Location(ref='ABC',name='London',issue=issue)
+        issue = Issue(issue=46, publication=pub)
+        location = Location(ref='ABC', name='London', issue=issue)
 
-        page_size = PageSize(name='A4',width=210,height=297)
+        page_size = PageSize(name='A4', width=210, height=297)
 
-        magazine = Magazine(location=location,size=page_size)
+        magazine = Magazine(location=location, size=page_size)
 
-        page = ClassifiedPage(magazine=magazine,page_no=1)
-        page2 = MagazinePage(magazine=magazine,page_no=2)
-        page3 = ClassifiedPage(magazine=magazine,page_no=3)
+        page = ClassifiedPage(magazine=magazine, page_no=1)
+        page2 = MagazinePage(magazine=magazine, page_no=2)
+        page3 = ClassifiedPage(magazine=magazine, page_no=3)
         session.add(pub)
-
 
         session.flush()
         print([x for x in session])
@@ -205,7 +215,7 @@ def _generate_round_trip_test(use_unions=False, use_joins=False):
 
         session.flush()
         session.expunge_all()
-        p = session.query(Publication).filter(Publication.name=="Test").one()
+        p = session.query(Publication).filter(Publication.name == "Test").one()
 
         print(p.issues[0].locations[0].magazine.pages)
         print([page, page2, page3])
@@ -214,6 +224,7 @@ def _generate_round_trip_test(use_unions=False, use_joins=False):
     test_roundtrip = function_named(
         test_roundtrip, "test_%s" % (not use_union and (use_joins and "joins" or "select") or "unions"))
     setattr(MagazineTest, test_roundtrip.__name__, test_roundtrip)
+
 
 for (use_union, use_join) in [(True, False), (False, True), (False, False)]:
     _generate_round_trip_test(use_union, use_join)

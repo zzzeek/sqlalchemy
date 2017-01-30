@@ -40,6 +40,7 @@ class ValidatorTest(_fixtures.FixtureTest):
                                 self.classes.Address)
 
         canary = Mock()
+
         class User(fixtures.ComparableEntity):
             @validates('addresses')
             def validate_address(self, key, ad):
@@ -103,6 +104,7 @@ class ValidatorTest(_fixtures.FixtureTest):
                                      self.tables.addresses,
                                      self.classes.Address)
         canary = Mock()
+
         class User(fixtures.ComparableEntity):
 
             @validates('name', include_removes=True)
@@ -198,6 +200,7 @@ class ValidatorTest(_fixtures.FixtureTest):
         users, addresses = (self.tables.users,
                                      self.tables.addresses)
         canary = Mock()
+
         class User(fixtures.ComparableEntity):
 
             if include_removes:

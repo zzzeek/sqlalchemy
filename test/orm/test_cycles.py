@@ -44,9 +44,9 @@ class SelfReferentialTest(fixtures.MappedTest):
     def test_single(self):
         C1, t1 = self.classes.C1, self.tables.t1
 
-        mapper(C1, t1, properties = {
-            'c1s':relationship(C1, cascade="all"),
-            'parent':relationship(C1,
+        mapper(C1, t1, properties={
+            'c1s': relationship(C1, cascade="all"),
+            'parent': relationship(C1,
                               primaryjoin=t1.c.parent_c1 == t1.c.c1,
                               remote_side=t1.c.c1,
                               lazy='select',
@@ -54,7 +54,7 @@ class SelfReferentialTest(fixtures.MappedTest):
         a = C1('head c1')
         a.c1s.append(C1('another c1'))
 
-        sess = create_session( )
+        sess = create_session()
         sess.add(a)
         sess.flush()
         sess.delete(a)
@@ -72,7 +72,7 @@ class SelfReferentialTest(fixtures.MappedTest):
         C1, t1 = self.classes.C1, self.tables.t1
 
         mapper(C1, t1, properties={
-            'parent':relationship(C1,
+            'parent': relationship(C1,
                               primaryjoin=t1.c.parent_c1 == t1.c.c1,
                               remote_side=t1.c.c1)})
 
@@ -87,7 +87,7 @@ class SelfReferentialTest(fixtures.MappedTest):
         c2.parent = c1
         sess.add(c2)
         sess.flush()
-        assert c2.parent_c1==c1.c1
+        assert c2.parent_c1 == c1.c1
 
     def test_cycle(self):
         C2, C1, t2, t1 = (self.classes.C2,
@@ -95,9 +95,9 @@ class SelfReferentialTest(fixtures.MappedTest):
                                 self.tables.t2,
                                 self.tables.t1)
 
-        mapper(C1, t1, properties = {
-            'c1s' : relationship(C1, cascade="all"),
-            'c2s' : relationship(mapper(C2, t2), cascade="all, delete-orphan")})
+        mapper(C1, t1, properties={
+            'c1s': relationship(C1, cascade="all"),
+            'c2s': relationship(mapper(C2, t2), cascade="all, delete-orphan")})
 
         a = C1('head c1')
         a.c1s.append(C1('child1'))
@@ -106,7 +106,7 @@ class SelfReferentialTest(fixtures.MappedTest):
         a.c1s[0].c1s.append(C1('subchild2'))
         a.c1s[1].c2s.append(C2('child2 data1'))
         a.c1s[1].c2s.append(C2('child2 data2'))
-        sess = create_session( )
+        sess = create_session()
         sess.add(a)
         sess.flush()
 
@@ -117,7 +117,7 @@ class SelfReferentialTest(fixtures.MappedTest):
         C1, t1 = self.classes.C1, self.tables.t1
 
         mapper(C1, t1, properties={
-            'children':relationship(C1)
+            'children': relationship(C1)
         })
 
         sess = create_session()
@@ -134,6 +134,7 @@ class SelfReferentialTest(fixtures.MappedTest):
 
         sess.expire_all()
         assert c2.parent_c1 is None
+
 
 class SelfReferentialNoPKTest(fixtures.MappedTest):
     """A self-referential relationship that joins on a column other than the primary key column"""
@@ -241,7 +242,6 @@ class InheritTestOne(fixtures.MappedTest):
 
         Child1, Child2 = self.classes.Child1, self.classes.Child2
 
-
         session = create_session()
 
         c1 = Child1()
@@ -306,12 +306,12 @@ class InheritTestTwo(fixtures.MappedTest):
                                 self.classes.B)
 
         mapper(A, a, properties={
-            'cs':relationship(C, primaryjoin=a.c.cid==c.c.id)})
+            'cs': relationship(C, primaryjoin=a.c.cid == c.c.id)})
 
         mapper(B, b, inherits=A, inherit_condition=b.c.id == a.c.id)
 
         mapper(C, c, properties={
-            'arel':relationship(A, primaryjoin=a.c.id == c.c.aid)})
+            'arel': relationship(A, primaryjoin=a.c.id == c.c.aid)})
 
         sess = create_session()
         bobj = B()
@@ -345,8 +345,10 @@ class BiDirectionalManyToOneTest(fixtures.MappedTest):
     def setup_classes(cls):
         class T1(cls.Basic):
             pass
+
         class T2(cls.Basic):
             pass
+
         class T3(cls.Basic):
             pass
 
@@ -360,12 +362,12 @@ class BiDirectionalManyToOneTest(fixtures.MappedTest):
                                 cls.classes.T1)
 
         mapper(T1, t1, properties={
-            't2':relationship(T2, primaryjoin=t1.c.t2id == t2.c.id)})
+            't2': relationship(T2, primaryjoin=t1.c.t2id == t2.c.id)})
         mapper(T2, t2, properties={
-            't1':relationship(T1, primaryjoin=t2.c.t1id == t1.c.id)})
+            't1': relationship(T1, primaryjoin=t2.c.t1id == t1.c.id)})
         mapper(T3, t3, properties={
-            't1':relationship(T1),
-            't2':relationship(T2)})
+            't1': relationship(T1),
+            't2': relationship(T2)})
 
     def test_reflush(self):
         T2, T3, T1 = (self.classes.T2,
@@ -555,6 +557,7 @@ class BiDirectionalOneToManyTest2(fixtures.MappedTest):
         sess.delete(c)
         sess.flush()
 
+
 class OneToManyManyToOneTest(fixtures.MappedTest):
     """
 
@@ -651,14 +654,14 @@ class OneToManyManyToOneTest(fixtures.MappedTest):
         self.assert_sql_execution(
             testing.db,
             sess.flush,
-            RegexSQL("^INSERT INTO person", {'data':'some data'}),
-            RegexSQL("^INSERT INTO ball", lambda c: {'person_id':p.id, 'data':'some data'}),
-            RegexSQL("^INSERT INTO ball", lambda c: {'person_id':p.id, 'data':'some data'}),
-            RegexSQL("^INSERT INTO ball", lambda c: {'person_id':p.id, 'data':'some data'}),
-            RegexSQL("^INSERT INTO ball", lambda c: {'person_id':p.id, 'data':'some data'}),
+            RegexSQL("^INSERT INTO person", {'data': 'some data'}),
+            RegexSQL("^INSERT INTO ball", lambda c: {'person_id': p.id, 'data': 'some data'}),
+            RegexSQL("^INSERT INTO ball", lambda c: {'person_id': p.id, 'data': 'some data'}),
+            RegexSQL("^INSERT INTO ball", lambda c: {'person_id': p.id, 'data': 'some data'}),
+            RegexSQL("^INSERT INTO ball", lambda c: {'person_id': p.id, 'data': 'some data'}),
             CompiledSQL("UPDATE person SET favorite_ball_id=:favorite_ball_id "
                         "WHERE person.id = :person_id",
-                        lambda ctx:{'favorite_ball_id':p.favorite.id, 'person_id':p.id}
+                        lambda ctx: {'favorite_ball_id': p.favorite.id, 'person_id': p.id}
              ),
         )
 
@@ -670,8 +673,8 @@ class OneToManyManyToOneTest(fixtures.MappedTest):
             CompiledSQL("UPDATE person SET favorite_ball_id=:favorite_ball_id "
                 "WHERE person.id = :person_id",
                 lambda ctx: {'person_id': p.id, 'favorite_ball_id': None}),
-            CompiledSQL("DELETE FROM ball WHERE ball.id = :id", None), # lambda ctx:[{'id': 1L}, {'id': 4L}, {'id': 3L}, {'id': 2L}])
-            CompiledSQL("DELETE FROM person WHERE person.id = :id", lambda ctx:[{'id': p.id}])
+            CompiledSQL("DELETE FROM ball WHERE ball.id = :id", None),  # lambda ctx:[{'id': 1L}, {'id': 4L}, {'id': 3L}, {'id': 2L}])
+            CompiledSQL("DELETE FROM person WHERE person.id = :id", lambda ctx: [{'id': p.id}])
         )
 
     def test_post_update_backref(self):
@@ -681,7 +684,6 @@ class OneToManyManyToOneTest(fixtures.MappedTest):
                                 self.tables.ball,
                                 self.classes.Ball,
                                 self.classes.Person)
-
 
         mapper(Ball, ball)
         mapper(Person, person, properties=dict(
@@ -723,8 +725,6 @@ class OneToManyManyToOneTest(fixtures.MappedTest):
             p3, b1.person
         )
 
-
-
     def test_post_update_o2m(self):
         """A cycle between two rows, with a post_update on the one-to-many"""
 
@@ -732,7 +732,6 @@ class OneToManyManyToOneTest(fixtures.MappedTest):
                                 self.tables.ball,
                                 self.classes.Ball,
                                 self.classes.Person)
-
 
         mapper(Ball, ball)
         mapper(Person, person, properties=dict(
@@ -757,38 +756,38 @@ class OneToManyManyToOneTest(fixtures.MappedTest):
         p.balls.append(b4)
         p.favorite = b
         sess = create_session()
-        sess.add_all((b,p,b2,b3,b4))
+        sess.add_all((b, p, b2, b3, b4))
 
         self.assert_sql_execution(
             testing.db,
             sess.flush,
             CompiledSQL("INSERT INTO ball (person_id, data) "
              "VALUES (:person_id, :data)",
-             {'person_id':None, 'data':'some data'}),
+             {'person_id': None, 'data': 'some data'}),
 
             CompiledSQL("INSERT INTO ball (person_id, data) "
              "VALUES (:person_id, :data)",
-             {'person_id':None, 'data':'some data'}),
+             {'person_id': None, 'data': 'some data'}),
 
             CompiledSQL("INSERT INTO ball (person_id, data) "
              "VALUES (:person_id, :data)",
-             {'person_id':None, 'data':'some data'}),
+             {'person_id': None, 'data': 'some data'}),
 
             CompiledSQL("INSERT INTO ball (person_id, data) "
              "VALUES (:person_id, :data)",
-             {'person_id':None, 'data':'some data'}),
+             {'person_id': None, 'data': 'some data'}),
 
             CompiledSQL("INSERT INTO person (favorite_ball_id, data) "
              "VALUES (:favorite_ball_id, :data)",
-             lambda ctx:{'favorite_ball_id':b.id, 'data':'some data'}),
+             lambda ctx: {'favorite_ball_id': b.id, 'data': 'some data'}),
 
              CompiledSQL("UPDATE ball SET person_id=:person_id "
               "WHERE ball.id = :ball_id",
-              lambda ctx:[
-                {'person_id':p.id,'ball_id':b.id},
-                {'person_id':p.id,'ball_id':b2.id},
-                {'person_id':p.id,'ball_id':b3.id},
-                {'person_id':p.id,'ball_id':b4.id}
+              lambda ctx: [
+                {'person_id': p.id, 'ball_id': b.id},
+                {'person_id': p.id, 'ball_id': b2.id},
+                {'person_id': p.id, 'ball_id': b3.id},
+                {'person_id': p.id, 'ball_id': b4.id}
                 ]
             ),
 
@@ -799,7 +798,7 @@ class OneToManyManyToOneTest(fixtures.MappedTest):
         self.assert_sql_execution(testing.db, sess.flush,
             CompiledSQL("UPDATE ball SET person_id=:person_id "
                 "WHERE ball.id = :ball_id",
-                lambda ctx:[
+                lambda ctx: [
                     {'person_id': None, 'ball_id': b.id},
                     {'person_id': None, 'ball_id': b2.id},
                     {'person_id': None, 'ball_id': b3.id},
@@ -807,10 +806,10 @@ class OneToManyManyToOneTest(fixtures.MappedTest):
                 ]
             ),
             CompiledSQL("DELETE FROM person WHERE person.id = :id",
-             lambda ctx:[{'id':p.id}]),
+             lambda ctx: [{'id': p.id}]),
 
             CompiledSQL("DELETE FROM ball WHERE ball.id = :id",
-             lambda ctx:[{'id': b.id},
+             lambda ctx: [{'id': b.id},
                          {'id': b2.id},
                          {'id': b3.id},
                          {'id': b4.id}])
@@ -885,22 +884,21 @@ class SelfReferentialPostUpdateTest(fixtures.MappedTest):
 
         node, Node = self.tables.node, self.classes.Node
 
-
         mapper(Node, node, properties={
             'children': relationship(
                 Node,
-                primaryjoin=node.c.id==node.c.parent_id,
+                primaryjoin=node.c.id == node.c.parent_id,
                 cascade="all",
                 backref=backref("parent", remote_side=node.c.id)
             ),
             'prev_sibling': relationship(
                 Node,
-                primaryjoin=node.c.prev_sibling_id==node.c.id,
+                primaryjoin=node.c.prev_sibling_id == node.c.id,
                 remote_side=node.c.id,
                 uselist=False),
             'next_sibling': relationship(
                 Node,
-                primaryjoin=node.c.next_sibling_id==node.c.id,
+                primaryjoin=node.c.next_sibling_id == node.c.id,
                 remote_side=node.c.id,
                 uselist=False,
                 post_update=True)})
@@ -948,19 +946,19 @@ class SelfReferentialPostUpdateTest(fixtures.MappedTest):
             AllOf(
             CompiledSQL("UPDATE node SET prev_sibling_id=:prev_sibling_id "
              "WHERE node.id = :node_id",
-             lambda ctx:{'prev_sibling_id':about.id, 'node_id':stories.id}),
+             lambda ctx: {'prev_sibling_id': about.id, 'node_id': stories.id}),
 
             CompiledSQL("UPDATE node SET next_sibling_id=:next_sibling_id "
              "WHERE node.id = :node_id",
-             lambda ctx:{'next_sibling_id':stories.id, 'node_id':about.id}),
+             lambda ctx: {'next_sibling_id': stories.id, 'node_id': about.id}),
 
             CompiledSQL("UPDATE node SET next_sibling_id=:next_sibling_id "
              "WHERE node.id = :node_id",
-             lambda ctx:{'next_sibling_id':None, 'node_id':cats.id}),
+             lambda ctx: {'next_sibling_id': None, 'node_id': cats.id}),
             ),
 
             CompiledSQL("DELETE FROM node WHERE node.id = :id",
-             lambda ctx:[{'id':cats.id}])
+             lambda ctx: [{'id': cats.id}])
         )
 
         session.delete(root)
@@ -977,17 +975,17 @@ class SelfReferentialPostUpdateTest(fixtures.MappedTest):
             ),
             AllOf(
                 CompiledSQL("DELETE FROM node WHERE node.id = :id",
-                    lambda ctx:{'id':about.id}
+                    lambda ctx: {'id': about.id}
                 ),
                 CompiledSQL("DELETE FROM node WHERE node.id = :id",
-                    lambda ctx:{'id':stories.id}
+                    lambda ctx: {'id': stories.id}
                 ),
                 CompiledSQL("DELETE FROM node WHERE node.id = :id",
-                    lambda ctx:{'id':bruce.id}
+                    lambda ctx: {'id': bruce.id}
                 ),
             ),
             CompiledSQL("DELETE FROM node WHERE node.id = :id",
-                lambda ctx:{'id':root.id}
+                lambda ctx: {'id': root.id}
             ),
         )
         about = Node('about')
@@ -999,6 +997,7 @@ class SelfReferentialPostUpdateTest(fixtures.MappedTest):
         session.delete(about)
         cats.prev_sibling = None
         session.flush()
+
 
 class SelfReferentialPostUpdateTest2(fixtures.MappedTest):
 
@@ -1023,7 +1022,6 @@ class SelfReferentialPostUpdateTest2(fixtures.MappedTest):
         """
 
         A, a_table = self.classes.A, self.tables.a_table
-
 
         mapper(A, a_table, properties={
             'foo': relationship(A,
@@ -1085,18 +1083,18 @@ class SelfReferentialPostUpdateTest3(fixtures.MappedTest):
                                 self.tables.child)
 
         mapper(Parent, parent, properties={
-            'children':relationship(Child, primaryjoin=parent.c.id==child.c.parent_id),
-            'child':relationship(Child, primaryjoin=parent.c.child_id==child.c.id, post_update=True)
+            'children': relationship(Child, primaryjoin=parent.c.id == child.c.parent_id),
+            'child': relationship(Child, primaryjoin=parent.c.child_id == child.c.id, post_update=True)
         })
         mapper(Child, child, properties={
-            'parent':relationship(Child, remote_side=child.c.id)
+            'parent': relationship(Child, remote_side=child.c.id)
         })
 
         session = create_session()
         p1 = Parent('p1')
         c1 = Child('c1')
         c2 = Child('c2')
-        p1.children =[c1, c2]
+        p1.children = [c1, c2]
         c2.parent = c1
         p1.child = c2
 
@@ -1116,6 +1114,7 @@ class SelfReferentialPostUpdateTest3(fixtures.MappedTest):
 
         p2.child = None
         session.flush()
+
 
 class PostUpdateBatchingTest(fixtures.MappedTest):
     """test that lots of post update cols batch together into a single UPDATE."""
@@ -1160,12 +1159,15 @@ class PostUpdateBatchingTest(fixtures.MappedTest):
         class Parent(cls.Basic):
             def __init__(self, name=''):
                 self.name = name
+
         class Child1(cls.Basic):
             def __init__(self, name=''):
                 self.name = name
+
         class Child2(cls.Basic):
             def __init__(self, name=''):
                 self.name = name
+
         class Child3(cls.Basic):
             def __init__(self, name=''):
                 self.name = name
@@ -1181,13 +1183,13 @@ class PostUpdateBatchingTest(fixtures.MappedTest):
                                 self.classes.Child3)
 
         mapper(Parent, parent, properties={
-            'c1s':relationship(Child1, primaryjoin=child1.c.parent_id==parent.c.id),
-            'c2s':relationship(Child2, primaryjoin=child2.c.parent_id==parent.c.id),
-            'c3s':relationship(Child3, primaryjoin=child3.c.parent_id==parent.c.id),
+            'c1s': relationship(Child1, primaryjoin=child1.c.parent_id == parent.c.id),
+            'c2s': relationship(Child2, primaryjoin=child2.c.parent_id == parent.c.id),
+            'c3s': relationship(Child3, primaryjoin=child3.c.parent_id == parent.c.id),
 
-            'c1':relationship(Child1, primaryjoin=child1.c.id==parent.c.c1_id, post_update=True),
-            'c2':relationship(Child2, primaryjoin=child2.c.id==parent.c.c2_id, post_update=True),
-            'c3':relationship(Child3, primaryjoin=child3.c.id==parent.c.c3_id, post_update=True),
+            'c1': relationship(Child1, primaryjoin=child1.c.id == parent.c.c1_id, post_update=True),
+            'c2': relationship(Child2, primaryjoin=child2.c.id == parent.c.c2_id, post_update=True),
+            'c3': relationship(Child3, primaryjoin=child3.c.id == parent.c.c3_id, post_update=True),
         })
         mapper(Child1, child1)
         mapper(Child2, child2)

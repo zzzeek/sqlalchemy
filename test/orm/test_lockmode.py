@@ -99,6 +99,7 @@ class ForUpdateTest(_fixtures.FixtureTest):
             assert_sel_of=[users.c.id]
         )
 
+
 class CompileTest(_fixtures.FixtureTest, AssertsCompiledSQL):
     """run some compile tests, even though these are redundant."""
     run_inserts = None
@@ -212,7 +213,6 @@ class CompileTest(_fixtures.FixtureTest, AssertsCompiledSQL):
             "SELECT users.id AS users_id FROM users FOR UPDATE SKIP LOCKED",
             dialect="postgresql"
         )
-
 
     def test_oracle_update(self):
         User = self.classes.User

@@ -112,6 +112,7 @@ class LoadTest(PathTest, QueryTest):
             l._generate_path, l.path, User.addresses, "relationship"
 
         )
+
     def test_gen_path_attr_entity_invalid_raiseerr(self):
         User = self.classes.User
         Order = self.classes.Order
@@ -164,15 +165,11 @@ class LoadTest(PathTest, QueryTest):
         )
 
 
-
-
 class OptionsTest(PathTest, QueryTest):
 
     def _option_fixture(self, *arg):
         return strategy_options._UnboundLoad._from_keys(
                     strategy_options._UnboundLoad.joinedload, arg, True, {})
-
-
 
     def test_get_path_one_level_string(self):
         User = self.classes.User
@@ -311,6 +308,7 @@ class OptionsTest(PathTest, QueryTest):
         Dingaling, Address = self.classes.Dingaling, self.classes.Address
 
         sess = Session()
+
         class SubAddr(Address):
             pass
         mapper(SubAddr, inherits=Address, properties={
@@ -326,6 +324,7 @@ class OptionsTest(PathTest, QueryTest):
         Dingaling, Address = self.classes.Dingaling, self.classes.Address
 
         sess = Session()
+
         class SubAddr(Address):
             pass
         mapper(SubAddr, inherits=Address, properties={
@@ -341,6 +340,7 @@ class OptionsTest(PathTest, QueryTest):
         Dingaling, Address = self.classes.Dingaling, self.classes.Address
 
         sess = Session()
+
         class SubAddr(Address):
             pass
         mapper(SubAddr, inherits=Address, properties={
@@ -357,6 +357,7 @@ class OptionsTest(PathTest, QueryTest):
         User, Address = self.classes.User, self.classes.Address
 
         sess = Session()
+
         class SubAddr(Address):
             pass
         mapper(SubAddr, inherits=Address)
@@ -377,6 +378,7 @@ class OptionsTest(PathTest, QueryTest):
                                 self.classes.Address)
 
         sess = Session()
+
         class SubAddr(Address):
             pass
         mapper(SubAddr, inherits=Address, properties={

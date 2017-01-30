@@ -21,6 +21,7 @@ class AssertsUOW(object):
             uow.register_object(d, isdelete=True)
         return uow
 
+
 class SyncTest(fixtures.MappedTest,
                     testing.AssertsExecutionResults, AssertsUOW):
 
@@ -39,6 +40,7 @@ class SyncTest(fixtures.MappedTest,
     def setup_classes(cls):
         class A(cls.Basic):
             pass
+
         class B(cls.Basic):
             pass
 
@@ -52,7 +54,7 @@ class SyncTest(fixtures.MappedTest,
         session = create_session()
         uowcommit = self._get_test_uow(session)
         a_mapper = class_mapper(A)
-        b_mapper= class_mapper(B)
+        b_mapper = class_mapper(B)
         self.a1 = a1 = A()
         self.b1 = b1 = B()
         uowcommit = self._get_test_uow(session)
@@ -171,7 +173,7 @@ class SyncTest(fixtures.MappedTest,
         pairs = [(a_mapper.c.id, b_mapper.c.id,)]
         dest = {}
         sync.populate_dict(a1, a_mapper, dest, pairs)
-        eq_(dest, {'id':10})
+        eq_(dest, {'id': 10})
 
     def test_populate_dict_unmapped(self):
         uowcommit, a1, b1, a_mapper, b_mapper = self._fixture()

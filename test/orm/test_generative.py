@@ -74,21 +74,20 @@ class GenerativeQueryTest(fixtures.MappedTest):
         sess = create_session()
         query = sess.query(Foo)
         assert query.count() == 100
-        assert sess.query(func.min(foo.c.bar)).filter(foo.c.bar<30).one() == (0,)
+        assert sess.query(func.min(foo.c.bar)).filter(foo.c.bar < 30).one() == (0,)
 
-        assert sess.query(func.max(foo.c.bar)).filter(foo.c.bar<30).one() == (29,)
-        assert next(query.filter(foo.c.bar<30).values(sa.func.max(foo.c.bar)))[0] == 29
-        assert next(query.filter(foo.c.bar<30).values(sa.func.max(foo.c.bar)))[0] == 29
+        assert sess.query(func.max(foo.c.bar)).filter(foo.c.bar < 30).one() == (29,)
+        assert next(query.filter(foo.c.bar < 30).values(sa.func.max(foo.c.bar)))[0] == 29
+        assert next(query.filter(foo.c.bar < 30).values(sa.func.max(foo.c.bar)))[0] == 29
 
-    @testing.fails_if(lambda:testing.against('mysql+mysqldb') and
+    @testing.fails_if(lambda: testing.against('mysql+mysqldb') and
             testing.db.dialect.dbapi.version_info[:4] == (1, 2, 1, 'gamma'),
             "unknown incompatibility")
     def test_aggregate_1(self):
         foo = self.tables.foo
 
-
         query = create_session().query(func.sum(foo.c.bar))
-        assert query.filter(foo.c.bar<30).one() == (435,)
+        assert query.filter(foo.c.bar < 30).one() == (435,)
 
     @testing.fails_on('firebird', 'FIXME: unknown')
     @testing.fails_on('mssql', 'AVG produces an average as the original column type on mssql.')
@@ -105,10 +104,10 @@ class GenerativeQueryTest(fixtures.MappedTest):
 
         query = create_session().query(Foo)
 
-        avg_f = next(query.filter(foo.c.bar<30).values(sa.func.avg(foo.c.bar)))[0]
+        avg_f = next(query.filter(foo.c.bar < 30).values(sa.func.avg(foo.c.bar)))[0]
         assert float(round(avg_f, 1)) == 14.5
 
-        avg_o = next(query.filter(foo.c.bar<30).values(sa.func.avg(foo.c.bar)))[0]
+        avg_o = next(query.filter(foo.c.bar < 30).values(sa.func.avg(foo.c.bar)))[0]
         assert float(round(avg_o, 1)) == 14.5
 
     def test_filter(self):
@@ -157,6 +156,7 @@ class GenerativeTest2(fixtures.MappedTest):
 
         class Obj1(cls.Basic):
             pass
+
         class Obj2(cls.Basic):
             pass
 
@@ -210,15 +210,13 @@ class RelationshipsTest(_fixtures.FixtureTest):
                                 cls.tables.users)
 
         mapper(User, users, properties={
-            'orders':relationship(mapper(Order, orders, properties={
-                'addresses':relationship(mapper(Address, addresses))}))})
-
+            'orders': relationship(mapper(Order, orders, properties={
+                'addresses': relationship(mapper(Address, addresses))}))})
 
     def test_join(self):
         """Query.join"""
 
         User, Address = self.classes.User, self.classes.Address
-
 
         session = create_session()
         q = (session.query(User).join('orders', 'addresses').
@@ -232,7 +230,6 @@ class RelationshipsTest(_fixtures.FixtureTest):
                                 self.classes.User,
                                 self.classes.Address)
 
-
         session = create_session()
         q = (session.query(User).outerjoin('orders', 'addresses').
              filter(sa.or_(Order.id == None, Address.id == 1)))
@@ -245,7 +242,6 @@ class RelationshipsTest(_fixtures.FixtureTest):
         Order, User, Address = (self.classes.Order,
                                 self.classes.User,
                                 self.classes.Address)
-
 
         session = create_session()
 
@@ -288,6 +284,7 @@ class CaseSensitiveTest(fixtures.MappedTest):
 
         class Obj1(cls.Basic):
             pass
+
         class Obj2(cls.Basic):
             pass
 
@@ -317,9 +314,9 @@ class CaseSensitiveTest(fixtures.MappedTest):
 
         q = create_session(bind=testing.db).query(Obj1)
         assert q.count() == 4
-        res = q.filter(sa.and_(Table1.c.ID==Table2.c.T1ID,Table2.c.T1ID==1))
+        res = q.filter(sa.and_(Table1.c.ID == Table2.c.T1ID, Table2.c.T1ID == 1))
         assert res.count() == 3
-        res = q.filter(sa.and_(Table1.c.ID==Table2.c.T1ID,Table2.c.T1ID==1)).distinct()
+        res = q.filter(sa.and_(Table1.c.ID == Table2.c.T1ID, Table2.c.T1ID == 1)).distinct()
         eq_(res.count(), 1)
 
 

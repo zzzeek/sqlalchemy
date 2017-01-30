@@ -9,7 +9,6 @@ from sqlalchemy.testing import eq_
 from sqlalchemy.testing import fixtures
 
 
-
 class _ScopedTest(fixtures.MappedTest):
     """Adds another lookup bucket to emulate Session globals."""
 
@@ -47,12 +46,13 @@ class ScopedSessionTest(fixtures.MappedTest):
 
         class SomeObject(fixtures.ComparableEntity):
             query = Session.query_property()
+
         class SomeOtherObject(fixtures.ComparableEntity):
             query = Session.query_property()
             custom_query = Session.query_property(query_cls=CustomQuery)
 
         mapper(SomeObject, table1, properties={
-            'options':relationship(SomeOtherObject)})
+            'options': relationship(SomeOtherObject)})
         mapper(SomeOtherObject, table2)
 
         s = SomeObject(id=1, data="hello")

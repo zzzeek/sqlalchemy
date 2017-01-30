@@ -10,20 +10,34 @@ from sqlalchemy import testing
 from sqlalchemy.testing.schema import Table, Column
 from sqlalchemy.testing import assert_raises, eq_, is_
 
+
 class Company(fixtures.ComparableEntity):
     pass
+
+
 class Person(fixtures.ComparableEntity):
     pass
+
+
 class Engineer(Person):
     pass
+
+
 class Manager(Person):
     pass
+
+
 class Boss(Manager):
     pass
+
+
 class Machine(fixtures.ComparableEntity):
     pass
+
+
 class Paperwork(fixtures.ComparableEntity):
     pass
+
 
 class SelfReferentialTestJoinedToBase(fixtures.MappedTest):
 
@@ -59,10 +73,9 @@ class SelfReferentialTestJoinedToBase(fixtures.MappedTest):
             inherit_condition=engineers.c.person_id == people.c.person_id,
             polymorphic_identity='engineer',
             properties={
-                'reports_to':relationship(
+                'reports_to': relationship(
                     Person,
-                    primaryjoin=
-                        people.c.person_id == engineers.c.reports_to_id)})
+                    primaryjoin=people.c.person_id == engineers.c.reports_to_id)})
 
     def test_has(self):
         p1 = Person(name='dogbert')
@@ -102,6 +115,7 @@ class SelfReferentialTestJoinedToBase(fixtures.MappedTest):
                 .join('reports_to', aliased=True)
                 .filter(Person.name == 'dogbert').first(),
             Engineer(name='dilbert'))
+
 
 class SelfReferentialJ2JTest(fixtures.MappedTest):
 
@@ -148,12 +162,10 @@ class SelfReferentialJ2JTest(fixtures.MappedTest):
             inherits=Person,
             polymorphic_identity='engineer',
             properties={
-                'reports_to':relationship(
+                'reports_to': relationship(
                     Manager,
-                    primaryjoin=
-                        managers.c.person_id == engineers.c.reports_to_id,
+                    primaryjoin=managers.c.person_id == engineers.c.reports_to_id,
                     backref='engineers')})
-
 
     def test_has(self):
         m1 = Manager(name='dogbert')
@@ -237,6 +249,7 @@ class SelfReferentialJ2JTest(fixtures.MappedTest):
                 .filter(Engineer.reports_to == m1).all(),
             [m1])
 
+
 class SelfReferentialJ2JSelfTest(fixtures.MappedTest):
 
     run_setup_mappers = 'once'
@@ -270,10 +283,9 @@ class SelfReferentialJ2JSelfTest(fixtures.MappedTest):
             inherits=Person,
             polymorphic_identity='engineer',
             properties={
-                'reports_to':relationship(
+                'reports_to': relationship(
                     Engineer,
-                    primaryjoin=
-                        engineers.c.person_id == engineers.c.reports_to_id,
+                    primaryjoin=engineers.c.person_id == engineers.c.reports_to_id,
                     backref='engineers',
                     remote_side=engineers.c.person_id)})
 
@@ -345,6 +357,7 @@ class SelfReferentialJ2JSelfTest(fixtures.MappedTest):
                 .filter(Engineer.reports_to != None).all(),
             [e1, e2])
 
+
 class M2MFilterTest(fixtures.MappedTest):
 
     run_setup_mappers = 'once'
@@ -390,7 +403,7 @@ class M2MFilterTest(fixtures.MappedTest):
 
         mapper(Organization, organizations,
             properties={
-                'engineers':relationship(
+                'engineers': relationship(
                     Engineer,
                     secondary=engineers_to_org,
                     backref='organizations')})
@@ -453,6 +466,7 @@ class M2MFilterTest(fixtures.MappedTest):
                 .all(),
             [Organization(name='org1')])
 
+
 class SelfReferentialM2MTest(fixtures.MappedTest, AssertsCompiledSQL):
     __dialect__ = "default"
 
@@ -486,8 +500,10 @@ class SelfReferentialM2MTest(fixtures.MappedTest, AssertsCompiledSQL):
     def setup_classes(cls):
         class Parent(cls.Basic):
             pass
+
         class Child1(Parent):
             pass
+
         class Child2(Parent):
             pass
 
@@ -508,7 +524,7 @@ class SelfReferentialM2MTest(fixtures.MappedTest, AssertsCompiledSQL):
             inherits=Parent,
             polymorphic_identity='child1',
             properties={
-                'left_child2':relationship(
+                'left_child2': relationship(
                     Child2,
                     secondary=secondary,
                     primaryjoin=parent.c.id == secondary.c.right_id,
@@ -608,6 +624,7 @@ class SelfReferentialM2MTest(fixtures.MappedTest, AssertsCompiledSQL):
         for row in query_.all():
             assert row.left_child2
 
+
 class EagerToSubclassTest(fixtures.MappedTest):
     """Test eager loads to subclass mappers"""
 
@@ -651,10 +668,13 @@ class EagerToSubclassTest(fixtures.MappedTest):
     def setup_classes(cls):
         class Parent(cls.Comparable):
             pass
+
         class Base(cls.Comparable):
             pass
+
         class Sub(Base):
             pass
+
         class Related(cls.Comparable):
             pass
 
@@ -670,12 +690,12 @@ class EagerToSubclassTest(fixtures.MappedTest):
         Related = cls.classes.Related
 
         mapper(Parent, parent,
-            properties={'children':relationship(Sub, order_by=sub.c.data)})
+            properties={'children': relationship(Sub, order_by=sub.c.data)})
 
         mapper(Base, base,
             polymorphic_on=base.c.type,
             polymorphic_identity='b',
-            properties={'related':relationship(Related)})
+            properties={'related': relationship(Related)})
 
         mapper(Sub, sub,
             inherits=Base,
@@ -706,6 +726,7 @@ class EagerToSubclassTest(fixtures.MappedTest):
     def test_joinedload(self):
         Parent = self.classes.Parent
         sess = Session()
+
         def go():
             eq_(sess.query(Parent)
                     .options(joinedload(Parent.children)).all(),
@@ -716,6 +737,7 @@ class EagerToSubclassTest(fixtures.MappedTest):
         Parent = self.classes.Parent
         Sub = self.classes.Sub
         sess = Session()
+
         def go():
             eq_(sess.query(Parent)
                     .join(Parent.children)
@@ -748,6 +770,7 @@ class EagerToSubclassTest(fixtures.MappedTest):
                     .order_by(pa.data).all(),
                 [p1, p2])
         self.assert_sql_count(testing.db, go, 3)
+
 
 class SubClassEagerToSubClassTest(fixtures.MappedTest):
     """Test joinedloads from subclass to subclass mappers"""
@@ -794,10 +817,13 @@ class SubClassEagerToSubClassTest(fixtures.MappedTest):
     def setup_classes(cls):
         class Parent(cls.Comparable):
             pass
+
         class Subparent(Parent):
             pass
+
         class Base(cls.Comparable):
             pass
+
         class Sub(Base):
             pass
 
@@ -820,7 +846,7 @@ class SubClassEagerToSubClassTest(fixtures.MappedTest):
             inherits=Parent,
             polymorphic_identity='s',
             properties={
-                'children':relationship(Sub, order_by=base.c.id)})
+                'children': relationship(Sub, order_by=base.c.id)})
 
         mapper(Base, base,
             polymorphic_on=base.c.type,
@@ -850,6 +876,7 @@ class SubClassEagerToSubClassTest(fixtures.MappedTest):
         Subparent = self.classes.Subparent
 
         sess = create_session()
+
         def go():
             eq_(sess.query(Subparent)
                     .options(joinedload(Subparent.children)).all(),
@@ -857,6 +884,7 @@ class SubClassEagerToSubClassTest(fixtures.MappedTest):
         self.assert_sql_count(testing.db, go, 1)
 
         sess.expunge_all()
+
         def go():
             eq_(sess.query(Subparent)
                     .options(joinedload("children")).all(),
@@ -867,6 +895,7 @@ class SubClassEagerToSubClassTest(fixtures.MappedTest):
         Subparent = self.classes.Subparent
 
         sess = create_session()
+
         def go():
             eq_(sess.query(Subparent)
                     .join(Subparent.children)
@@ -875,6 +904,7 @@ class SubClassEagerToSubClassTest(fixtures.MappedTest):
         self.assert_sql_count(testing.db, go, 1)
 
         sess.expunge_all()
+
         def go():
             eq_(sess.query(Subparent)
                     .join(Subparent.children)
@@ -886,6 +916,7 @@ class SubClassEagerToSubClassTest(fixtures.MappedTest):
         Subparent = self.classes.Subparent
 
         sess = create_session()
+
         def go():
             eq_(sess.query(Subparent)
                     .options(subqueryload(Subparent.children)).all(),
@@ -893,11 +924,13 @@ class SubClassEagerToSubClassTest(fixtures.MappedTest):
         self.assert_sql_count(testing.db, go, 2)
 
         sess.expunge_all()
+
         def go():
             eq_(sess.query(Subparent)
                     .options(subqueryload("children")).all(),
                 [p1, p2])
         self.assert_sql_count(testing.db, go, 2)
+
 
 class SameNamedPropTwoPolymorphicSubClassesTest(fixtures.MappedTest):
     """test pathing when two subclasses contain a different property
@@ -941,10 +974,13 @@ class SameNamedPropTwoPolymorphicSubClassesTest(fixtures.MappedTest):
     def setup_classes(cls):
         class A(cls.Comparable):
             pass
+
         class B(A):
             pass
+
         class C(A):
             pass
+
         class D(cls.Comparable):
             pass
 
@@ -965,7 +1001,6 @@ class SameNamedPropTwoPolymorphicSubClassesTest(fixtures.MappedTest):
                         'related': relationship(D, secondary=cls.tables.ctod)
                     })
         mapper(D, cls.tables.d)
-
 
     @classmethod
     def insert_data(cls):
@@ -991,6 +1026,7 @@ class SameNamedPropTwoPolymorphicSubClassesTest(fixtures.MappedTest):
         session = Session()
         d = session.query(D).one()
         a_poly = with_polymorphic(A, [B, C])
+
         def go():
             for a in session.query(a_poly).\
                 options(
@@ -1007,6 +1043,7 @@ class SameNamedPropTwoPolymorphicSubClassesTest(fixtures.MappedTest):
 
         session = Session()
         d = session.query(D).one()
+
         def go():
             for a in session.query(A).with_polymorphic([B, C]).\
                 options(subqueryload(B.related), subqueryload(C.related)):
@@ -1022,6 +1059,7 @@ class SameNamedPropTwoPolymorphicSubClassesTest(fixtures.MappedTest):
         session = Session()
         d = session.query(D).one()
         a_poly = with_polymorphic(A, [B, C])
+
         def go():
             for a in session.query(a_poly).\
                 options(
@@ -1038,6 +1076,7 @@ class SameNamedPropTwoPolymorphicSubClassesTest(fixtures.MappedTest):
 
         session = Session()
         d = session.query(D).one()
+
         def go():
             for a in session.query(A).with_polymorphic([B, C]).\
                 options(joinedload(B.related), joinedload(C.related)):
@@ -1078,10 +1117,13 @@ class SubClassToSubClassFromParentTest(fixtures.MappedTest):
     def setup_classes(cls):
         class Z(cls.Comparable):
             pass
+
         class A(cls.Comparable):
             pass
+
         class B(A):
             pass
+
         class D(A):
             pass
 
@@ -1106,7 +1148,6 @@ class SubClassToSubClassFromParentTest(fixtures.MappedTest):
                     })
         mapper(D, cls.tables.d, inherits=A, polymorphic_identity='d')
 
-
     @classmethod
     def insert_data(cls):
         B = cls.classes.B
@@ -1118,6 +1159,7 @@ class SubClassToSubClassFromParentTest(fixtures.MappedTest):
     def test_2617(self):
         A = self.classes.A
         session = Session()
+
         def go():
             a1 = session.query(A).first()
             eq_(a1.related, [])
@@ -1185,16 +1227,22 @@ class SubClassToSubClassMultiTest(AssertsCompiledSQL, fixtures.MappedTest):
     def setup_classes(cls):
         class Parent(cls.Comparable):
             pass
+
         class Base1(cls.Comparable):
             pass
+
         class Sub1(Base1):
             pass
+
         class Base2(cls.Comparable):
             pass
+
         class Sub2(Base2):
             pass
+
         class EP1(cls.Comparable):
             pass
+
         class EP2(cls.Comparable):
             pass
 
@@ -1265,7 +1313,7 @@ class SubClassToSubClassMultiTest(AssertsCompiledSQL, fixtures.MappedTest):
         s = Session()
         self.assert_compile(
             s.query(Base1).join(Base1.sub2).
-                join(Sub2.ep1).\
+                join(Sub2.ep1).
                 join(Sub2.ep2),
             "SELECT base1.id AS base1_id, base1.data AS base1_data "
             "FROM base1 JOIN (base2 JOIN sub2 "
@@ -1281,7 +1329,7 @@ class SubClassToSubClassMultiTest(AssertsCompiledSQL, fixtures.MappedTest):
         s = Session()
         self.assert_compile(
             s.query(Sub2).join(Base1, Base1.id == Sub2.base1_id).
-                join(Sub2.ep1).\
+                join(Sub2.ep1).
                 join(Sub2.ep2),
             "SELECT sub2.id AS sub2_id, base2.id AS base2_id, "
             "base2.base1_id AS base2_base1_id, base2.data AS base2_data, "
@@ -1298,7 +1346,7 @@ class SubClassToSubClassMultiTest(AssertsCompiledSQL, fixtures.MappedTest):
         s = Session()
         self.assert_compile(
             s.query(Sub2).join(Sub1, Sub1.id == Sub2.base1_id).
-                join(Sub2.ep1).\
+                join(Sub2.ep1).
                 join(Sub2.ep2),
             "SELECT sub2.id AS sub2_id, base2.id AS base2_id, "
             "base2.base1_id AS base2_base1_id, base2.data AS base2_data, "
@@ -1316,7 +1364,7 @@ class SubClassToSubClassMultiTest(AssertsCompiledSQL, fixtures.MappedTest):
 
         s = Session()
         self.assert_compile(
-            s.query(Sub2).from_self().\
+            s.query(Sub2).from_self().
                 join(Sub2.ep1).
                 join(Sub2.ep2),
             "SELECT anon_1.sub2_id AS anon_1_sub2_id, "
@@ -1602,7 +1650,7 @@ class JoinedloadOverWPolyAliased(
             "parent_1.owner_id AS parent_1_owner_id, "
             "owner_1.id AS owner_1_id, owner_1.type AS owner_1_type "
             "FROM link LEFT OUTER JOIN parent AS parent_1 "
-            "ON link.child_id = parent_1.id "  + extra +
+            "ON link.child_id = parent_1.id " + extra +
             "LEFT OUTER JOIN owner AS owner_1 "
             "ON owner_1.id = parent_1.owner_id"
         )
@@ -1641,7 +1689,6 @@ class JoinAcrossJoinedInhMultiPath(fixtures.DeclarativeMappedTest,
     times across the same joined-inh to the same target but with other classes
     in the middle.    E.g. test [ticket:2908]
     """
-
 
     run_setup_mappers = 'once'
     __dialect__ = 'default'
@@ -1746,7 +1793,7 @@ class JoinAcrossJoinedInhMultiPath(fixtures.DeclarativeMappedTest,
         q = sess.query(Root).\
                 options(
                     joinedload(Root.sub1).joinedload(Sub1.target),
-                    joinedload(Root.intermediate).joinedload(Intermediate.sub1).\
+                    joinedload(Root.intermediate).joinedload(Intermediate.sub1).
                         joinedload(Sub1.target),
                 )
         self.assert_compile(q,
@@ -1796,10 +1843,13 @@ class MultipleAdaptUsesEntityOverTableTest(AssertsCompiledSQL, fixtures.MappedTe
     def setup_classes(cls):
         class A(cls.Comparable):
             pass
+
         class B(A):
             pass
+
         class C(A):
             pass
+
         class D(A):
             pass
 

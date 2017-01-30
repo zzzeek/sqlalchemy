@@ -29,6 +29,7 @@ class AssociationTest(fixtures.MappedTest):
         class Item(cls.Basic):
             def __init__(self, name):
                 self.name = name
+
             def __repr__(self):
                 return "Item id=%d name=%s keywordassoc=%r" % (
                     self.item_id, self.name, self.keywords)
@@ -36,6 +37,7 @@ class AssociationTest(fixtures.MappedTest):
         class Keyword(cls.Basic):
             def __init__(self, name):
                 self.name = name
+
             def __repr__(self):
                 return "Keyword id=%d name=%s" % (self.keyword_id, self.name)
 
@@ -43,6 +45,7 @@ class AssociationTest(fixtures.MappedTest):
             def __init__(self, keyword, data):
                 self.keyword = keyword
                 self.data = data
+
             def __repr__(self):
                 return "KeywordAssociation itemid=%d keyword=%r data=%s" % (
                     self.item_id, self.keyword, self.data)
@@ -58,12 +61,11 @@ class AssociationTest(fixtures.MappedTest):
 
         mapper(Keyword, keywords)
         mapper(KeywordAssociation, item_keywords, properties={
-            'keyword':relationship(Keyword, lazy='joined')},
-               primary_key=
-                    [item_keywords.c.item_id, item_keywords.c.keyword_id])
+            'keyword': relationship(Keyword, lazy='joined')},
+               primary_key=[item_keywords.c.item_id, item_keywords.c.keyword_id])
 
         mapper(Item, items, properties={
-            'keywords' : relationship(KeywordAssociation,
+            'keywords': relationship(KeywordAssociation,
                                   order_by=item_keywords.c.data,
                                   cascade="all, delete-orphan")
         })

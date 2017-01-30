@@ -15,6 +15,7 @@ from sqlalchemy import inspect
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.testing import AssertsCompiledSQL
 
+
 class AliasedClassTest(fixtures.TestBase, AssertsCompiledSQL):
     __dialect__ = 'default'
 
@@ -97,16 +98,19 @@ class AliasedClassTest(fixtures.TestBase, AssertsCompiledSQL):
         class descriptor(object):
             def __init__(self, fn):
                 self.fn = fn
+
             def __get__(self, obj, owner):
                 if obj is not None:
                     return self.fn(obj, obj)
                 else:
                     return self
+
             def method(self):
                 return 'method'
 
         class Point(object):
             center = (0, 0)
+
             @descriptor
             def thing(self, arg):
                 return arg.center
@@ -334,7 +338,6 @@ class PathRegistryTest(_fixtures.FixtureTest):
     run_setup_mappers = 'once'
     run_inserts = None
     run_deletes = None
-
 
     @classmethod
     def setup_mappers(cls):
@@ -604,7 +607,6 @@ class PathRegistryTest(_fixtures.FixtureTest):
         umapper = inspect(self.classes.User)
         amapper = inspect(self.classes.Address)
 
-
         p1 = PathRegistry.coerce((umapper, umapper.attrs.addresses, amapper,
                             amapper.attrs.email_address))
         p2 = PathRegistry.coerce((umapper, umapper.attrs.addresses, amapper))
@@ -624,7 +626,10 @@ class PathRegistryTest(_fixtures.FixtureTest):
             p3
         )
 
+
 from .inheritance import _poly_fixtures
+
+
 class PathRegistryInhTest(_poly_fixtures._Polymorphic):
     run_setup_mappers = 'once'
     run_inserts = None

@@ -5,6 +5,7 @@ from sqlalchemy.testing import AssertsCompiledSQL
 from sqlalchemy import Integer, select, ForeignKey, String, func
 from sqlalchemy.orm import mapper, relationship, aliased
 
+
 class BundleTest(fixtures.MappedTest, AssertsCompiledSQL):
     __dialect__ = 'default'
 
@@ -32,6 +33,7 @@ class BundleTest(fixtures.MappedTest, AssertsCompiledSQL):
     def setup_classes(cls):
         class Data(cls.Basic):
             pass
+
         class Other(cls.Basic):
             pass
 
@@ -188,7 +190,6 @@ class BundleTest(fixtures.MappedTest, AssertsCompiledSQL):
         eq_(row.b1.d1, 'd4d1')
         eq_(row.b1.b2.d2, 'd4d2')
 
-
     def test_query_count(self):
         Data = self.classes.Data
         b1 = Bundle('b1', Data.d1, Data.d2)
@@ -216,7 +217,6 @@ class BundleTest(fixtures.MappedTest, AssertsCompiledSQL):
             "SELECT data.d1 AS data_d1, data.d2 AS data_d2 FROM data "
             "JOIN other ON data.id = other.data_id"
         )
-
 
     def test_joins_from_adapted_entities(self):
         Data = self.classes.Data

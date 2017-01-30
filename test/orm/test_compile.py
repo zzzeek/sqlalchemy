@@ -143,16 +143,19 @@ class CompileTest(fixtures.ORMTest):
         metadata.create_all()
         try:
             node_table.insert().execute(node_id=1, node_index=5)
-            class Node(object):pass
-            class NodeName(object):pass
-            class Host(object):pass
+
+            class Node(object): pass
+
+            class NodeName(object): pass
+
+            class Host(object): pass
 
             node_mapper = mapper(Node, node_table)
             host_mapper = mapper(Host, host_table)
             node_name_mapper = mapper(NodeName, node_name_table,
-            properties = {
-                'node' : relationship(Node, backref=backref('names')),
-                'host' : relationship(Host),
+            properties={
+                'node': relationship(Node, backref=backref('names')),
+                'host': relationship(Host),
                 }
             )
             sess = create_session()
@@ -169,14 +172,15 @@ class CompileTest(fixtures.ORMTest):
 
         class A(object):
             pass
+
         class B(object):
             pass
 
         mapper(A, a, properties={
-            'b':relationship(B, backref='a')
+            'b': relationship(B, backref='a')
         })
         mapper(B, b, properties={
-            'a':relationship(A, backref='b')
+            'a': relationship(A, backref='b')
         })
 
         assert_raises_message(
@@ -194,8 +198,10 @@ class CompileTest(fixtures.ORMTest):
 
         class A(object):
             pass
+
         class B(object):
             pass
+
         class C(B):
             pass
 

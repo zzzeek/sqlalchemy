@@ -28,6 +28,7 @@ class AttributeImplAPITest(fixtures.MappedTest):
     def _scalar_obj_fixture(self):
         class A(object):
             pass
+
         class B(object):
             pass
         instrumentation.register_class(A)
@@ -38,6 +39,7 @@ class AttributeImplAPITest(fixtures.MappedTest):
     def _collection_obj_fixture(self):
         class A(object):
             pass
+
         class B(object):
             pass
         instrumentation.register_class(A)
@@ -172,7 +174,9 @@ class AttributeImplAPITest(fixtures.MappedTest):
 class AttributesTest(fixtures.ORMTest):
     def setup(self):
         global MyTest, MyTest2
+
         class MyTest(object): pass
+
         class MyTest2(object): pass
 
     def teardown(self):
@@ -229,13 +233,12 @@ class AttributesTest(fixtures.ORMTest):
 
         o = MyTest()
         o.mt2.append(MyTest2())
-        o.user_id=7
+        o.user_id = 7
         o.mt2[0].a = 'abcde'
         pk_o = pickle.dumps(o)
 
         o2 = pickle.loads(pk_o)
         pk_o2 = pickle.dumps(o2)
-
 
         # the above is kind of distrurbing, so let's do it again a little
         # differently.  the string-id in serialization thing is just an
@@ -278,6 +281,7 @@ class AttributesTest(fixtures.ORMTest):
     def test_object_dereferenced_error(self):
         class Foo(object):
             pass
+
         class Bar(object):
             def __init__(self):
                 gc_collect()
@@ -301,7 +305,8 @@ class AttributesTest(fixtures.ORMTest):
         class Foo(object):
             pass
 
-        data = {'a':'this is a', 'b':12}
+        data = {'a': 'this is a', 'b': 12}
+
         def loader(state, keys):
             for k in keys:
                 state.dict[k] = data[k]
@@ -341,7 +346,8 @@ class AttributesTest(fixtures.ORMTest):
         eq_(f.b, 12)
 
     def test_deferred_pickleable(self):
-        data = {'a':'this is a', 'b':12}
+        data = {'a': 'this is a', 'b': 12}
+
         def loader(state, keys):
             for k in keys:
                 state.dict[k] = data[k]
@@ -349,7 +355,7 @@ class AttributesTest(fixtures.ORMTest):
 
         instrumentation.register_class(MyTest)
         manager = attributes.manager_of_class(MyTest)
-        manager.deferred_scalar_loader=loader
+        manager.deferred_scalar_loader = loader
         attributes.register_attribute(MyTest, 'a', uselist=False, useobject=False)
         attributes.register_attribute(MyTest, 'b', uselist=False, useobject=False)
 
@@ -362,8 +368,9 @@ class AttributesTest(fixtures.ORMTest):
         eq_(m2.b, 12)
 
     def test_list(self):
-        class User(object):pass
-        class Address(object):pass
+        class User(object): pass
+
+        class Address(object): pass
 
         instrumentation.register_class(User)
         instrumentation.register_class(Address)
@@ -402,8 +409,8 @@ class AttributesTest(fixtures.ORMTest):
 
         eq_(u.user_id, 7)
         eq_(u.user_name, 'heythere')
-        eq_(u.addresses[0].email_address,'lala@123.com')
-        eq_(u.addresses[1].email_address,'foo@bar.com')
+        eq_(u.addresses[0].email_address, 'lala@123.com')
+        eq_(u.addresses[1].email_address, 'foo@bar.com')
 
     def test_extension_commit_attr(self):
         """test that an extension which commits attribute history
@@ -415,6 +422,7 @@ class AttributesTest(fixtures.ORMTest):
 
         class Foo(fixtures.BasicEntity):
             pass
+
         class Bar(fixtures.BasicEntity):
             pass
 
@@ -468,7 +476,6 @@ class AttributesTest(fixtures.ORMTest):
                             uselist=False,
                             useobject=False, extension=[ReceiveEvents('scalar')])
 
-
         def create_hist():
             def hist(key, shouldmatch, fn, *arg):
                 attributes.instance_state(f1)._commit_all(attributes.instance_dict(f1))
@@ -506,6 +513,7 @@ class AttributesTest(fixtures.ORMTest):
     def test_extension_lazyload_assertion(self):
         class Foo(fixtures.BasicEntity):
             pass
+
         class Bar(fixtures.BasicEntity):
             pass
 
@@ -525,6 +533,7 @@ class AttributesTest(fixtures.ORMTest):
         instrumentation.register_class(Bar)
 
         bar1, bar2, bar3 = [Bar(id=1), Bar(id=2), Bar(id=3)]
+
         def func1(state, passive):
             if passive is attributes.PASSIVE_NO_FETCH:
                 return attributes.PASSIVE_NO_RESULT
@@ -547,7 +556,6 @@ class AttributesTest(fixtures.ORMTest):
                 ['bars'])
         assert_raises(AssertionError, b.foos.remove, x)
 
-
     def test_scalar_listener(self):
 
         # listeners on ScalarAttributeImpl aren't used normally. test that
@@ -558,6 +566,7 @@ class AttributesTest(fixtures.ORMTest):
             pass
 
         results = []
+
         class ReceiveEvents(AttributeExtension):
             def append(self, state, child, initiator):
                 assert False
@@ -593,6 +602,7 @@ class AttributesTest(fixtures.ORMTest):
 
         class Post(object):
             pass
+
         class Blog(object):
             pass
         instrumentation.register_class(Post)
@@ -610,9 +620,9 @@ class AttributesTest(fixtures.ORMTest):
         b = Blog()
         p1 = Post()
         _set_callable(attributes.instance_state(b), attributes.instance_dict(b),
-                                                    'posts', lambda state, passive:[p1])
+                                                    'posts', lambda state, passive: [p1])
         _set_callable(attributes.instance_state(p1), attributes.instance_dict(p1),
-                                                    'blog', lambda state, passive:b)
+                                                    'blog', lambda state, passive: b)
         p1, attributes.instance_state(b)._commit_all(attributes.instance_dict(b))
 
         # no orphans (called before the lazy loaders fire off)
@@ -631,8 +641,9 @@ class AttributesTest(fixtures.ORMTest):
         assert attributes.has_parent(Post, b2, 'blog')
 
     def test_illegal_trackparent(self):
-        class Post(object):pass
-        class Blog(object):pass
+        class Post(object): pass
+
+        class Blog(object): pass
         instrumentation.register_class(Post)
         instrumentation.register_class(Blog)
 
@@ -648,21 +659,22 @@ class AttributesTest(fixtures.ORMTest):
             Post.blog.impl.sethasparent, "x", "x", True
         )
 
-
     def test_inheritance(self):
         """tests that attributes are polymorphic"""
 
-        class Foo(object):pass
-        class Bar(Foo):pass
+        class Foo(object): pass
 
+        class Bar(Foo): pass
 
         instrumentation.register_class(Foo)
         instrumentation.register_class(Bar)
 
         def func1(state, passive):
             return "this is the foo attr"
+
         def func2(state, passive):
             return "this is the bar attr"
+
         def func3(state, passive):
             return "this is the shared attr"
         attributes.register_attribute(Foo, 'element', uselist=False,
@@ -681,14 +693,15 @@ class AttributesTest(fixtures.ORMTest):
 
     def test_no_double_state(self):
         states = set()
+
         class Foo(object):
             def __init__(self):
                 states.add(attributes.instance_state(self))
+
         class Bar(Foo):
             def __init__(self):
                 states.add(attributes.instance_state(self))
                 Foo.__init__(self)
-
 
         instrumentation.register_class(Foo)
         instrumentation.register_class(Bar)
@@ -696,7 +709,6 @@ class AttributesTest(fixtures.ORMTest):
         b = Bar()
         eq_(len(states), 1)
         eq_(list(states)[0].obj(), b)
-
 
     def test_inheritance2(self):
         """test that the attribute manager can properly traverse the
@@ -733,6 +745,7 @@ class AttributesTest(fixtures.ORMTest):
 
         class Foo(fixtures.BasicEntity):
             pass
+
         class Bar(fixtures.BasicEntity):
             pass
 
@@ -884,6 +897,7 @@ class AttributesTest(fixtures.ORMTest):
         except sa_exc.ArgumentError as e:
             assert False
 
+
 class GetNoValueTest(fixtures.ORMTest):
     def _fixture(self, expected):
         class Foo(object):
@@ -910,7 +924,6 @@ class GetNoValueTest(fixtures.ORMTest):
         return Foo.attr.impl,\
                 attributes.instance_state(f1), \
                 attributes.instance_dict(f1)
-
 
     def test_passive_no_result(self):
         attr, state, dict_ = self._fixture(attributes.PASSIVE_NO_RESULT)
@@ -951,6 +964,7 @@ class GetNoValueTest(fixtures.ORMTest):
         )
         assert 'attr' not in dict_
 
+
 class UtilTest(fixtures.ORMTest):
     def test_helpers(self):
         class Foo(object):
@@ -978,11 +992,13 @@ class UtilTest(fixtures.ORMTest):
         attributes.del_attribute(f1, "coll")
         assert "coll" not in f1.__dict__
 
+
 class BackrefTest(fixtures.ORMTest):
 
     def test_m2m(self):
-        class Student(object):pass
-        class Course(object):pass
+        class Student(object): pass
+
+        class Course(object): pass
 
         instrumentation.register_class(Student)
         instrumentation.register_class(Course)
@@ -1004,11 +1020,12 @@ class BackrefTest(fixtures.ORMTest):
         self.assert_(s2.courses == [c])
         self.assert_(s1.courses == [c])
         s1.courses.remove(c)
-        self.assert_(c.students == [s2,s3])
+        self.assert_(c.students == [s2, s3])
 
     def test_o2m(self):
-        class Post(object):pass
-        class Blog(object):pass
+        class Post(object): pass
+
+        class Blog(object): pass
 
         instrumentation.register_class(Post)
         instrumentation.register_class(Blog)
@@ -1042,8 +1059,9 @@ class BackrefTest(fixtures.ORMTest):
         del p5.blog
 
     def test_o2o(self):
-        class Port(object):pass
-        class Jack(object):pass
+        class Port(object): pass
+
+        class Jack(object): pass
         instrumentation.register_class(Port)
         instrumentation.register_class(Jack)
 
@@ -1052,7 +1070,6 @@ class BackrefTest(fixtures.ORMTest):
 
         attributes.register_attribute(Jack, 'port', uselist=False,
                                             useobject=True, backref="jack")
-
 
         p = Port()
         j = Jack()
@@ -1073,8 +1090,10 @@ class BackrefTest(fixtures.ORMTest):
 
         class Parent(object):
             pass
+
         class Child(object):
             pass
+
         class SubChild(Child):
             pass
 
@@ -1086,16 +1105,16 @@ class BackrefTest(fixtures.ORMTest):
         instrumentation.register_class(SubChild)
         attributes.register_attribute(Parent, 'child', uselist=False,
                 backref="parent",
-                parent_token = p_token,
+                parent_token=p_token,
                 useobject=True)
         attributes.register_attribute(Child, 'parent', uselist=False,
                 backref="child",
-                parent_token = c_token,
+                parent_token=c_token,
                 useobject=True)
         attributes.register_attribute(SubChild, 'parent',
                 uselist=False,
                 backref="child",
-                parent_token = c_token,
+                parent_token=c_token,
                 useobject=True)
 
         p1 = Parent()
@@ -1108,8 +1127,10 @@ class BackrefTest(fixtures.ORMTest):
     def test_symmetric_o2m_inheritance(self):
         class Parent(object):
             pass
+
         class SubParent(Parent):
             pass
+
         class Child(object):
             pass
 
@@ -1121,15 +1142,15 @@ class BackrefTest(fixtures.ORMTest):
         instrumentation.register_class(Child)
         attributes.register_attribute(Parent, 'children', uselist=True,
                 backref='parent',
-                parent_token = p_token,
+                parent_token=p_token,
                 useobject=True)
         attributes.register_attribute(SubParent, 'children', uselist=True,
                 backref='parent',
-                parent_token = p_token,
+                parent_token=p_token,
                 useobject=True)
         attributes.register_attribute(Child, 'parent', uselist=False,
                 backref='children',
-                parent_token = c_token,
+                parent_token=c_token,
                 useobject=True)
 
         p1 = Parent()
@@ -1147,11 +1168,13 @@ class BackrefTest(fixtures.ORMTest):
         # event propagates to remove as of [ticket:2789]
         assert c1 not in p1.children
 
+
 class CyclicBackrefAssertionTest(fixtures.TestBase):
     """test that infinite recursion due to incorrect backref assignments
     is blocked.
 
     """
+
     def test_scalar_set_type_assertion(self):
         A, B, C = self._scalar_fixture()
         c1 = C()
@@ -1178,12 +1201,13 @@ class CyclicBackrefAssertionTest(fixtures.TestBase):
             c1.a.append, b1
         )
 
-
     def _scalar_fixture(self):
         class A(object):
             pass
+
         class B(object):
             pass
+
         class C(object):
             pass
         instrumentation.register_class(A)
@@ -1202,8 +1226,10 @@ class CyclicBackrefAssertionTest(fixtures.TestBase):
     def _collection_fixture(self):
         class A(object):
             pass
+
         class B(object):
             pass
+
         class C(object):
             pass
         instrumentation.register_class(A)
@@ -1223,6 +1249,7 @@ class CyclicBackrefAssertionTest(fixtures.TestBase):
     def _broken_collection_fixture(self):
         class A(object):
             pass
+
         class B(object):
             pass
         instrumentation.register_class(A)
@@ -1250,12 +1277,14 @@ class CyclicBackrefAssertionTest(fixtures.TestBase):
             b1.a2.append, a1
         )
 
+
 class PendingBackrefTest(fixtures.ORMTest):
     def _fixture(self):
         class Post(object):
             def __init__(self, name):
                 self.name = name
             __hash__ = None
+
             def __eq__(self, other):
                 return other is not None and other.name == self.name
 
@@ -1263,6 +1292,7 @@ class PendingBackrefTest(fixtures.ORMTest):
             def __init__(self, name):
                 self.name = name
             __hash__ = None
+
             def __eq__(self, other):
                 return other is not None and other.name == self.name
 
@@ -1442,7 +1472,6 @@ class PendingBackrefTest(fixtures.ORMTest):
         eq_(lazy_posts.mock_calls,
             [call(b_state, attributes.PASSIVE_OFF)])
 
-
     def test_commit_removes_pending(self):
         Post, Blog, lazy_posts = self._fixture()
 
@@ -1462,6 +1491,7 @@ class PendingBackrefTest(fixtures.ORMTest):
             [call(b_state, attributes.PASSIVE_NO_FETCH),
             call(b_state, attributes.PASSIVE_OFF)])
 
+
 class HistoryTest(fixtures.TestBase):
 
     def _fixture(self, uselist, useobject, active_history, **kw):
@@ -1480,6 +1510,7 @@ class HistoryTest(fixtures.TestBase):
     def _two_obj_fixture(self, uselist):
         class Foo(fixtures.BasicEntity):
             pass
+
         class Bar(fixtures.BasicEntity):
             def __bool__(self):
                 assert False
@@ -1810,7 +1841,6 @@ class HistoryTest(fixtures.TestBase):
         f.someattr = 'two'
         eq_(self._someattr_history(f), (['two'], (), ()))
 
-
     def test_scalar_passive_flag(self):
         Foo = self._fixture(uselist=False, useobject=False,
                                 active_history=True)
@@ -1832,7 +1862,6 @@ class HistoryTest(fixtures.TestBase):
         state.manager.deferred_scalar_loader = scalar_loader
 
         eq_(self._someattr_history(f), ((), ['one'], ()))
-
 
     def test_scalar_inplace_mutation_set(self):
         Foo = self._fixture(uselist=False, useobject=False,
@@ -1902,7 +1931,6 @@ class HistoryTest(fixtures.TestBase):
 
         attributes.flag_modified(f, 'someattr')
         eq_(self._someattr_history(f), ([{'a': 'b'}], (), ()))
-
 
     def test_use_object_init(self):
         Foo, Bar = self._two_obj_fixture(uselist=False)
@@ -2029,7 +2057,6 @@ class HistoryTest(fixtures.TestBase):
         f.someattr = there
         eq_(self._someattr_history(f), ([there], (), ()))
 
-
     def test_object_collections_set(self):
         # TODO: break into individual tests
 
@@ -2084,6 +2111,7 @@ class HistoryTest(fixtures.TestBase):
 
         class Foo(fixtures.BasicEntity):
             pass
+
         class Bar(fixtures.BasicEntity):
             pass
 
@@ -2117,6 +2145,7 @@ class HistoryTest(fixtures.TestBase):
 
         class Foo(fixtures.BasicEntity):
             pass
+
         class Bar(fixtures.BasicEntity):
             pass
 
@@ -2224,6 +2253,7 @@ class HistoryTest(fixtures.TestBase):
 
         class Foo(fixtures.BasicEntity):
             pass
+
         class Bar(fixtures.BasicEntity):
             pass
 
@@ -2278,10 +2308,12 @@ class LazyloadHistoryTest(fixtures.TestBase):
 
         class Foo(fixtures.BasicEntity):
             pass
+
         class Bar(fixtures.BasicEntity):
             pass
 
         lazy_load = []
+
         def lazyload(state, passive):
             return lazy_load
 
@@ -2317,10 +2349,12 @@ class LazyloadHistoryTest(fixtures.TestBase):
 
         class Foo(fixtures.BasicEntity):
             pass
+
         class Bar(fixtures.BasicEntity):
             pass
 
         lazy_load = []
+
         def lazyload(state, passive):
             return lazy_load
 
@@ -2448,10 +2482,12 @@ class LazyloadHistoryTest(fixtures.TestBase):
 
         class Foo(fixtures.BasicEntity):
             pass
+
         class Bar(fixtures.BasicEntity):
             pass
 
         lazy_load = None
+
         def lazyload(state, passive):
             return lazy_load
 
@@ -2488,12 +2524,14 @@ class LazyloadHistoryTest(fixtures.TestBase):
         eq_(attributes.get_state_history(attributes.instance_state(f),
             'bar'), ((), (), [bar1]))
 
+
 class ListenerTest(fixtures.ORMTest):
     def test_receive_changes(self):
         """test that Listeners can mutate the given value."""
 
         class Foo(object):
             pass
+
         class Bar(object):
             pass
 
@@ -2579,6 +2617,7 @@ class ListenerTest(fixtures.ORMTest):
     def test_collection_link_events(self):
         class Foo(object):
             pass
+
         class Bar(object):
             pass
         instrumentation.register_class(Foo)
@@ -2612,7 +2651,6 @@ class ListenerTest(fixtures.ORMTest):
             ]
         )
 
-
     def test_none_on_collection_event(self):
         """test that append/remove of None in collections emits events.
 
@@ -2621,6 +2659,7 @@ class ListenerTest(fixtures.ORMTest):
         """
         class Foo(object):
             pass
+
         class Bar(object):
             pass
         instrumentation.register_class(Foo)
@@ -2628,8 +2667,10 @@ class ListenerTest(fixtures.ORMTest):
         attributes.register_attribute(Foo, 'barlist', uselist=True,
                 useobject=True)
         canary = []
+
         def append(state, child, initiator):
             canary.append((state, child))
+
         def remove(state, child, initiator):
             canary.append((state, child))
         event.listen(Foo.barlist, 'append', append)
@@ -2655,6 +2696,7 @@ class ListenerTest(fixtures.ORMTest):
 
     def test_none_init_scalar(self):
         canary = Mock()
+
         class Foo(object):
             pass
         instrumentation.register_class(Foo)
@@ -2669,6 +2711,7 @@ class ListenerTest(fixtures.ORMTest):
 
     def test_none_init_object(self):
         canary = Mock()
+
         class Foo(object):
             pass
         instrumentation.register_class(Foo)
@@ -2683,6 +2726,7 @@ class ListenerTest(fixtures.ORMTest):
 
     def test_none_init_collection(self):
         canary = Mock()
+
         class Foo(object):
             pass
         instrumentation.register_class(Foo)
@@ -2695,10 +2739,10 @@ class ListenerTest(fixtures.ORMTest):
         # reversal of approach in #3061
         eq_(canary.mock_calls, [])
 
-
     def test_propagate(self):
         classes = [None, None, None]
         canary = []
+
         def make_a():
             class A(object):
                 pass
@@ -2785,6 +2829,7 @@ class TestUnlink(fixtures.TestBase):
     def setUp(self):
         class A(object):
             pass
+
         class B(object):
             pass
         self.A = A

@@ -29,12 +29,16 @@ class SingleInheritanceTest(testing.AssertsCompiledSQL, fixtures.MappedTest):
     @classmethod
     def setup_classes(cls):
         global Employee, Manager, Engineer, JuniorEngineer
+
         class Employee(cls.Comparable):
             pass
+
         class Manager(Employee):
             pass
+
         class Engineer(Employee):
             pass
+
         class JuniorEngineer(Engineer):
             pass
 
@@ -85,7 +89,7 @@ class SingleInheritanceTest(testing.AssertsCompiledSQL, fixtures.MappedTest):
         session.expire(m1, ['manager_data'])
         eq_(m1.manager_data, "knows how to manage things")
 
-        row = session.query(Engineer.name, Engineer.employee_id).filter(Engineer.name=='Kurt').first()
+        row = session.query(Engineer.name, Engineer.employee_id).filter(Engineer.name == 'Kurt').first()
         assert row.name == 'Kurt'
         assert row.employee_id == e1.employee_id
 
@@ -404,6 +408,7 @@ class SingleInheritanceTest(testing.AssertsCompiledSQL, fixtures.MappedTest):
         assert len(rq.join(Report.employee.of_type(Manager)).all()) == 1
         assert len(rq.join(Report.employee.of_type(Engineer)).all()) == 0
 
+
 class RelationshipFromSingleTest(testing.AssertsCompiledSQL, fixtures.MappedTest):
     @classmethod
     def define_tables(cls, metadata):
@@ -423,8 +428,10 @@ class RelationshipFromSingleTest(testing.AssertsCompiledSQL, fixtures.MappedTest
     def setup_classes(cls):
         class Employee(cls.Comparable):
             pass
+
         class Manager(Employee):
             pass
+
         class Stuff(cls.Comparable):
             pass
 
@@ -437,7 +444,7 @@ class RelationshipFromSingleTest(testing.AssertsCompiledSQL, fixtures.MappedTest
 
         mapper(Employee, employee, polymorphic_on=employee.c.type, polymorphic_identity='employee')
         mapper(Manager, inherits=Employee, polymorphic_identity='manager', properties={
-            'stuff':relationship(Stuff)
+            'stuff': relationship(Stuff)
         })
         mapper(Stuff, employee_stuff)
 
@@ -460,6 +467,7 @@ class RelationshipFromSingleTest(testing.AssertsCompiledSQL, fixtures.MappedTest
                             'anon_1.employee_id',
                             use_default_dialect=True
                             )
+
 
 class RelationshipToSingleTest(testing.AssertsCompiledSQL, fixtures.MappedTest):
     __dialect__ = 'default'
@@ -487,10 +495,13 @@ class RelationshipToSingleTest(testing.AssertsCompiledSQL, fixtures.MappedTest):
 
         class Employee(cls.Comparable):
             pass
+
         class Manager(Employee):
             pass
+
         class Engineer(Employee):
             pass
+
         class JuniorEngineer(Engineer):
             pass
 
@@ -505,7 +516,7 @@ class RelationshipToSingleTest(testing.AssertsCompiledSQL, fixtures.MappedTest):
                                 self.classes.Engineer)
 
         mapper(Company, companies, properties={
-            'employees':relationship(Employee, backref='company')
+            'employees': relationship(Employee, backref='company')
         })
         mapper(Employee, employees, polymorphic_on=employees.c.type)
         mapper(Manager, inherits=Employee, polymorphic_identity='manager')
@@ -544,7 +555,7 @@ class RelationshipToSingleTest(testing.AssertsCompiledSQL, fixtures.MappedTest):
         companies, employees = self.tables.companies, self.tables.employees
 
         mapper(Company, companies, properties={
-            'employee':relationship(Employee)
+            'employee': relationship(Employee)
         })
         mapper(Employee, employees, polymorphic_on=employees.c.type)
         mapper(Engineer, inherits=Employee, polymorphic_identity='engineer')
@@ -593,7 +604,7 @@ class RelationshipToSingleTest(testing.AssertsCompiledSQL, fixtures.MappedTest):
         companies, employees = self.tables.companies, self.tables.employees
 
         mapper(Company, companies, properties={
-            'engineers':relationship(Engineer)
+            'engineers': relationship(Engineer)
         })
         mapper(Employee, employees, polymorphic_on=employees.c.type)
         mapper(Engineer, inherits=Employee, polymorphic_identity='engineer')
@@ -614,7 +625,7 @@ class RelationshipToSingleTest(testing.AssertsCompiledSQL, fixtures.MappedTest):
         companies, employees = self.tables.companies, self.tables.employees
 
         mapper(Company, companies, properties={
-            'engineers':relationship(Engineer)
+            'engineers': relationship(Engineer)
         })
         mapper(Employee, employees, polymorphic_on=employees.c.type)
         mapper(Engineer, inherits=Employee, polymorphic_identity='engineer')
@@ -630,7 +641,6 @@ class RelationshipToSingleTest(testing.AssertsCompiledSQL, fixtures.MappedTest):
             "= employees_1.company_id AND employees_1.type IN (:type_1)"
         )
 
-
     def test_outer_join_literal_onclause(self):
         Company, Employee, Engineer = self.classes.Company,\
                                 self.classes.Employee,\
@@ -638,7 +648,7 @@ class RelationshipToSingleTest(testing.AssertsCompiledSQL, fixtures.MappedTest):
         companies, employees = self.tables.companies, self.tables.employees
 
         mapper(Company, companies, properties={
-            'engineers':relationship(Engineer)
+            'engineers': relationship(Engineer)
         })
         mapper(Employee, employees, polymorphic_on=employees.c.type)
         mapper(Engineer, inherits=Employee, polymorphic_identity='engineer')
@@ -667,7 +677,7 @@ class RelationshipToSingleTest(testing.AssertsCompiledSQL, fixtures.MappedTest):
         companies, employees = self.tables.companies, self.tables.employees
 
         mapper(Company, companies, properties={
-            'engineers':relationship(Engineer)
+            'engineers': relationship(Engineer)
         })
         mapper(Employee, employees, polymorphic_on=employees.c.type)
         mapper(Engineer, inherits=Employee, polymorphic_identity='engineer')
@@ -697,7 +707,7 @@ class RelationshipToSingleTest(testing.AssertsCompiledSQL, fixtures.MappedTest):
         companies, employees = self.tables.companies, self.tables.employees
 
         mapper(Company, companies, properties={
-            'engineers':relationship(Engineer)
+            'engineers': relationship(Engineer)
         })
         mapper(Employee, employees, polymorphic_on=employees.c.type)
         mapper(Engineer, inherits=Employee, polymorphic_identity='engineer')
@@ -726,7 +736,7 @@ class RelationshipToSingleTest(testing.AssertsCompiledSQL, fixtures.MappedTest):
         companies, employees = self.tables.companies, self.tables.employees
 
         mapper(Company, companies, properties={
-            'engineers':relationship(Engineer)
+            'engineers': relationship(Engineer)
         })
         mapper(Employee, employees, polymorphic_on=employees.c.type)
         mapper(Engineer, inherits=Employee, polymorphic_identity='engineer')
@@ -820,10 +830,10 @@ class RelationshipToSingleTest(testing.AssertsCompiledSQL, fixtures.MappedTest):
                                 self.classes.Engineer)
 
         mapper(Company, companies, properties={
-            'engineers':relationship(Engineer)
+            'engineers': relationship(Engineer)
         })
         mapper(Employee, employees, polymorphic_on=employees.c.type, properties={
-            'company':relationship(Company)
+            'company': relationship(Company)
         })
         mapper(Manager, inherits=Employee, polymorphic_identity='manager')
         mapper(Engineer, inherits=Employee, polymorphic_identity='engineer')
@@ -896,8 +906,8 @@ class RelationshipToSingleTest(testing.AssertsCompiledSQL, fixtures.MappedTest):
         @testing.fails_on_everything_except()
         def go():
             sess.expunge_all()
-            eq_(sess.query(Company).\
-                filter(Company.company_id==Engineer.company_id).filter(Engineer.name.in_(['Tom', 'Kurt'])).all(),
+            eq_(sess.query(Company).
+                filter(Company.company_id == Engineer.company_id).filter(Engineer.name.in_(['Tom', 'Kurt'])).all(),
                 [
                     Company(name='c2')
                 ]
@@ -1023,6 +1033,7 @@ class ManyToManyToSingleTest(fixtures.MappedTest, AssertsCompiledSQL):
             "IN (:discriminator_1)) ON parent.id = m2m_1.parent_id"
         )
 
+
 class SingleOnJoinedTest(fixtures.MappedTest):
     @classmethod
     def define_tables(cls, metadata):
@@ -1035,7 +1046,7 @@ class SingleOnJoinedTest(fixtures.MappedTest):
         )
 
         employees_table = Table('employees', metadata,
-           Column('person_id', Integer, ForeignKey('persons.person_id'),primary_key=True),
+           Column('person_id', Integer, ForeignKey('persons.person_id'), primary_key=True),
            Column('employee_data', String(50)),
            Column('manager_data', String(50)),
         )
@@ -1043,15 +1054,17 @@ class SingleOnJoinedTest(fixtures.MappedTest):
     def test_single_on_joined(self):
         class Person(fixtures.ComparableEntity):
             pass
+
         class Employee(Person):
             pass
+
         class Manager(Employee):
             pass
 
         mapper(Person, persons_table, polymorphic_on=persons_table.c.type,
                     polymorphic_identity='person')
-        mapper(Employee, employees_table, inherits=Person,polymorphic_identity='engineer')
-        mapper(Manager, inherits=Employee,polymorphic_identity='manager')
+        mapper(Employee, employees_table, inherits=Person, polymorphic_identity='engineer')
+        mapper(Manager, inherits=Employee, polymorphic_identity='manager')
 
         sess = create_session()
         sess.add(Person(name='p1'))

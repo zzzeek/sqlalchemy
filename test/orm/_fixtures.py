@@ -68,24 +68,24 @@ class FixtureTest(fixtures.MappedTest):
         # assert the order of attributes (e.g. orm/test_inspect)
         mapper(User, users, properties=util.OrderedDict(
             [('addresses', relationship(Address, backref='user', order_by=addresses.c.id)),
-            ('orders', relationship(Order, backref='user', order_by=orders.c.id)), # o2m, m2o
+            ('orders', relationship(Order, backref='user', order_by=orders.c.id)),  # o2m, m2o
             ]
         ))
         mapper(Address, addresses, properties={
-            'dingaling':relationship(Dingaling, uselist=False, backref="address")  #o2o
+            'dingaling': relationship(Dingaling, uselist=False, backref="address")  # o2o
         })
         mapper(Dingaling, dingalings)
         mapper(Order, orders, properties={
-            'items':relationship(Item, secondary=order_items, order_by=items.c.id),  #m2m
-            'address':relationship(Address),  # m2o
+            'items': relationship(Item, secondary=order_items, order_by=items.c.id),  # m2m
+            'address': relationship(Address),  # m2o
         })
         mapper(Item, items, properties={
-            'keywords':relationship(Keyword, secondary=item_keywords) #m2m
+            'keywords': relationship(Keyword, secondary=item_keywords)  # m2m
         })
         mapper(Keyword, keywords)
 
         mapper(Node, nodes, properties={
-            'children':relationship(Node,
+            'children': relationship(Node,
                 backref=backref('parent', remote_side=[nodes.c.id])
             )
         })
@@ -183,7 +183,7 @@ class FixtureTest(fixtures.MappedTest):
     @classmethod
     def fixtures(cls):
         return dict(
-            users = (
+            users=(
                 ('id', 'name'),
                 (7, 'jack'),
                 (8, 'ed'),
@@ -191,7 +191,7 @@ class FixtureTest(fixtures.MappedTest):
                 (10, 'chuck')
             ),
 
-            addresses = (
+            addresses=(
                 ('id', 'user_id', 'email_address'),
                 (1, 7, "jack@bean.com"),
                 (2, 8, "ed@wood.com"),
@@ -200,7 +200,7 @@ class FixtureTest(fixtures.MappedTest):
                 (5, 9, "fred@fred.com")
             ),
 
-            email_bounces = (
+            email_bounces=(
                 ('id', 'bounces'),
                 (1, 1),
                 (2, 0),
@@ -209,7 +209,7 @@ class FixtureTest(fixtures.MappedTest):
                 (5, 0)
             ),
 
-            orders = (
+            orders=(
                 ('id', 'user_id', 'description', 'isopen', 'address_id'),
                 (1, 7, 'order 1', 0, 1),
                 (2, 9, 'order 2', 0, 4),
@@ -218,13 +218,13 @@ class FixtureTest(fixtures.MappedTest):
                 (5, 7, 'order 5', 0, None)
             ),
 
-            dingalings = (
+            dingalings=(
                 ('id', 'address_id', 'data'),
                 (1, 2, 'ding 1/2'),
                 (2, 5, 'ding 2/5')
             ),
 
-            items = (
+            items=(
                 ('id', 'description'),
                 (1, 'item 1'),
                 (2, 'item 2'),
@@ -233,7 +233,7 @@ class FixtureTest(fixtures.MappedTest):
                 (5, 'item 5')
             ),
 
-            order_items = (
+            order_items=(
                 ('item_id', 'order_id'),
                 (1, 1),
                 (2, 1),
@@ -253,7 +253,7 @@ class FixtureTest(fixtures.MappedTest):
                 (5, 5)
             ),
 
-            keywords = (
+            keywords=(
                 ('id', 'name'),
                 (1, 'blue'),
                 (2, 'red'),
@@ -264,7 +264,7 @@ class FixtureTest(fixtures.MappedTest):
                 (7, 'square')
             ),
 
-            item_keywords = (
+            item_keywords=(
                 ('keyword_id', 'item_id'),
                 (2, 1),
                 (2, 2),
@@ -277,16 +277,16 @@ class FixtureTest(fixtures.MappedTest):
                 (6, 3)
             ),
 
-            nodes = (
+            nodes=(
                 ('id', 'parent_id', 'data'),
             ),
 
-            composite_pk_table = (
+            composite_pk_table=(
                 ('i', 'j', 'k'),
                 (1, 2, 3),
                 (2, 1, 4),
                 (1, 1, 5),
-                (2, 2,6)
+                (2, 2, 6)
             )
         )
 

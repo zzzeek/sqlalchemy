@@ -11,6 +11,7 @@ from sqlalchemy.testing.util import gc_collect
 from test.orm._fixtures import FixtureTest
 from sqlalchemy import inspect
 
+
 class SessionTransactionTest(FixtureTest):
     run_inserts = None
     __backend__ = True

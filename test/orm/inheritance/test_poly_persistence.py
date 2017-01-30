@@ -11,16 +11,26 @@ from sqlalchemy.testing.util import function_named
 from test.orm import _fixtures
 from sqlalchemy.testing import fixtures
 
+
 class Person(fixtures.ComparableEntity):
     pass
+
+
 class Engineer(Person):
     pass
+
+
 class Manager(Person):
     pass
+
+
 class Boss(Manager):
     pass
+
+
 class Company(fixtures.ComparableEntity):
     pass
+
 
 class PolymorphTest(fixtures.MappedTest):
     @classmethod
@@ -63,6 +73,7 @@ class PolymorphTest(fixtures.MappedTest):
 
         metadata.create_all()
 
+
 class InsertOrderTest(PolymorphTest):
     def test_insert_order(self):
         """test that classes of multiple types mix up mapper inserts
@@ -70,9 +81,9 @@ class InsertOrderTest(PolymorphTest):
 
         person_join = polymorphic_union(
             {
-                'engineer':people.join(engineers),
-                'manager':people.join(managers),
-                'person':people.select(people.c.type=='person'),
+                'engineer': people.join(engineers),
+                'manager': people.join(managers),
+                'person': people.select(people.c.type == 'person'),
             }, None, 'pjoin')
 
         person_mapper = mapper(Person, people,
@@ -92,8 +103,7 @@ class InsertOrderTest(PolymorphTest):
 
         session = create_session()
         c = Company(name='company1')
-        c.employees.append(Manager(status='AAB', manager_name='manager1'
-                           , name='pointy haired boss'))
+        c.employees.append(Manager(status='AAB', manager_name='manager1', name='pointy haired boss'))
         c.employees.append(Engineer(status='BBA',
                            engineer_name='engineer1',
                            primary_language='java', name='dilbert'))
@@ -101,15 +111,16 @@ class InsertOrderTest(PolymorphTest):
         c.employees.append(Engineer(status='CGG',
                            engineer_name='engineer2',
                            primary_language='python', name='wally'))
-        c.employees.append(Manager(status='ABA', manager_name='manager2'
-                           , name='jsmith'))
+        c.employees.append(Manager(status='ABA', manager_name='manager2', name='jsmith'))
         session.add(c)
         session.flush()
         session.expunge_all()
         eq_(session.query(Company).get(c.company_id), c)
 
+
 class RoundTripTest(PolymorphTest):
     pass
+
 
 def _generate_round_trip_test(include_base, lazy_relationship,
                                     redefine_colprop, with_polymorphic):
@@ -126,20 +137,21 @@ def _generate_round_trip_test(include_base, lazy_relationship,
 
     use_literal_join - primary join condition is explicitly specified
     """
+
     def test_roundtrip(self):
         if with_polymorphic == 'unions':
             if include_base:
                 person_join = polymorphic_union(
                     {
-                        'engineer':people.join(engineers),
-                        'manager':people.join(managers),
-                        'person':people.select(people.c.type=='person'),
+                        'engineer': people.join(engineers),
+                        'manager': people.join(managers),
+                        'person': people.select(people.c.type == 'person'),
                     }, None, 'pjoin')
             else:
                 person_join = polymorphic_union(
                     {
-                        'engineer':people.join(engineers),
-                        'manager':people.join(managers),
+                        'engineer': people.join(engineers),
+                        'manager': people.join(managers),
                     }, None, 'pjoin')
 
             manager_join = people.join(managers).outerjoin(boss)
@@ -163,7 +175,7 @@ def _generate_round_trip_test(include_base, lazy_relationship,
                                 with_polymorphic=person_with_polymorphic,
                                 polymorphic_on=people.c.type,
                                 polymorphic_identity='person',
-                                properties= {'person_name':people.c.name})
+                                properties={'person_name': people.c.name})
         else:
             person_mapper = mapper(Person, people,
                                 with_polymorphic=person_with_polymorphic,
@@ -192,19 +204,19 @@ def _generate_round_trip_test(include_base, lazy_relationship,
 
         employees = [
                 Manager(status='AAB', manager_name='manager1',
-                            **{person_attribute_name:'pointy haired boss'}),
+                            **{person_attribute_name: 'pointy haired boss'}),
                 Engineer(status='BBA', engineer_name='engineer1',
                             primary_language='java',
-                            **{person_attribute_name:'dilbert'}),
+                            **{person_attribute_name: 'dilbert'}),
             ]
         if include_base:
-            employees.append(Person(**{person_attribute_name:'joesmith'}))
+            employees.append(Person(**{person_attribute_name: 'joesmith'}))
         employees += [
             Engineer(status='CGG', engineer_name='engineer2',
                             primary_language='python',
-                            **{person_attribute_name:'wally'}),
+                            **{person_attribute_name: 'wally'}),
             Manager(status='ABA', manager_name='manager2',
-                            **{person_attribute_name:'jsmith'})
+                            **{person_attribute_name: 'jsmith'})
         ]
 
         pointy = employees[0]
@@ -223,7 +235,7 @@ def _generate_round_trip_test(include_base, lazy_relationship,
         session.expunge_all()
 
         eq_(session.query(Person).filter(
-                            Person.person_id==dilbert.person_id).one(),
+                            Person.person_id == dilbert.person_id).one(),
                             dilbert)
         session.expunge_all()
 
@@ -249,18 +261,18 @@ def _generate_round_trip_test(include_base, lazy_relationship,
         # the "people" selectable should be adapted to be "person_join"
         eq_(
             session.query(Person).filter(
-                            getattr(Person, person_attribute_name)=='dilbert'
+                            getattr(Person, person_attribute_name) == 'dilbert'
                             ).first(),
             dilbert
         )
 
         assert session.query(Person).filter(
-                            getattr(Person, person_attribute_name)=='dilbert'
+                            getattr(Person, person_attribute_name) == 'dilbert'
                             ).first().person_id
 
         eq_(
             session.query(Engineer).filter(
-                            getattr(Person, person_attribute_name)=='dilbert'
+                            getattr(Person, person_attribute_name) == 'dilbert'
                             ).first(),
             dilbert
         )
@@ -301,23 +313,24 @@ def _generate_round_trip_test(include_base, lazy_relationship,
 
         def go():
             session.query(Person).filter(getattr(Person,
-                            person_attribute_name)=='dilbert').first()
+                            person_attribute_name) == 'dilbert').first()
         self.assert_sql_count(testing.db, go, 1)
         session.expunge_all()
         dilbert = session.query(Person).filter(getattr(Person,
-                            person_attribute_name)=='dilbert').first()
+                            person_attribute_name) == 'dilbert').first()
+
         def go():
             # assert that only primary table is queried for
             # already-present-in-session
             d = session.query(Person).filter(getattr(Person,
-                            person_attribute_name)=='dilbert').first()
+                            person_attribute_name) == 'dilbert').first()
         self.assert_sql_count(testing.db, go, 1)
 
         # test standalone orphans
         daboss = Boss(status='BBB',
                         manager_name='boss',
                         golf_swing='fore',
-                        **{person_attribute_name:'daboss'})
+                        **{person_attribute_name: 'daboss'})
         session.add(daboss)
         assert_raises(sa_exc.DBAPIError, session.flush)
 
@@ -344,6 +357,7 @@ def _generate_round_trip_test(include_base, lazy_relationship,
           (redefine_colprop and "_redefcol" or ""),
           with_polymorphic))
     setattr(RoundTripTest, test_roundtrip.__name__, test_roundtrip)
+
 
 for lazy_relationship in [True, False]:
     for redefine_colprop in [True, False]:

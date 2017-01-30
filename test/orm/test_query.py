@@ -1285,7 +1285,7 @@ class OperatorTest(QueryTest, AssertsCompiledSQL):
 
         # this fails because self-referential any() is auto-aliasing;
         # the fact that we use "nalias" here means we get two aliases.
-        #self._test(
+        # self._test(
         #        Node.children.any(nalias.data == 'some data'),
         #        "EXISTS (SELECT 1 FROM nodes AS nodes_1 WHERE "
         #        "nodes.id = nodes_1.parent_id AND nodes_1.data = :data_1)",
@@ -1734,6 +1734,7 @@ class ExpressionTest(QueryTest, AssertsCompiledSQL):
 
         q1._no_criterion_assertion("foo")
 
+
 class ColumnPropertyTest(_fixtures.FixtureTest, AssertsCompiledSQL):
     __dialect__ = 'default'
     run_setup_mappers = 'each'
@@ -1807,7 +1808,6 @@ class ColumnPropertyTest(_fixtures.FixtureTest, AssertsCompiledSQL):
             "SELECT foob(users.name) AS x, foob(users_1.name) AS y "
             "FROM users, users AS users_1"
         )
-
 
     def test_order_by_column_prop_string(self):
         User, Address = self.classes("User", "Address")
@@ -1928,7 +1928,6 @@ class ColumnPropertyTest(_fixtures.FixtureTest, AssertsCompiledSQL):
             "users_1.id AS users_1_id, users_1.name AS users_1_name, "
             "users.id AS users_id FROM users AS users_1, users ORDER BY anon_1"
         )
-
 
     def test_order_by_column_unlabeled_prop_attr_aliased_one(self):
         User = self.classes.User
@@ -2409,7 +2408,6 @@ class FilterTest(QueryTest, AssertsCompiledSQL):
             sess.query(User).filter_by(addresses=None).all()
         assert [User(name='chuck')] == \
             sess.query(User).filter_by(addresses=null()).all()
-
 
     def test_filter_by_tables(self):
         users = self.tables.users
@@ -3727,7 +3725,6 @@ class ParentTest(QueryTest, AssertsCompiledSQL):
                 Order(description="order 5")],
             o.all()
         )
-
 
     def test_with_pending_autoflush(self):
         Order, User = self.classes.Order, self.classes.User

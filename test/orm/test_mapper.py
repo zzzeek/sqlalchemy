@@ -416,7 +416,6 @@ class MapperTest(_fixtures.FixtureTest, AssertsCompiledSQL):
         ]
         eq_(len(b_calls), 3)
 
-
     def test_check_descriptor_as_method(self):
         User, users = self.classes.User, self.tables.users
 
@@ -2914,7 +2913,7 @@ class RaiseLoadTest(_fixtures.FixtureTest):
             'user': relationship(
                 User,
                 primaryjoin=sa.and_(
-                    addresses.c.user_id == users.c.id ,
+                    addresses.c.user_id == users.c.id,
                     users.c.name != None
                 )
             )

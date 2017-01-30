@@ -5,6 +5,7 @@ from sqlalchemy import util
 import sqlalchemy as sa
 from sqlalchemy.testing import eq_, assert_raises_message
 
+
 class DefaultStrategyOptionsTest(_fixtures.FixtureTest):
 
     def _assert_fully_loaded(self, users):
@@ -343,6 +344,7 @@ class DefaultStrategyOptionsTest(_fixtures.FixtureTest):
             # redundant with last test, but illustrative
             users[0].orders[0].items[0]
         self.assert_sql_count(testing.db, go, 0)
+
         def go():
             users[0].orders[0].items[0].keywords
         self.assert_sql_count(testing.db, go, 1)
@@ -427,6 +429,7 @@ class DefaultStrategyOptionsTest(_fixtures.FixtureTest):
         def go():
             users[0].orders[0].items[0]
         self.assert_sql_count(testing.db, go, 0)
+
         def go():
             users[0].orders[0].items[0].keywords
         self.assert_sql_count(testing.db, go, 1)
