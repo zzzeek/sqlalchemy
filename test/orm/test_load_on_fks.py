@@ -20,13 +20,15 @@ class FlushOnPendingTest(AssertsExecutionResults, fixtures.TestBase):
         class Parent(Base):
             __tablename__ = 'parent'
 
-            id = Column(Integer, primary_key=True, test_needs_autoincrement=True)
+            id = Column(Integer, primary_key=True,
+                        test_needs_autoincrement=True)
             name = Column(String(50), nullable=False)
             children = relationship("Child", load_on_pending=True)
 
         class Child(Base):
             __tablename__ = 'child'
-            id = Column(Integer, primary_key=True, test_needs_autoincrement=True)
+            id = Column(Integer, primary_key=True,
+                        test_needs_autoincrement=True)
             parent_id = Column(Integer, ForeignKey('parent.id'))
 
         Base.metadata.create_all(engine)
@@ -69,13 +71,15 @@ class LoadOnFKsTest(AssertsExecutionResults, fixtures.TestBase):
             __tablename__ = 'parent'
             __table_args__ = {'mysql_engine': 'InnoDB'}
 
-            id = Column(Integer, primary_key=True, test_needs_autoincrement=True)
+            id = Column(Integer, primary_key=True,
+                        test_needs_autoincrement=True)
 
         class Child(Base):
             __tablename__ = 'child'
             __table_args__ = {'mysql_engine': 'InnoDB'}
 
-            id = Column(Integer, primary_key=True, test_needs_autoincrement=True)
+            id = Column(Integer, primary_key=True,
+                        test_needs_autoincrement=True)
             parent_id = Column(Integer, ForeignKey('parent.id'))
 
             parent = relationship(Parent, backref=backref("children"))
@@ -259,18 +263,22 @@ class LoadOnFKsTest(AssertsExecutionResults, fixtures.TestBase):
                                 sess.expire(c1, ['parent'])
 
                             # old 0.6 behavior
-                            # if manualflush and (not loadrel or fake_autoexpire):
+                            # if manualflush and (not loadrel or
+                            #                     fake_autoexpire):
                             #    # a flush occurs, we get p2
                             #    assert c1.parent is p2
                             # elif not loadrel and not loadfk:
-                            #    # problematically - we get None since committed state
-                            #    # is empty when c1.parent_id was mutated, since we want
+                            #    # problematically - we get None since
+                            #    # committed state
+                            #    # is empty when c1.parent_id was mutated,
+                            #    # since we want
                             #    # to save on selects.  this is
-                            #    # why the patch goes in in 0.6 - this is mostly a bug.
+                            #    # why the patch goes in in 0.6 - this is
+                            #    # mostly a bug.
                             #    assert c1.parent is None
                             # else:
-                            #    # if things were loaded, autoflush doesn't even
-                            #    # happen.
+                            #    # if things were loaded, autoflush doesn't
+                            #    # even happen.
                             #    assert c1.parent is p1
 
                             # new behavior
@@ -292,7 +300,7 @@ class LoadOnFKsTest(AssertsExecutionResults, fixtures.TestBase):
                     c2.parent_id = p2.id
 
                     if manualflush:
-                       sess.flush()
+                        sess.flush()
 
                     if loadonpending or manualflush:
                         assert c2.parent is p2
@@ -307,7 +315,8 @@ class LoadOnFKsTest(AssertsExecutionResults, fixtures.TestBase):
                 for autoflush in (False, True):
                     for manualflush in (False, True):
                         for enable_relationship_rel in (False, True):
-                            Child.parent.property.load_on_pending = loadonpending
+                            Child.parent.property.load_on_pending = \
+                                loadonpending
                             sess.autoflush = autoflush
                             c2 = Child()
 
@@ -321,9 +330,10 @@ class LoadOnFKsTest(AssertsExecutionResults, fixtures.TestBase):
                             c2.parent_id = p2.id
 
                             if manualflush:
-                               sess.flush()
+                                sess.flush()
 
-                            if (loadonpending and attach) or enable_relationship_rel:
+                            if (loadonpending and attach) \
+                                    or enable_relationship_rel:
                                 assert c2.parent is p2
                             else:
                                 assert c2.parent is None
