@@ -851,11 +851,14 @@ class SubqueryLoader(AbstractRelationshipLoader):
 
         # set a real "from" if not present, as this is more
         # accurate than just going off of the column expression
-        if not q._from_obj and orig_entity.mapper.isa(leftmost_mapper):
+        if not q._from_obj and orig_entity.is_mapper and \
+                orig_entity.mapper.isa(leftmost_mapper):
             q._set_select_from([orig_entity], False)
         target_cols = q._adapt_col_list(leftmost_attr)
 
-        # select from the identity columns of the outer
+        # select from the identity columns of the outer.  This will remove
+        # other columns from the query that might suggest the right entity
+        # which is why we try to _set_select_from above.
         q._set_entities(target_cols)
 
         distinct_target_key = leftmost_relationship.distinct_target_key
@@ -1087,7 +1090,15 @@ class SubqueryLoader(AbstractRelationshipLoader):
             state.get_impl(self.key).\
                 set_committed_value(state, dict_, collection)
 
-        populators["new"].append((self.key, load_collection_from_subq))
+        def load_collection_from_subq_existing_row(state, dict_, row):
+            if self.key not in dict_:
+                load_collection_from_subq(state, dict_, row)
+
+        populators["new"].append(
+            (self.key, load_collection_from_subq))
+        populators["existing"].append(
+            (self.key, load_collection_from_subq_existing_row))
+
         if context.invoke_all_eagers:
             populators["eager"].append((self.key, collections.loader))
 
@@ -1108,7 +1119,14 @@ class SubqueryLoader(AbstractRelationshipLoader):
             state.get_impl(self.key).\
                 set_committed_value(state, dict_, scalar)
 
-        populators["new"].append((self.key, load_scalar_from_subq))
+        def load_scalar_from_subq_existing_row(state, dict_, row):
+            if self.key not in dict_:
+                load_scalar_from_subq(state, dict_, row)
+
+        populators["new"].append(
+            (self.key, load_scalar_from_subq))
+        populators["existing"].append(
+            (self.key, load_scalar_from_subq_existing_row))
         if context.invoke_all_eagers:
             populators["eager"].append((self.key, collections.loader))
 

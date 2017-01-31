@@ -5,7 +5,7 @@
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
-"""Define an extension to the :mod:`sqlalchemy.ext.declarative` system
+r"""Define an extension to the :mod:`sqlalchemy.ext.declarative` system
 which automatically generates mapped classes and relationships from a database
 schema, typically though not necessarily one which is reflected.
 
@@ -187,7 +187,7 @@ scheme for class names and a "pluralizer" for collection names using the
         "Produce a 'camelized' class name, e.g. "
         "'words_and_underscores' -> 'WordsAndUnderscores'"
 
-        return str(tablename[0].upper() + \\
+        return str(tablename[0].upper() + \
                 re.sub(r'_([a-z])', lambda m: m.group(1).upper(), tablename[1:]))
 
     _pluralizer = inflect.engine()
@@ -606,7 +606,7 @@ def name_for_collection_relationship(
 
 def generate_relationship(
         base, direction, return_fn, attrname, local_cls, referred_cls, **kw):
-    """Generate a :func:`.relationship` or :func:`.backref` on behalf of two
+    r"""Generate a :func:`.relationship` or :func:`.backref` on behalf of two
     mapped classes.
 
     An alternate implementation of this function can be specified using the
@@ -633,9 +633,9 @@ def generate_relationship(
      that user-defined implementations correctly differentiate between the two
      functions, if a custom relationship function is being used.
 
-    :attrname: the attribute name to which this relationship is being assigned.
-     If the value of :paramref:`.generate_relationship.return_fn` is the
-     :func:`.backref` function, then this name is the name that is being
+    :param attrname: the attribute name to which this relationship is being
+     assigned. If the value of :paramref:`.generate_relationship.return_fn` is
+     the :func:`.backref` function, then this name is the name that is being
      assigned to the backref.
 
     :param local_cls: the "local" class to which this relationship or backref
@@ -820,7 +820,7 @@ class AutomapBase(object):
 
 
 def automap_base(declarative_base=None, **kw):
-    """Produce a declarative automap base.
+    r"""Produce a declarative automap base.
 
     This function produces a new base class that is a product of the
     :class:`.AutomapBase` class as well a declarative base produced by

@@ -440,8 +440,8 @@ class JoinTest(QueryTest, AssertsCompiledSQL):
 
         assert_raises_message(
             sa_exc.InvalidRequestError,
-            "Don't know how to join from x; please use select_from\(\) to "
-            "establish the left entity/selectable of this join",
+            r"Don't know how to join from x; please use select_from\(\) to "
+            r"establish the left entity/selectable of this join",
             sess.query(literal_column('x'), User).join, Address
         )
 
@@ -453,8 +453,8 @@ class JoinTest(QueryTest, AssertsCompiledSQL):
 
         assert_raises_message(
             sa_exc.InvalidRequestError,
-            "No entities to join from; please use select_from\(\) to "
-            "establish the left entity/selectable of this join",
+            r"No entities to join from; please use select_from\(\) to "
+            r"establish the left entity/selectable of this join",
             sess.query().join, Address
         )
 

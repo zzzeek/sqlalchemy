@@ -19,7 +19,84 @@
         :start-line: 5
 
 .. changelog::
+    :version: 1.1.6
+
+    .. change:: 3901
+        :tags: bug, ext
+        :tickets: 3901
+
+        Fixed bug in new :mod:`sqlalchemy.ext.indexable` extension
+        where setting of a property that itself refers to another property
+        would fail.
+
+    .. change:: 3900
+        :tags: bug, postgresql
+        :tickets: 3900
+
+        Fixed bug in Postgresql :class:`.ExcludeConstraint` where the
+        "whereclause" and "using" parameters would not be copied during an
+        operation like :meth:`.Table.tometadata`.
+
+    .. change:: 3898
+        :tags: bug, mssql
+        :tickets: 3898
+
+        Added a version check to the "get_isolation_level" feature, which is
+        invoked upon first connect, so that it skips for SQL Server version
+        2000, as the necessary system view is not available prior to SQL Server
+        2005.
+
+    .. change:: 3897
+        :tags: feature, ext
+        :tickets: 3896
+
+        Added :meth:`.baked.Result.scalar` and :meth:`.baked.Result.count`
+        to the "baked" query system.
+
+    .. change:: 3893
+        :tags: bug, orm
+        :tickets: 3893
+
+        Fixed bug first introduced in 0.9.7 as a result of :ticket:`3106`
+        which would cause an incorrect query in some forms of multi-level
+        subqueryload against aliased entities, with an unnecessary extra
+        FROM entity in the innermost subquery.
+
+.. changelog::
     :version: 1.1.5
+    :released: January 17, 2017
+
+    .. change:: mysql_index_prefix
+        :tags: feature, mysql
+
+        Added a new parameter ``mysql_prefix`` supported by the :class:`.Index`
+        construct, allows specification of MySQL-specific prefixes such as
+        "FULLTEXT". Pull request courtesy Joseph Schorr.
+
+    .. change:: 3854
+        :tags: bug, orm
+        :tickets: 3854
+
+        Fixed bug in subquery loading where an object encountered as an
+        "existing" row, e.g. already loaded from a different path in the
+        same query, would not invoke subquery loaders for unloaded attributes
+        that specified this loading.  This issue is in the same area
+        as that of :ticket:`3431`, :ticket:`3811` which involved
+        similar issues with joined loading.
+
+    .. change:: 3888
+        :tags: bug, postgresql
+        :tickets: 3888
+
+        Fixed bug in new "ON CONFLICT DO UPDATE" feature where the "set"
+        values for the UPDATE clause would not be subject to type-level
+        processing, as normally takes effect to handle both user-defined
+        type level conversions as well as dialect-required conversions, such
+        as those required for JSON datatypes.   Additionally, clarified that
+        the keys in the set_ dictionary should match the "key" of the column,
+        if distinct from the column name.  A warning is emitted
+        for remaining column names that don't match column keys; for
+        compatibility reasons, these are emitted as they were previously.
 
     .. change:: 3872
         :tags: bug, examples
@@ -63,6 +140,14 @@
         sqlalchemy.sql.expression, due to mis-spelled "any_" and "all_"
         functions.
 
+    .. change:: 3880
+        :tags: bg, sql
+        :tickets: 3880
+
+        Fixed bug where literal_binds compiler flag was not honored by the
+        :class:`.Insert` construct for the "multiple values" feature; the
+        subsequent values are now rendered as literals.
+
     .. change:: 3877
         :tags: bug, oracle, postgresql
         :tickets: 3877
@@ -96,6 +181,24 @@
         Fixed bug where the single-table inheritance query criteria would not
         be inserted into the query in the case that the :class:`.Bundle`
         construct were used as the selection criteria.
+
+    .. change:: repr_for_url_reflect
+        :tags: bug, sql
+
+        The engine URL embedded in the exception for "could not reflect"
+        in :meth:`.MetaData.reflect` now conceals the password; also
+        the ``__repr__`` for :class:`.TLEngine` now acts like that of
+        :class:`.Engine`, concealing the URL password.  Pull request courtesy
+        Valery Yundin.
+
+    .. change:: 3867
+        :tags: bug, mysql
+        :tickets: 3867
+
+        The MySQL dialect now will not warn when a reflected column has a
+        "COMMENT" keyword on it, but note however the comment is not yet
+        reflected; this is on the roadmap for a future release.  Pull request
+        courtesy Lele Long.
 
     .. change:: pg_timestamp_zero_prec
         :tags: bug, postgresql
@@ -142,7 +245,7 @@
         called against :class:`.Query` in the same way as :meth:`.Query.from_self`.
 
     .. change:: 3548
-        :tag: bug, firebird
+        :tags: bug, firebird
         :tickets: 3548
 
         Ported the fix for Oracle quoted-lowercase names to Firebird, so that
@@ -689,7 +792,7 @@
 
         Made a slight behavioral change in the ``sqlalchemy.ext.compiler``
         extension, whereby the existing compilation schemes for an established
-        construct would be removed if that construct was itself didn't already
+        construct would be removed if that construct itself didn't already
         have its own dedicated ``__visit_name__``.  This was a
         rare occurrence in 1.0, however in 1.1 :class:`.postgresql.ARRAY`
         subclasses :class:`.sqltypes.ARRAY` and has this behavior.

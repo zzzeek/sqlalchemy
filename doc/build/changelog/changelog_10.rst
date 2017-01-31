@@ -17,6 +17,15 @@
 
 .. changelog::
     :version: 1.0.17
+    :released: January 17, 2017
+
+     .. change::
+        :tags: bug, py3k
+        :tickets: 3886
+        :versions: 1.1.5
+
+        Fixed Python 3.6 DeprecationWarnings related to escaped strings without
+        the 'r' modifier, and added test coverage for Python 3.6.
 
     .. change::
         :tags: bug, orm

@@ -3049,7 +3049,7 @@ class ConstraintTest(fixtures.TestBase):
                 return t2
         assert_raises_message(
             exc.ArgumentError,
-            "Element Table\('t2', .* is not a string name or column element",
+            r"Element Table\('t2', .* is not a string name or column element",
             Index, "foo", SomeClass()
         )
 
@@ -4212,8 +4212,8 @@ class NamingConventionTest(fixtures.TestBase, AssertsCompiledSQL):
 
         assert_raises_message(
             exc.InvalidRequestError,
-            "Naming convention including \%\(constraint_name\)s token "
-            "requires that constraint is explicitly named.",
+            r"Naming convention including \%\(constraint_name\)s token "
+            r"requires that constraint is explicitly named.",
             schema.CreateTable(u1).compile, dialect=default.DefaultDialect()
         )
 

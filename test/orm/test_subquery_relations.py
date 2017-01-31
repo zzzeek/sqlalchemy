@@ -1,4 +1,4 @@
-from sqlalchemy.testing import eq_, is_, is_not_
+from sqlalchemy.testing import eq_, is_, is_not_, is_true
 from sqlalchemy import testing
 from sqlalchemy.testing.schema import Table, Column
 from sqlalchemy import Integer, String, ForeignKey, bindparam, inspect
@@ -2086,3 +2086,201 @@ class JoinedNoLoadConflictTest(fixtures.DeclarativeMappedTest):
             [Child(name='c1')]
         )
 
+
+class SelfRefInheritanceAliasedTest(
+        fixtures.DeclarativeMappedTest,
+        testing.AssertsCompiledSQL):
+    __dialect__ = 'default'
+
+    @classmethod
+    def setup_classes(cls):
+        Base = cls.DeclarativeBasic
+
+        class Foo(Base):
+            __tablename__ = "foo"
+            id = Column(Integer, primary_key=True)
+            type = Column(String(50))
+
+            foo_id = Column(Integer, ForeignKey("foo.id"))
+            foo = relationship(
+                lambda: Foo, foreign_keys=foo_id, remote_side=id)
+
+            __mapper_args__ = {
+                "polymorphic_on": type,
+                "polymorphic_identity": "foo",
+            }
+
+        class Bar(Foo):
+            __mapper_args__ = {
+                "polymorphic_identity": "bar",
+            }
+
+    @classmethod
+    def insert_data(cls):
+        Foo, Bar = cls.classes('Foo', 'Bar')
+
+        session = Session()
+        target = Bar(id=1)
+        b1 = Bar(id=2, foo=Foo(id=3, foo=target))
+        session.add(b1)
+        session.commit()
+
+    def test_twolevel_subquery_w_polymorphic(self):
+        Foo, Bar = self.classes('Foo', 'Bar')
+
+        I = with_polymorphic(Foo, "*", aliased=True)
+        attr1 = Foo.foo.of_type(I)
+        attr2 = I.foo
+
+        s = Session()
+        q = s.query(Foo).filter(Foo.id == 2).options(
+            subqueryload(attr1).subqueryload(attr2))
+
+        self.assert_sql_execution(
+            testing.db,
+            q.all,
+            CompiledSQL(
+                "SELECT foo.id AS foo_id_1, foo.type AS foo_type, "
+                "foo.foo_id AS foo_foo_id FROM foo WHERE foo.id = :id_1",
+                [{'id_1': 2}]
+            ),
+            CompiledSQL(
+                "SELECT foo_1.id AS foo_1_id, foo_1.type AS foo_1_type, "
+                "foo_1.foo_id AS foo_1_foo_id, "
+                "anon_1.foo_foo_id AS anon_1_foo_foo_id "
+                "FROM (SELECT DISTINCT foo.foo_id AS foo_foo_id "
+                "FROM foo WHERE foo.id = :id_1) AS anon_1 "
+                "JOIN foo AS foo_1 ON foo_1.id = anon_1.foo_foo_id "
+                "ORDER BY anon_1.foo_foo_id",
+                {'id_1': 2}
+            ),
+            CompiledSQL(
+                "SELECT foo.id AS foo_id_1, foo.type AS foo_type, "
+                "foo.foo_id AS foo_foo_id, foo_1.foo_id AS foo_1_foo_id "
+                "FROM (SELECT DISTINCT foo.foo_id AS foo_foo_id FROM foo "
+                "WHERE foo.id = :id_1) AS anon_1 "
+                "JOIN foo AS foo_1 ON foo_1.id = anon_1.foo_foo_id "
+                "JOIN foo ON foo.id = foo_1.foo_id ORDER BY foo_1.foo_id",
+                {'id_1': 2}
+            ),
+        )
+
+
+class TestExistingRowPopulation(fixtures.DeclarativeMappedTest):
+    @classmethod
+    def setup_classes(cls):
+        Base = cls.DeclarativeBasic
+
+        class A(Base):
+            __tablename__ = 'a'
+
+            id = Column(Integer, primary_key=True)
+            b_id = Column(ForeignKey('b.id'))
+            a2_id = Column(ForeignKey('a2.id'))
+            a2 = relationship("A2")
+            b = relationship("B")
+
+        class A2(Base):
+            __tablename__ = 'a2'
+
+            id = Column(Integer, primary_key=True)
+            b_id = Column(ForeignKey('b.id'))
+            b = relationship("B")
+
+        class B(Base):
+            __tablename__ = 'b'
+
+            id = Column(Integer, primary_key=True)
+
+            c1_m2o_id = Column(ForeignKey('c1_m2o.id'))
+            c2_m2o_id = Column(ForeignKey('c2_m2o.id'))
+
+            c1_o2m = relationship("C1o2m")
+            c2_o2m = relationship("C2o2m")
+            c1_m2o = relationship("C1m2o")
+            c2_m2o = relationship("C2m2o")
+
+        class C1o2m(Base):
+            __tablename__ = 'c1_o2m'
+
+            id = Column(Integer, primary_key=True)
+            b_id = Column(ForeignKey('b.id'))
+
+        class C2o2m(Base):
+            __tablename__ = 'c2_o2m'
+
+            id = Column(Integer, primary_key=True)
+            b_id = Column(ForeignKey('b.id'))
+
+        class C1m2o(Base):
+            __tablename__ = 'c1_m2o'
+
+            id = Column(Integer, primary_key=True)
+
+        class C2m2o(Base):
+            __tablename__ = 'c2_m2o'
+
+            id = Column(Integer, primary_key=True)
+
+    @classmethod
+    def insert_data(cls):
+        A, A2, B, C1o2m, C2o2m, C1m2o, C2m2o = cls.classes(
+            'A', 'A2', 'B', 'C1o2m', 'C2o2m', 'C1m2o', 'C2m2o'
+        )
+
+        s = Session()
+
+        b = B(
+            c1_o2m=[C1o2m()],
+            c2_o2m=[C2o2m()],
+            c1_m2o=C1m2o(),
+            c2_m2o=C2m2o(),
+        )
+
+        s.add(A(b=b, a2=A2(b=b)))
+        s.commit()
+
+    def test_o2m(self):
+        A, A2, B, C1o2m, C2o2m = self.classes(
+            'A', 'A2', 'B', 'C1o2m', 'C2o2m'
+        )
+
+        s = Session()
+
+        # A -J-> B -L-> C1
+        # A -J-> B -S-> C2
+
+        # A -J-> A2 -J-> B -S-> C1
+        # A -J-> A2 -J-> B -L-> C2
+
+        q = s.query(A).options(
+            joinedload(A.b).subqueryload(B.c2_o2m),
+            joinedload(A.a2).joinedload(A2.b).subqueryload(B.c1_o2m)
+        )
+
+        a1 = q.all()[0]
+
+        is_true('c1_o2m' in a1.b.__dict__)
+        is_true('c2_o2m' in a1.b.__dict__)
+
+    def test_m2o(self):
+        A, A2, B, C1m2o, C2m2o = self.classes(
+            'A', 'A2', 'B', 'C1m2o', 'C2m2o'
+        )
+
+        s = Session()
+
+        # A -J-> B -L-> C1
+        # A -J-> B -S-> C2
+
+        # A -J-> A2 -J-> B -S-> C1
+        # A -J-> A2 -J-> B -L-> C2
+
+        q = s.query(A).options(
+            joinedload(A.b).subqueryload(B.c2_m2o),
+            joinedload(A.a2).joinedload(A2.b).subqueryload(B.c1_m2o)
+        )
+
+        a1 = q.all()[0]
+        is_true('c1_m2o' in a1.b.__dict__)
+        is_true('c2_m2o' in a1.b.__dict__)

@@ -1,12 +1,12 @@
 # coding: utf-8
 
 from sqlalchemy.testing.assertions import AssertsCompiledSQL, is_, \
-    assert_raises, assert_raises_message
+    assert_raises, assert_raises_message, expect_warnings
 from sqlalchemy.testing import engines, fixtures
 from sqlalchemy import testing
 from sqlalchemy import Sequence, Table, Column, Integer, update, String,\
     func, MetaData, Enum, Index, and_, delete, select, cast, text, \
-    Text
+    Text, null
 from sqlalchemy.dialects.postgresql import ExcludeConstraint, array
 from sqlalchemy import exc, schema
 from sqlalchemy.dialects import postgresql
@@ -560,6 +560,30 @@ class CompileTest(fixtures.TestBase, AssertsCompiledSQL):
                             'ALTER TABLE testtbl ADD EXCLUDE USING gist '
                             '(room WITH =)')
 
+    def test_exclude_constraint_copy_where_using(self):
+        m = MetaData()
+        tbl = Table('testtbl', m,
+                    Column('room', Integer, primary_key=True),
+                    )
+        cons = ExcludeConstraint(
+            (tbl.c.room, '='), where=tbl.c.room > 5, using='foobar')
+        tbl.append_constraint(cons)
+        self.assert_compile(
+            schema.AddConstraint(cons),
+            "ALTER TABLE testtbl ADD EXCLUDE USING foobar "
+            "(room WITH =) WHERE (testtbl.room > 5)"
+        )
+
+        m2 = MetaData()
+        tbl2 = tbl.tometadata(m2)
+        self.assert_compile(
+            schema.CreateTable(tbl2),
+            "CREATE TABLE testtbl (room SERIAL NOT NULL, "
+            "PRIMARY KEY (room), "
+            "EXCLUDE USING foobar "
+            "(room WITH =) WHERE (testtbl.room > 5))"
+        )
+
     def test_exclude_constraint_text(self):
         m = MetaData()
         cons = ExcludeConstraint((text('room::TEXT'), '='))
@@ -1098,13 +1122,32 @@ class InsertOnConflictTest(fixtures.TestBase, AssertsCompiledSQL):
             "(%(name)s) ON CONFLICT (myid) DO NOTHING"
         )
 
-    def test_do_update_set_clause_literal(self):
+    def test_do_update_set_clause_none(self):
         i = insert(self.table_with_metadata).values(myid=1, name='foo')
         i = i.on_conflict_do_update(
             index_elements=['myid'],
             set_=OrderedDict([
                 ('name', "I'm a name"),
                 ('description', None)])
+        )
+        self.assert_compile(
+            i,
+            'INSERT INTO mytable (myid, name) VALUES '
+            '(%(myid)s, %(name)s) ON CONFLICT (myid) '
+            'DO UPDATE SET name = %(param_1)s, '
+            'description = %(param_2)s',
+            {"myid": 1, "name": "foo",
+             "param_1": "I'm a name", "param_2": None}
+
+        )
+
+    def test_do_update_set_clause_literal(self):
+        i = insert(self.table_with_metadata).values(myid=1, name='foo')
+        i = i.on_conflict_do_update(
+            index_elements=['myid'],
+            set_=OrderedDict([
+                ('name', "I'm a name"),
+                ('description', null())])
         )
         self.assert_compile(
             i,
@@ -1304,6 +1347,28 @@ class InsertOnConflictTest(fixtures.TestBase, AssertsCompiledSQL):
                             "WHERE description != %(description_1)s "
                             'DO UPDATE SET name = excluded.name '
                             "WHERE mytable.name != excluded.name")
+
+    def test_do_update_additional_colnames(self):
+        i = insert(
+            self.table1, values=dict(name='bar'))
+        i = i.on_conflict_do_update(
+            constraint=self.excl_constr_anon,
+            set_=dict(name='somename', unknown='unknown')
+        )
+        with expect_warnings(
+                "Additional column names not matching any "
+                "column keys in table 'mytable': 'unknown'"):
+            self.assert_compile(i,
+                                'INSERT INTO mytable (name) VALUES '
+                                "(%(name)s) ON CONFLICT (name, description) "
+                                "WHERE description != %(description_1)s "
+                                "DO UPDATE SET name = %(param_1)s, "
+                                "unknown = %(param_2)s",
+                                checkparams={
+                                    "name": "bar",
+                                    "description_1": "foo",
+                                    "param_1": "somename",
+                                    "param_2": "unknown"})
 
     def test_quote_raw_string_col(self):
         t = table('t', column("FancyName"), column("other name"))
