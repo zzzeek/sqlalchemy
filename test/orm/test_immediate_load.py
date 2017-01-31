@@ -12,9 +12,9 @@ class ImmediateTest(_fixtures.FixtureTest):
 
     def test_basic_option(self):
         Address, addresses, users, User = (self.classes.Address,
-                                self.tables.addresses,
-                                self.tables.users,
-                                self.classes.User)
+                                           self.tables.addresses,
+                                           self.tables.users,
+                                           self.classes.User)
 
         mapper(Address, addresses)
         mapper(User, users, properties={
@@ -22,21 +22,23 @@ class ImmediateTest(_fixtures.FixtureTest):
         })
         sess = create_session()
 
-        l = sess.query(User).options(immediateload(User.addresses)).filter(users.c.id == 7).all()
+        result = sess.query(User).options(immediateload(
+            User.addresses)).filter(users.c.id == 7).all()
         eq_(len(sess.identity_map), 2)
 
         sess.close()
 
         eq_(
-            [User(id=7, addresses=[Address(id=1, email_address='jack@bean.com')])],
-            l
+            [User(id=7,
+                  addresses=[Address(id=1, email_address='jack@bean.com')])],
+            result
         )
 
     def test_basic(self):
         Address, addresses, users, User = (self.classes.Address,
-                                self.tables.addresses,
-                                self.tables.users,
-                                self.classes.User)
+                                           self.tables.addresses,
+                                           self.tables.users,
+                                           self.classes.User)
 
         mapper(Address, addresses)
         mapper(User, users, properties={
@@ -44,13 +46,12 @@ class ImmediateTest(_fixtures.FixtureTest):
         })
         sess = create_session()
 
-        l = sess.query(User).filter(users.c.id == 7).all()
+        result = sess.query(User).filter(users.c.id == 7).all()
         eq_(len(sess.identity_map), 2)
         sess.close()
 
         eq_(
-            [User(id=7, addresses=[Address(id=1, email_address='jack@bean.com')])],
-            l
+            [User(id=7,
+                  addresses=[Address(id=1, email_address='jack@bean.com')])],
+            result
         )
-
-
