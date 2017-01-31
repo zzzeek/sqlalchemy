@@ -23,14 +23,14 @@ class CascadeArgTest(fixtures.MappedTest):
     @classmethod
     def define_tables(cls, metadata):
         Table('users', metadata,
-              Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
-              Column('name', String(30), nullable=False),
-        )
+              Column('id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
+              Column('name', String(30), nullable=False))
         Table('addresses', metadata,
-              Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
+              Column('id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
               Column('user_id', Integer, ForeignKey('users.id')),
-              Column('email_address', String(50), nullable=False),
-        )
+              Column('email_address', String(50), nullable=False))
 
     @classmethod
     def setup_classes(cls):
@@ -46,8 +46,8 @@ class CascadeArgTest(fixtures.MappedTest):
 
         mapper(User, users, properties={
             'addresses': relationship(Address,
-                    passive_deletes="all", cascade="all, delete-orphan")
-            })
+                                      passive_deletes="all",
+                                      cascade="all, delete-orphan")})
         mapper(Address, addresses)
         assert_raises_message(
             sa_exc.ArgumentError,
@@ -80,7 +80,7 @@ class CascadeArgTest(fixtures.MappedTest):
         eq_(
             repr(orm_util.CascadeOptions("all, delete-orphan")),
             "CascadeOptions('delete,delete-orphan,expunge,"
-                    "merge,refresh-expire,save-update')"
+            "merge,refresh-expire,save-update')"
         )
 
     def test_cascade_immutable(self):
@@ -102,9 +102,7 @@ class CascadeArgTest(fixtures.MappedTest):
         rel.cascade = "save-update, merge, expunge"
         eq_(rel.cascade, set(['save-update', 'merge', 'expunge']))
 
-        mapper(User, users, properties={
-                'addresses': rel
-            })
+        mapper(User, users, properties={'addresses': rel})
         am = mapper(Address, addresses)
         configure_mappers()
 
@@ -116,7 +114,7 @@ class CascadeArgTest(fixtures.MappedTest):
 
         eq_(rel.cascade,
             set(['delete', 'delete-orphan', 'expunge', 'merge',
-                    'refresh-expire', 'save-update'])
+                 'refresh-expire', 'save-update'])
             )
 
     def test_cascade_unicode(self):
@@ -134,24 +132,25 @@ class O2MCascadeDeleteOrphanTest(fixtures.MappedTest):
     @classmethod
     def define_tables(cls, metadata):
         Table('users', metadata,
-              Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
-              Column('name', String(30), nullable=False),
-        )
+              Column('id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
+              Column('name', String(30), nullable=False))
         Table('addresses', metadata,
-              Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
+              Column('id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
               Column('user_id', Integer, ForeignKey('users.id')),
-              Column('email_address', String(50), nullable=False),
-        )
+              Column('email_address', String(50), nullable=False))
         Table('orders', metadata,
-              Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
-              Column('user_id', Integer, ForeignKey('users.id'), nullable=False),
-              Column('description', String(30)),
-        )
+              Column('id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
+              Column('user_id', Integer, ForeignKey(
+                  'users.id'), nullable=False),
+              Column('description', String(30)))
         Table("dingalings", metadata,
-              Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
+              Column('id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
               Column('address_id', Integer, ForeignKey('addresses.id')),
-              Column('data', String(30))
-        )
+              Column('data', String(30)))
 
     @classmethod
     def setup_classes(cls):
@@ -169,23 +168,26 @@ class O2MCascadeDeleteOrphanTest(fixtures.MappedTest):
 
     @classmethod
     def setup_mappers(cls):
-        users, Dingaling, Order, User, dingalings, Address, orders, addresses = (cls.tables.users,
-                                cls.classes.Dingaling,
-                                cls.classes.Order,
-                                cls.classes.User,
-                                cls.tables.dingalings,
-                                cls.classes.Address,
-                                cls.tables.orders,
-                                cls.tables.addresses)
+        users, Dingaling, Order, User, dingalings, Address, \
+            orders, addresses = (cls.tables.users,
+                                 cls.classes.Dingaling,
+                                 cls.classes.Order,
+                                 cls.classes.User,
+                                 cls.tables.dingalings,
+                                 cls.classes.Address,
+                                 cls.tables.orders,
+                                 cls.tables.addresses)
 
         mapper(Address, addresses)
         mapper(Order, orders)
         mapper(User, users, properties={
-           'addresses': relationship(Address,
-                            cascade='all, delete-orphan', backref='user'),
+            'addresses': relationship(Address,
+                                      cascade='all, delete-orphan',
+                                      backref='user'),
 
-           'orders': relationship(Order,
-                        cascade='all, delete-orphan', order_by=orders.c.id)
+            'orders': relationship(Order,
+                                   cascade='all, delete-orphan',
+                                   order_by=orders.c.id)
         })
 
         mapper(Dingaling, dingalings, properties={
@@ -272,9 +274,9 @@ class O2MCascadeDeleteOrphanTest(fixtures.MappedTest):
 
     def test_delete(self):
         User, users, orders, Order = (self.classes.User,
-                                self.tables.users,
-                                self.tables.orders,
-                                self.classes.Order)
+                                      self.tables.users,
+                                      self.tables.orders,
+                                      self.classes.Order)
 
         sess = create_session()
         u = User(name='jack',
@@ -293,9 +295,9 @@ class O2MCascadeDeleteOrphanTest(fixtures.MappedTest):
         by default."""
 
         User, addresses, users, Address = (self.classes.User,
-                                self.tables.addresses,
-                                self.tables.users,
-                                self.classes.Address)
+                                           self.tables.addresses,
+                                           self.tables.users,
+                                           self.classes.Address)
 
         sess = create_session()
         u = User(name='jack',
@@ -320,9 +322,9 @@ class O2MCascadeDeleteOrphanTest(fixtures.MappedTest):
         collection, not those that have been removed"""
 
         User, Order, users, orders = (self.classes.User,
-                                self.classes.Order,
-                                self.tables.users,
-                                self.tables.orders)
+                                      self.classes.Order,
+                                      self.tables.users,
+                                      self.tables.orders)
 
         sess = create_session()
         u = User(name='jack',
@@ -353,8 +355,8 @@ class O2MCascadeDeleteOrphanTest(fixtures.MappedTest):
         scalars/collections unchanged."""
 
         Dingaling, User, Address = (self.classes.Dingaling,
-                                self.classes.User,
-                                self.classes.Address)
+                                    self.classes.User,
+                                    self.classes.Address)
 
         sess = create_session()
         u = User(name='jack')
@@ -380,9 +382,9 @@ class O2MCascadeDeleteOrphanTest(fixtures.MappedTest):
 
     def test_cascade_delete_plusorphans(self):
         User, users, orders, Order = (self.classes.User,
-                                self.tables.users,
-                                self.tables.orders,
-                                self.classes.Order)
+                                      self.tables.users,
+                                      self.tables.orders,
+                                      self.classes.Order)
 
         sess = create_session()
         u = User(name='jack',
@@ -401,9 +403,9 @@ class O2MCascadeDeleteOrphanTest(fixtures.MappedTest):
 
     def test_collection_orphans(self):
         User, users, orders, Order = (self.classes.User,
-                                self.tables.users,
-                                self.tables.orders,
-                                self.classes.Order)
+                                      self.tables.users,
+                                      self.tables.orders,
+                                      self.classes.Order)
 
         sess = create_session()
         u = User(name='jack',
@@ -429,14 +431,14 @@ class O2MCascadeTest(fixtures.MappedTest):
     @classmethod
     def define_tables(cls, metadata):
         Table('users', metadata,
-              Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
-              Column('name', String(30), nullable=False),
-        )
+              Column('id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
+              Column('name', String(30), nullable=False))
         Table('addresses', metadata,
-              Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
+              Column('id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
               Column('user_id', Integer, ForeignKey('users.id')),
-              Column('email_address', String(50), nullable=False),
-        )
+              Column('email_address', String(50), nullable=False))
 
     @classmethod
     def setup_classes(cls):
@@ -449,12 +451,12 @@ class O2MCascadeTest(fixtures.MappedTest):
     @classmethod
     def setup_mappers(cls):
         users, User, Address, addresses = (
-                    cls.tables.users, cls.classes.User,
-                    cls.classes.Address, cls.tables.addresses)
+            cls.tables.users, cls.classes.User,
+            cls.classes.Address, cls.tables.addresses)
 
         mapper(Address, addresses)
         mapper(User, users, properties={
-           'addresses': relationship(Address, backref="user"),
+            'addresses': relationship(Address, backref="user"),
 
         })
 
@@ -493,14 +495,14 @@ class O2MCascadeDeleteNoOrphanTest(fixtures.MappedTest):
     @classmethod
     def define_tables(cls, metadata):
         Table('users', metadata,
-            Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
-            Column('name', String(30))
-        )
+              Column('id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
+              Column('name', String(30)))
         Table('orders', metadata,
-            Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
-            Column('user_id', Integer, ForeignKey('users.id')),
-            Column('description', String(30))
-        )
+              Column('id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
+              Column('user_id', Integer, ForeignKey('users.id')),
+              Column('description', String(30)))
 
     @classmethod
     def setup_classes(cls):
@@ -513,9 +515,9 @@ class O2MCascadeDeleteNoOrphanTest(fixtures.MappedTest):
     @classmethod
     def setup_mappers(cls):
         User, Order, orders, users = (cls.classes.User,
-                                cls.classes.Order,
-                                cls.tables.orders,
-                                cls.tables.users)
+                                      cls.classes.Order,
+                                      cls.tables.orders,
+                                      cls.tables.users)
 
         mapper(User, users, properties=dict(
             orders=relationship(
@@ -524,9 +526,9 @@ class O2MCascadeDeleteNoOrphanTest(fixtures.MappedTest):
 
     def test_cascade_delete_noorphans(self):
         User, Order, orders, users = (self.classes.User,
-                                self.classes.Order,
-                                self.tables.orders,
-                                self.tables.users)
+                                      self.classes.Order,
+                                      self.tables.orders,
+                                      self.tables.users)
 
         sess = create_session()
         u = User(name='jack',
@@ -550,13 +552,15 @@ class O2OSingleParentTest(_fixtures.FixtureTest):
     @classmethod
     def setup_mappers(cls):
         Address, addresses, users, User = (cls.classes.Address,
-                                cls.tables.addresses,
-                                cls.tables.users,
-                                cls.classes.User)
+                                           cls.tables.addresses,
+                                           cls.tables.users,
+                                           cls.classes.User)
 
         mapper(Address, addresses)
-        mapper(User, users, properties={'address': relationship(Address, backref=backref('user',
-               single_parent=True), uselist=False)})
+        mapper(User, users,
+               properties={'address': relationship(
+                   Address, backref=backref('user', single_parent=True),
+                   uselist=False)})
 
     def test_single_parent_raise(self):
         User, Address = self.classes.User, self.classes.Address
@@ -577,15 +581,15 @@ class O2OSingleParentNoFlushTest(fixtures.MappedTest):
     @classmethod
     def define_tables(cls, metadata):
         Table('users', metadata,
-              Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
-              Column('name', String(30), nullable=False),
-        )
+              Column('id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
+              Column('name', String(30), nullable=False))
 
         Table('addresses', metadata,
-              Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
+              Column('id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
               Column('user_id', None, ForeignKey('users.id'), nullable=False),
-              Column('email_address', String(50), nullable=False),
-        )
+              Column('email_address', String(50), nullable=False))
 
     @classmethod
     def setup_classes(cls):
@@ -598,14 +602,16 @@ class O2OSingleParentNoFlushTest(fixtures.MappedTest):
     @classmethod
     def setup_mappers(cls):
         Address, addresses, users, User = (cls.classes.Address,
-                                cls.tables.addresses,
-                                cls.tables.users,
-                                cls.classes.User)
+                                           cls.tables.addresses,
+                                           cls.tables.users,
+                                           cls.classes.User)
 
         mapper(Address, addresses)
-        mapper(User, users, properties={'address': relationship(Address, backref=backref('user',
-               single_parent=True, cascade="all, delete-orphan"),
-               uselist=False)})
+        mapper(User, users,
+               properties={'address': relationship(
+                   Address, backref=backref('user', single_parent=True,
+                                            cascade="all, delete-orphan"),
+                   uselist=False)})
 
     def test_replace_attribute_no_flush(self):
         # test [ticket:2921]
@@ -628,41 +634,40 @@ class NoSaveCascadeFlushTest(_fixtures.FixtureTest):
     run_inserts = None
 
     def _one_to_many_fixture(self, o2m_cascade=True,
-                                    m2o_cascade=True,
-                                    o2m=False,
-                                    m2o=False,
-                                    o2m_cascade_backrefs=True,
-                                    m2o_cascade_backrefs=True):
+                             m2o_cascade=True,
+                             o2m=False,
+                             m2o=False,
+                             o2m_cascade_backrefs=True,
+                             m2o_cascade_backrefs=True):
 
         Address, addresses, users, User = (self.classes.Address,
-                                self.tables.addresses,
-                                self.tables.users,
-                                self.classes.User)
+                                           self.tables.addresses,
+                                           self.tables.users,
+                                           self.classes.User)
 
         if o2m:
             if m2o:
                 addresses_rel = {'addresses': relationship(
-                                Address,
-                                cascade_backrefs=o2m_cascade_backrefs,
-                                cascade=o2m_cascade and 'save-update' or '',
-                                backref=backref('user',
-                                            cascade=m2o_cascade and 'save-update' or '',
-                                            cascade_backrefs=m2o_cascade_backrefs
-                                        )
-                                )}
+                    Address,
+                    cascade_backrefs=o2m_cascade_backrefs,
+                    cascade=o2m_cascade and 'save-update' or '',
+                    backref=backref(
+                        'user', cascade=m2o_cascade and 'save-update' or '',
+                        cascade_backrefs=m2o_cascade_backrefs)
+                )}
 
             else:
                 addresses_rel = {'addresses': relationship(
-                                Address,
-                                cascade=o2m_cascade and 'save-update' or '',
-                                cascade_backrefs=o2m_cascade_backrefs,
-                                )}
+                    Address,
+                    cascade=o2m_cascade and 'save-update' or '',
+                    cascade_backrefs=o2m_cascade_backrefs,
+                )}
             user_rel = {}
         elif m2o:
-            user_rel = {'user': relationship(User,
-                                cascade=m2o_cascade and 'save-update' or '',
-                                cascade_backrefs=m2o_cascade_backrefs
-                            )}
+            user_rel = {'user': relationship(
+                User, cascade=m2o_cascade and 'save-update' or '',
+                cascade_backrefs=m2o_cascade_backrefs
+            )}
             addresses_rel = {}
         else:
             addresses_rel = {}
@@ -672,45 +677,45 @@ class NoSaveCascadeFlushTest(_fixtures.FixtureTest):
         mapper(Address, addresses, properties=user_rel)
 
     def _many_to_many_fixture(self, fwd_cascade=True,
-                                    bkd_cascade=True,
-                                    fwd=False,
-                                    bkd=False,
-                                    fwd_cascade_backrefs=True,
-                                    bkd_cascade_backrefs=True):
+                              bkd_cascade=True,
+                              fwd=False,
+                              bkd=False,
+                              fwd_cascade_backrefs=True,
+                              bkd_cascade_backrefs=True):
 
-        keywords, items, item_keywords, Keyword, Item = (self.tables.keywords,
-                                self.tables.items,
-                                self.tables.item_keywords,
-                                self.classes.Keyword,
-                                self.classes.Item)
+        keywords, items, item_keywords, Keyword, Item = \
+            (self.tables.keywords,
+             self.tables.items,
+             self.tables.item_keywords,
+             self.classes.Keyword,
+             self.classes.Item)
 
         if fwd:
             if bkd:
                 keywords_rel = {'keywords': relationship(
-                                Keyword,
-                                secondary=item_keywords,
-                                cascade_backrefs=fwd_cascade_backrefs,
-                                cascade=fwd_cascade and 'save-update' or '',
-                                backref=backref('items',
-                                            cascade=bkd_cascade and 'save-update' or '',
-                                            cascade_backrefs=bkd_cascade_backrefs
-                                        )
-                                )}
+                    Keyword,
+                    secondary=item_keywords,
+                    cascade_backrefs=fwd_cascade_backrefs,
+                    cascade=fwd_cascade and 'save-update' or '',
+                    backref=backref(
+                        'items',
+                        cascade=bkd_cascade and 'save-update' or '',
+                        cascade_backrefs=bkd_cascade_backrefs))}
 
             else:
                 keywords_rel = {'keywords': relationship(
                                 Keyword,
                                 secondary=item_keywords,
                                 cascade=fwd_cascade and 'save-update' or '',
-                                cascade_backrefs=fwd_cascade_backrefs,
-                                )}
+                                cascade_backrefs=fwd_cascade_backrefs)}
             items_rel = {}
         elif bkd:
-            items_rel = {'items': relationship(Item,
-                                secondary=item_keywords,
-                                cascade=bkd_cascade and 'save-update' or '',
-                                cascade_backrefs=bkd_cascade_backrefs
-                            )}
+            items_rel = {'items': relationship(
+                Item,
+                secondary=item_keywords,
+                cascade=bkd_cascade and 'save-update' or '',
+                cascade_backrefs=bkd_cascade_backrefs
+            )}
             keywords_rel = {}
         else:
             keywords_rel = {}
@@ -784,7 +789,7 @@ class NoSaveCascadeFlushTest(_fixtures.FixtureTest):
         User, Address = self.classes.User, self.classes.Address
 
         self._one_to_many_fixture(o2m=True, m2o=True,
-                                    o2m_cascade=False)
+                                  o2m_cascade=False)
         sess = Session()
         u1 = User(name='u1')
         a1 = Address(email_address='a1')
@@ -800,7 +805,7 @@ class NoSaveCascadeFlushTest(_fixtures.FixtureTest):
         User, Address = self.classes.User, self.classes.Address
 
         self._one_to_many_fixture(o2m=True, m2o=True,
-                                    o2m_cascade=False)
+                                  o2m_cascade=False)
         sess = Session()
         u1 = User(name='u1')
         a1 = Address(email_address='a1')
@@ -819,7 +824,7 @@ class NoSaveCascadeFlushTest(_fixtures.FixtureTest):
         User, Address = self.classes.User, self.classes.Address
 
         self._one_to_many_fixture(o2m=True, m2o=True,
-                                    o2m_cascade=False)
+                                  o2m_cascade=False)
         sess = Session()
         u1 = User(name='u1')
         a1 = Address(email_address='a1')
@@ -839,7 +844,7 @@ class NoSaveCascadeFlushTest(_fixtures.FixtureTest):
         User, Address = self.classes.User, self.classes.Address
 
         self._one_to_many_fixture(o2m=True, m2o=True,
-                                    o2m_cascade=False)
+                                  o2m_cascade=False)
         sess = Session()
         u1 = User(name='u1')
         a1 = Address(email_address='a1')
@@ -1060,7 +1065,7 @@ class NoSaveCascadeFlushTest(_fixtures.FixtureTest):
         Item, Keyword = self.classes.Item, self.classes.Keyword
 
         self._many_to_many_fixture(fwd=True, bkd=True,
-                                    fwd_cascade=False)
+                                   fwd_cascade=False)
         sess = Session()
         i1 = Item(description='i1')
         k1 = Keyword(name='k1')
@@ -1076,7 +1081,7 @@ class NoSaveCascadeFlushTest(_fixtures.FixtureTest):
         Item, Keyword = self.classes.Item, self.classes.Keyword
 
         self._many_to_many_fixture(fwd=True, bkd=True,
-                                    fwd_cascade=False)
+                                   fwd_cascade=False)
         sess = Session()
         i1 = Item(description='i1')
         k1 = Keyword(name='k1')
@@ -1095,7 +1100,7 @@ class NoSaveCascadeFlushTest(_fixtures.FixtureTest):
         Item, Keyword = self.classes.Item, self.classes.Keyword
 
         self._many_to_many_fixture(fwd=True, bkd=True,
-                                    fwd_cascade=False)
+                                   fwd_cascade=False)
         sess = Session()
         i1 = Item(description='i1')
         k1 = Keyword(name='k1')
@@ -1115,7 +1120,7 @@ class NoSaveCascadeFlushTest(_fixtures.FixtureTest):
         Item, Keyword = self.classes.Item, self.classes.Keyword
 
         self._many_to_many_fixture(fwd=True, bkd=True,
-                                    fwd_cascade=False)
+                                   fwd_cascade=False)
         sess = Session()
         i1 = Item(description='i1')
         k1 = Keyword(name='k1')
@@ -1141,9 +1146,9 @@ class NoSaveCascadeBackrefTest(_fixtures.FixtureTest):
 
     def test_unidirectional_cascade_o2m(self):
         User, Order, users, orders = (self.classes.User,
-                                self.classes.Order,
-                                self.tables.users,
-                                self.tables.orders)
+                                      self.classes.Order,
+                                      self.tables.users,
+                                      self.tables.orders)
 
         mapper(Order, orders)
         mapper(User, users, properties=dict(
@@ -1169,9 +1174,9 @@ class NoSaveCascadeBackrefTest(_fixtures.FixtureTest):
 
     def test_unidirectional_cascade_m2o(self):
         User, Order, users, orders = (self.classes.User,
-                                self.classes.Order,
-                                self.tables.users,
-                                self.tables.orders)
+                                      self.classes.Order,
+                                      self.tables.users,
+                                      self.tables.orders)
 
         mapper(Order, orders, properties={
             'user': relationship(User, backref=backref("orders", cascade=None))
@@ -1197,14 +1202,18 @@ class NoSaveCascadeBackrefTest(_fixtures.FixtureTest):
         assert u1 in sess
 
     def test_unidirectional_cascade_m2m(self):
-        keywords, items, item_keywords, Keyword, Item = (self.tables.keywords,
-                                self.tables.items,
-                                self.tables.item_keywords,
-                                self.classes.Keyword,
-                                self.classes.Item)
+        keywords, items, item_keywords, Keyword, Item = \
+            (self.tables.keywords,
+             self.tables.items,
+             self.tables.item_keywords,
+             self.classes.Keyword,
+             self.classes.Item)
 
-        mapper(Item, items, properties={'keywords': relationship(Keyword, secondary=item_keywords,
-               cascade='none', backref='items')})
+        mapper(Item, items,
+               properties={'keywords': relationship(Keyword,
+                                                    secondary=item_keywords,
+                                                    cascade='none',
+                                                    backref='items')})
         mapper(Keyword, keywords)
 
         sess = create_session()
@@ -1231,10 +1240,12 @@ class M2OCascadeDeleteOrphanTestOne(fixtures.MappedTest):
     @classmethod
     def define_tables(cls, metadata):
         Table('extra', metadata, Column('id', Integer,
-              primary_key=True, test_needs_autoincrement=True),
+                                        primary_key=True,
+                                        test_needs_autoincrement=True),
               Column('prefs_id', Integer, ForeignKey('prefs.id')))
         Table('prefs', metadata, Column('id', Integer,
-              primary_key=True, test_needs_autoincrement=True),
+                                        primary_key=True,
+                                        test_needs_autoincrement=True),
               Column('data', String(40)))
         Table(
             'users',
@@ -1244,10 +1255,11 @@ class M2OCascadeDeleteOrphanTestOne(fixtures.MappedTest):
             Column('name', String(40)),
             Column('pref_id', Integer, ForeignKey('prefs.id')),
             Column('foo_id', Integer, ForeignKey('foo.id')),
-            )
-        Table('foo', metadata, Column('id', Integer, primary_key=True,
-              test_needs_autoincrement=True), Column('data',
-              String(40)))
+        )
+        Table('foo', metadata,
+              Column('id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
+              Column('data', String(40)))
 
     @classmethod
     def setup_classes(cls):
@@ -1266,27 +1278,29 @@ class M2OCascadeDeleteOrphanTestOne(fixtures.MappedTest):
     @classmethod
     def setup_mappers(cls):
         extra, foo, users, Extra, Pref, User, prefs, Foo = (cls.tables.extra,
-                                cls.tables.foo,
-                                cls.tables.users,
-                                cls.classes.Extra,
-                                cls.classes.Pref,
-                                cls.classes.User,
-                                cls.tables.prefs,
-                                cls.classes.Foo)
+                                                            cls.tables.foo,
+                                                            cls.tables.users,
+                                                            cls.classes.Extra,
+                                                            cls.classes.Pref,
+                                                            cls.classes.User,
+                                                            cls.tables.prefs,
+                                                            cls.classes.Foo)
 
         mapper(Extra, extra)
-        mapper(Pref, prefs, properties=dict(extra=relationship(Extra,
-               cascade='all, delete')))
-        mapper(User, users, properties=dict(pref=relationship(Pref,
-               lazy='joined', cascade='all, delete-orphan',
-               single_parent=True), foo=relationship(Foo)))  # straight m2o
+        mapper(Pref, prefs, properties=dict(
+            extra=relationship(Extra, cascade='all, delete')))
+        mapper(User, users, properties=dict(
+            pref=relationship(Pref, lazy='joined',
+                              cascade='all, delete-orphan',
+                              single_parent=True),
+            foo=relationship(Foo)))  # straight m2o
         mapper(Foo, foo)
 
     @classmethod
     def insert_data(cls):
         Pref, User, Extra = (cls.classes.Pref,
-                                cls.classes.User,
-                                cls.classes.Extra)
+                             cls.classes.User,
+                             cls.classes.Extra)
 
         u1 = User(name='ed', pref=Pref(data="pref 1", extra=[Extra()]))
         u2 = User(name='jack', pref=Pref(data="pref 2", extra=[Extra()]))
@@ -1298,8 +1312,8 @@ class M2OCascadeDeleteOrphanTestOne(fixtures.MappedTest):
 
     def test_orphan(self):
         prefs, User, extra = (self.tables.prefs,
-                                self.classes.User,
-                                self.tables.extra)
+                              self.classes.User,
+                              self.tables.extra)
 
         sess = create_session()
         eq_(select([func.count('*')]).select_from(prefs).scalar(), 3)
@@ -1358,8 +1372,8 @@ class M2OCascadeDeleteOrphanTestOne(fixtures.MappedTest):
 
     def test_orphan_on_update(self):
         prefs, User, extra = (self.tables.prefs,
-                                self.classes.User,
-                                self.tables.extra)
+                              self.classes.User,
+                              self.tables.extra)
 
         sess = create_session()
         jack = sess.query(User).filter_by(name="jack").one()
@@ -1414,19 +1428,19 @@ class M2OCascadeDeleteOrphanTestTwo(fixtures.MappedTest):
     def define_tables(cls, metadata):
         Table('t1', metadata,
               Column('id', Integer, primary_key=True,
-                            test_needs_autoincrement=True),
+                     test_needs_autoincrement=True),
               Column('data', String(50)),
               Column('t2id', Integer, ForeignKey('t2.id')))
 
         Table('t2', metadata,
               Column('id', Integer, primary_key=True,
-                                test_needs_autoincrement=True),
+                     test_needs_autoincrement=True),
               Column('data', String(50)),
               Column('t3id', Integer, ForeignKey('t3.id')))
 
         Table('t3', metadata,
               Column('id', Integer, primary_key=True,
-                                test_needs_autoincrement=True),
+                     test_needs_autoincrement=True),
               Column('data', String(50)))
 
     @classmethod
@@ -1443,23 +1457,25 @@ class M2OCascadeDeleteOrphanTestTwo(fixtures.MappedTest):
     @classmethod
     def setup_mappers(cls):
         t2, T2, T3, t1, t3, T1 = (cls.tables.t2,
-                                cls.classes.T2,
-                                cls.classes.T3,
-                                cls.tables.t1,
-                                cls.tables.t3,
-                                cls.classes.T1)
+                                  cls.classes.T2,
+                                  cls.classes.T3,
+                                  cls.tables.t1,
+                                  cls.tables.t3,
+                                  cls.classes.T1)
 
-        mapper(T1, t1, properties=dict(t2=relationship(T2,
-               cascade='all, delete-orphan', single_parent=True)))
-        mapper(T2, t2, properties=dict(t3=relationship(T3,
-               cascade='all, delete-orphan', single_parent=True,
-               backref=backref('t2', uselist=False))))
+        mapper(T1, t1, properties=dict(
+            t2=relationship(T2, cascade='all, delete-orphan',
+                            single_parent=True)))
+        mapper(T2, t2, properties=dict(
+            t3=relationship(T3, cascade='all, delete-orphan',
+                            single_parent=True,
+                            backref=backref('t2', uselist=False))))
         mapper(T3, t3)
 
     def test_cascade_delete(self):
         T2, T3, T1 = (self.classes.T2,
-                                self.classes.T3,
-                                self.classes.T1)
+                      self.classes.T3,
+                      self.classes.T1)
 
         sess = create_session()
         x = T1(data='t1a', t2=T2(data='t2a', t3=T3(data='t3a')))
@@ -1474,8 +1490,8 @@ class M2OCascadeDeleteOrphanTestTwo(fixtures.MappedTest):
 
     def test_deletes_orphans_onelevel(self):
         T2, T3, T1 = (self.classes.T2,
-                                self.classes.T3,
-                                self.classes.T1)
+                      self.classes.T3,
+                      self.classes.T1)
 
         sess = create_session()
         x2 = T1(data='t1b', t2=T2(data='t2b', t3=T3(data='t3b')))
@@ -1491,8 +1507,8 @@ class M2OCascadeDeleteOrphanTestTwo(fixtures.MappedTest):
 
     def test_deletes_orphans_twolevel(self):
         T2, T3, T1 = (self.classes.T2,
-                                self.classes.T3,
-                                self.classes.T1)
+                      self.classes.T3,
+                      self.classes.T1)
 
         sess = create_session()
         x = T1(data='t1a', t2=T2(data='t2a', t3=T3(data='t3a')))
@@ -1508,8 +1524,8 @@ class M2OCascadeDeleteOrphanTestTwo(fixtures.MappedTest):
 
     def test_finds_orphans_twolevel(self):
         T2, T3, T1 = (self.classes.T2,
-                                self.classes.T3,
-                                self.classes.T1)
+                      self.classes.T3,
+                      self.classes.T1)
 
         sess = create_session()
         x = T1(data='t1a', t2=T2(data='t2a', t3=T3(data='t3a')))
@@ -1556,19 +1572,19 @@ class M2OCascadeDeleteNoOrphanTest(fixtures.MappedTest):
     @classmethod
     def define_tables(cls, metadata):
         Table('t1', metadata, Column('id', Integer, primary_key=True,
-              test_needs_autoincrement=True),
+                                     test_needs_autoincrement=True),
               Column('data', String(50)),
               Column('t2id', Integer, ForeignKey('t2.id')))
 
         Table('t2', metadata,
-            Column('id', Integer, primary_key=True,
-              test_needs_autoincrement=True),
+              Column('id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
               Column('data', String(50)),
               Column('t3id', Integer, ForeignKey('t3.id')))
 
         Table('t3', metadata,
-            Column('id', Integer, primary_key=True,
-              test_needs_autoincrement=True),
+              Column('id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
               Column('data', String(50)))
 
     @classmethod
@@ -1585,11 +1601,11 @@ class M2OCascadeDeleteNoOrphanTest(fixtures.MappedTest):
     @classmethod
     def setup_mappers(cls):
         t2, T2, T3, t1, t3, T1 = (cls.tables.t2,
-                                cls.classes.T2,
-                                cls.classes.T3,
-                                cls.tables.t1,
-                                cls.tables.t3,
-                                cls.classes.T1)
+                                  cls.classes.T2,
+                                  cls.classes.T3,
+                                  cls.tables.t1,
+                                  cls.tables.t3,
+                                  cls.classes.T1)
 
         mapper(T1, t1, properties={'t2': relationship(T2, cascade="all")})
         mapper(T2, t2, properties={'t3': relationship(T3, cascade="all")})
@@ -1597,8 +1613,8 @@ class M2OCascadeDeleteNoOrphanTest(fixtures.MappedTest):
 
     def test_cascade_delete(self):
         T2, T3, T1 = (self.classes.T2,
-                                self.classes.T3,
-                                self.classes.T1)
+                      self.classes.T3,
+                      self.classes.T1)
 
         sess = create_session()
         x = T1(data='t1a', t2=T2(data='t2a', t3=T3(data='t3a')))
@@ -1613,8 +1629,8 @@ class M2OCascadeDeleteNoOrphanTest(fixtures.MappedTest):
 
     def test_cascade_delete_postappend_onelevel(self):
         T2, T3, T1 = (self.classes.T2,
-                                self.classes.T3,
-                                self.classes.T1)
+                      self.classes.T3,
+                      self.classes.T1)
 
         sess = create_session()
         x1 = T1(data='t1', )
@@ -1633,8 +1649,8 @@ class M2OCascadeDeleteNoOrphanTest(fixtures.MappedTest):
 
     def test_cascade_delete_postappend_twolevel(self):
         T2, T3, T1 = (self.classes.T2,
-                                self.classes.T3,
-                                self.classes.T1)
+                      self.classes.T3,
+                      self.classes.T1)
 
         sess = create_session()
         x1 = T1(data='t1', t2=T2(data='t2'))
@@ -1651,8 +1667,8 @@ class M2OCascadeDeleteNoOrphanTest(fixtures.MappedTest):
 
     def test_preserves_orphans_onelevel(self):
         T2, T3, T1 = (self.classes.T2,
-                                self.classes.T3,
-                                self.classes.T1)
+                      self.classes.T3,
+                      self.classes.T1)
 
         sess = create_session()
         x2 = T1(data='t1b', t2=T2(data='t2b', t3=T3(data='t3b')))
@@ -1669,8 +1685,8 @@ class M2OCascadeDeleteNoOrphanTest(fixtures.MappedTest):
     @testing.future
     def test_preserves_orphans_onelevel_postremove(self):
         T2, T3, T1 = (self.classes.T2,
-                                self.classes.T3,
-                                self.classes.T1)
+                      self.classes.T3,
+                      self.classes.T1)
 
         sess = create_session()
         x2 = T1(data='t1b', t2=T2(data='t2b', t3=T3(data='t3b')))
@@ -1686,8 +1702,8 @@ class M2OCascadeDeleteNoOrphanTest(fixtures.MappedTest):
 
     def test_preserves_orphans_twolevel(self):
         T2, T3, T1 = (self.classes.T2,
-                                self.classes.T3,
-                                self.classes.T1)
+                      self.classes.T3,
+                      self.classes.T1)
 
         sess = create_session()
         x = T1(data='t1a', t2=T2(data='t2a', t3=T3(data='t3a')))
@@ -1706,32 +1722,25 @@ class M2MCascadeTest(fixtures.MappedTest):
     @classmethod
     def define_tables(cls, metadata):
         Table('a', metadata,
-            Column('id', Integer, primary_key=True,
-                            test_needs_autoincrement=True),
-            Column('data', String(30)),
-            test_needs_fk=True
-            )
+              Column('id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
+              Column('data', String(30)),
+              test_needs_fk=True)
         Table('b', metadata,
-            Column('id', Integer, primary_key=True,
-                            test_needs_autoincrement=True),
-            Column('data', String(30)),
-            test_needs_fk=True
-
-            )
+              Column('id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
+              Column('data', String(30)),
+              test_needs_fk=True)
         Table('atob', metadata,
-            Column('aid', Integer, ForeignKey('a.id')),
-            Column('bid', Integer, ForeignKey('b.id')),
-            test_needs_fk=True
-
-            )
+              Column('aid', Integer, ForeignKey('a.id')),
+              Column('bid', Integer, ForeignKey('b.id')),
+              test_needs_fk=True)
         Table('c', metadata,
               Column('id', Integer, primary_key=True,
-                            test_needs_autoincrement=True),
+                     test_needs_autoincrement=True),
               Column('data', String(30)),
               Column('bid', Integer, ForeignKey('b.id')),
-              test_needs_fk=True
-
-              )
+              test_needs_fk=True)
 
     @classmethod
     def setup_classes(cls):
@@ -1746,16 +1755,18 @@ class M2MCascadeTest(fixtures.MappedTest):
 
     def test_delete_orphan(self):
         a, A, B, b, atob = (self.tables.a,
-                                self.classes.A,
-                                self.classes.B,
-                                self.tables.b,
-                                self.tables.atob)
+                            self.classes.A,
+                            self.classes.B,
+                            self.tables.b,
+                            self.tables.atob)
 
         # if no backref here, delete-orphan failed until [ticket:427]
         # was fixed
 
-        mapper(A, a, properties={'bs': relationship(B, secondary=atob,
-               cascade='all, delete-orphan', single_parent=True)})
+        mapper(A, a,
+               properties={'bs': relationship(B, secondary=atob,
+                                              cascade='all, delete-orphan',
+                                              single_parent=True)})
         mapper(B, b)
 
         sess = create_session()
@@ -1772,15 +1783,18 @@ class M2MCascadeTest(fixtures.MappedTest):
 
     def test_delete_orphan_dynamic(self):
         a, A, B, b, atob = (self.tables.a,
-                                self.classes.A,
-                                self.classes.B,
-                                self.tables.b,
-                                self.tables.atob)
+                            self.classes.A,
+                            self.classes.B,
+                            self.tables.b,
+                            self.tables.atob)
 
-        mapper(A, a, properties={'bs': relationship(B, secondary=atob,
-               cascade='all, delete-orphan', single_parent=True,
-               lazy='dynamic')})  # if no backref here, delete-orphan
-                                  # failed until [ticket:427] was fixed
+        mapper(A, a,
+               # if no backref here, delete-orphan
+               properties={'bs': relationship(B, secondary=atob,
+                                              cascade='all, delete-orphan',
+                                              single_parent=True,
+                                              lazy='dynamic')})
+        # failed until [ticket:427] was fixed
         mapper(B, b)
 
         sess = create_session()
@@ -1797,21 +1811,22 @@ class M2MCascadeTest(fixtures.MappedTest):
 
     def test_delete_orphan_cascades(self):
         a, A, c, b, C, B, atob = (self.tables.a,
-                                self.classes.A,
-                                self.tables.c,
-                                self.tables.b,
-                                self.classes.C,
-                                self.classes.B,
-                                self.tables.atob)
+                                  self.classes.A,
+                                  self.tables.c,
+                                  self.tables.b,
+                                  self.classes.C,
+                                  self.classes.B,
+                                  self.tables.atob)
 
         mapper(A, a, properties={
             # if no backref here, delete-orphan failed until [ticket:427] was
             # fixed
             'bs': relationship(B, secondary=atob, cascade="all, delete-orphan",
-                                    single_parent=True)
+                               single_parent=True)
         })
-        mapper(B, b, properties={'cs':
-                            relationship(C, cascade="all, delete-orphan")})
+        mapper(B, b,
+               properties={'cs': relationship(C,
+                                              cascade="all, delete-orphan")})
         mapper(C, c)
 
         sess = create_session()
@@ -1829,14 +1844,14 @@ class M2MCascadeTest(fixtures.MappedTest):
 
     def test_cascade_delete(self):
         a, A, B, b, atob = (self.tables.a,
-                                self.classes.A,
-                                self.classes.B,
-                                self.tables.b,
-                                self.tables.atob)
+                            self.classes.A,
+                            self.classes.B,
+                            self.tables.b,
+                            self.tables.atob)
 
         mapper(A, a, properties={
             'bs': relationship(B, secondary=atob, cascade="all, delete-orphan",
-                                    single_parent=True)
+                               single_parent=True)
         })
         mapper(B, b)
 
@@ -1853,14 +1868,14 @@ class M2MCascadeTest(fixtures.MappedTest):
 
     def test_single_parent_error(self):
         a, A, B, b, atob = (self.tables.a,
-                                self.classes.A,
-                                self.classes.B,
-                                self.tables.b,
-                                self.tables.atob)
+                            self.classes.A,
+                            self.classes.B,
+                            self.tables.b,
+                            self.tables.atob)
 
         mapper(A, a, properties={
             'bs': relationship(B, secondary=atob,
-                        cascade="all, delete-orphan")
+                               cascade="all, delete-orphan")
         })
         mapper(B, b)
         assert_raises_message(
@@ -1871,14 +1886,14 @@ class M2MCascadeTest(fixtures.MappedTest):
 
     def test_single_parent_raise(self):
         a, A, B, b, atob = (self.tables.a,
-                                self.classes.A,
-                                self.classes.B,
-                                self.tables.b,
-                                self.tables.atob)
+                            self.classes.A,
+                            self.classes.B,
+                            self.tables.b,
+                            self.tables.atob)
 
         mapper(A, a, properties={
             'bs': relationship(B, secondary=atob, cascade="all, delete-orphan",
-                                    single_parent=True)
+                               single_parent=True)
         })
         mapper(B, b)
 
@@ -1887,23 +1902,24 @@ class M2MCascadeTest(fixtures.MappedTest):
         a1 = A(data='a1', bs=[b1])
 
         assert_raises(sa_exc.InvalidRequestError,
-                A, data='a2', bs=[b1]
-            )
+                      A, data='a2', bs=[b1])
 
     def test_single_parent_backref(self):
-        """test that setting m2m via a uselist=False backref bypasses the single_parent raise"""
+        """test that setting m2m via a uselist=False backref bypasses the
+        single_parent raise"""
 
         a, A, B, b, atob = (self.tables.a,
-                                self.classes.A,
-                                self.classes.B,
-                                self.tables.b,
-                                self.tables.atob)
+                            self.classes.A,
+                            self.classes.B,
+                            self.tables.b,
+                            self.tables.atob)
 
         mapper(A, a, properties={
             'bs': relationship(B,
-                secondary=atob,
-                cascade="all, delete-orphan", single_parent=True,
-                backref=backref('a', uselist=False))
+                               secondary=atob,
+                               cascade="all, delete-orphan",
+                               single_parent=True,
+                               backref=backref('a', uselist=False))
         })
         mapper(B, b)
 
@@ -1923,14 +1939,14 @@ class M2MCascadeTest(fixtures.MappedTest):
 
     def test_none_m2m_collection_assignment(self):
         a, A, B, b, atob = (self.tables.a,
-                                self.classes.A,
-                                self.classes.B,
-                                self.tables.b,
-                                self.tables.atob)
+                            self.classes.A,
+                            self.classes.B,
+                            self.tables.b,
+                            self.tables.atob)
 
         mapper(A, a, properties={
             'bs': relationship(B,
-                secondary=atob, backref="as")
+                               secondary=atob, backref="as")
         })
         mapper(B, b)
 
@@ -1947,14 +1963,13 @@ class M2MCascadeTest(fixtures.MappedTest):
 
     def test_none_m2m_collection_append(self):
         a, A, B, b, atob = (self.tables.a,
-                                self.classes.A,
-                                self.classes.B,
-                                self.tables.b,
-                                self.tables.atob)
+                            self.classes.A,
+                            self.classes.B,
+                            self.tables.b,
+                            self.tables.atob)
 
         mapper(A, a, properties={
-            'bs': relationship(B,
-                secondary=atob, backref="as")
+            'bs': relationship(B, secondary=atob, backref="as")
         })
         mapper(B, b)
 
@@ -1975,10 +1990,9 @@ class O2MSelfReferentialDetelOrphanTest(fixtures.MappedTest):
     @classmethod
     def define_tables(cls, metadata):
         Table('node', metadata,
-            Column('id', Integer, primary_key=True,
-                        test_needs_autoincrement=True),
-            Column('parent_id', Integer, ForeignKey('node.id'))
-        )
+              Column('id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
+              Column('parent_id', Integer, ForeignKey('node.id')))
 
     @classmethod
     def setup_classes(cls):
@@ -1991,13 +2005,13 @@ class O2MSelfReferentialDetelOrphanTest(fixtures.MappedTest):
         node = cls.tables.node
         mapper(Node, node, properties={
             "children": relationship(
-                            Node,
-                            cascade="all, delete-orphan",
-                            backref=backref(
-                                    "parent",
-                                    remote_side=node.c.id
-                                )
-                            )
+                Node,
+                cascade="all, delete-orphan",
+                backref=backref(
+                    "parent",
+                    remote_side=node.c.id
+                )
+            )
         })
 
     def test_self_referential_delete(self):
@@ -2021,22 +2035,23 @@ class NoBackrefCascadeTest(_fixtures.FixtureTest):
 
     @classmethod
     def setup_mappers(cls):
-        addresses, Dingaling, User, dingalings, Address, users = (cls.tables.addresses,
-                                cls.classes.Dingaling,
-                                cls.classes.User,
-                                cls.tables.dingalings,
-                                cls.classes.Address,
-                                cls.tables.users)
+        addresses, Dingaling, User, dingalings, Address, users = \
+            (cls.tables.addresses,
+             cls.classes.Dingaling,
+             cls.classes.User,
+             cls.tables.dingalings,
+             cls.classes.Address,
+             cls.tables.users)
 
         mapper(Address, addresses)
         mapper(User, users, properties={
-                'addresses': relationship(Address, backref='user',
-                            cascade_backrefs=False)
+            'addresses': relationship(Address, backref='user',
+                                      cascade_backrefs=False)
         })
 
         mapper(Dingaling, dingalings, properties={
-                'address': relationship(Address, backref='dingalings',
-                            cascade_backrefs=False)
+            'address': relationship(Address, backref='dingalings',
+                                    cascade_backrefs=False)
         })
 
     def test_o2m_basic(self):
@@ -2134,19 +2149,20 @@ class PendingOrphanTestSingleLevel(fixtures.MappedTest):
     @classmethod
     def define_tables(cls, metadata):
         Table('users', metadata,
-            Column('user_id', Integer, primary_key=True,
-                                test_needs_autoincrement=True),
-            Column('name', String(40)))
+              Column('user_id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
+              Column('name', String(40)))
 
         Table('addresses', metadata,
-            Column('address_id', Integer, primary_key=True,
-                                test_needs_autoincrement=True),
-            Column('user_id', Integer, ForeignKey('users.user_id')),
-            Column('email_address', String(40)))
+              Column('address_id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
+              Column('user_id', Integer, ForeignKey('users.user_id')),
+              Column('email_address', String(40)))
         Table('orders', metadata,
-            Column('order_id', Integer, primary_key=True, test_needs_autoincrement=True),
-            Column('user_id', Integer, ForeignKey('users.user_id'), nullable=False),
-        )
+              Column('order_id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
+              Column('user_id', Integer, ForeignKey(
+                  'users.user_id'), nullable=False))
 
     @classmethod
     def setup_classes(cls):
@@ -2168,18 +2184,19 @@ class PendingOrphanTestSingleLevel(fixtures.MappedTest):
 
         """
 
-        users, orders, User, Address, Order, addresses = (self.tables.users,
-                                self.tables.orders,
-                                self.classes.User,
-                                self.classes.Address,
-                                self.classes.Order,
-                                self.tables.addresses)
+        users, orders, User, Address, Order, addresses = \
+            (self.tables.users,
+             self.tables.orders,
+             self.classes.User,
+             self.classes.Address,
+             self.classes.Order,
+             self.tables.addresses)
 
         mapper(Order, orders)
         mapper(Address, addresses)
         mapper(User, users, properties=dict(
             addresses=relationship(Address, cascade="all,delete-orphan",
-                                                backref="user"),
+                                   backref="user"),
             orders=relationship(Order, cascade='all, delete-orphan')
         ))
         s = Session()
@@ -2211,14 +2228,14 @@ class PendingOrphanTestSingleLevel(fixtures.MappedTest):
         the session."""
 
         users, Address, addresses, User = (self.tables.users,
-                                self.classes.Address,
-                                self.tables.addresses,
-                                self.classes.User)
+                                           self.classes.Address,
+                                           self.tables.addresses,
+                                           self.classes.User)
 
         mapper(Address, addresses)
         mapper(User, users, properties=dict(
             addresses=relationship(Address, cascade="all,delete-orphan",
-                                        backref="user")
+                                   backref="user")
         ))
         s = create_session()
 
@@ -2240,14 +2257,14 @@ class PendingOrphanTestSingleLevel(fixtures.MappedTest):
 
     def test_nonorphans_ok(self):
         users, Address, addresses, User = (self.tables.users,
-                                self.classes.Address,
-                                self.tables.addresses,
-                                self.classes.User)
+                                           self.classes.Address,
+                                           self.tables.addresses,
+                                           self.classes.User)
 
         mapper(Address, addresses)
         mapper(User, users, properties=dict(
             addresses=relationship(Address, cascade="all,delete",
-                                            backref="user")
+                                   backref="user")
         ))
         s = create_session()
         u = User(name='u1', addresses=[Address(email_address='ad1')])
@@ -2270,16 +2287,18 @@ class PendingOrphanTestTwoLevel(fixtures.MappedTest):
     @classmethod
     def define_tables(cls, metadata):
         Table('order', metadata,
-            Column('id', Integer, primary_key=True, test_needs_autoincrement=True)
-        )
+              Column('id', Integer, primary_key=True,
+                     test_needs_autoincrement=True))
         Table('item', metadata,
-            Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
-            Column('order_id', Integer, ForeignKey('order.id'), nullable=False)
-        )
+              Column('id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
+              Column('order_id', Integer, ForeignKey(
+                  'order.id'), nullable=False))
         Table('attribute', metadata,
-            Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
-            Column('item_id', Integer, ForeignKey('item.id'), nullable=False)
-        )
+              Column('id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
+              Column('item_id', Integer, ForeignKey('item.id'),
+                     nullable=False))
 
     @classmethod
     def setup_classes(cls):
@@ -2294,9 +2313,9 @@ class PendingOrphanTestTwoLevel(fixtures.MappedTest):
 
     def test_singlelevel_remove(self):
         item, Order, order, Item = (self.tables.item,
-                                self.classes.Order,
-                                self.tables.order,
-                                self.classes.Item)
+                                    self.classes.Order,
+                                    self.tables.order,
+                                    self.classes.Item)
 
         mapper(Order, order, properties={
             'items': relationship(Item, cascade="all, delete-orphan")
@@ -2313,12 +2332,13 @@ class PendingOrphanTestTwoLevel(fixtures.MappedTest):
         assert i1 not in o1.items
 
     def test_multilevel_remove(self):
-        Item, Attribute, order, item, attribute, Order = (self.classes.Item,
-                                self.classes.Attribute,
-                                self.tables.order,
-                                self.tables.item,
-                                self.tables.attribute,
-                                self.classes.Order)
+        Item, Attribute, order, item, attribute, Order = \
+            (self.classes.Item,
+             self.classes.Attribute,
+             self.tables.order,
+             self.tables.item,
+             self.tables.attribute,
+             self.classes.Order)
 
         mapper(Order, order, properties={
             'items': relationship(Item, cascade="all, delete-orphan")
@@ -2364,27 +2384,27 @@ class DoubleParentO2MOrphanTest(fixtures.MappedTest):
     @classmethod
     def define_tables(cls, meta):
         Table('sales_reps', meta,
-            Column('sales_rep_id', Integer, primary_key=True,
-                                    test_needs_autoincrement=True),
-            Column('name', String(50)))
+              Column('sales_rep_id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
+              Column('name', String(50)))
         Table('accounts', meta,
-            Column('account_id', Integer, primary_key=True,
-                                    test_needs_autoincrement=True),
-            Column('balance', Integer))
+              Column('account_id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
+              Column('balance', Integer))
 
         Table('customers', meta,
-            Column('customer_id', Integer, primary_key=True,
-                                    test_needs_autoincrement=True),
-            Column('name', String(50)),
-            Column('sales_rep_id', Integer,
-                   ForeignKey('sales_reps.sales_rep_id')),
-            Column('account_id', Integer,
-                   ForeignKey('accounts.account_id')))
+              Column('customer_id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
+              Column('name', String(50)),
+              Column('sales_rep_id', Integer,
+                     ForeignKey('sales_reps.sales_rep_id')),
+              Column('account_id', Integer,
+                     ForeignKey('accounts.account_id')))
 
     def _fixture(self, legacy_is_orphan, uselist):
         sales_reps, customers, accounts = (self.tables.sales_reps,
-                                self.tables.customers,
-                                self.tables.accounts)
+                                           self.tables.customers,
+                                           self.tables.accounts)
 
         class Customer(fixtures.ComparableEntity):
             pass
@@ -2398,14 +2418,14 @@ class DoubleParentO2MOrphanTest(fixtures.MappedTest):
         mapper(Customer, customers, legacy_is_orphan=legacy_is_orphan)
         mapper(Account, accounts, properties=dict(
             customers=relationship(Customer,
-                               cascade="all,delete-orphan",
-                               backref="account",
-                               uselist=uselist)))
+                                   cascade="all,delete-orphan",
+                                   backref="account",
+                                   uselist=uselist)))
         mapper(SalesRep, sales_reps, properties=dict(
             customers=relationship(Customer,
-                               cascade="all,delete-orphan",
-                               backref="sales_rep",
-                               uselist=uselist)))
+                                   cascade="all,delete-orphan",
+                                   backref="sales_rep",
+                                   uselist=uselist)))
         s = create_session()
 
         a = Account(balance=0)
@@ -2487,34 +2507,31 @@ class DoubleParentM2OOrphanTest(fixtures.MappedTest):
     @classmethod
     def define_tables(cls, metadata):
         Table('addresses', metadata,
-            Column('address_id', Integer, primary_key=True,
-                                    test_needs_autoincrement=True),
-            Column('street', String(30)),
-        )
+              Column('address_id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
+              Column('street', String(30)))
 
         Table('homes', metadata,
-            Column('home_id', Integer, primary_key=True, key="id",
-                                    test_needs_autoincrement=True),
-            Column('description', String(30)),
-            Column('address_id', Integer, ForeignKey('addresses.address_id'),
-                   nullable=False),
-        )
+              Column('home_id', Integer, primary_key=True, key="id",
+                     test_needs_autoincrement=True),
+              Column('description', String(30)),
+              Column('address_id', Integer, ForeignKey('addresses.address_id'),
+                     nullable=False))
 
         Table('businesses', metadata,
-            Column('business_id', Integer, primary_key=True, key="id",
-                                    test_needs_autoincrement=True),
-            Column('description', String(30), key="description"),
-            Column('address_id', Integer, ForeignKey('addresses.address_id'),
-                   nullable=False),
-        )
+              Column('business_id', Integer, primary_key=True, key="id",
+                     test_needs_autoincrement=True),
+              Column('description', String(30), key="description"),
+              Column('address_id', Integer, ForeignKey('addresses.address_id'),
+                     nullable=False))
 
     def test_non_orphan(self):
         """test that an entity can have two parent delete-orphan
         cascades, and persists normally."""
 
         homes, businesses, addresses = (self.tables.homes,
-                                self.tables.businesses,
-                                self.tables.addresses)
+                                        self.tables.businesses,
+                                        self.tables.addresses)
 
         class Address(fixtures.ComparableEntity):
             pass
@@ -2526,10 +2543,10 @@ class DoubleParentM2OOrphanTest(fixtures.MappedTest):
             pass
 
         mapper(Address, addresses)
-        mapper(Home, homes, properties={'address': relationship(Address, cascade='all,delete-orphan',
-               single_parent=True)})
-        mapper(Business, businesses, properties={'address': relationship(Address, cascade='all,delete-orphan',
-               single_parent=True)})
+        mapper(Home, homes, properties={'address': relationship(
+            Address, cascade='all,delete-orphan', single_parent=True)})
+        mapper(Business, businesses, properties={'address': relationship(
+            Address, cascade='all,delete-orphan', single_parent=True)})
 
         session = create_session()
         h1 = Home(description='home1', address=Address(street='address1'))
@@ -2540,10 +2557,11 @@ class DoubleParentM2OOrphanTest(fixtures.MappedTest):
         session.expunge_all()
 
         eq_(session.query(Home).get(h1.id), Home(description='home1',
-            address=Address(street='address1')))
+                                                 address=Address(
+                                                     street='address1')))
         eq_(session.query(Business).get(b1.id),
             Business(description='business1',
-            address=Address(street='address2')))
+                     address=Address(street='address2')))
 
     def test_orphan(self):
         """test that an entity can have two parent delete-orphan
@@ -2551,8 +2569,8 @@ class DoubleParentM2OOrphanTest(fixtures.MappedTest):
         parent."""
 
         homes, businesses, addresses = (self.tables.homes,
-                                self.tables.businesses,
-                                self.tables.addresses)
+                                        self.tables.businesses,
+                                        self.tables.addresses)
 
         class Address(fixtures.ComparableEntity):
             pass
@@ -2564,10 +2582,10 @@ class DoubleParentM2OOrphanTest(fixtures.MappedTest):
             pass
 
         mapper(Address, addresses)
-        mapper(Home, homes, properties={'address': relationship(Address, cascade='all,delete-orphan',
-               single_parent=True)})
-        mapper(Business, businesses, properties={'address': relationship(Address, cascade='all,delete-orphan',
-               single_parent=True)})
+        mapper(Home, homes, properties={'address': relationship(
+            Address, cascade='all,delete-orphan', single_parent=True)})
+        mapper(Business, businesses, properties={'address': relationship(
+            Address, cascade='all,delete-orphan', single_parent=True)})
         session = create_session()
         a1 = Address()
         session.add(a1)
@@ -2578,12 +2596,12 @@ class CollectionAssignmentOrphanTest(fixtures.MappedTest):
     @classmethod
     def define_tables(cls, metadata):
         Table('table_a', metadata,
-            Column('id', Integer,
-              primary_key=True, test_needs_autoincrement=True),
+              Column('id', Integer,
+                     primary_key=True, test_needs_autoincrement=True),
               Column('name', String(30)))
         Table('table_b', metadata,
-            Column('id', Integer,
-              primary_key=True, test_needs_autoincrement=True),
+              Column('id', Integer,
+                     primary_key=True, test_needs_autoincrement=True),
               Column('name', String(30)),
               Column('a_id', Integer, ForeignKey('table_a.id')))
 
@@ -2598,7 +2616,7 @@ class CollectionAssignmentOrphanTest(fixtures.MappedTest):
 
         mapper(A, table_a, properties={
             'bs': relationship(B, cascade="all, delete-orphan")
-            })
+        })
         mapper(B, table_b)
 
         a1 = A(name='a1', bs=[B(name='b1'), B(name='b2'), B(name='b3')])
@@ -2628,24 +2646,21 @@ class OrphanCriterionTest(fixtures.MappedTest):
     @classmethod
     def define_tables(self, metadata):
         Table("core", metadata,
-            Column("id", Integer,
-                    primary_key=True, test_needs_autoincrement=True),
-            Column("related_one_id", Integer, ForeignKey("related_one.id")),
-            Column("related_two_id", Integer, ForeignKey("related_two.id"))
-        )
+              Column("id", Integer,
+                     primary_key=True, test_needs_autoincrement=True),
+              Column("related_one_id", Integer, ForeignKey("related_one.id")),
+              Column("related_two_id", Integer, ForeignKey("related_two.id")))
 
         Table("related_one", metadata,
-            Column("id", Integer,
-                primary_key=True, test_needs_autoincrement=True),
-            )
+              Column("id", Integer,
+                     primary_key=True, test_needs_autoincrement=True))
 
         Table("related_two", metadata,
-            Column("id", Integer,
-                primary_key=True, test_needs_autoincrement=True),
-            )
+              Column("id", Integer,
+                     primary_key=True, test_needs_autoincrement=True))
 
     def _fixture(self, legacy_is_orphan, persistent,
-                        r1_present, r2_present, detach_event=True):
+                 r1_present, r2_present, detach_event=True):
         class Core(object):
             pass
 
@@ -2659,13 +2674,13 @@ class OrphanCriterionTest(fixtures.MappedTest):
 
         mapper(Core, self.tables.core, legacy_is_orphan=legacy_is_orphan)
         mapper(RelatedOne, self.tables.related_one, properties={
-                'cores': relationship(Core, cascade="all, delete-orphan",
-                    backref="r1")
-            })
+            'cores': relationship(Core, cascade="all, delete-orphan",
+                                  backref="r1")
+        })
         mapper(RelatedTwo, self.tables.related_two, properties={
-                'cores': relationship(Core, cascade="all, delete-orphan",
-                    backref="r2")
-            })
+            'cores': relationship(Core, cascade="all, delete-orphan",
+                                  backref="r2")
+        })
         c1 = Core()
         if detach_event:
             r1 = RelatedOne(cores=[c1])
@@ -2788,15 +2803,13 @@ class O2MConflictTest(fixtures.MappedTest):
     @classmethod
     def define_tables(cls, metadata):
         Table("parent", metadata,
-            Column("id", Integer, primary_key=True,
-                                test_needs_autoincrement=True)
-        )
+              Column("id", Integer, primary_key=True,
+                     test_needs_autoincrement=True))
         Table("child", metadata,
-            Column("id", Integer, primary_key=True,
-                                    test_needs_autoincrement=True),
-            Column('parent_id', Integer, ForeignKey('parent.id'),
-                                    nullable=False)
-        )
+              Column("id", Integer, primary_key=True,
+                     test_needs_autoincrement=True),
+              Column('parent_id', Integer, ForeignKey('parent.id'),
+                     nullable=False))
 
     @classmethod
     def setup_classes(cls):
@@ -2833,9 +2846,9 @@ class O2MConflictTest(fixtures.MappedTest):
 
     def test_o2o_delete_old(self):
         Child, Parent, parent, child = (self.classes.Child,
-                                self.classes.Parent,
-                                self.tables.parent,
-                                self.tables.child)
+                                        self.classes.Parent,
+                                        self.tables.parent,
+                                        self.tables.child)
 
         mapper(Parent, parent, properties={
             'child': relationship(Child, uselist=False)
@@ -2846,9 +2859,9 @@ class O2MConflictTest(fixtures.MappedTest):
 
     def test_o2m_delete_old(self):
         Child, Parent, parent, child = (self.classes.Child,
-                                self.classes.Parent,
-                                self.tables.parent,
-                                self.tables.child)
+                                        self.classes.Parent,
+                                        self.tables.parent,
+                                        self.tables.child)
 
         mapper(Parent, parent, properties={
             'child': relationship(Child, uselist=True)
@@ -2859,9 +2872,9 @@ class O2MConflictTest(fixtures.MappedTest):
 
     def test_o2o_backref_delete_old(self):
         Child, Parent, parent, child = (self.classes.Child,
-                                self.classes.Parent,
-                                self.tables.parent,
-                                self.tables.child)
+                                        self.classes.Parent,
+                                        self.tables.parent,
+                                        self.tables.child)
 
         mapper(Parent, parent, properties={
             'child': relationship(Child, uselist=False, backref='parent')
@@ -2872,9 +2885,9 @@ class O2MConflictTest(fixtures.MappedTest):
 
     def test_o2o_delcascade_delete_old(self):
         Child, Parent, parent, child = (self.classes.Child,
-                                self.classes.Parent,
-                                self.tables.parent,
-                                self.tables.child)
+                                        self.classes.Parent,
+                                        self.tables.parent,
+                                        self.tables.child)
 
         mapper(Parent, parent, properties={
             'child': relationship(Child, uselist=False, cascade="all, delete")
@@ -2885,13 +2898,13 @@ class O2MConflictTest(fixtures.MappedTest):
 
     def test_o2o_delorphan_delete_old(self):
         Child, Parent, parent, child = (self.classes.Child,
-                                self.classes.Parent,
-                                self.tables.parent,
-                                self.tables.child)
+                                        self.classes.Parent,
+                                        self.tables.parent,
+                                        self.tables.child)
 
         mapper(Parent, parent, properties={
             'child': relationship(Child, uselist=False,
-                                    cascade="all, delete, delete-orphan")
+                                  cascade="all, delete, delete-orphan")
         })
         mapper(Child, child)
         self._do_move_test(True)
@@ -2899,14 +2912,14 @@ class O2MConflictTest(fixtures.MappedTest):
 
     def test_o2o_delorphan_backref_delete_old(self):
         Child, Parent, parent, child = (self.classes.Child,
-                                self.classes.Parent,
-                                self.tables.parent,
-                                self.tables.child)
+                                        self.classes.Parent,
+                                        self.tables.parent,
+                                        self.tables.child)
 
         mapper(Parent, parent, properties={
             'child': relationship(Child, uselist=False,
-                                        cascade="all, delete, delete-orphan",
-                                        backref='parent')
+                                  cascade="all, delete, delete-orphan",
+                                  backref='parent')
         })
         mapper(Child, child)
         self._do_move_test(True)
@@ -2914,58 +2927,55 @@ class O2MConflictTest(fixtures.MappedTest):
 
     def test_o2o_backref_delorphan_delete_old(self):
         Child, Parent, parent, child = (self.classes.Child,
-                                self.classes.Parent,
-                                self.tables.parent,
-                                self.tables.child)
+                                        self.classes.Parent,
+                                        self.tables.parent,
+                                        self.tables.child)
 
         mapper(Parent, parent)
         mapper(Child, child, properties={
             'parent': relationship(Parent, uselist=False, single_parent=True,
-                                backref=backref('child', uselist=False),
-                                cascade="all,delete,delete-orphan")
+                                   backref=backref('child', uselist=False),
+                                   cascade="all,delete,delete-orphan")
         })
         self._do_move_test(True)
         self._do_move_test(False)
 
     def test_o2m_backref_delorphan_delete_old(self):
         Child, Parent, parent, child = (self.classes.Child,
-                                self.classes.Parent,
-                                self.tables.parent,
-                                self.tables.child)
+                                        self.classes.Parent,
+                                        self.tables.parent,
+                                        self.tables.child)
 
         mapper(Parent, parent)
         mapper(Child, child, properties={
             'parent': relationship(Parent, uselist=False, single_parent=True,
-                                backref=backref('child', uselist=True),
-                                cascade="all,delete,delete-orphan")
+                                   backref=backref('child', uselist=True),
+                                   cascade="all,delete,delete-orphan")
         })
         self._do_move_test(True)
         self._do_move_test(False)
 
 
 class PartialFlushTest(fixtures.MappedTest):
-    """test cascade behavior as it relates to object lists passed to flush()."""
+    """test cascade behavior as it relates to object lists passed to flush().
+    """
     @classmethod
     def define_tables(cls, metadata):
         Table("base", metadata,
-            Column("id", Integer, primary_key=True,
-                                test_needs_autoincrement=True),
-            Column("descr", String(50))
-        )
+              Column("id", Integer, primary_key=True,
+                     test_needs_autoincrement=True),
+              Column("descr", String(50)))
 
         Table("noninh_child", metadata,
-            Column('id', Integer, primary_key=True,
-                                test_needs_autoincrement=True),
-            Column('base_id', Integer, ForeignKey('base.id'))
-        )
+              Column('id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
+              Column('base_id', Integer, ForeignKey('base.id')))
 
         Table("parent", metadata,
-            Column("id", Integer, ForeignKey("base.id"), primary_key=True)
-        )
+              Column("id", Integer, ForeignKey("base.id"), primary_key=True))
         Table("inh_child", metadata,
-            Column("id", Integer, ForeignKey("base.id"), primary_key=True),
-            Column("parent_id", Integer, ForeignKey("parent.id"))
-        )
+              Column("id", Integer, ForeignKey("base.id"), primary_key=True),
+              Column("parent_id", Integer, ForeignKey("parent.id")))
 
     def test_o2m_m2o(self):
         base, noninh_child = self.tables.base, self.tables.noninh_child
@@ -3022,8 +3032,8 @@ class PartialFlushTest(fixtures.MappedTest):
         """test ticket 1306"""
 
         base, inh_child, parent = (self.tables.base,
-                                self.tables.inh_child,
-                                self.tables.parent)
+                                   self.tables.inh_child,
+                                   self.tables.parent)
 
         class Base(fixtures.ComparableEntity):
             pass
@@ -3037,13 +3047,12 @@ class PartialFlushTest(fixtures.MappedTest):
         mapper(Base, base)
 
         mapper(Child, inh_child,
-            inherits=Base,
-            properties={'parent': relationship(
-                Parent,
-                backref='children',
-                primaryjoin=inh_child.c.parent_id == parent.c.id
-            )}
-        )
+               inherits=Base,
+               properties={'parent': relationship(
+                   Parent,
+                   backref='children',
+                   primaryjoin=inh_child.c.parent_id == parent.c.id
+               )})
 
         mapper(Parent, parent, inherits=Base)
 
@@ -3058,4 +3067,3 @@ class PartialFlushTest(fixtures.MappedTest):
         assert p1 in sess.new
         assert c1 not in sess.new
         assert c2 in sess.new
-
