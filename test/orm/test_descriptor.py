@@ -11,7 +11,7 @@ from sqlalchemy.testing import eq_
 
 class TestDescriptor(descriptor_props.DescriptorProperty):
     def __init__(self, cls, key, descriptor=None, doc=None,
-            comparator_factory=None):
+                 comparator_factory=None):
         self.parent = cls.__mapper__
         self.key = key
         self.doc = doc
@@ -107,7 +107,7 @@ class DescriptorInstrumentationTest(fixtures.ORMTest):
 
             def __eq__(self, other):
                 return func.foobar(self.__clause_element__()) ==\
-                            func.foobar(other)
+                    func.foobar(other)
 
         Foo = self._fixture()
         Foo._name = Column('name', String)
@@ -121,10 +121,9 @@ class DescriptorInstrumentationTest(fixtures.ORMTest):
 
         eq_(
             str(Foo.foo == 'ed'),
-           "foobar(foo.name) = foobar(:foobar_1)"
+            "foobar(foo.name) = foobar(:foobar_1)"
         )
         eq_(
             str(aliased(Foo).foo == 'ed'),
             "foobar(foo_1.name) = foobar(:foobar_1)"
         )
-
