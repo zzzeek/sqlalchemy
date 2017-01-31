@@ -194,7 +194,7 @@ class InitTest(fixtures.ORMTest):
         del inits[:]
         obj = C()
         eq_(inits, [(C, 'init', C), (C, '__init__'), (B, '__init__'),
-                   (A, '__init__')])
+                    (A, '__init__')])
 
     def test_Ai_bi_Ci(self):
         inits = []
@@ -226,7 +226,7 @@ class InitTest(fixtures.ORMTest):
         del inits[:]
         obj = C()
         eq_(inits, [(C, 'init', C), (C, '__init__'),  (B, '__init__'),
-                   (A, '__init__')])
+                    (A, '__init__')])
 
     def test_Ai_b_Ci(self):
         inits = []
@@ -513,7 +513,7 @@ class NativeInstrumentationTest(fixtures.ORMTest):
         sa = instrumentation.ClassManager.STATE_ATTR
         ma = instrumentation.ClassManager.MANAGER_ATTR
 
-        fails = lambda method, attr: assert_raises(
+        def fails(method, attr): return assert_raises(
             KeyError, getattr(manager, method), attr, property())
 
         fails('install_member', sa)
@@ -741,5 +741,3 @@ class MiscTest(fixtures.ORMTest):
             session = create_session()
             session.add(a)
             assert b in session, 'base: %s' % base
-
-
