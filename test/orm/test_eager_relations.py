@@ -118,7 +118,7 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
                 Address(id=5)
             ]),
             User(id=10, addresses=[])
-            ], q.order_by(User.id).all())
+        ], q.order_by(User.id).all())
 
     def test_orderby_multi(self):
         users, Address, addresses, User = (
@@ -147,7 +147,7 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
                 Address(id=5)
             ]),
             User(id=10, addresses=[])
-            ], q.order_by(User.id).all())
+        ], q.order_by(User.id).all())
 
     def test_orderby_related(self):
         """A regular mapper select on a single table can
@@ -165,7 +165,7 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
         ))
 
         q = create_session().query(User)
-        l = q.filter(User.id == Address.user_id).order_by(
+        result = q.filter(User.id == Address.user_id).order_by(
             Address.email_address).all()
 
         eq_([
@@ -180,7 +180,7 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
             User(id=7, addresses=[
                 Address(id=1)
             ]),
-            ], l)
+        ], result)
 
     def test_orderby_desc(self):
         Address, addresses, users, User = (self.classes.Address,
@@ -208,7 +208,7 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
                 Address(id=5)
             ]),
             User(id=10, addresses=[])
-            ], sess.query(User).order_by(User.id).all())
+        ], sess.query(User).order_by(User.id).all())
 
     def test_no_ad_hoc_orderby(self):
         """part of #2992; make sure string label references can't
@@ -572,7 +572,7 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
                 ),
                 User(id=10)
 
-                ], q.all())
+            ], q.all())
         self.assert_sql_count(testing.db, go, 1)
 
     def test_double_same_mappers(self):
@@ -651,7 +651,7 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
                                    Item(id=2),
                                    Item(id=3)])]),
                 User(id=10)
-                ], q.all())
+            ], q.all())
         self.assert_sql_count(testing.db, go, 1)
 
     def test_no_false_hits(self):
@@ -714,8 +714,8 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
         sess = create_session()
         q = sess.query(User)
 
-        l = q.order_by(User.id).limit(2).offset(1).all()
-        eq_(self.static.user_all_result[1:3], l)
+        result = q.order_by(User.id).limit(2).offset(1).all()
+        eq_(self.static.user_all_result[1:3], result)
 
     def test_distinct(self):
         Address, addresses, users, User = (self.classes.Address,
@@ -742,9 +742,9 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
         q = sess.query(User)
 
         def go():
-            l = q.filter(s.c.u2_id == User.id).distinct().\
+            result = q.filter(s.c.u2_id == User.id).distinct().\
                 order_by(User.id).all()
-            eq_(self.static.user_address_result, l)
+            eq_(self.static.user_address_result, result)
         self.assert_sql_count(testing.db, go, 1)
 
     def test_limit_2(self):
@@ -764,12 +764,12 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
 
         sess = create_session()
         q = sess.query(Item)
-        l = q.filter((Item.description == 'item 2') |
-                     (Item.description == 'item 5') |
-                     (Item.description == 'item 3')).\
+        result = q.filter((Item.description == 'item 2') |
+                          (Item.description == 'item 5') |
+                          (Item.description == 'item 3')).\
             order_by(Item.id).limit(2).all()
 
-        eq_(self.static.item_keyword_result[1:3], l)
+        eq_(self.static.item_keyword_result[1:3], result)
 
     def test_limit_3(self):
         """test that the ORDER BY is propagated from the inner
@@ -805,7 +805,7 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
         q = sess.query(User)
 
         if not testing.against('mssql'):
-            l = q.join('orders').order_by(
+            result = q.join('orders').order_by(
                 Order.user_id.desc()).limit(2).offset(1)
             eq_([
                 User(id=9,
@@ -816,16 +816,16 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
                      orders=[Order(id=1), Order(id=3), Order(id=5)],
                      addresses=[Address(id=1)]
                      )
-                ], l.all())
+            ], result.all())
 
-        l = q.join('addresses').order_by(
+        result = q.join('addresses').order_by(
             Address.email_address.desc()).limit(1).offset(0)
         eq_([
             User(id=7,
                  orders=[Order(id=1), Order(id=3), Order(id=5)],
                  addresses=[Address(id=1)]
                  )
-            ], l.all())
+        ], result.all())
 
     def test_limit_4(self):
         User, Order, addresses, users, orders = (self.classes.User,
@@ -894,7 +894,7 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
                 "addresses_email_address FROM addresses WHERE :param_1 = "
                 "addresses.user_id",
                 {'param_1': 8})
-            )
+        )
 
     def test_useget_cancels_eager_propagated_present(self):
         """test that a one to many lazyload cancels the unnecessary
@@ -918,7 +918,8 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
             propagate_to_loaders = True
 
         sess = create_session()
-        u1 = sess.query(User).options(MyBogusOption()).filter(User.id == 8).one()
+        u1 = sess.query(User).options(
+            MyBogusOption()).filter(User.id == 8).one()
 
         def go():
             eq_(u1.addresses[0].user, u1)
@@ -930,7 +931,7 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
                 "addresses_email_address FROM addresses WHERE :param_1 = "
                 "addresses.user_id",
                 {'param_1': 8})
-            )
+        )
 
     def test_manytoone_limit(self):
         """test that the subquery wrapping only occurs with
@@ -1103,8 +1104,8 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
         q = create_session().query(User)
 
         def go():
-            l = q.filter(users.c.id == 7).all()
-            eq_([User(id=7, address=Address(id=1))], l)
+            result = q.filter(users.c.id == 7).all()
+            eq_([User(id=7, address=Address(id=1))], result)
         self.assert_sql_count(testing.db, go, 1)
 
     def test_one_to_many_scalar_subq_wrapping(self):
@@ -1171,7 +1172,7 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
                 mapper(Address, addresses),
                 primaryjoin=and_(
                     addresses.c.id == orders.c.address_id,
-                    addresses.c.email_address != None
+                    addresses.c.email_address != None  # noqa
                 ),
 
                 lazy='joined')
@@ -1219,10 +1220,11 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
 
         q = create_session().query(User)
 
-        l = q.filter(text("users.id in (7, 8, 9)")).order_by(text("users.id"))
+        result = q.filter(text("users.id in (7, 8, 9)")).order_by(
+            text("users.id"))
 
         def go():
-            eq_(self.static.user_order_result[0:3], l.all())
+            eq_(self.static.user_order_result[0:3], result.all())
         self.assert_sql_count(testing.db, go, 1)
 
     def test_double_with_aggregate(self):
@@ -1265,7 +1267,7 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
                      max_order=Order(id=4)
                      ),
                 User(id=10),
-                ], q.order_by(User.id).all())
+            ], q.order_by(User.id).all())
         self.assert_sql_count(testing.db, go, 1)
 
     def test_uselist_false_warning(self):
@@ -1343,13 +1345,13 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
         eq_([
             Order(id=3, user=User(id=7)),
             Order(id=4, user=User(id=9))
-            ], q.all())
+        ], q.all())
 
         q = q.select_from(s.join(order_items).join(items)).filter(
             ~Item.id.in_([1, 2, 5]))
         eq_([
             Order(id=3, user=User(id=7)),
-            ], q.all())
+        ], q.all())
 
     def test_aliasing(self):
         """test that eager loading uses aliases to insulate the eager
@@ -1365,9 +1367,9 @@ class EagerTest(_fixtures.FixtureTest, testing.AssertsCompiledSQL):
                                    lazy='joined', order_by=addresses.c.id)
         ))
         q = create_session().query(User)
-        l = q.filter(addresses.c.email_address == 'ed@lala.com').filter(
+        result = q.filter(addresses.c.email_address == 'ed@lala.com').filter(
             Address.user_id == User.id).order_by(User.id)
-        eq_(self.static.user_address_result[1:2], l.all())
+        eq_(self.static.user_address_result[1:2], result.all())
 
     def test_inner_join(self):
         Address, addresses, users, User = (self.classes.Address,
@@ -2963,7 +2965,7 @@ class OrderBySecondaryTest(fixtures.MappedTest):
             [
                 A(data='a1', bs=[B(data='b3'), B(data='b1'), B(data='b2')]),
                 A(bs=[B(data='b4'), B(data='b3'), B(data='b2')])
-            ])
+        ])
 
 
 class SelfReferentialEagerTest(fixtures.MappedTest):
@@ -3014,7 +3016,7 @@ class SelfReferentialEagerTest(fixtures.MappedTest):
                     Node(data='n123')
                 ]),
                 Node(data='n13')
-                ]), d)
+            ]), d)
         self.assert_sql_count(testing.db, go, 1)
 
         sess.expunge_all()
@@ -3029,7 +3031,7 @@ class SelfReferentialEagerTest(fixtures.MappedTest):
                     Node(data='n123')
                 ]),
                 Node(data='n13')
-                ]), d)
+            ]), d)
         self.assert_sql_count(testing.db, go, 1)
 
     def test_lazy_fallback_doesnt_affect_eager(self):
@@ -3072,7 +3074,7 @@ class SelfReferentialEagerTest(fixtures.MappedTest):
                 Node(data='n121'),
                 Node(data='n122'),
                 Node(data='n123')
-                ], list(n12.children))
+            ], list(n12.children))
         self.assert_sql_count(testing.db, go, 1)
 
     def test_with_deferred(self):
@@ -3154,7 +3156,7 @@ class SelfReferentialEagerTest(fixtures.MappedTest):
                     Node(data='n123')
                 ]),
                 Node(data='n13')
-                ]), d)
+            ]), d)
         self.assert_sql_count(testing.db, go, 2)
 
         def go():
@@ -3206,7 +3208,7 @@ class SelfReferentialEagerTest(fixtures.MappedTest):
                     Node(data='n123')
                 ]),
                 Node(data='n13')
-                ]), d)
+            ]), d)
         self.assert_sql_count(testing.db, go, 3)
 
 
