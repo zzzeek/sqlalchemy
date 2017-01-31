@@ -20,7 +20,7 @@ class DefaultStrategyOptionsTest(_fixtures.FixtureTest):
             # iterated all the items with no sql.
             f = util.flatten_iterator
             assert any([i.keywords for i in
-                f([o.items for o in f([u.orders for u in users])])])
+                        f([o.items for o in f([u.orders for u in users])])])
         self.assert_sql_count(testing.db, go, 0)
 
     def _assert_addresses_loaded(self, users):
@@ -45,18 +45,18 @@ class DefaultStrategyOptionsTest(_fixtures.FixtureTest):
 
         mapper(Item, items, properties=dict(
             keywords=relationship(Keyword, secondary=item_keywords,
-                              lazy='subquery',
-                              order_by=item_keywords.c.keyword_id)))
+                                  lazy='subquery',
+                                  order_by=item_keywords.c.keyword_id)))
 
         mapper(Order, orders, properties=dict(
             items=relationship(Item, secondary=order_items, lazy='subquery',
-                           order_by=order_items.c.item_id)))
+                               order_by=order_items.c.item_id)))
 
         mapper(User, users, properties=dict(
             addresses=relationship(Address, lazy='joined',
-                               order_by=addresses.c.id),
+                                   order_by=addresses.c.id),
             orders=relationship(Order, lazy='joined',
-                            order_by=orders.c.id)))
+                                order_by=orders.c.id)))
 
         return create_session()
 
@@ -75,18 +75,18 @@ class DefaultStrategyOptionsTest(_fixtures.FixtureTest):
 
         mapper(Item, items, properties=dict(
             keywords=relationship(Keyword, secondary=item_keywords,
-                              lazy='select',
-                              order_by=item_keywords.c.keyword_id)))
+                                  lazy='select',
+                                  order_by=item_keywords.c.keyword_id)))
 
         mapper(Order, orders, properties=dict(
             items=relationship(Item, secondary=order_items, lazy=True,
-                           order_by=order_items.c.item_id)))
+                               order_by=order_items.c.item_id)))
 
         mapper(User, users, properties=dict(
             addresses=relationship(Address, lazy=True,
-                               order_by=addresses.c.id),
+                                   order_by=addresses.c.id),
             orders=relationship(Order,
-                            order_by=orders.c.id)))
+                                order_by=orders.c.id)))
 
         return create_session()
 
@@ -96,7 +96,8 @@ class DefaultStrategyOptionsTest(_fixtures.FixtureTest):
         sess = self._downgrade_fixture()
         users = []
 
-        # test _downgrade_fixture mapper defaults, 3 queries (2 subquery loads).
+        # test _downgrade_fixture mapper defaults, 3 queries (2 subquery
+        # loads).
         def go():
             users[:] = sess.query(self.classes.User)\
                 .order_by(self.classes.User.id)\
