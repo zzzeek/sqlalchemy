@@ -35,12 +35,12 @@ class ParentRemovalTest(fixtures.MappedTest):
             fk_args = dict(onupdate='cascade')
 
         Table('users', metadata,
-              Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
-        )
+              Column('id', Integer, primary_key=True,
+                     test_needs_autoincrement=True))
         Table('addresses', metadata,
-              Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
-              Column('user_id', Integer, ForeignKey('users.id', **fk_args)),
-        )
+              Column('id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
+              Column('user_id', Integer, ForeignKey('users.id', **fk_args)))
 
     @classmethod
     def setup_classes(cls):
@@ -54,18 +54,16 @@ class ParentRemovalTest(fixtures.MappedTest):
     def setup_mappers(cls):
         mapper(cls.classes.Address, cls.tables.addresses)
         mapper(cls.classes.User, cls.tables.users, properties={
-           'addresses': relationship(cls.classes.Address,
-                            cascade='all, delete-orphan'),
+            'addresses': relationship(cls.classes.Address,
+                                      cascade='all, delete-orphan'),
 
         })
 
     def _assert_hasparent(self, a1):
-        assert attributes.has_parent(
-                    self.classes.User, a1, "addresses")
+        assert attributes.has_parent(self.classes.User, a1, "addresses")
 
     def _assert_not_hasparent(self, a1):
-        assert not attributes.has_parent(
-                    self.classes.User, a1, "addresses")
+        assert not attributes.has_parent(self.classes.User, a1, "addresses")
 
     def _fixture(self):
         User, Address = self.classes.User, self.classes.Address
@@ -205,5 +203,3 @@ class ParentRemovalTest(fixtures.MappedTest):
         u1.addresses.remove(a1)
 
         self._assert_not_hasparent(a1)
-
-
