@@ -39,8 +39,7 @@ class TestORMInspection(_fixtures.FixtureTest):
         user_table = self.tables.users
         insp = inspect(User)
         eq_(insp.primary_key,
-            (user_table.c.id,)
-        )
+            (user_table.c.id,))
 
     def test_local_table(self):
         User = self.classes.User
@@ -74,8 +73,8 @@ class TestORMInspection(_fixtures.FixtureTest):
         addresses_table = self.tables.addresses
         mapper(Foo, user_table, with_polymorphic=(Bar,))
         mapper(Bar, addresses_table, inherits=Foo, properties={
-                'address_id': addresses_table.c.id
-            })
+            'address_id': addresses_table.c.id
+        })
         i1 = inspect(Foo)
         i2 = inspect(Foo)
         assert i1.selectable is i2.selectable
@@ -242,9 +241,9 @@ class TestORMInspection(_fixtures.FixtureTest):
 
     def test_extension_types(self):
         from sqlalchemy.ext.associationproxy import \
-                                        association_proxy, ASSOCIATION_PROXY
+            association_proxy, ASSOCIATION_PROXY
         from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method, \
-                                        HYBRID_PROPERTY, HYBRID_METHOD
+            HYBRID_PROPERTY, HYBRID_METHOD
         from sqlalchemy import Table, MetaData, Integer, Column
         from sqlalchemy.orm import mapper
         from sqlalchemy.orm.interfaces import NOT_EXTENSION
@@ -270,15 +269,14 @@ class TestORMInspection(_fixtures.FixtureTest):
                 raise NotImplementedError()
 
         t = Table('sometable', MetaData(),
-                        Column('id', Integer, primary_key=True))
+                  Column('id', Integer, primary_key=True))
         mapper(SomeClass, t)
         mapper(SomeSubClass, inherits=SomeClass)
 
         insp = inspect(SomeSubClass)
         eq_(
             dict((k, v.extension_type)
-                for k, v in list(insp.all_orm_descriptors.items())
-            ),
+                 for k, v in list(insp.all_orm_descriptors.items())),
             {
                 'id': NOT_EXTENSION,
                 'name': NOT_EXTENSION,
@@ -499,7 +497,7 @@ class TestORMInspection(_fixtures.FixtureTest):
 
         eq_(
             (insp.transient, insp.pending,
-            insp.persistent, insp.detached),
+             insp.persistent, insp.detached),
             (True, False, False, False)
         )
         s = Session(testing.db)
@@ -507,20 +505,20 @@ class TestORMInspection(_fixtures.FixtureTest):
 
         eq_(
             (insp.transient, insp.pending,
-            insp.persistent, insp.detached),
+             insp.persistent, insp.detached),
             (False, True, False, False)
         )
 
         s.flush()
         eq_(
             (insp.transient, insp.pending,
-            insp.persistent, insp.detached),
+             insp.persistent, insp.detached),
             (False, False, True, False)
         )
         s.expunge(u1)
         eq_(
             (insp.transient, insp.pending,
-            insp.persistent, insp.detached),
+             insp.persistent, insp.detached),
             (False, False, False, True)
         )
 
@@ -539,4 +537,3 @@ class TestORMInspection(_fixtures.FixtureTest):
         u1 = User(name='ed')
         insp = inspect(u1)
         is_(insp.object, u1)
-
