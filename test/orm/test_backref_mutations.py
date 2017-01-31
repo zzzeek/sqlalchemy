@@ -1,10 +1,10 @@
 """
-a series of tests which assert the behavior of moving objects between collections
-and scalar attributes resulting in the expected state w.r.t. backrefs, add/remove
-events, etc.
+a series of tests which assert the behavior of moving objects between
+collections and scalar attributes resulting in the expected state w.r.t.
+backrefs, add/remove events, etc.
 
-there's a particular focus on collections that have "uselist=False", since in these
-cases the re-assignment of an attribute means the previous owner needs an
+there's a particular focus on collections that have "uselist=False", since in
+these cases the re-assignment of an attribute means the previous owner needs an
 UPDATE in the database.
 
 """
@@ -28,9 +28,9 @@ class O2MCollectionTest(_fixtures.FixtureTest):
     @classmethod
     def setup_mappers(cls):
         Address, addresses, users, User = (cls.classes.Address,
-                                cls.tables.addresses,
-                                cls.tables.users,
-                                cls.classes.User)
+                                           cls.tables.addresses,
+                                           cls.tables.users,
+                                           cls.classes.User)
 
         mapper(Address, addresses)
         mapper(User, users, properties=dict(
@@ -242,13 +242,14 @@ class O2OScalarBackrefMoveTest(_fixtures.FixtureTest):
     @classmethod
     def setup_mappers(cls):
         Address, addresses, users, User = (cls.classes.Address,
-                                cls.tables.addresses,
-                                cls.tables.users,
-                                cls.classes.User)
+                                           cls.tables.addresses,
+                                           cls.tables.users,
+                                           cls.classes.User)
 
         mapper(Address, addresses)
         mapper(User, users, properties={
-            'address': relationship(Address, backref=backref("user"), uselist=False)
+            'address': relationship(Address, backref=backref("user"),
+                                    uselist=False)
         })
 
     def test_collection_move_preloaded(self):
@@ -407,9 +408,9 @@ class O2OScalarMoveTest(_fixtures.FixtureTest):
     @classmethod
     def setup_mappers(cls):
         Address, addresses, users, User = (cls.classes.Address,
-                                cls.tables.addresses,
-                                cls.tables.users,
-                                cls.classes.User)
+                                           cls.tables.addresses,
+                                           cls.tables.users,
+                                           cls.classes.User)
 
         mapper(Address, addresses)
         mapper(User, users, properties={
@@ -447,15 +448,16 @@ class O2OScalarOrphanTest(_fixtures.FixtureTest):
     @classmethod
     def setup_mappers(cls):
         Address, addresses, users, User = (cls.classes.Address,
-                                cls.tables.addresses,
-                                cls.tables.users,
-                                cls.classes.User)
+                                           cls.tables.addresses,
+                                           cls.tables.users,
+                                           cls.classes.User)
 
         mapper(Address, addresses)
         mapper(User, users, properties={
-            'address': relationship(Address, uselist=False,
+            'address': relationship(
+                Address, uselist=False,
                 backref=backref('user', single_parent=True,
-                                    cascade="all, delete-orphan"))
+                                cascade="all, delete-orphan"))
         })
 
     def test_m2o_event(self):
@@ -482,15 +484,16 @@ class M2MCollectionMoveTest(_fixtures.FixtureTest):
 
     @classmethod
     def setup_mappers(cls):
-        keywords, items, item_keywords, Keyword, Item = (cls.tables.keywords,
-                                cls.tables.items,
-                                cls.tables.item_keywords,
-                                cls.classes.Keyword,
-                                cls.classes.Item)
+        keywords, items, item_keywords, \
+            Keyword, Item = (cls.tables.keywords,
+                             cls.tables.items,
+                             cls.tables.item_keywords,
+                             cls.classes.Keyword,
+                             cls.classes.Item)
 
         mapper(Item, items, properties={
             'keywords': relationship(Keyword, secondary=item_keywords,
-                                    backref='items')
+                                     backref='items')
         })
         mapper(Keyword, keywords)
 
@@ -561,8 +564,8 @@ class M2MCollectionMoveTest(_fixtures.FixtureTest):
 
         # the pending collection was removed
         assert 'keywords' not in attributes.\
-                                instance_state(i1).\
-                                _pending_mutations
+            instance_state(i1).\
+            _pending_mutations
 
     def test_duplicate_adds(self):
         Item, Keyword = (self.classes.Item, self.classes.Keyword)
@@ -595,11 +598,12 @@ class M2MScalarMoveTest(_fixtures.FixtureTest):
 
     @classmethod
     def setup_mappers(cls):
-        keywords, items, item_keywords, Keyword, Item = (cls.tables.keywords,
-                                cls.tables.items,
-                                cls.tables.item_keywords,
-                                cls.classes.Keyword,
-                                cls.classes.Item)
+        keywords, items, item_keywords, \
+            Keyword, Item = (cls.tables.keywords,
+                             cls.tables.items,
+                             cls.tables.item_keywords,
+                             cls.classes.Keyword,
+                             cls.classes.Item)
 
         mapper(Item, items, properties={
             'keyword': relationship(Keyword, secondary=item_keywords,
@@ -680,9 +684,9 @@ class O2MStaleBackrefTest(_fixtures.FixtureTest):
     @classmethod
     def setup_mappers(cls):
         Address, addresses, users, User = (cls.classes.Address,
-                                cls.tables.addresses,
-                                cls.tables.users,
-                                cls.classes.User)
+                                           cls.tables.addresses,
+                                           cls.tables.users,
+                                           cls.classes.User)
 
         mapper(Address, addresses)
         mapper(User, users, properties=dict(
@@ -710,15 +714,16 @@ class M2MStaleBackrefTest(_fixtures.FixtureTest):
 
     @classmethod
     def setup_mappers(cls):
-        keywords, items, item_keywords, Keyword, Item = (cls.tables.keywords,
-                                cls.tables.items,
-                                cls.tables.item_keywords,
-                                cls.classes.Keyword,
-                                cls.classes.Item)
+        keywords, items, item_keywords, \
+            Keyword, Item = (cls.tables.keywords,
+                             cls.tables.items,
+                             cls.tables.item_keywords,
+                             cls.classes.Keyword,
+                             cls.classes.Item)
 
         mapper(Item, items, properties={
             'keywords': relationship(Keyword, secondary=item_keywords,
-                                    backref='items')
+                                     backref='items')
         })
         mapper(Keyword, keywords)
 
