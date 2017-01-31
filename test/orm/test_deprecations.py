@@ -68,32 +68,33 @@ class QueryAlternativesTest(fixtures.MappedTest):
 
     @classmethod
     def setup_mappers(cls):
-        addresses_table, User, users_table, Address = (cls.tables.addresses_table,
-                                cls.classes.User,
-                                cls.tables.users_table,
-                                cls.classes.Address)
+        addresses_table, User, users_table, Address = \
+            (cls.tables.addresses_table,
+             cls.classes.User,
+             cls.tables.users_table,
+             cls.classes.Address)
 
         mapper(User, users_table, properties=dict(
             addresses=relationship(Address, backref='user'),
-            ))
+        ))
         mapper(Address, addresses_table)
 
     @classmethod
     def fixtures(cls):
         return dict(
             users_table=(
-            ('id', 'name'),
-            (1, 'jack'),
-            (2, 'ed'),
-            (3, 'fred'),
-            (4, 'chuck')),
+                ('id', 'name'),
+                (1, 'jack'),
+                (2, 'ed'),
+                (3, 'fred'),
+                (4, 'chuck')),
 
             addresses_table=(
-            ('id', 'user_id', 'email_address', 'purpose', 'bounces'),
-            (1, 1, 'jack@jack.home', 'Personal', 0),
-            (2, 1, 'jack@jack.bizz', 'Work', 1),
-            (3, 2, 'ed@foo.bar', 'Personal', 0),
-            (4, 3, 'fred@the.fred', 'Personal', 10)))
+                ('id', 'user_id', 'email_address', 'purpose', 'bounces'),
+                (1, 1, 'jack@jack.home', 'Personal', 0),
+                (2, 1, 'jack@jack.bizz', 'Work', 1),
+                (3, 2, 'ed@foo.bar', 'Personal', 0),
+                (4, 3, 'fred@the.fred', 'Personal', 10)))
 
     ######################################################################
 
@@ -281,7 +282,8 @@ class QueryAlternativesTest(fixtures.MappedTest):
         assert user.name == 'fred'
 
         user = session.query(User).filter(
-            User.addresses.any(Address.email_address == 'fred@the.fred')).first()
+            User.addresses.any(Address.email_address == 'fred@the.fred')
+        ).first()
         assert user.name == 'fred'
 
     def test_instances_entities(self):
@@ -292,10 +294,11 @@ class QueryAlternativesTest(fixtures.MappedTest):
 
         """
 
-        addresses_table, User, users_table, Address = (self.tables.addresses_table,
-                                self.classes.User,
-                                self.tables.users_table,
-                                self.classes.Address)
+        addresses_table, User, users_table, Address = \
+            (self.tables.addresses_table,
+             self.classes.User,
+             self.tables.users_table,
+             self.classes.Address)
 
         session = create_session()
 
@@ -369,7 +372,7 @@ class QueryAlternativesTest(fixtures.MappedTest):
 
         session = create_session()
 
-        users = session.query(User).filter(User.name != None).all()
+        users = session.query(User).filter(User.name != None).all()  # noqa
         assert len(users) == 4
 
     def test_select_by(self):
@@ -528,4 +531,3 @@ class QueryAlternativesTest(fixtures.MappedTest):
 
         users = session.query(User).filter(text("name='ed'")).all()
         assert len(users) == 1 and users[0].name == 'ed'
-
