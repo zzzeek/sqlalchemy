@@ -897,7 +897,7 @@ def full_text_search_missing():
         testing.db.execute('CREATE VIRTUAL TABLE t using FTS3;')
         testing.db.execute('DROP TABLE t;')
         return False
-    except:
+    except Exception:
         return True
 
 
@@ -1199,7 +1199,7 @@ class ConstraintReflectionTest(fixtures.TestBase):
                     "d", "d1", "d2", "c", "b", "a1", "a2"]:
                 try:
                     conn.execute("drop table %s" % name)
-                except:
+                except Exception:
                     pass
 
     def test_legacy_quoted_identifiers_unit(self):
