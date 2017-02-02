@@ -116,7 +116,7 @@ class TransactionTest(fixtures.TestBase):
                                        user_name='user5')
                     raise Exception('uh oh')
                     trans2.commit()
-                except:
+                except Exception:
                     trans2.rollback()
                     raise
                 transaction.rollback()
