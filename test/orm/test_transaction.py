@@ -79,7 +79,7 @@ class SessionTransactionTest(FixtureTest):
 
             trans.commit()
             assert len(sess.query(User).all()) == 1
-        except:
+        except Exception:
             conn.close()
             raise
 
@@ -503,7 +503,7 @@ class SessionTransactionTest(FixtureTest):
         trans2 = sess.begin(subtransactions=True)
         try:
             raise Exception("test")
-        except:
+        except Exception:
             trans2.rollback(_capture_exception=True)
         assert_raises_message(
             sa_exc.InvalidRequestError,
