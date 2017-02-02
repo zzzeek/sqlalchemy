@@ -750,10 +750,10 @@ class PKIncrementTest(fixtures.TablesTest):
         try:
             try:
                 self._test_autoincrement(con)
-            except:
+            except Exception:
                 try:
                     tx.rollback()
-                except:
+                except Exception:
                     pass
                 raise
             else:
