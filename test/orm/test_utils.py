@@ -15,15 +15,17 @@ from sqlalchemy import inspect
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.testing import AssertsCompiledSQL
 
+from .inheritance import _poly_fixtures
+
 
 class AliasedClassTest(fixtures.TestBase, AssertsCompiledSQL):
     __dialect__ = 'default'
 
     def _fixture(self, cls, properties={}):
         table = Table('point', MetaData(),
-                    Column('id', Integer(), primary_key=True),
-                    Column('x', Integer),
-                    Column('y', Integer))
+                      Column('id', Integer(), primary_key=True),
+                      Column('x', Integer),
+                      Column('y', Integer))
         mapper(cls, table, properties=properties)
         return table
 
@@ -363,7 +365,7 @@ class PathRegistryTest(_fixtures.FixtureTest):
             path[umapper.attrs.addresses][amapper]
                 [amapper.attrs.email_address],
             PathRegistry.coerce((umapper, umapper.attrs.addresses,
-                                amapper, amapper.attrs.email_address))
+                                 amapper, amapper.attrs.email_address))
         )
 
     def test_entity_boolean(self):
@@ -387,7 +389,7 @@ class PathRegistryTest(_fixtures.FixtureTest):
         umapper = inspect(self.classes.User)
         amapper = inspect(self.classes.Address)
         path = PathRegistry.coerce((umapper, umapper.attrs.addresses,
-                                amapper, amapper.attrs.email_address))
+                                    amapper, amapper.attrs.email_address))
         is_(path[0], umapper)
         is_(path[2], amapper)
 
@@ -395,7 +397,7 @@ class PathRegistryTest(_fixtures.FixtureTest):
         umapper = inspect(self.classes.User)
         amapper = inspect(self.classes.Address)
         path = PathRegistry.coerce((umapper, umapper.attrs.addresses,
-                                amapper, amapper.attrs.email_address))
+                                    amapper, amapper.attrs.email_address))
         eq_(path[1], umapper.attrs.addresses)
         eq_(path[3], amapper.attrs.email_address)
 
@@ -403,7 +405,7 @@ class PathRegistryTest(_fixtures.FixtureTest):
         umapper = inspect(self.classes.User)
         amapper = inspect(self.classes.Address)
         path = PathRegistry.coerce((umapper, umapper.attrs.addresses,
-                                amapper, amapper.attrs.email_address))
+                                    amapper, amapper.attrs.email_address))
         eq_(path[1:3], (umapper.attrs.addresses, amapper))
 
     def test_addition(self):
@@ -414,7 +416,7 @@ class PathRegistryTest(_fixtures.FixtureTest):
         eq_(
             p1 + p2,
             PathRegistry.coerce((umapper, umapper.attrs.addresses,
-                                amapper, amapper.attrs.email_address))
+                                 amapper, amapper.attrs.email_address))
         )
 
     def test_length(self):
@@ -425,7 +427,7 @@ class PathRegistryTest(_fixtures.FixtureTest):
         p1 = PathRegistry.coerce((umapper, umapper.attrs.addresses))
         p2 = PathRegistry.coerce((umapper, umapper.attrs.addresses, amapper))
         p3 = PathRegistry.coerce((umapper, umapper.attrs.addresses,
-                                amapper, amapper.attrs.email_address))
+                                  amapper, amapper.attrs.email_address))
 
         eq_(len(pneg1), 0)
         eq_(len(p0), 1)
@@ -448,10 +450,10 @@ class PathRegistryTest(_fixtures.FixtureTest):
         p4 = PathRegistry.coerce((u_alias, umapper.attrs.addresses))
         p5 = PathRegistry.coerce((umapper, umapper.attrs.addresses, amapper))
         p6 = PathRegistry.coerce((amapper, amapper.attrs.user, umapper,
-                                umapper.attrs.addresses))
+                                  umapper.attrs.addresses))
         p7 = PathRegistry.coerce((amapper, amapper.attrs.user, umapper,
-                                umapper.attrs.addresses,
-                                amapper, amapper.attrs.email_address))
+                                  umapper.attrs.addresses,
+                                  amapper, amapper.attrs.email_address))
 
         is_(p1 == p2, True)
         is_(p1 == p3, False)
@@ -585,7 +587,7 @@ class PathRegistryTest(_fixtures.FixtureTest):
         amapper = inspect(self.classes.Address)
 
         p1 = PathRegistry.coerce((umapper, umapper.attrs.addresses, amapper,
-                            amapper.attrs.email_address))
+                                  amapper.attrs.email_address))
         p2 = PathRegistry.coerce((umapper, umapper.attrs.addresses, amapper))
         p3 = PathRegistry.coerce((umapper, umapper.attrs.addresses))
         eq_(
@@ -608,13 +610,13 @@ class PathRegistryTest(_fixtures.FixtureTest):
         amapper = inspect(self.classes.Address)
 
         p1 = PathRegistry.coerce((umapper, umapper.attrs.addresses, amapper,
-                            amapper.attrs.email_address))
+                                  amapper.attrs.email_address))
         p2 = PathRegistry.coerce((umapper, umapper.attrs.addresses, amapper))
         p3 = PathRegistry.coerce((umapper, umapper.attrs.addresses))
 
         eq_(
             PathRegistry.deserialize([(User, "addresses"),
-                        (Address, "email_address")]),
+                                      (Address, "email_address")]),
             p1
         )
         eq_(
@@ -625,9 +627,6 @@ class PathRegistryTest(_fixtures.FixtureTest):
             PathRegistry.deserialize([(User, "addresses")]),
             p3
         )
-
-
-from .inheritance import _poly_fixtures
 
 
 class PathRegistryInhTest(_poly_fixtures._Polymorphic):
@@ -659,7 +658,7 @@ class PathRegistryInhTest(_poly_fixtures._Polymorphic):
         emapper = inspect(Engineer)
 
         p1 = PathRegistry.coerce((cmapper, cmapper.attrs.employees,
-                        pmapper, emapper.attrs.machines))
+                                  pmapper, emapper.attrs.machines))
 
         # given a mapper and an attribute on a subclass,
         # the path converts what you get to be against that subclass
@@ -698,7 +697,7 @@ class PathRegistryInhTest(_poly_fixtures._Polymorphic):
         p_alias = inspect(p_alias)
 
         p1 = PathRegistry.coerce((c_alias, cmapper.attrs.employees,
-                    p_alias, emapper.attrs.machines))
+                                  p_alias, emapper.attrs.machines))
         # plain AliasedClass - the path keeps that AliasedClass directly
         # as is in the path
         eq_(
@@ -759,4 +758,3 @@ class PathRegistryInhTest(_poly_fixtures._Polymorphic):
             p1.path,
             (emapper, emapper.attrs.machines)
         )
-
