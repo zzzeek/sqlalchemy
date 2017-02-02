@@ -2264,7 +2264,7 @@ class ReraiseTest(fixtures.TestBase):
         def go():
             try:
                 raise m1
-            except:
+            except Exception:
                 with util.safe_reraise():
                     go2()
 
