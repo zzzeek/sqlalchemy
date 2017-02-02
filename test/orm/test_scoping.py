@@ -30,10 +30,12 @@ class ScopedSessionTest(fixtures.MappedTest):
     @classmethod
     def define_tables(cls, metadata):
         Table('table1', metadata,
-              Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
+              Column('id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
               Column('data', String(30)))
         Table('table2', metadata,
-              Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
+              Column('id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
               Column('someid', None, ForeignKey('table1.id')))
 
     def test_basic(self):
@@ -63,9 +65,11 @@ class ScopedSessionTest(fixtures.MappedTest):
         Session.refresh(sso)
         Session.remove()
 
-        eq_(SomeObject(id=1, data="hello", options=[SomeOtherObject(someid=1)]),
+        eq_(SomeObject(id=1, data="hello",
+                       options=[SomeOtherObject(someid=1)]),
             Session.query(SomeObject).one())
-        eq_(SomeObject(id=1, data="hello", options=[SomeOtherObject(someid=1)]),
+        eq_(SomeObject(id=1, data="hello",
+                       options=[SomeOtherObject(someid=1)]),
             SomeObject.query.one())
         eq_(SomeOtherObject(someid=1),
             SomeOtherObject.query.filter(
@@ -89,6 +93,3 @@ class ScopedSessionTest(fixtures.MappedTest):
             "At least one scoped session is already present. ",
             Session.configure, bind=testing.db
         )
-
-
-
