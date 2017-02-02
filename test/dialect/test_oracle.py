@@ -1964,7 +1964,7 @@ def all_tables_compression_missing():
                 "select * from v$version"):
             return True
         return False
-    except:
+    except Exception:
         return True
 
 
@@ -1975,7 +1975,7 @@ def all_tables_compress_for_missing():
                 "select * from v$version"):
             return True
         return False
-    except:
+    except Exception:
         return True
 
 
