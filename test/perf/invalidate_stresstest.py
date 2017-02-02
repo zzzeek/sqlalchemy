@@ -28,7 +28,7 @@ def worker():
                 conn.execute("SELECT 1+1")
                 gevent.sleep(random.random() * 1.01)
 
-        except:
+        except Exception:
             # traceback.print_exc()
             sys.stderr.write('X')
         else:
