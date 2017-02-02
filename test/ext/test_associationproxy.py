@@ -521,7 +521,7 @@ class SetTest(_CollectionOperations):
                     getattr(control, op)(other)
                     try:
                         self.assert_(p.children == control)
-                    except:
+                    except Exception:
                         print('Test %s.%s(%s):' % (set(base), op, other))
                         print('want', repr(control))
                         print('got', repr(p.children))
@@ -531,7 +531,7 @@ class SetTest(_CollectionOperations):
 
                     try:
                         self.assert_(p.children == control)
-                    except:
+                    except Exception:
                         print('Test %s.%s(%s):' % (base, op, other))
                         print('want', repr(control))
                         print('got', repr(p.children))
@@ -554,7 +554,7 @@ class SetTest(_CollectionOperations):
 
                     try:
                         self.assert_(p.children == control)
-                    except:
+                    except Exception:
                         print('Test %s %s %s:' % (set(base), op, other))
                         print('want', repr(control))
                         print('got', repr(p.children))
@@ -564,7 +564,7 @@ class SetTest(_CollectionOperations):
 
                     try:
                         self.assert_(p.children == control)
-                    except:
+                    except Exception:
                         print('Test %s %s %s:' % (base, op, other))
                         print('want', repr(control))
                         print('got', repr(p.children))
