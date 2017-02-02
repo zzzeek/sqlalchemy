@@ -9,10 +9,12 @@ from sqlalchemy.testing.schema import Column
 from sqlalchemy.engine import default
 from sqlalchemy.testing.entities import ComparableEntity
 from sqlalchemy import Integer, String, ForeignKey
-from .inheritance._poly_fixtures import Company, Person, Engineer, Manager, Boss, \
-    Machine, Paperwork, _PolymorphicFixtureBase, _Polymorphic,\
-    _PolymorphicPolymorphic, _PolymorphicUnions, _PolymorphicJoins,\
-    _PolymorphicAliasedJoins
+from .inheritance._poly_fixtures import (Company, Person, Engineer, Manager,
+                                         Boss, Machine, Paperwork,
+                                         _PolymorphicFixtureBase, _Polymorphic,
+                                         _PolymorphicPolymorphic,
+                                         _PolymorphicUnions, _PolymorphicJoins,
+                                         _PolymorphicAliasedJoins)
 from sqlalchemy.testing.assertsql import AllOf, CompiledSQL
 
 
@@ -91,15 +93,15 @@ class _PolymorphicTestBase(object):
 
         self.assert_compile(
             sess.query(Company).join(
-                    Company.employees.of_type(
-                        with_polymorphic(Person, [Engineer, Manager],
-                                    aliased=True, flat=True)
-                    )
-                ),
+                Company.employees.of_type(
+                    with_polymorphic(Person, [Engineer, Manager],
+                                     aliased=True, flat=True)
+                )
+            ),
             "SELECT companies.company_id AS companies_company_id, "
             "companies.name AS companies_name FROM companies "
             "JOIN %s"
-             % (
+            % (
                 self._polymorphic_join_target([Engineer, Manager])
             )
         )
@@ -109,7 +111,7 @@ class _PolymorphicTestBase(object):
 
         def go():
             wp = with_polymorphic(Person, [Engineer, Manager],
-                                    aliased=True, flat=True)
+                                  aliased=True, flat=True)
             eq_(
                 sess.query(Company).join(
                     Company.employees.of_type(wp)
@@ -138,10 +140,10 @@ class _PolymorphicTestBase(object):
         wp = with_polymorphic(Person, [Engineer], aliased=True)
         eq_(
             sess.query(Company.company_id).
-                filter(
-                    Company.employees.of_type(wp).any(
-                            wp.Engineer.primary_language == 'java')
-                ).all(),
+            filter(
+                Company.employees.of_type(wp).any(
+                    wp.Engineer.primary_language == 'java')
+            ).all(),
             [(1, )]
         )
 
@@ -151,9 +153,9 @@ class _PolymorphicTestBase(object):
         def go():
             eq_(
                 sess.query(Company).
-                    filter_by(company_id=1).
-                    options(subqueryload(Company.employees.of_type(Engineer))).
-                    all(),
+                filter_by(company_id=1).
+                options(subqueryload(Company.employees.of_type(Engineer))).
+                all(),
                 [self._company_with_emps_fixture()[0]]
             )
         self.assert_sql_count(testing.db, go, 4)
@@ -164,9 +166,9 @@ class _PolymorphicTestBase(object):
         def go():
             eq_(
                 sess.query(Company).
-                    filter_by(company_id=1).
-                    options(joinedload(Company.employees.of_type(Engineer))).
-                    all(),
+                filter_by(company_id=1).
+                options(joinedload(Company.employees.of_type(Engineer))).
+                all(),
                 [self._company_with_emps_fixture()[0]]
             )
         self.assert_sql_count(testing.db, go, 3)
@@ -178,9 +180,9 @@ class _PolymorphicTestBase(object):
             target = with_polymorphic(Person, Engineer)
             eq_(
                 sess.query(Company).
-                    filter_by(company_id=1).
-                    options(subqueryload(Company.employees.of_type(target))).
-                    all(),
+                filter_by(company_id=1).
+                options(subqueryload(Company.employees.of_type(target))).
+                all(),
                 [self._company_with_emps_fixture()[0]]
             )
         self.assert_sql_count(testing.db, go, 4)
@@ -192,9 +194,9 @@ class _PolymorphicTestBase(object):
             target = with_polymorphic(Person, Engineer, flat=True)
             eq_(
                 sess.query(Company).
-                    filter_by(company_id=1).
-                    options(joinedload(Company.employees.of_type(target))).
-                    all(),
+                filter_by(company_id=1).
+                options(joinedload(Company.employees.of_type(target))).
+                all(),
                 [self._company_with_emps_fixture()[0]]
             )
         self.assert_sql_count(testing.db, go, 3)
@@ -215,7 +217,8 @@ class _PolymorphicTestBase(object):
         self.assert_sql_count(testing.db, go, 2)
 
 
-class PolymorphicPolymorphicTest(_PolymorphicTestBase, _PolymorphicPolymorphic):
+class PolymorphicPolymorphicTest(_PolymorphicTestBase,
+                                 _PolymorphicPolymorphic):
     def _polymorphic_join_target(self, cls):
         from sqlalchemy.orm import class_mapper
 
@@ -242,7 +245,8 @@ class PolymorphicUnionsTest(_PolymorphicTestBase, _PolymorphicUnions):
             " AS anon_1 ON companies.company_id = anon_1.company_id"
 
 
-class PolymorphicAliasedJoinsTest(_PolymorphicTestBase, _PolymorphicAliasedJoins):
+class PolymorphicAliasedJoinsTest(_PolymorphicTestBase,
+                                  _PolymorphicAliasedJoins):
     def _polymorphic_join_target(self, cls):
         from sqlalchemy.orm import class_mapper
 
@@ -259,7 +263,8 @@ class PolymorphicJoinsTest(_PolymorphicTestBase, _PolymorphicJoins):
         from sqlalchemy.orm import class_mapper
         from sqlalchemy.sql.expression import FromGrouping
 
-        sel = FromGrouping(class_mapper(Person)._with_polymorphic_selectable.alias(flat=True))
+        sel = FromGrouping(class_mapper(
+            Person)._with_polymorphic_selectable.alias(flat=True))
         comp_sel = sel.compile(dialect=default.DefaultDialect())
 
         return \
@@ -284,7 +289,8 @@ class PolymorphicJoinsTest(_PolymorphicTestBase, _PolymorphicJoins):
         q = sess.query(Company).\
             filter_by(company_id=1).\
             options(joinedload(Company.employees.of_type(target)))
-        self.assert_compile(q,
+        self.assert_compile(
+            q,
             "SELECT companies.company_id AS companies_company_id, "
             "companies.name AS companies_name, "
             "people_1.person_id AS people_1_person_id, "
@@ -305,7 +311,8 @@ class PolymorphicJoinsTest(_PolymorphicTestBase, _PolymorphicJoins):
         )
 
 
-class SubclassRelationshipTest(testing.AssertsCompiledSQL, fixtures.DeclarativeMappedTest):
+class SubclassRelationshipTest(testing.AssertsCompiledSQL,
+                               fixtures.DeclarativeMappedTest):
     """There's overlap here vs. the ones above."""
 
     run_setup_classes = 'once'
@@ -322,7 +329,7 @@ class SubclassRelationshipTest(testing.AssertsCompiledSQL, fixtures.DeclarativeM
             __tablename__ = "job"
 
             id = Column(Integer, primary_key=True,
-                                        test_needs_autoincrement=True)
+                        test_needs_autoincrement=True)
             type = Column(String(10))
             widget_id = Column(ForeignKey('widget.id'))
             widget = relationship("Widget")
@@ -338,7 +345,7 @@ class SubclassRelationshipTest(testing.AssertsCompiledSQL, fixtures.DeclarativeM
         class ParentThing(ComparableEntity, Base):
             __tablename__ = 'parent'
             id = Column(Integer, primary_key=True,
-                                            test_needs_autoincrement=True)
+                        test_needs_autoincrement=True)
             container_id = Column(Integer, ForeignKey('data_container.id'))
             container = relationship("DataContainer")
 
@@ -346,7 +353,7 @@ class SubclassRelationshipTest(testing.AssertsCompiledSQL, fixtures.DeclarativeM
             __tablename__ = "data_container"
 
             id = Column(Integer, primary_key=True,
-                                            test_needs_autoincrement=True)
+                        test_needs_autoincrement=True)
             name = Column(String(10))
             jobs = relationship(Job, order_by=Job.id)
 
@@ -354,7 +361,7 @@ class SubclassRelationshipTest(testing.AssertsCompiledSQL, fixtures.DeclarativeM
             __tablename__ = "widget"
 
             id = Column(Integer, primary_key=True,
-                                        test_needs_autoincrement=True)
+                        test_needs_autoincrement=True)
             name = Column(String(10))
 
     @classmethod
@@ -374,17 +381,19 @@ class SubclassRelationshipTest(testing.AssertsCompiledSQL, fixtures.DeclarativeM
         return [
             ParentThing(
                 container=DataContainer(name="d1",
-                    jobs=[
-                        SubJob(attr="s1", widget=Widget(name='w1')),
-                        SubJob(attr="s2", widget=Widget(name='w2'))
-                    ])
+                                        jobs=[
+                                            SubJob(attr="s1",
+                                                   widget=Widget(name='w1')),
+                                            SubJob(attr="s2",
+                                                   widget=Widget(name='w2'))])
             ),
             ParentThing(
                 container=DataContainer(name="d2",
-                    jobs=[
-                        SubJob(attr="s3", widget=Widget(name='w3')),
-                        SubJob(attr="s4", widget=Widget(name='w4'))
-                    ])
+                                        jobs=[
+                                            SubJob(attr="s3",
+                                                   widget=Widget(name='w3')),
+                                            SubJob(attr="s4",
+                                                   widget=Widget(name='w4'))])
             ),
         ]
 
@@ -403,8 +412,8 @@ class SubclassRelationshipTest(testing.AssertsCompiledSQL, fixtures.DeclarativeM
 
         s = Session(testing.db)
         q = s.query(DataContainer).\
-                    join(DataContainer.jobs.of_type(Job_P)).\
-                        options(contains_eager(DataContainer.jobs.of_type(Job_P)))
+            join(DataContainer.jobs.of_type(Job_P)).\
+            options(contains_eager(DataContainer.jobs.of_type(Job_P)))
 
         def go():
             eq_(
@@ -424,7 +433,7 @@ class SubclassRelationshipTest(testing.AssertsCompiledSQL, fixtures.DeclarativeM
 
         s = Session(testing.db)
         q = s.query(DataContainer).\
-                        options(joinedload(DataContainer.jobs.of_type(Job_P)))
+            options(joinedload(DataContainer.jobs.of_type(Job_P)))
 
         def go():
             eq_(
@@ -441,7 +450,7 @@ class SubclassRelationshipTest(testing.AssertsCompiledSQL, fixtures.DeclarativeM
             self.classes.SubJob
         s = Session(testing.db)
         q = s.query(DataContainer).\
-                        options(joinedload(DataContainer.jobs.of_type(SubJob)))
+            options(joinedload(DataContainer.jobs.of_type(SubJob)))
 
         def go():
             eq_(
@@ -474,7 +483,7 @@ class SubclassRelationshipTest(testing.AssertsCompiledSQL, fixtures.DeclarativeM
             self.classes.SubJob
         s = Session(testing.db)
         q = s.query(DataContainer).\
-                        options(subqueryload(DataContainer.jobs.of_type(SubJob)))
+            options(subqueryload(DataContainer.jobs.of_type(SubJob)))
 
         def go():
             eq_(
@@ -491,11 +500,11 @@ class SubclassRelationshipTest(testing.AssertsCompiledSQL, fixtures.DeclarativeM
             self.classes.SubJob
         s = Session(testing.db)
         q = s.query(ParentThing).\
-                        options(
-                            subqueryload_all(
-                                ParentThing.container,
-                                DataContainer.jobs.of_type(SubJob)
-                        ))
+            options(
+            subqueryload_all(
+                ParentThing.container,
+                DataContainer.jobs.of_type(SubJob)
+            ))
 
         def go():
             eq_(
@@ -511,11 +520,11 @@ class SubclassRelationshipTest(testing.AssertsCompiledSQL, fixtures.DeclarativeM
         s = Session(testing.db)
         sj_alias = aliased(SubJob)
         q = s.query(DataContainer).\
-                        options(
-                            subqueryload_all(
-                                DataContainer.jobs.of_type(sj_alias),
-                                sj_alias.widget
-                        ))
+            options(
+            subqueryload_all(
+                DataContainer.jobs.of_type(sj_alias),
+                sj_alias.widget
+            ))
 
         def go():
             eq_(
@@ -532,11 +541,11 @@ class SubclassRelationshipTest(testing.AssertsCompiledSQL, fixtures.DeclarativeM
             self.classes.SubJob
         s = Session(testing.db)
         q = s.query(ParentThing).\
-                        options(
-                            joinedload_all(
-                                ParentThing.container,
-                                DataContainer.jobs.of_type(SubJob)
-                        ))
+            options(
+            joinedload_all(
+                ParentThing.container,
+                DataContainer.jobs.of_type(SubJob)
+            ))
 
         def go():
             eq_(
@@ -556,12 +565,13 @@ class SubclassRelationshipTest(testing.AssertsCompiledSQL, fixtures.DeclarativeM
 
         s = Session()
         q = s.query(Job).join(DataContainer.jobs).\
-                        filter(
-                            DataContainer.jobs.of_type(Job_P).
-                                any(Job_P.id < Job.id)
-                        )
+            filter(
+            DataContainer.jobs.of_type(Job_P).
+            any(Job_P.id < Job.id)
+        )
 
-        self.assert_compile(q,
+        self.assert_compile(
+            q,
             "SELECT job.id AS job_id, job.type AS job_type, "
             "job.widget_id AS job_widget_id, "
             "job.container_id "
@@ -570,7 +580,7 @@ class SubclassRelationshipTest(testing.AssertsCompiledSQL, fixtures.DeclarativeM
             "JOIN job ON data_container.id = job.container_id "
             "WHERE EXISTS (SELECT 1 "
             "FROM job AS job_1 LEFT OUTER JOIN subjob AS subjob_1 "
-                "ON job_1.id = subjob_1.id "
+            "ON job_1.id = subjob_1.id "
             "WHERE data_container.id = job_1.container_id "
             "AND job_1.id < job.id)"
         )
@@ -586,15 +596,17 @@ class SubclassRelationshipTest(testing.AssertsCompiledSQL, fixtures.DeclarativeM
 
         s = Session()
         q = s.query(Job).join(DataContainer.jobs).\
-                        filter(
-                            DataContainer.jobs.of_type(Job_A).
-                                any(and_(Job_A.id < Job.id, Job_A.type == 'fred'))
-                        )
-        self.assert_compile(q,
+            filter(
+            DataContainer.jobs.of_type(Job_A).
+            any(and_(Job_A.id < Job.id, Job_A.type == 'fred'))
+        )
+        self.assert_compile(
+            q,
             "SELECT job.id AS job_id, job.type AS job_type, "
             "job.widget_id AS job_widget_id, "
             "job.container_id AS job_container_id "
-            "FROM data_container JOIN job ON data_container.id = job.container_id "
+            "FROM data_container JOIN job "
+            "ON data_container.id = job.container_id "
             "WHERE EXISTS (SELECT 1 "
             "FROM job AS job_1 "
             "WHERE data_container.id = job_1.container_id "
@@ -613,12 +625,12 @@ class SubclassRelationshipTest(testing.AssertsCompiledSQL, fixtures.DeclarativeM
         s = Session()
         q = s.query(DataContainer).join(DataContainer.jobs.of_type(Job_P))
         self.assert_compile(q,
-            "SELECT data_container.id AS data_container_id, "
-            "data_container.name AS data_container_name "
-            "FROM data_container JOIN "
-            "(job LEFT OUTER JOIN subjob "
-                "ON job.id = subjob.id) "
-            "ON data_container.id = job.container_id")
+                            "SELECT data_container.id AS data_container_id, "
+                            "data_container.name AS data_container_name "
+                            "FROM data_container JOIN "
+                            "(job LEFT OUTER JOIN subjob "
+                            "ON job.id = subjob.id) "
+                            "ON data_container.id = job.container_id")
 
     def test_join_wsubclass(self):
         ParentThing, DataContainer, Job, SubJob = \
@@ -634,7 +646,8 @@ class SubclassRelationshipTest(testing.AssertsCompiledSQL, fixtures.DeclarativeM
         # query.join().  When we do joinedload() etc., we're instead
         # doing a with_polymorphic(), and there we need the join to be
         # outer by default.
-        self.assert_compile(q,
+        self.assert_compile(
+            q,
             "SELECT data_container.id AS data_container_id, "
             "data_container.name AS data_container_name "
             "FROM data_container JOIN (job JOIN subjob ON job.id = subjob.id) "
@@ -653,11 +666,11 @@ class SubclassRelationshipTest(testing.AssertsCompiledSQL, fixtures.DeclarativeM
         s = Session()
         q = s.query(DataContainer).join(DataContainer.jobs.of_type(Job_P))
         self.assert_compile(q,
-            "SELECT data_container.id AS data_container_id, "
-            "data_container.name AS data_container_name "
-            "FROM data_container JOIN "
-            "(job JOIN subjob ON job.id = subjob.id) "
-            "ON data_container.id = job.container_id")
+                            "SELECT data_container.id AS data_container_id, "
+                            "data_container.name AS data_container_name "
+                            "FROM data_container JOIN "
+                            "(job JOIN subjob ON job.id = subjob.id) "
+                            "ON data_container.id = job.container_id")
 
     def test_join_walias(self):
         ParentThing, DataContainer, Job, SubJob = \
@@ -671,10 +684,10 @@ class SubclassRelationshipTest(testing.AssertsCompiledSQL, fixtures.DeclarativeM
         s = Session()
         q = s.query(DataContainer).join(DataContainer.jobs.of_type(Job_A))
         self.assert_compile(q,
-            "SELECT data_container.id AS data_container_id, "
-            "data_container.name AS data_container_name "
-            "FROM data_container JOIN job AS job_1 "
-            "ON data_container.id = job_1.container_id")
+                            "SELECT data_container.id AS data_container_id, "
+                            "data_container.name AS data_container_name "
+                            "FROM data_container JOIN job AS job_1 "
+                            "ON data_container.id = job_1.container_id")
 
     def test_join_explicit_wpoly_noalias(self):
         ParentThing, DataContainer, Job, SubJob = \
@@ -688,12 +701,12 @@ class SubclassRelationshipTest(testing.AssertsCompiledSQL, fixtures.DeclarativeM
         s = Session()
         q = s.query(DataContainer).join(Job_P, DataContainer.jobs)
         self.assert_compile(q,
-            "SELECT data_container.id AS data_container_id, "
-            "data_container.name AS data_container_name "
-            "FROM data_container JOIN "
-            "(job LEFT OUTER JOIN subjob "
-            "ON job.id = subjob.id) "
-            "ON data_container.id = job.container_id")
+                            "SELECT data_container.id AS data_container_id, "
+                            "data_container.name AS data_container_name "
+                            "FROM data_container JOIN "
+                            "(job LEFT OUTER JOIN subjob "
+                            "ON job.id = subjob.id) "
+                            "ON data_container.id = job.container_id")
 
     def test_join_explicit_wpoly_flat(self):
         ParentThing, DataContainer, Job, SubJob = \
@@ -707,12 +720,12 @@ class SubclassRelationshipTest(testing.AssertsCompiledSQL, fixtures.DeclarativeM
         s = Session()
         q = s.query(DataContainer).join(Job_P, DataContainer.jobs)
         self.assert_compile(q,
-            "SELECT data_container.id AS data_container_id, "
-            "data_container.name AS data_container_name "
-            "FROM data_container JOIN "
-            "(job AS job_1 LEFT OUTER JOIN subjob AS subjob_1 "
-            "ON job_1.id = subjob_1.id) "
-            "ON data_container.id = job_1.container_id")
+                            "SELECT data_container.id AS data_container_id, "
+                            "data_container.name AS data_container_name "
+                            "FROM data_container JOIN "
+                            "(job AS job_1 LEFT OUTER JOIN subjob AS subjob_1 "
+                            "ON job_1.id = subjob_1.id) "
+                            "ON data_container.id = job_1.container_id")
 
     def test_join_explicit_wpoly_full_alias(self):
         ParentThing, DataContainer, Job, SubJob = \
@@ -725,16 +738,17 @@ class SubclassRelationshipTest(testing.AssertsCompiledSQL, fixtures.DeclarativeM
 
         s = Session()
         q = s.query(DataContainer).join(Job_P, DataContainer.jobs)
-        self.assert_compile(q,
+        self.assert_compile(
+            q,
             "SELECT data_container.id AS data_container_id, "
             "data_container.name AS data_container_name "
             "FROM data_container JOIN "
             "(SELECT job.id AS job_id, job.type AS job_type, "
-                "job.widget_id AS job_widget_id, "
-                "job.container_id AS job_container_id, "
-                "subjob.id AS subjob_id, subjob.attr AS subjob_attr "
-                "FROM job LEFT OUTER JOIN subjob ON job.id = subjob.id) "
-                "AS anon_1 ON data_container.id = anon_1.job_container_id"
+            "job.widget_id AS job_widget_id, "
+            "job.container_id AS job_container_id, "
+            "subjob.id AS subjob_id, subjob.attr AS subjob_attr "
+            "FROM job LEFT OUTER JOIN subjob ON job.id = subjob.id) "
+            "AS anon_1 ON data_container.id = anon_1.job_container_id"
         )
 
 
