@@ -324,7 +324,7 @@ class TypesTest(fixtures.TestBase,
                 row = table.select().execute().first()
                 try:
                     self.assert_(list(row) == expected)
-                except:
+                except Exception:
                     print("Storing %s" % store)
                     print("Expected %s" % expected)
                     print("Found %s" % list(row))
