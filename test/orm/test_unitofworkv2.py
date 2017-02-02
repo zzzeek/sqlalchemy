@@ -351,7 +351,7 @@ class RudimentaryFlushTest(UOWTest):
 
         session.flush()
 
-        #pid = parent.id
+        # pid = parent.id
         c1id = c1.id
         c2id = c2.id
 
@@ -414,7 +414,7 @@ class RudimentaryFlushTest(UOWTest):
 
         session.flush()
 
-        #pid = parent.id
+        # pid = parent.id
         c1id = c1.id
         c2id = c2.id
 
@@ -734,7 +734,7 @@ class SingleCycleTest(UOWTest):
                         {'nodes_id': n3.id, 'parent_id': None},
                         {'nodes_id': n2.id, 'parent_id': None}
                     ]
-                    )
+                )
             ),
             CompiledSQL(
                 "DELETE FROM nodes WHERE nodes.id = :id", lambda ctx: {
