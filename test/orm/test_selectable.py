@@ -15,7 +15,8 @@ class SelectableNoFromsTest(fixtures.MappedTest, AssertsCompiledSQL):
     @classmethod
     def define_tables(cls, metadata):
         Table('common', metadata,
-              Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
+              Column('id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
               Column('data', Integer),
               Column('extra', String(45)))
 
@@ -51,7 +52,8 @@ class SelectableNoFromsTest(fixtures.MappedTest, AssertsCompiledSQL):
         Subset, common = self.classes.Subset, self.tables.common
 
         subset_select = select([common.c.id, common.c.data])
-        assert_raises(sa.exc.InvalidRequestError, mapper, Subset, subset_select)
+        assert_raises(sa.exc.InvalidRequestError,
+                      mapper, Subset, subset_select)
 
     def test_basic(self):
         Subset, common = self.classes.Subset, self.tables.common
@@ -70,5 +72,3 @@ class SelectableNoFromsTest(fixtures.MappedTest, AssertsCompiledSQL):
         subset_select = sa.orm.class_mapper(Subset).mapped_table
         eq_(sess.query(Subset).filter(subset_select.c.data == 1).one(),
             Subset(data=1))
-
-
