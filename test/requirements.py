@@ -756,7 +756,7 @@ class DefaultRequirements(SuiteRequirements):
             try:
                 config.db.execute("SELECT 'a=>1,a=>2'::hstore;")
                 return True
-            except:
+            except Exception:
                 return False
 
         return only_if(check_hstore)
@@ -771,7 +771,7 @@ class DefaultRequirements(SuiteRequirements):
             try:
                 config.db.scalar("select '[1,2)'::int4range;")
                 return True
-            except:
+            except Exception:
                 return False
 
         return only_if(check_range_types)
