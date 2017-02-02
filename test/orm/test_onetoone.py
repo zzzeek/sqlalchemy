@@ -10,13 +10,15 @@ class O2OTest(fixtures.MappedTest):
     @classmethod
     def define_tables(cls, metadata):
         Table('jack', metadata,
-              Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
+              Column('id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
               Column('number', String(50)),
               Column('status', String(20)),
               Column('subroom', String(5)))
 
         Table('port', metadata,
-              Column('id', Integer, primary_key=True, test_needs_autoincrement=True),
+              Column('id', Integer, primary_key=True,
+                     test_needs_autoincrement=True),
               Column('name', String(30)),
               Column('description', String(100)),
               Column('jack_id', Integer, ForeignKey("jack.id")))
@@ -31,17 +33,14 @@ class O2OTest(fixtures.MappedTest):
 
     def test_basic(self):
         Port, port, jack, Jack = (self.classes.Port,
-                                self.tables.port,
-                                self.tables.jack,
-                                self.classes.Jack)
+                                  self.tables.port,
+                                  self.tables.jack,
+                                  self.classes.Jack)
 
         mapper(Port, port)
         mapper(Jack, jack,
                properties=dict(
-                   port=relationship(Port, backref='jack',
-                                 uselist=False,
-                                 )),
-               )
+                   port=relationship(Port, backref='jack', uselist=False)))
 
         session = create_session()
 
@@ -74,4 +73,3 @@ class O2OTest(fixtures.MappedTest):
 
         session.delete(j)
         session.flush()
-
