@@ -66,10 +66,10 @@ class URL(object):
     def __to_string__(self, hide_password=True):
         s = self.drivername + "://"
         if self.username is not None:
-            s += _rfc_1738_quote(self.username)
+            s += _rfc_1738_quote(str(self.username))
             if self.password is not None:
                 s += ':' + ('***' if hide_password
-                            else _rfc_1738_quote(self.password))
+                            else _rfc_1738_quote(str(self.password)))
             s += "@"
         if self.host is not None:
             if ':' in self.host:
