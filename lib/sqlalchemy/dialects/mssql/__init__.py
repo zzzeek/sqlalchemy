@@ -6,7 +6,7 @@
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 from sqlalchemy.dialects.mssql import base, pyodbc, adodbapi, \
-    pymssql, zxjdbc, mxodbc
+    pymssql, zxjdbc, mxodbc, pytds
 
 base.dialect = pyodbc.dialect
 

@@ -1945,7 +1945,13 @@ class MSDialect(default.DefaultDialect):
         for col in cols:
             colmap[col['name']] = col
         # We also run an sp_columns to check for identity columns:
-        cursor = connection.execute("sp_columns @table_name = '%s', "
+        if self.driver == 'pytds':
+            cursor = connection.execute("sp_columns",  {
+                "@table_name": tablename,
+                "@table_owner": owner
+            })
+        else:
+            cursor = connection.execute("sp_columns @table_name = '%s', "
                                     "@table_owner = '%s'"
                                     % (tablename, owner))
         ic = None
