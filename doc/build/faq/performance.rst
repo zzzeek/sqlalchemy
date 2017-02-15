@@ -310,7 +310,7 @@ With cPython 2.7, runtimes observed::
     classics-MacBook-Pro:sqlalchemy classic$ python test.py
     SQLAlchemy ORM: Total time for 100000 records 12.0471920967 secs
     SQLAlchemy ORM pk given: Total time for 100000 records 7.06283402443 secs
-    SQLAlchemy ORM bulk_save_objects(): Total time for 100000 records 0.856323003769 secs
+    SQLAlchemy ORM bulk_insert_mappings(): Total time for 100000 records 0.856323003769 secs
     SQLAlchemy Core: Total time for 100000 records 0.485800027847 secs
     sqlite3: Total time for 100000 records 0.487842082977 sec
 
@@ -395,7 +395,7 @@ Script::
             )
         DBSession.commit()
         print(
-            "SQLAlchemy ORM bulk_save_objects(): Total time for " + str(n) +
+            "SQLAlchemy ORM bulk_insert_mappings(): Total time for " + str(n) +
             " records " + str(time.time() - t0) + " secs")
 
 
