@@ -98,16 +98,42 @@ class KeyedTuple(AbstractKeyedTuple):
     def __setattr__(self, key, value):
         raise AttributeError("Can't set attribute: %s" % key)
 
-    def _asdict(self):
+    def _asdict(self, impl=dict, recursive=False):
         """Return the contents of this :class:`.KeyedTuple` as a dictionary.
 
         This method provides compatibility with ``collections.namedtuple()``,
-        with the exception that the dictionary returned is **not** ordered.
+        with the exception that the dictionary returned is **not** ordered by
+        default.
+
+        :param impl:
+          The implementation to use. Defaults to :class:`dict`.
+
+        :param recursive:
+          Recursively call :meth:`._asdict` on values found that inherit from
+          AbstractKeyedTuple. Defaults to False.
+
 
         .. versionadded:: 0.8
 
         """
-        return dict((key, self.__dict__[key]) for key in self.keys())
+
+        if recursive:
+            return impl(
+                (
+                    key,
+                    (
+                        self.__dict__[key]._asdict(
+                            impl=impl,
+                            recursive=recursive
+                        )
+                        if isinstance(self.__dict__[key], AbstractKeyedTuple)
+                        else self.__dict__[key]
+                    )
+                )
+                for key in self.keys()
+            )
+        else:
+            return impl((key, self.__dict__[key]) for key in self.keys())
 
 
 class _LW(AbstractKeyedTuple):
@@ -122,10 +148,34 @@ class _LW(AbstractKeyedTuple):
         # difficulties
         return KeyedTuple, (list(self), self._real_fields)
 
-    def _asdict(self):
-        """Return the contents of this :class:`.KeyedTuple` as a dictionary."""
+    def _asdict(self, impl=dict, recursive=False):
+        """Return the contents of this :class:`.KeyedTuple` as a dictionary.
 
-        d = dict(zip(self._real_fields, self))
+        :param impl:
+          The implementation to use. Defaults to :class:`dict`.
+
+        :param recursive:
+          Recursively call :meth:`._asdict` on values found that inherit from
+          AbstractKeyedTuple. Defaults to False.
+
+        """
+
+        if recursive:
+            d = impl(
+                zip(
+                    self._real_fields,
+                    (
+                        (
+                            v._asdict(impl=impl, recursive=recursive)
+                            if isinstance(v, AbstractKeyedTuple)
+                            else v
+                        )
+                        for v in self
+                    )
+                )
+            )
+        else:
+            d = impl(zip(self._real_fields, self))
         d.pop(None, None)
         return d
 
@@ -931,7 +981,7 @@ class LRUCache(dict):
 _lw_tuples = LRUCache(100)
 
 
-def lightweight_named_tuple(name, fields):
+def lightweight_named_tuple(name, fields, **kw):
     hash_ = (name, ) + tuple(fields)
     tp_cls = _lw_tuples.get(hash_)
     if tp_cls:
@@ -942,7 +992,7 @@ def lightweight_named_tuple(name, fields):
         dict([
             (field, _property_getters[idx])
             for idx, field in enumerate(fields) if field is not None
-        ] + [('__slots__', ())])
+        ] + [('__slots__', ())], **kw)
     )
 
     tp_cls._real_fields = fields
