@@ -2468,6 +2468,28 @@ class DDLCompiler(Compiled):
             self.process(create.element)
         )
 
+    def visit_set_table_comment(self, create):
+        return "COMMENT ON TABLE %s IS %s" % (
+            self.preparer.format_table(create.element),
+            self.sql_compiler.render_literal_bindparam(
+                elements.BindParameter('comment', value=create.comment))
+        )
+
+    def visit_drop_table_comment(self, drop):
+        return "COMMENT ON TABLE %s IS NULL" % \
+            self.preparer.format_table(drop.element)
+
+    def visit_set_column_comment(self, create):
+        return "COMMENT ON COLUMN %s IS %s" % (
+            self.preparer.format_column(create.element, use_table=True),
+            self.sql_compiler.render_literal_bindparam(
+                elements.BindParameter('comment', value=create.comment))
+        )
+
+    def visit_drop_column_comment(self, drop):
+        return "COMMENT ON COLUMN %s IS NULL" % \
+            self.preparer.format_column(drop.element, use_table=True)
+
     def visit_create_sequence(self, create):
         text = "CREATE SEQUENCE %s" % \
             self.preparer.format_sequence(create.element)

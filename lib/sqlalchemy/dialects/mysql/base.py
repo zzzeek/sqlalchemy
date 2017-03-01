@@ -1142,6 +1142,15 @@ class MySQLDDLCompiler(compiler.DDLCompiler):
                 "causes ON UPDATE/ON DELETE clauses to be ignored.")
         return ""
 
+    def visit_set_table_comment(self, create):
+        return "ALTER TABLE %s COMMENT '%s'" % (
+            self.preparer.format_table(create.element),
+            create.element.comment
+        )
+
+    def visit_set_column_comment(self, create):
+        raise NotImplementedError
+
 
 class MySQLTypeCompiler(compiler.GenericTypeCompiler):
     def _extend_numeric(self, type_, spec):

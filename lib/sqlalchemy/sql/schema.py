@@ -490,6 +490,7 @@ class Table(DialectKWArgs, SchemaItem, TableClause):
         include_columns = kwargs.pop('include_columns', None)
 
         self.implicit_returning = kwargs.pop('implicit_returning', True)
+        self.comment = kwargs.pop('comment', None)
 
         if 'info' in kwargs:
             self.info = kwargs.pop('info')
@@ -584,6 +585,9 @@ class Table(DialectKWArgs, SchemaItem, TableClause):
 
         if 'info' in kwargs:
             self.info = kwargs.pop('info')
+
+        if 'comment' in kwargs:
+            self.comment = kwargs.pop('comment')
 
         if autoload:
             if not autoload_replace:
@@ -1202,6 +1206,7 @@ class Column(SchemaItem, ColumnClause):
         self.autoincrement = kwargs.pop('autoincrement', "auto")
         self.constraints = set()
         self.foreign_keys = set()
+        self.comment = kwargs.pop('comment', None)
 
         # check if this Column is proxying another column
         if '_proxies' in kwargs:
