@@ -444,6 +444,10 @@ class _IntegerType(_NumericType, sqltypes.Integer):
         self.display_width = display_width
         super(_IntegerType, self).__init__(**kw)
 
+    def __repr__(self):
+        return util.generic_repr(self,
+                                 additional_kw=[('display_width', None)],
+                                 to_inspect=_NumericType)
 
 class _StringType(sqltypes.String):
     """Base for MySQL string types."""
