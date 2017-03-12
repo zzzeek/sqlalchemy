@@ -2854,7 +2854,7 @@ class JoinCondition(object):
                     secondaryjoin, {}, col_to_bind)
             lazywhere = sql.and_(lazywhere, secondaryjoin)
 
-        bind_to_col = dict((binds[col].key, col) for col in binds)
+        bind_to_col = {binds[col].key: col for col in binds}
 
         # this is probably not necessary
         lazywhere = _deep_deannotate(lazywhere)

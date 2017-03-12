@@ -680,7 +680,7 @@ class DefaultExecutionContext(interfaces.ExecutionContext):
                 self.parameters = parameters
             else:
                 self.parameters = [
-                    dict((dialect._encoder(k)[0], d[k]) for k in d)
+                    {dialect._encoder(k)[0]: d[k] for k in d}
                     for d in parameters
                 ] or [{}]
         else:

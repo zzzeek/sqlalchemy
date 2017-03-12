@@ -582,7 +582,7 @@ class Insert(ValuesBase):
 
         self.parameters, self._has_multi_parameters = \
             self._process_colparams(
-                dict((_column_as_key(n), Null()) for n in names))
+                {_column_as_key(n): Null() for n in names})
 
         self.select_names = names
         self.inline = True
