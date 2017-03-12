@@ -2728,7 +2728,7 @@ class JoinCondition(object):
                 self._gather_columns_with_annotation(
                     self.secondaryjoin, annotation)
             )
-        return set([x._deannotate() for x in s])
+        return {x._deannotate() for x in s}
 
     def _gather_columns_with_annotation(self, clause, *annotation):
         annotation = set(annotation)

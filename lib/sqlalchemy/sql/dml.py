@@ -771,7 +771,7 @@ class Update(ValuesBase):
         # TODO: this could be made memoized
         # if the memoization is reset on each generative call.
         froms = []
-        seen = set([self.table])
+        seen = {self.table}
 
         if self._whereclause is not None:
             for item in _from_objects(self._whereclause):
