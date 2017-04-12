@@ -800,6 +800,10 @@ class MySQLCompiler(compiler.SQLCompiler):
         return "rand%s" % self.function_argspec(fn)
 
     def visit_utc_timestamp_func(self, fn, **kw):
+        if len(fn.clauses) == 1:
+            # Starting from MySQL 5.6.4 it's possible to specify a fractional seconds precision from 0 to 6.
+            # https://dev.mysql.com/doc/refman/5.6/en/date-and-time-functions.html#function_utc-timestamp
+            return "UTC_TIMESTAMP(%s)" % self.process(fn.clauses)
         return "UTC_TIMESTAMP"
 
     def visit_sysdate_func(self, fn, **kw):

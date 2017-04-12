@@ -337,6 +337,10 @@ class SQLTest(fixtures.TestBase, AssertsCompiledSQL):
 
     def test_utc_timestamp(self):
         self.assert_compile(func.utc_timestamp(), "UTC_TIMESTAMP")
+        fsp = 3
+        self.assert_compile(func.utc_timestamp(fsp),
+                            "UTC_TIMESTAMP(%s)",
+                            params={'utc_timestamp_1': fsp})
 
     def test_sysdate(self):
         self.assert_compile(func.sysdate(), "SYSDATE()")
