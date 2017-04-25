@@ -1120,7 +1120,7 @@ declarative, we define this table along with its mapped class, ``Address``:
     ...     __tablename__ = 'addresses'
     ...     id = Column(Integer, primary_key=True)
     ...     email_address = Column(String, nullable=False)
-    ...     user_id = Column(Integer, ForeignKey('users.id'))
+    ...     user_id = Column(Integer, ForeignKey('user.id'))
     ...
     ...     user = relationship("User", back_populates="addresses")
     ...
