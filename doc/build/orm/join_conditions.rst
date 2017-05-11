@@ -1,7 +1,7 @@
 .. _relationship_configure_joins:
 
 Configuring how Relationship Joins
-------------------------------------
+----------------------------------
 
 :func:`.relationship` will normally create a join between two tables
 by examining the foreign key relationship between the two tables
@@ -104,7 +104,7 @@ one :class:`.Column` we need::
 .. _relationship_primaryjoin:
 
 Specifying Alternate Join Conditions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The default behavior of :func:`.relationship` when constructing a join
 is that it equates the value of primary key columns
@@ -248,7 +248,7 @@ SQL expressions::
 .. _relationship_custom_operator:
 
 Using custom operators in join conditions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Another use case for relationships is the use of custom operators, such
 as PostgreSQL's "is contained within" ``<<`` operator when joining with
@@ -468,7 +468,7 @@ we seek for a load of ``Element.descendants`` to look like::
 .. _self_referential_many_to_many:
 
 Self-Referential Many-to-Many Relationship
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Many to many relationships can be customized by one or both of :paramref:`~.relationship.primaryjoin`
 and :paramref:`~.relationship.secondaryjoin` - the latter is significant for a relationship that
@@ -718,7 +718,7 @@ additional columns when we query; these can be ignored:
 
 
 Building Query-Enabled Properties
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Very ambitious custom join conditions may fail to be directly persistable, and
 in some cases may not even load correctly. To remove the persistence part of

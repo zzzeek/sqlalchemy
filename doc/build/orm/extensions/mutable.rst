@@ -1,7 +1,7 @@
 .. _mutable_toplevel:
 
 Mutation Tracking
-==================
+=================
 
 .. automodule:: sqlalchemy.ext.mutable
 
