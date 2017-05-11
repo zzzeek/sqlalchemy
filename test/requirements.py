@@ -340,7 +340,8 @@ class DefaultRequirements(SuiteRequirements):
         return fails_on_everything_except(
                     "postgresql",
                     "mysql",
-                    "sqlite"
+                    "sqlite",
+                    "oracle"
                 )
 
     @property
