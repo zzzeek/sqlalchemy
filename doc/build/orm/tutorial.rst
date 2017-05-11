@@ -1111,7 +1111,7 @@ implies a basic one to many association from the ``users`` to a new
 table which stores email addresses, which we will call ``addresses``. Using
 declarative, we define this table along with its mapped class, ``Address``:
 
-.. sourcecode:: python+sql
+.. sourcecode:: python
 
     >>> from sqlalchemy import ForeignKey
     >>> from sqlalchemy.orm import relationship

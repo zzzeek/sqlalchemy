@@ -339,7 +339,7 @@ narrowing the criterion to specific derived aliases or subclasses. Suppose the
 with a ``Company`` object. We'll add a ``company_id`` column to the
 ``employees`` table and a new table ``companies``:
 
-.. sourcecode:: python+sql
+.. sourcecode:: python
 
     class Company(Base):
         __tablename__ = 'company'

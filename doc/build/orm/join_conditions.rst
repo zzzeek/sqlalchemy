@@ -728,7 +728,7 @@ attribute (data written to the collection will be ignored on flush()).
 However, in extreme cases, consider using a regular Python property in
 conjunction with :class:`.Query` as follows:
 
-.. sourcecode:: python+sql
+.. sourcecode:: python
 
     class User(Base):
         __tablename__ = 'user'

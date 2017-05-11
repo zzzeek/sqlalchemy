@@ -454,7 +454,7 @@ collections. Use them when your class doesn't quite meet the regular interface
 for its container type, or when you otherwise would like to use a different method to
 get the job done.
 
-.. sourcecode:: python+sql
+.. sourcecode:: python
 
     from sqlalchemy.orm.collections import collection
 
