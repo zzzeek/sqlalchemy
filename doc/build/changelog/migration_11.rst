@@ -32,7 +32,7 @@ as things like "extras", ``setup.py`` now depends on Setuptools fully.
 
 .. seealso::
 
-	:ref:`installation`
+    :ref:`installation`
 
 :ticket:`3489`
 
@@ -47,7 +47,7 @@ as it relies on deprecated features of setuptools.
 
 .. seealso::
 
-	:ref:`c_extensions`
+    :ref:`c_extensions`
 
 :ticket:`3500`
 
