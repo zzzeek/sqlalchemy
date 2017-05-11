@@ -42,7 +42,7 @@ class MSExecutionContext_zxjdbc(MSExecutionContext):
                     break
                 except self.dialect.dbapi.Error:
                     self.cursor.nextset()
-            self._lastrowid = int(row[0])
+            self._lastrowid = int(row[0]) if row[0] else None
 
         if (self.isinsert or self.isupdate or self.isdelete) and \
                 self.compiled.returning:
