@@ -2579,7 +2579,7 @@ class UnaryExpression(ColumnElement):
         should be handled when they are encountered during ordering::
 
 
-            from sqlalchemy import desc, nullsfirst
+            from sqlalchemy.sql.expression import desc, nullsfirst
 
             stmt = select([users_table]).\
                         order_by(nullsfirst(desc(users_table.c.name)))
@@ -2622,7 +2622,7 @@ class UnaryExpression(ColumnElement):
         should be handled when they are encountered during ordering::
 
 
-            from sqlalchemy import desc, nullslast
+            from sqlalchemy.sql.expression import desc, nullslast
 
             stmt = select([users_table]).\
                         order_by(nullslast(desc(users_table.c.name)))
