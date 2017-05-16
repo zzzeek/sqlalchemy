@@ -267,3 +267,16 @@ def nested(*managers):
                 exc = sys.exc_info()
         if exc != (None, None, None):
             reraise(exc[0], exc[1], exc[2])
+
+if py3k:
+    def items(dct):
+        return dct.items()
+
+    def keys(dct):
+        return dct.keys()
+else:
+    def items(dct):
+        return dct.iteritems()
+
+    def keys(dct):
+        return dct.iterkeys()

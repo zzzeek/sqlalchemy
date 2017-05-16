@@ -5,7 +5,7 @@
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
-from ...sql.elements import ClauseElement, _literal_as_binds
+from ...sql.elements import ClauseElement
 from ...sql.dml import Insert as StandardInsert
 from ...sql.expression import alias
 from ...sql import schema
