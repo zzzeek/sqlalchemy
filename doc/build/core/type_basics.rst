@@ -36,7 +36,8 @@ particular type of Python data.  SQLAlchemy will choose the best
 database column type available on the target database when issuing a
 ``CREATE TABLE`` statement.  For complete control over which column
 type is emitted in ``CREATE TABLE``, such as ``VARCHAR`` see `SQL
-Standard Types`_ and the other sections of this chapter.
+Standard and Multiple Vendor Types`_ and the other sections of this
+chapter.
 
 .. autoclass:: BigInteger
    :members:
