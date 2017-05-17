@@ -10,7 +10,7 @@ __all__ = ('Insert', 'insert')
 
 class Insert(StandardInsert):
     @util.memoized_property
-    def values(self):
+    def vals(self):
         self.values_alias = alias(self.table, name='values')
         return self.values_alias.columns
 

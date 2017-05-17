@@ -21,7 +21,7 @@ def check_statement(statement, expected_sql):
 
 def test_from_values():
     stmt = mysql.insert(table, [{'id': 1, 'bar': 'ab'}, {'id': 2, 'bar': 'b'}])
-    update = OrderedDict([('bar', stmt.values.bar), ('baz', stmt.values.baz)])
+    update = OrderedDict([('bar', stmt.vals.bar), ('baz', stmt.vals.baz)])
     from_values = (
         'INSERT INTO foos (id, bar) VALUES (%s, %s), (%s, %s) '
         'ON DUPLICATE KEY UPDATE bar = VALUES(bar), baz = VALUES(baz)'
