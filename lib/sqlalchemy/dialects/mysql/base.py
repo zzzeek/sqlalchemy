@@ -603,8 +603,6 @@ import re
 import sys
 import json
 
-from itertools import chain
-
 from ... import schema as sa_schema
 from ... import exc, log, sql, util
 from ...sql import compiler, elements
@@ -850,9 +848,8 @@ class MySQLCompiler(compiler.SQLCompiler):
                 )
             )
         update_text = ', '.join(
-            ' = '.join(process_value(name, val, col))
-            for name, (col, val) in iter_dcts(cols, on_duplicate.update)
-            if val is not None
+            ' = '.join(process_value(name, val, cols.get(name)))
+            for name, val in util.items(on_duplicate.update)
         )
         return 'ON DUPLICATE KEY UPDATE ' + update_text
 
@@ -2149,8 +2146,3 @@ class _DecodingRowProxy(object):
             return item.decode(self.charset)
         else:
             return item
-
-
-def iter_dcts(*dcts, guard=None):
-    keys = set(chain.from_iterable(util.keys(d) for d in dcts))
-    return ((k, (d.get(k, guard) for d in dcts)) for k in keys)
