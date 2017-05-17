@@ -21,7 +21,7 @@ from .base import \
     TINYBLOB, TINYINT, TINYTEXT,\
     VARBINARY, VARCHAR, YEAR, dialect
 
-from .dlm import insert, Insert
+from .dml import insert, Insert
 
 __all__ = (
     'BIGINT', 'BINARY', 'BIT', 'BLOB', 'BOOLEAN', 'CHAR', 'DATE', 'DATETIME',

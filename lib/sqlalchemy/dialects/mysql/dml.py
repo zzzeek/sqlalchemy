@@ -17,6 +17,7 @@ class Insert(StandardInsert):
     @_generative
     def on_duplicate_key_update(self, update):
         self._post_values_clause = OnDuplicateClause(update)
+        return self
 
 
 insert = public_factory(Insert, '.dialects.postgresql.insert')
