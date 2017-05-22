@@ -15,7 +15,7 @@ class Insert(StandardInsert):
         return self.values_alias.columns
 
     @_generative
-    def on_duplicate_key_update(self, update):
+    def on_duplicate_key_update(self, **update):
         self._post_values_clause = OnDuplicateClause(update)
         return self
 

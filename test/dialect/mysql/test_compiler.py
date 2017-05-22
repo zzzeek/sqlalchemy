@@ -710,8 +710,7 @@ class InsertOnDuplicateTest(fixtures.TestBase, AssertsCompiledSQL):
 
     def test_from_values(self):
         stmt = mmysql.insert(self.table, [{'id': 1, 'bar': 'ab'}, {'id': 2, 'bar': 'b'}])
-        update = OrderedDict([('bar', stmt.vals.bar), ('baz', stmt.vals.baz)])
-        stmt = stmt.on_duplicate_key_update(update=update)
+        stmt = stmt.on_duplicate_key_update(bar=stmt.vals.bar, baz=stmt.vals.baz)
         expected_sql = (
             'INSERT INTO foos (id, bar) VALUES (%s, %s), (%s, %s) '
             'ON DUPLICATE KEY UPDATE bar = VALUES(bar), baz = VALUES(baz)'
@@ -720,7 +719,7 @@ class InsertOnDuplicateTest(fixtures.TestBase, AssertsCompiledSQL):
 
     def test_from_literal(self):
         stmt = mmysql.insert(self.table, [{'id': 1, 'bar': 'ab'}, {'id': 2, 'bar': 'b'}])
-        stmt = stmt.on_duplicate_key_update(update=dict(bar=literal_column('bb')))
+        stmt = stmt.on_duplicate_key_update(bar=literal_column('bb'))
         expected_sql = (
             'INSERT INTO foos (id, bar) VALUES (%s, %s), (%s, %s) '
             'ON DUPLICATE KEY UPDATE bar = bb'

@@ -21,13 +21,8 @@ class OnDuplicateTest(fixtures.TablesTest):
 
     def test_bad_args(self):
         assert_raises(
-            TypeError,
-            insert(self.tables.foos, values={}).on_duplicate_key_update
-        )
-        assert_raises(
             ValueError,
-            insert(self.tables.foos, values={}).on_duplicate_key_update,
-            {}
+            insert(self.tables.foos, values={}).on_duplicate_key_update
         )
 
     def test_on_duplicate_key_update(self):
@@ -35,7 +30,7 @@ class OnDuplicateTest(fixtures.TablesTest):
         with testing.db.connect() as conn:
             conn.execute(insert(foos, dict(id=1, bar='b', baz='bz')))
             stmt = insert(foos, [dict(id=1, bar='ab'), dict(id=2, bar='b')])
-            stmt = stmt.on_duplicate_key_update(update=dict(bar=stmt.vals.bar))
+            stmt = stmt.on_duplicate_key_update(bar=stmt.vals.bar)
             result = conn.execute(stmt)
             eq_(result.inserted_primary_key, [2])
             eq_(
