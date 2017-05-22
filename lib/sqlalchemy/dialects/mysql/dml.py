@@ -16,7 +16,8 @@ class Insert(StandardInsert):
 
     @_generative
     def on_duplicate_key_update(self, **update):
-        self._post_values_clause = OnDuplicateClause(update)
+        values_alias = getattr(self, 'values_alias', None)
+        self._post_values_clause = OnDuplicateClause(values_alias, update)
         return self
 
 
@@ -25,7 +26,8 @@ insert = public_factory(Insert, '.dialects.postgresql.insert')
 
 class OnDuplicateClause(ClauseElement):
     __visit_name__ = 'on_duplicate_key_update'
-    def __init__(self, update):
+    def __init__(self, values_alias, update):
+        self.values_alias = values_alias
         if not update or not isinstance(update, dict):
             raise ValueError('update parameter must be a non-empty dictionary')
         self.update = update
