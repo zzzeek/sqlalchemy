@@ -826,9 +826,12 @@ class MySQLCompiler(compiler.SQLCompiler):
                 value_text = self.process(
                     elements._literal_as_binds(val), use_schema=False
                 )
-            elif val.table is self.statement.values_alias:
-                name_text = self.preparer.quote(name)
-                value_text = 'VALUES(' + self.preparer.quote(name) + ')'
+            elif (
+                hasattr(self.statement, 'values_alias')
+                and val.table is self.statement.values_alias
+                ):
+                    name_text = self.preparer.quote(name)
+                    value_text = 'VALUES(' + self.preparer.quote(name) + ')'
             else:
                 if elements._is_literal(val):
                     val = elements.BindParameter(None, val, type_=column.type)

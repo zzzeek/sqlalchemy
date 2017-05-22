@@ -1,39 +1,45 @@
-from collections import OrderedDict
-
-import pytest
-
-from sqlalchemy import Table, Column, Integer, String, MetaData
-from sqlalchemy.dialects import mysql
-from sqlalchemy.sql.expression import literal_column
+from sqlalchemy.testing.assertions import eq_, assert_raises
+from sqlalchemy.testing import fixtures
+from sqlalchemy import testing
+from sqlalchemy.dialects.mysql import insert
+from sqlalchemy import Table, MetaData, Column, Integer, String
 
 
-table = Table(
-    'foos', MetaData(),
-    Column('id', Integer, primary_key=True),
-    Column('bar', String(10)),
-    Column('baz', String(10)),
-)
+class OnDuplicateTest(fixtures.TablesTest):
+    __only_on__ = 'mysql',
+    __backend__ = True
+    run_define_tables = 'each'
 
+    @classmethod
+    def define_tables(cls, metadata):
+        Table(
+            'foos', metadata,
+            Column('id', Integer, primary_key=True),
+            Column('bar', String(10)),
+            Column('baz', String(10)),
+        )
 
-def check_statement(statement, expected_sql):
-    assert expected_sql == str(statement.compile(dialect=mysql.dialect()))
+    def test_bad_args(self):
+        assert_raises(
+            TypeError,
+            insert(self.tables.foos, values={}).on_duplicate_key_update
+        )
+        assert_raises(
+            ValueError,
+            insert(self.tables.foos, values={}).on_duplicate_key_update,
+            {}
+        )
 
+    def test_on_duplicate_key_update(self):
+        foos = self.tables.foos
+        with testing.db.connect() as conn:
+            conn.execute(insert(foos, dict(id=1, bar='b', baz='bz')))
+            stmt = insert(foos, [dict(id=1, bar='ab'), dict(id=2, bar='b')])
+            stmt = stmt.on_duplicate_key_update(update=dict(bar=stmt.vals.bar))
+            result = conn.execute(stmt)
+            eq_(result.inserted_primary_key, [2])
+            eq_(
+                conn.execute(foos.select().where(foos.c.id == 1)).fetchall(),
+                [(1, 'ab', 'bz')]
+            )
 
-def test_from_values():
-    stmt = mysql.insert(table, [{'id': 1, 'bar': 'ab'}, {'id': 2, 'bar': 'b'}])
-    update = OrderedDict([('bar', stmt.vals.bar), ('baz', stmt.vals.baz)])
-    from_values = (
-        'INSERT INTO foos (id, bar) VALUES (%s, %s), (%s, %s) '
-        'ON DUPLICATE KEY UPDATE bar = VALUES(bar), baz = VALUES(baz)'
-    )
-    stmt = stmt.on_duplicate_key_update(update=update)
-    check_statement(stmt, from_values)
-
-
-def test_from_literal():
-    stmt = mysql.insert(table, [{'id': 1, 'bar': 'ab'}, {'id': 2, 'bar': 'b'}])
-    stmt = stmt.on_duplicate_key_update(update=dict(bar=literal_column('bb')))
-    from_values = (
-        'INSERT INTO foos (id, bar) VALUES (%s, %s), (%s, %s) '
-        'ON DUPLICATE KEY UPDATE bar = "bb"'
-    )
