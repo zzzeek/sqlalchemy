@@ -1992,7 +1992,7 @@ class Mapper(InspectionAttr):
                 frozenset(
                     col.key for col in columns
                     if not col.primary_key and
-                    not col.server_default and not col.default
+                    col.server_default is None and col.default is None
                     and not col.type.should_evaluate_none)
             )
             for table, columns in self._cols_by_table.items()
