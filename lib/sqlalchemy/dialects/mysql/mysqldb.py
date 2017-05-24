@@ -43,6 +43,9 @@ Server Side Cursors
 
 The mysqldb dialect supports server-side cursors. See :ref:`mysql_ss_cursors`.
 
+:class:`~sqlalchemy.Unicode` and  :class:`~sqlalchemy.UnicodeText`
+columns will have :class:`str` instead of :class:`unicode` values when
+used with MySQL-python versions prior to 1.2.5.
 """
 
 from .base import (MySQLDialect, MySQLExecutionContext,
