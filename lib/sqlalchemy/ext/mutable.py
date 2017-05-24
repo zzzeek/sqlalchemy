@@ -501,7 +501,7 @@ class MutableBase(object):
 
         def pickle(state, state_dict):
             val = state.dict.get(key, None)
-            if val is not None:
+            if val is not None and hasattr(val, '_parents'):
                 if 'ext.mutable.values' not in state_dict:
                     state_dict['ext.mutable.values'] = []
                 state_dict['ext.mutable.values'].append(val)
