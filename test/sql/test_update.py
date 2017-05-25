@@ -188,7 +188,7 @@ class UpdateTest(_UpdateFromTestBase, fixtures.TablesTest, AssertsCompiledSQL):
             'name=(mytable.name || :name_1) '
             'WHERE '
             'mytable.myid = hoho(:hoho_1) AND '
-            'mytable.name = :param_2 || mytable.name || :param_3')
+            'mytable.name = (:param_2 || mytable.name || :param_3)')
 
     def test_unconsumed_names_kwargs(self):
         t = table("t", column("x"), column("y"))
@@ -244,7 +244,7 @@ class UpdateTest(_UpdateFromTestBase, fixtures.TablesTest, AssertsCompiledSQL):
             'myid=do_stuff(mytable.myid, :param_1) '
             'WHERE '
             'mytable.myid = hoho(:hoho_1) AND '
-            'mytable.name = :param_2 || mytable.name || :param_3')
+            'mytable.name = (:param_2 || mytable.name || :param_3)')
 
     def test_update_ordered_parameters_2(self):
         table1 = self.tables.mytable
@@ -271,7 +271,7 @@ class UpdateTest(_UpdateFromTestBase, fixtures.TablesTest, AssertsCompiledSQL):
             'myid=do_stuff(mytable.myid, :param_1) '
             'WHERE '
             'mytable.myid = hoho(:hoho_1) AND '
-            'mytable.name = :param_2 || mytable.name || :param_3')
+            'mytable.name = (:param_2 || mytable.name || :param_3)')
 
     def test_update_ordered_parameters_fire_onupdate(self):
         table = self.tables.update_w_default
@@ -335,7 +335,7 @@ class UpdateTest(_UpdateFromTestBase, fixtures.TablesTest, AssertsCompiledSQL):
             'name=(mytable.name || :name_1) '
             'WHERE '
             'mytable.myid = hoho(:hoho_1) AND '
-            'mytable.name = :param_2 || mytable.name || :param_3')
+            'mytable.name = (:param_2 || mytable.name || :param_3)')
 
     def test_where_empty(self):
         table1 = self.tables.mytable
