@@ -142,8 +142,8 @@ Or from the :class:`.Connection`, in which case the :class:`.Transaction` object
 is available as well::
 
     with connection.begin() as trans:
-        r1 = connection.execute(table1.select())
-        connection.execute(table1.insert(), col1=7, col2='this is some data')
+        r1 = trans.execute(table1.select())
+        trans.execute(table1.insert(), col1=7, col2='this is some data')
 
 .. _connections_nested_transactions:
 
