@@ -2363,6 +2363,12 @@ class Session(_SessionClassMethods):
             **before using this method, and fully test and confirm the
             functionality of all code developed using these systems.**
 
+        .. warning::
+
+            Objects are processed in the order passed. Be sure to group objects
+            of the same type together (the list is sorted), else they will be
+            inserted in distinct batches.
+
         :param objects: a list of mapped object instances.  The mapped
          objects are persisted as is, and are **not** associated with the
          :class:`.Session` afterwards.
