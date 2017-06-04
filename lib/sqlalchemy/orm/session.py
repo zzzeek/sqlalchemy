@@ -1724,6 +1724,7 @@ class Session(_SessionClassMethods):
                 obj = state.obj()
 
             self.identity_map.safe_discard(state)
+            obj = state.obj()
             self._deleted.pop(state, None)
             state._deleted = True
             # can't call state._detach() here, because this state
