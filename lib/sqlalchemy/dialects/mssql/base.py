@@ -782,12 +782,27 @@ class DATETIME2(_DateTimeBase, sqltypes.DateTime):
         self.precision = precision
 
 
-# TODO: is this not an Interval ?
+# TODO: this is timezone aware type of mssql
 class DATETIMEOFFSET(sqltypes.TypeEngine):
     __visit_name__ = 'DATETIMEOFFSET'
 
     def __init__(self, precision=None, **kwargs):
         self.precision = precision
+    
+    def bind_processor(self, dialect):
+        def process(value):
+            _mstz = value.strftime("%z")[:3] + ':' + value.strftime("%z")[3:]
+            return value.strftime("%Y-%m-%d %H:%M:%S.%f") + _mstz
+        return process
+
+    def result_processor(self, dialect, coltype):
+        def process(value):
+            _str_microsecond = value[20:20+self.precision] if self.precision else value[20:27]
+            _str_microsecond = _str_microsecond[:6] if len(_str_microsecond) > 6 else _str_microsecond
+            _str_tzinfo = value[-6:-3] + value[-2:]
+            _dt = "%s-%s-%s %s:%s:%s.%s %s" % (value[0:4], value[5:7], value[8:10], value[11:13], value[14:16], value[17:19], _str_microsecond, _str_tzinfo)
+            return datetime.datetime.strptime(_dt,"%Y-%m-%d %H:%M:%S.%f %z")
+        return process
 
 
 class _StringType(object):
