@@ -1686,6 +1686,7 @@ class NestedTransaction(Transaction):
         if self.is_active:
             self.connection._release_savepoint_impl(
                 self._savepoint, self._parent)
+            self.connection._commit_impl()
 
 
 class TwoPhaseTransaction(Transaction):
