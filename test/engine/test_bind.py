@@ -2,7 +2,7 @@
 including the deprecated versions of these arguments"""
 
 from sqlalchemy.testing import assert_raises, assert_raises_message
-from sqlalchemy import engine, exc
+from sqlalchemy import engine, exc, create_engine
 from sqlalchemy import MetaData, ThreadLocalMetaData
 from sqlalchemy import Integer, text
 from sqlalchemy.testing.schema import Table
@@ -21,6 +21,21 @@ class BindTest(fixtures.TestBase):
 
         with e.contextual_connect() as conn:
             assert not conn.closed
+        assert conn.closed
+
+    def test_tlbind_close_conn(self):
+        e = create_engine(testing.db.url, strategy='threadlocal')
+        conn = e.contextual_connect()
+        e.execute('select 1').fetchall()
+        conn.close()
+        assert conn.closed
+
+    def test_tlbind_close_trans_conn(self):
+        e = create_engine(testing.db.url, strategy='threadlocal')
+        conn = e.contextual_connect()
+        with e.begin():
+            pass
+        conn.close()
         assert conn.closed
 
     def test_bind_close_conn(self):
