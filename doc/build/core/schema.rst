@@ -10,7 +10,7 @@ This section references SQLAlchemy **schema metadata**, a comprehensive system o
 database schemas.
 
 The core of SQLAlchemy's query and object mapping operations are supported by
-*database metadata*, which is comprised of Python objects that describe tables
+*database metadata*, which is composed of Python objects that describe tables
 and other schema-level objects. These objects are at the core of three major
 types of operations - issuing CREATE and DROP statements (known as *DDL*),
 constructing SQL queries, and expressing information about structures that

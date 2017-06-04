@@ -9,7 +9,7 @@ Mapping a Class against Multiple Tables
 
 Mappers can be constructed against arbitrary relational units (called
 *selectables*) in addition to plain tables. For example, the :func:`~.expression.join`
-function creates a selectable unit comprised of
+function creates a selectable unit composed of
 multiple tables, complete with its own composite primary key, which can be
 mapped in the same way as a :class:`.Table`::
 
