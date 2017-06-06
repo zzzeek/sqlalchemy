@@ -1149,8 +1149,8 @@ class classproperty(property):
         super(classproperty, self).__init__(fget, *arg, **kw)
         self.__doc__ = fget.__doc__
 
-    def __get__(desc, self, cls):
-        return desc.fget(cls)
+    def __get__(self, obj, cls):
+        return self.fget(cls)
 
 
 class hybridproperty(object):
@@ -1262,7 +1262,7 @@ def warn_exception(func, *args, **kwargs):
     try:
         return func(*args, **kwargs)
     except Exception:
-        warn("%s('%s') ignored" % sys.exc_info()[0:2])
+        warn("%s('%s') ignored" % tuple(sys.exc_info()[0:2]))
 
 
 def ellipses_string(value, len_=25):
