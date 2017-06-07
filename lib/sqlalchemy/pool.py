@@ -472,6 +472,7 @@ class _ConnectionRecord(object):
 
     def __init__(self, pool, connect=True):
         self.__pool = pool
+        self.activetime = None
         if connect:
             self.__connect(first_connect_check=True)
         self.finalize_callback = deque()
@@ -621,7 +622,7 @@ class _ConnectionRecord(object):
             self.info.clear()
             self.__connect()
         elif self.__pool._recycle > -1 and \
-                time.time() - self.starttime > self.__pool._recycle:
+                time.time() - self.activetime > self.__pool._recycle:
             self.__pool.logger.info(
                 "Connection %r exceeded timeout; recycling",
                 self.connection)
@@ -662,7 +663,7 @@ class _ConnectionRecord(object):
         # creator fails, this attribute stays None
         self.connection = None
         try:
-            self.starttime = time.time()
+            self.starttime = self.activetime = time.time()
             connection = pool._invoke_creator(self)
             pool.logger.debug("Created new connection %r", connection)
             self.connection = connection
