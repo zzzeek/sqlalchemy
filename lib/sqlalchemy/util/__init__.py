@@ -12,7 +12,7 @@ from .compat import callable, cmp, reduce,  \
     binary_type, nested, \
     quote_plus, with_metaclass, print_, itertools_filterfalse, u, ue, b,\
     unquote_plus, unquote, b64decode, b64encode, byte_buffer, itertools_filter,\
-    iterbytes, StringIO, inspect_getargspec, zip_longest
+    iterbytes, StringIO, inspect_getargspec, zip_longest, items, keys
 
 from ._collections import KeyedTuple, ImmutableContainer, immutabledict, \
     Properties, OrderedProperties, ImmutableProperties, OrderedDict, \

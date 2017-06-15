@@ -814,6 +814,45 @@ class MySQLCompiler(compiler.SQLCompiler):
             self.process(binary.left, **kw),
             self.process(binary.right, **kw))
 
+    def visit_on_duplicate_key_update(self, on_duplicate, **kw):
+        cols = self.statement.table.c
+        def process_value(name, val, column):
+            if column is None:
+                name_text = (
+                    self.preparer.quote(name)
+                    if isinstance(name, util.string_types)
+                    else self.process(name, use_schema=False)
+                )
+                value_text = self.process(
+                    elements._literal_as_binds(val), use_schema=False
+                )
+            elif val.table is on_duplicate.values_alias:
+                name_text = self.preparer.quote(name)
+                value_text = 'VALUES(' + self.preparer.quote(name) + ')'
+            else:
+                if elements._is_literal(val):
+                    val = elements.BindParameter(None, val, type_=column.type)
+                elif isinstance(val, elements.BindParameter) and val.type._isnull:
+                    val = val._clone()
+                    val.type = column.type
+                name_text = self.preparer.quote(name)
+                value_text = self.process(val.self_group(), use_schema=False)
+            return name_text, value_text
+        non_matching = set(on_duplicate.update) - set(cols.keys())
+        if non_matching:
+            util.warn(
+                'Additional column names not matching '
+                "any column keys in table '%s': %s" % (
+                    self.statement.table.name,
+                    (', '.join("'%s'" % c for c in non_matching))
+                )
+            )
+        update_text = ', '.join(
+            ' = '.join(process_value(name, val, cols.get(name)))
+            for name, val in util.items(on_duplicate.update)
+        )
+        return 'ON DUPLICATE KEY UPDATE ' + update_text
+
     def visit_concat_op_binary(self, binary, operator, **kw):
         return "concat(%s, %s)" % (self.process(binary.left),
                                    self.process(binary.right))
