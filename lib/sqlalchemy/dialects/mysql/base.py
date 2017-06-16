@@ -1672,14 +1672,19 @@ class MySQLDialect(default.DefaultDialect):
     def _compat_fetchone(self, rp, charset=None):
         """Proxy a result row to smooth over MySQL-Python driver
         inconsistencies."""
-
-        return _DecodingRowProxy(rp.fetchone(), charset)
+        data = rp.fetchone()
+        if data:
+            return _DecodingRowProxy(data, charset)
+        return None
 
     def _compat_first(self, rp, charset=None):
         """Proxy a result row to smooth over MySQL-Python driver
         inconsistencies."""
 
-        return _DecodingRowProxy(rp.first(), charset)
+        data = rp.first()
+        if data:
+            return _DecodingRowProxy(data, charset)
+        return None
 
     def _extract_error_code(self, exception):
         raise NotImplementedError()
