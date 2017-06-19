@@ -596,8 +596,6 @@ class Table(DialectKWArgs, SchemaItem, TableClause):
         if 'info' in kwargs:
             self.info = kwargs.pop('info')
 
-        self.comment = kwargs.pop('comment', None)
-
         if autoload:
             if not autoload_replace:
                 # don't replace columns already present.
