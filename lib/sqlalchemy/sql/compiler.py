@@ -2765,6 +2765,9 @@ class GenericTypeCompiler(TypeCompiler):
     def visit_INTEGER(self, type_, **kw):
         return "INTEGER"
 
+    def visit_INT(self, type_, **kw):
+        return "INTEGER"
+
     def visit_SMALLINT(self, type_, **kw):
         return "SMALLINT"
 
@@ -2805,6 +2808,9 @@ class GenericTypeCompiler(TypeCompiler):
         return self._render_string_type(type_, "NCHAR")
 
     def visit_VARCHAR(self, type_, **kw):
+        return self._render_string_type(type_, "VARCHAR")
+
+    def visit_STRING(self, type_, **kw):
         return self._render_string_type(type_, "VARCHAR")
 
     def visit_NVARCHAR(self, type_, **kw):
