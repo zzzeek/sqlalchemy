@@ -617,12 +617,17 @@ from ... import engine
 from ...engine import reflection, default
 from ... import types as sqltypes
 from ...types import INTEGER, BIGINT, SMALLINT, DECIMAL, NUMERIC, \
-    FLOAT, TIMESTAMP, DATETIME, DATE, BINARY,\
+    FLOAT, DATETIME, DATE, BINARY,\
     TEXT, VARCHAR, NVARCHAR, CHAR, NCHAR
 
 
 from ...util import update_wrapper
 from . import information_schema as ischema
+
+
+# The mssql TIMESTAMP value is *not* the ANSI SQL TIMESTAMP type
+# https://msdn.microsoft.com/en-us/library/ms182776%28v=SQL.90%29.aspx
+TIMESTAMP = BINARY
 
 # http://sqlserverbuilds.blogspot.com/
 MS_2016_VERSION = (13,)
