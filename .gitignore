@@ -21,3 +21,4 @@ sqlnet.log
 /test.py
 /.cache/
 *.sw[o,p]
+test_schema.db
