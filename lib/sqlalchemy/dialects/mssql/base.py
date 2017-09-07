@@ -617,12 +617,13 @@ from ... import engine
 from ...engine import reflection, default
 from ... import types as sqltypes
 from ...types import INTEGER, BIGINT, SMALLINT, DECIMAL, NUMERIC, \
-    FLOAT, TIMESTAMP, DATETIME, DATE, BINARY,\
+    FLOAT, DATETIME, DATE, BINARY,\
     TEXT, VARCHAR, NVARCHAR, CHAR, NCHAR
 
 
 from ...util import update_wrapper
 from . import information_schema as ischema
+
 
 # http://sqlserverbuilds.blogspot.com/
 MS_2016_VERSION = (13,)
@@ -662,6 +663,20 @@ RESERVED_WORDS = set(
      'varying', 'view', 'waitfor', 'when', 'where', 'while', 'with',
      'writetext',
      ])
+
+
+class TIMESTAMP(sqltypes.BINARY):
+    """The MSSQL TIMESTAMP type is a *binary* type and is different from the
+    TIMESTAMP data type defined in the SQL-2003 standard. The SQL-2003 TIMESTAMP
+    data type is equivalent to the MSSQL DATETIME data type.
+
+    A nonnullable timestamp column is semantically equivalent to a BINARY(8)
+    column. A nullable timestamp column is semantically equivalent to a
+    VARBINARY(8) column.
+
+    :ref: https://msdn.microsoft.com/en-us/library/ms182776%28v=SQL.90%29.aspx
+    """
+    pass
 
 
 class REAL(sqltypes.REAL):
