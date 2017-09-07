@@ -625,10 +625,6 @@ from ...util import update_wrapper
 from . import information_schema as ischema
 
 
-# The mssql TIMESTAMP value is *not* the ANSI SQL TIMESTAMP type
-# https://msdn.microsoft.com/en-us/library/ms182776%28v=SQL.90%29.aspx
-TIMESTAMP = BINARY
-
 # http://sqlserverbuilds.blogspot.com/
 MS_2016_VERSION = (13,)
 MS_2014_VERSION = (12,)
@@ -667,6 +663,20 @@ RESERVED_WORDS = set(
      'varying', 'view', 'waitfor', 'when', 'where', 'while', 'with',
      'writetext',
      ])
+
+
+class TIMESTAMP(sqltypes.BINARY):
+    """The MSSQL TIMESTAMP type is a *binary* type and is different from the
+    TIMESTAMP data type defined in the SQL-2003 standard. The SQL-2003 TIMESTAMP
+    data type is equivalent to the MSSQL DATETIME data type.
+
+    A nonnullable timestamp column is semantically equivalent to a BINARY(8)
+    column. A nullable timestamp column is semantically equivalent to a
+    VARBINARY(8) column.
+
+    :ref: https://msdn.microsoft.com/en-us/library/ms182776%28v=SQL.90%29.aspx
+    """
+    pass
 
 
 class REAL(sqltypes.REAL):
