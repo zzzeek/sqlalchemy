@@ -86,6 +86,16 @@ class CompileTest(fixtures.TestBase, AssertsCompiledSQL):
         ]:
             self.assert_compile(func.random(), ret, dialect=dialect)
 
+    def test_grouping_set(self):
+        for clause, compiled, checkparams in [
+            (func.grouping_sets('col_1'), 'GROUPING SETS(:grouping_sets_1)', {'grouping_sets_1': 'col_1'}),
+            (func.grouping_sets('col_1', 'col_2'), 'GROUPING SETS(:grouping_sets_1, :grouping_sets_2)', {'grouping_sets_1': 'col_1', 'grouping_sets_2': 'col_2'}),
+            (func.grouping_sets('col_1', ()), 'GROUPING SETS(:grouping_sets_1, :grouping_sets_2)', {'grouping_sets_1': 'col_1', 'grouping_sets_2': ()}),
+            (func.grouping_sets('col_1', ('col_2', 'col_3')), 'GROUPING SETS(:grouping_sets_1, :grouping_sets_2)', {'grouping_sets_1': 'col_1', 'grouping_sets_2': ('col_2', 'col_3')}),
+            (func.grouping_sets('col_1', ('col_2', 'col_3'), ()), 'GROUPING SETS(:grouping_sets_1, :grouping_sets_2, :grouping_sets_3)', {'grouping_sets_1': 'col_1', 'grouping_sets_2': ('col_2', 'col_3'), 'grouping_sets_3': ()}),
+        ]:
+            self.assert_compile(clause, compiled, checkparams=checkparams)
+
     def test_generic_annotation(self):
         fn = func.coalesce('x', 'y')._annotate({"foo": "bar"})
         self.assert_compile(
