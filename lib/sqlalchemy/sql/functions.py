@@ -811,3 +811,33 @@ class cume_dist(GenericFunction):
 
     """
     type = sqltypes.Numeric()
+
+
+class cube(GenericFunction):
+    r"""Implement the ``CUBE`` grouping operation.
+
+    This function must be used as argument of :func:`Query.group_by`:
+
+        stmt = select([func.sum(table.c.value), table.c.col_1, table.c.col_2]).\
+               group_by(func.cube(table.c.col_1, table.c.col_2))
+    """
+
+
+class rollup(GenericFunction):
+    r"""Implement the ``ROLLUP`` grouping operation.
+
+    This function must be used as argument of :func:`Query.group_by`:
+
+        stmt = select([func.sum(table.c.value), table.c.col_1, table.c.col_2]).\
+               group_by(func.rollup(table.c.col_1, table.c.col_2))
+    """
+
+
+class grouping_sets(GenericFunction):
+    r"""Implement the ``GROUPING SETS`` grouping operation.
+
+    This function must be used as argument of :func:`Query.group_by`:
+
+        stmt = select([func.sum(table.c.value), table.c.col_1, table.c.col_2]).\
+               group_by(func.grouping_sets(table.c.col_1, table.c.col_2))
+    """
