@@ -154,6 +154,10 @@ class PGCompiler_pg8000(PGCompiler):
 
 
 class PGIdentifierPreparer_pg8000(PGIdentifierPreparer):
+    def __init__(self, *args, **kwargs):
+        PGIdentifierPreparer.__init__(self, *args, **kwargs)
+        self._double_percents = False
+
     def _escape_identifier(self, value):
         value = value.replace(self.escape_quote, self.escape_to_quote)
         return value.replace('%', '%%')
