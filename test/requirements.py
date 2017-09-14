@@ -750,9 +750,11 @@ class DefaultRequirements(SuiteRequirements):
             "sqlite >= 3.9"
         ])
 
+
     @property
     def json_array_indexes(self):
-        return self.json_type + fails_if("+pg8000")
+        return exclusions.open()
+
 
     @property
     def datetime_literals(self):
