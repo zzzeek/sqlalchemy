@@ -150,7 +150,70 @@ class PGCompiler_pg8000(PGCompiler):
             util.warn("The SQLAlchemy postgresql dialect "
                       "now automatically escapes '%' in text() "
                       "expressions to '%%'.")
-        return text.replace('%', '%%')
+
+        OUTSIDE = 0    # outside quoted string
+        INSIDE_SQ = 1  # inside single-quote string '...'
+        INSIDE_QI = 2  # inside quoted identifier   "..."
+        INSIDE_ES = 3  # inside escaped single-quote string, E'...'
+        INSIDE_CO = 4  # inside inline comment eg. --
+
+        in_quote_escape = False
+        output_query = []
+        state = OUTSIDE
+        prev_c = None
+        for i, c in enumerate(text):
+            if i + 1 < len(text):
+                next_c = text[i + 1]
+            else:
+                next_c = None
+
+            if state == OUTSIDE:
+                if c == "'":
+                    if prev_c == 'E':
+                        state = INSIDE_ES
+                    else:
+                        state = INSIDE_SQ
+                elif c == '"':
+                    state = INSIDE_QI
+                elif c == '-':
+                    if prev_c == '-':
+                        state = INSIDE_CO
+                output_query.append(c)
+
+            elif state == INSIDE_SQ:
+                if not (c == '%' and prev_c == '%'):
+                    if c == "'":
+                        if in_quote_escape:
+                            in_quote_escape = False
+                        else:
+                            if next_c == "'":
+                                in_quote_escape = True
+                            else:
+                                state = OUTSIDE
+                    output_query.append(c)
+
+            elif state == INSIDE_QI:
+                if not (c == '%' and prev_c == '%'):
+                    if c == '"':
+                        state = OUTSIDE
+                    output_query.append(c)
+
+            elif state == INSIDE_ES:
+                if not (c == '%' and prev_c == '%'):
+                    if c == "'" and prev_c != "\\":
+                        # check for escaped single-quote
+                        state = OUTSIDE
+                    output_query.append(c)
+
+            elif state == INSIDE_CO:
+                if not (c == '%' and prev_c == '%'):
+                    output_query.append(c)
+                    if c == '\n':
+                        state = OUTSIDE
+
+            prev_c = c
+
+        return ''.join(output_query)
 
 
 class PGIdentifierPreparer_pg8000(PGIdentifierPreparer):
