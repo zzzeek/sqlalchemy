@@ -7,7 +7,7 @@ from sqlalchemy.orm.instrumentation import ClassManager
 from sqlalchemy.testing.schema import Table, Column
 from sqlalchemy.testing import eq_, assert_raises_message, assert_raises
 from sqlalchemy.testing.util import picklers
-from sqlalchemy.testing import fixtures
+from sqlalchemy.testing import fixtures, fails_on
 from sqlalchemy.ext.mutable import MutableComposite
 from sqlalchemy.ext.mutable import MutableDict, MutableList, MutableSet
 from sqlalchemy.testing import mock
@@ -875,6 +875,10 @@ class MutableColumnCopyArrayTest(_MutableListTestBase, fixtures.MappedTest):
         class Foo(Mixin, Base):
             __tablename__ = 'foo'
             id = Column(Integer, primary_key=True)
+
+    @fails_on('postgresql+pg8000', 'Empty array of type text[]')
+    def test_clear(self):
+        super(MutableColumnDefaultTest, self).test_clear()
 
 
 class MutableListWithScalarPickleTest(_MutableListTestBase,

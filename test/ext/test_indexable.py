@@ -183,6 +183,7 @@ class IndexPropertyArrayTest(fixtures.DeclarativeMappedTest):
             first = index_property('array', 0)
             first0 = index_property('array0', 0, onebased=False)
 
+    @testing.fails_on('postgresql+pg8000', 'Empty array of type text[]')
     def test_query(self):
         Array = self.classes.Array
         s = Session(testing.db)
@@ -203,6 +204,7 @@ class IndexPropertyArrayTest(fixtures.DeclarativeMappedTest):
         a5 = s.query(Array).filter(Array.first0 == 4).one()
         ne_(a1.id, a5.id)
 
+    @testing.fails_on('postgresql+pg8000', 'Empty array of type text[]')
     def test_mutable(self):
         Array = self.classes.Array
         s = Session(testing.db)
@@ -221,6 +223,7 @@ class IndexPropertyArrayTest(fixtures.DeclarativeMappedTest):
         s.commit()
         eq_(a.first, 2)
 
+    @testing.fails_on('postgresql+pg8000', 'Empty array of type text[]')
     def test_modified(self):
         from sqlalchemy import inspect
 

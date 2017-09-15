@@ -1,5 +1,3 @@
-
-from sqlalchemy import testing
 from sqlalchemy import Integer, String, ForeignKey, func, select
 from sqlalchemy.testing.schema import Table, Column
 from sqlalchemy.orm import mapper, relationship, create_session

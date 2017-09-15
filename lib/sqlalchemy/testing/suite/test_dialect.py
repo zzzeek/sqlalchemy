@@ -1,5 +1,4 @@
 from .. import fixtures, config
-from ..config import requirements
 from sqlalchemy import exc
 from sqlalchemy import Integer, String, select, literal_column
 from .. import assert_raises
@@ -26,7 +25,6 @@ class ExceptionTest(fixtures.TablesTest):
               Column('data', String(50))
               )
 
-    @requirements.duplicate_key_raises_integrity_error
     def test_integrity_error(self):
 
         with config.db.connect() as conn:

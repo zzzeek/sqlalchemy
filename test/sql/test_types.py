@@ -845,9 +845,11 @@ class TypeCoerceCastTest(fixtures.TablesTest):
             [('BIND_INd1', 'BIND_INd1BIND_OUT')]
         )
 
+    @testing.fails_on('postgresql+pg8000', "could not determine data type")
     def test_cast_replace_col_w_bind(self):
         self._test_replace_col_w_bind(cast)
 
+    @testing.fails_on('postgresql+pg8000', "could not determine data type")
     def test_type_coerce_replace_col_w_bind(self):
         self._test_replace_col_w_bind(type_coerce)
 
@@ -884,9 +886,11 @@ class TypeCoerceCastTest(fixtures.TablesTest):
             else [('x', 'xBIND_OUT')]
         )
 
+    @testing.fails_on('postgresql+pg8000', "could not determine data type")
     def test_cast_bind(self):
         self._test_bind(cast)
 
+    @testing.fails_on('postgresql+pg8000', "could not determine data type")
     def test_type_bind(self):
         self._test_bind(type_coerce)
 
@@ -1552,6 +1556,7 @@ class EnumTest(AssertsCompiledSQL, fixtures.TablesTest):
             ]
         )
 
+    @testing.fails_on('postgresql+pg8000', 'invalid input value for enum')
     def test_pep435_enum_round_trip(self):
         stdlib_enum_table = self.tables['stdlib_enum_table']
 

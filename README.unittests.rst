@@ -90,7 +90,7 @@ a pre-set URL.  These can be seen using --dbs::
                    mysql    mysql://scott:tiger@127.0.0.1:3306/test?charset=utf8
                   oracle    oracle://scott:tiger@127.0.0.1:1521
                  oracle8    oracle://scott:tiger@127.0.0.1:1521/?use_ansi=0
-                  pg8000    postgresql+pg8000://scott:tiger@127.0.0.1:5432/test
+                  pg8000    postgresql+pg8000://scott:tiger@127.0.0.1:5432/test?max_prepared_statements=100
               postgresql    postgresql://scott:tiger@127.0.0.1:5432/test
     postgresql_psycopg2cffi postgresql+psycopg2cffi://scott:tiger@127.0.0.1:5432/test
                  pymysql    mysql+pymysql://scott:tiger@127.0.0.1:3306/test?charset=utf8

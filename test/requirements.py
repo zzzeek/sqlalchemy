@@ -505,7 +505,7 @@ class DefaultRequirements(SuiteRequirements):
 
         return only_if(
             ['postgresql']
-        )
+        ) + fails_if(['postgresql+pg8000'])
 
     @property
     def mod_operator_as_percent_sign(self):
@@ -720,7 +720,7 @@ class DefaultRequirements(SuiteRequirements):
     def array_type(self):
         return only_on([
             lambda config: against(config, "postgresql") and
-            not against(config, "+pg8000") and not against(config, "+zxjdbc")
+            not against(config, "+zxjdbc")
         ])
 
     @property
@@ -951,10 +951,6 @@ class DefaultRequirements(SuiteRequirements):
         return skip_if(
                     ("mssql+pyodbc", None, None, "crashes due to bug #351"),
                 )
-
-    @property
-    def duplicate_key_raises_integrity_error(self):
-        return fails_on("postgresql+pg8000")
 
     def _has_pg_extension(self, name):
         def check(config):

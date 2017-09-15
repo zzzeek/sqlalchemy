@@ -2804,6 +2804,7 @@ class EnsurePKSortableTest(fixtures.MappedTest):
         orm_mapper(cls.classes.T1, cls.tables.t1)
         orm_mapper(cls.classes.T2, cls.tables.t2)
 
+    @testing.fails_on('postgresql+pg8000', 'invalid input value for enum')
     def test_exception_persistent_flush_py3k(self):
         s = Session()
 
@@ -2825,6 +2826,7 @@ class EnsurePKSortableTest(fixtures.MappedTest):
             s.flush()
         s.close()
 
+    @testing.fails_on('postgresql+pg8000', 'invalid input value for enum')
     def test_persistent_flush_sortable(self):
         s = Session()
 

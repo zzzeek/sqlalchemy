@@ -924,6 +924,7 @@ class JSONTest(_LiteralRoundTripFixture, fixtures.TablesTest):
             "r6"
         )
 
+    @testing.fails_on('postgresql+pg8000', 'compare string and json')
     def test_crit_against_string_coerce_type(self):
         name = self.tables.data_table.c.name
         col = self.tables.data_table.c['data']
@@ -944,6 +945,7 @@ class JSONTest(_LiteralRoundTripFixture, fixtures.TablesTest):
             "r6"
         )
 
+    @testing.fails_on('postgresql+pg8000', 'character varying = smallint')
     def test_crit_against_int_coerce_type(self):
         name = self.tables.data_table.c.name
         col = self.tables.data_table.c['data']

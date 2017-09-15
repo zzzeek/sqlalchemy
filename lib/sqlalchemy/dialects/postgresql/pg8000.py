@@ -70,15 +70,34 @@ from ... import processors
 from ... import types as sqltypes
 from .base import (
     PGDialect, PGCompiler, PGIdentifierPreparer, PGExecutionContext,
-    _DECIMAL_TYPES, _FLOAT_TYPES, _INT_TYPES, UUID)
+    _DECIMAL_TYPES, _FLOAT_TYPES, _INT_TYPES, UUID, ENUM, TSVECTOR)
 import re
-from sqlalchemy.dialects.postgresql.json import JSON
-from ...sql.elements import quoted_name
+from sqlalchemy.dialects.postgresql.json import JSON, JSONB
+from ...sql.elements import quoted_name, Null
+import collections
 
 try:
     from uuid import UUID as _python_UUID
 except ImportError:
     _python_UUID = None
+
+
+class _PGEnum(ENUM):
+    def result_processor(self, dialect, coltype):
+        if self.native_enum and util.py2k and self.convert_unicode is True:
+            # we can't easily use PG's extensions here because
+            # the OID is on the fly, and we need to give it a python
+            # function anyway - not really worth it.
+            self.convert_unicode = "force_nocheck"
+        return super(_PGEnum, self).result_processor(dialect, coltype)
+
+    def bind_processor(self, dialect):
+        pg_enum = dialect.dbapi.PGEnum
+
+        def process(value):
+            return None if value is None else pg_enum(value)
+
+        return process
 
 
 class _PGNumeric(sqltypes.Numeric):
@@ -110,12 +129,114 @@ class _PGNumericNoBind(_PGNumeric):
 
 
 class _PGJSON(JSON):
+    def bind_processor(self, dialect):
+        pg_json = dialect.dbapi.PGJson
+
+        def process(value):
+            if value is self.NULL:
+                value = None
+            elif isinstance(value, Null) or (
+                    value is None and self.none_as_null):
+                return None
+            return pg_json(value)
+
+        return process
 
     def result_processor(self, dialect, coltype):
         if dialect._dbapi_version > (1, 10, 1):
             return None  # Has native JSON
         else:
             return super(_PGJSON, self).result_processor(dialect, coltype)
+
+
+class _PGJSONB(JSONB):
+
+    def bind_processor(self, dialect):
+        pg_jsonb = dialect.dbapi.PGJsonb
+
+        def process(value):
+            if value is self.NULL:
+                value = None
+            elif isinstance(value, Null) or (
+                    value is None and self.none_as_null):
+                return None
+            return pg_jsonb(value)
+
+        return process
+
+    def result_processor(self, dialect, coltype):
+        pass
+
+
+class JSONPathType(sqltypes.JSON.JSONPathType):
+    def bind_processor(self, dialect):
+        def process(value):
+            assert isinstance(value, collections.Sequence)
+            return [util.text_type(elem)for elem in value]
+
+        return process
+
+    def literal_processor(self, dialect):
+        super_proc = self.string_literal_processor(dialect)
+
+        def process(value):
+            assert isinstance(value, collections.Sequence)
+            tokens = [util.text_type(elem)for elem in value]
+            value = "{%s}" % (", ".join(tokens))
+            if super_proc:
+                value = super_proc(value)
+            return value
+
+        return process
+
+
+class _PGTSVECTOR(TSVECTOR):
+
+    def bind_processor(self, dialect):
+        pg_tsvector = dialect.dbapi.PGTsvector
+
+        def process(value):
+            if value is not None:
+                value = pg_tsvector(value)
+            return value
+        return process
+
+    def result_processor(self, dialect, coltype):
+        pass
+
+
+class _PGVarchar(sqltypes.VARCHAR):
+    def bind_processor(self, dialect):
+        proc = super(_PGVarchar, self).bind_processor(dialect)
+        if proc is None:
+            return proc
+        else:
+            pg_varchar = dialect.dbapi.PGVarchar
+
+            def new_proc(value):
+                res = proc(value)
+                if res is None:
+                    return res
+                else:
+                    return pg_varchar(value)
+            return new_proc
+
+
+class _PGText(sqltypes.TEXT):
+    def bind_processor(self, dialect):
+        proc = super(_PGText, self).bind_processor(dialect)
+        if proc is None:
+            return proc
+        else:
+            pg_text = dialect.dbapi.PGText
+
+            def new_proc(value):
+                res = proc(value)
+                if res is None:
+                    return res
+                else:
+                    return pg_text(value)
+            return new_proc
 
 
 class _PGUUID(UUID):
@@ -142,88 +263,14 @@ class PGExecutionContext_pg8000(PGExecutionContext):
 
 class PGCompiler_pg8000(PGCompiler):
     def visit_mod_binary(self, binary, operator, **kw):
-        return self.process(binary.left, **kw) + " %% " + \
-            self.process(binary.right, **kw)
-
-    def post_process_text(self, text):
-        if '%%' in text:
-            util.warn("The SQLAlchemy postgresql dialect "
-                      "now automatically escapes '%' in text() "
-                      "expressions to '%%'.")
-
-        OUTSIDE = 0    # outside quoted string
-        INSIDE_SQ = 1  # inside single-quote string '...'
-        INSIDE_QI = 2  # inside quoted identifier   "..."
-        INSIDE_ES = 3  # inside escaped single-quote string, E'...'
-        INSIDE_CO = 4  # inside inline comment eg. --
-
-        in_quote_escape = False
-        output_query = []
-        state = OUTSIDE
-        prev_c = None
-        for i, c in enumerate(text):
-            if i + 1 < len(text):
-                next_c = text[i + 1]
-            else:
-                next_c = None
-
-            if state == OUTSIDE:
-                if c == "'":
-                    if prev_c == 'E':
-                        state = INSIDE_ES
-                    else:
-                        state = INSIDE_SQ
-                elif c == '"':
-                    state = INSIDE_QI
-                elif c == '-':
-                    if prev_c == '-':
-                        state = INSIDE_CO
-                output_query.append(c)
-
-            elif state == INSIDE_SQ:
-                if not (c == '%' and prev_c == '%'):
-                    if c == "'":
-                        if in_quote_escape:
-                            in_quote_escape = False
-                        else:
-                            if next_c == "'":
-                                in_quote_escape = True
-                            else:
-                                state = OUTSIDE
-                    output_query.append(c)
-
-            elif state == INSIDE_QI:
-                if not (c == '%' and prev_c == '%'):
-                    if c == '"':
-                        state = OUTSIDE
-                    output_query.append(c)
-
-            elif state == INSIDE_ES:
-                if not (c == '%' and prev_c == '%'):
-                    if c == "'" and prev_c != "\\":
-                        # check for escaped single-quote
-                        state = OUTSIDE
-                    output_query.append(c)
-
-            elif state == INSIDE_CO:
-                if not (c == '%' and prev_c == '%'):
-                    output_query.append(c)
-                    if c == '\n':
-                        state = OUTSIDE
-
-            prev_c = c
-
-        return ''.join(output_query)
+        return self.process(binary.left, **kw) + " %% " + self.process(
+            binary.right, **kw)
 
 
 class PGIdentifierPreparer_pg8000(PGIdentifierPreparer):
     def __init__(self, *args, **kwargs):
         PGIdentifierPreparer.__init__(self, *args, **kwargs)
         self._double_percents = False
-
-    def _escape_identifier(self, value):
-        value = value.replace(self.escape_quote, self.escape_to_quote)
-        return value.replace('%', '%%')
 
 
 class PGDialect_pg8000(PGDialect):
@@ -243,11 +290,22 @@ class PGDialect_pg8000(PGDialect):
     colspecs = util.update_copy(
         PGDialect.colspecs,
         {
+            ENUM: _PGEnum,  # needs force_unicode
+            sqltypes.Enum: _PGEnum,  # needs force_unicode
             sqltypes.Numeric: _PGNumericNoBind,
             sqltypes.Float: _PGNumeric,
             JSON: _PGJSON,
             sqltypes.JSON: _PGJSON,
-            UUID: _PGUUID
+            JSONB: _PGJSONB,
+            sqltypes.JSON.JSONPathType: JSONPathType,
+            TSVECTOR: _PGTSVECTOR,
+            UUID: _PGUUID,
+            sqltypes.VARCHAR: _PGVarchar,
+            sqltypes.TEXT: _PGText,
+            sqltypes.Text: _PGText,
+            sqltypes.Unicode: _PGText,
+            sqltypes.UnicodeText: _PGText,
+            sqltypes.String: _PGText
         }
     )
 

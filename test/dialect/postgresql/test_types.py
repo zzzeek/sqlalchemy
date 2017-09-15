@@ -1774,6 +1774,10 @@ class UUIDTest(fixtures.TestBase):
         'postgresql+zxjdbc',
         'column "data" is of type uuid but expression '
         'is of type character varying')
+    @testing.fails_on(
+        'postgresql+pg8000',
+        'column "data" is of type uuid but expression '
+        'is of type character varying')
     def test_uuid_string(self):
         import uuid
         self._test_round_trip(
