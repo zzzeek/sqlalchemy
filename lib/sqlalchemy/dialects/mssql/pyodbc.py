@@ -87,7 +87,7 @@ versioning.
 
 """
 
-from .base import MSExecutionContext, MSDialect, VARBINARY
+from .base import MSExecutionContext, MSDialect, BINARY, VARBINARY
 from ...connectors.pyodbc import PyODBCConnector
 from ... import types as sqltypes, util, exc
 import decimal
@@ -240,6 +240,7 @@ class MSDialect_pyodbc(PyODBCConnector, MSDialect):
         {
             sqltypes.Numeric: _MSNumeric_pyodbc,
             sqltypes.Float: _MSFloat_pyodbc,
+            BINARY: _VARBINARY_pyodbc,
             VARBINARY: _VARBINARY_pyodbc,
             sqltypes.LargeBinary: _VARBINARY_pyodbc,
         }
