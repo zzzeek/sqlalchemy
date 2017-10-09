@@ -167,7 +167,13 @@ class _MSFloat_pyodbc(_ms_numeric_pyodbc, sqltypes.Float):
     pass
 
 
-class _VARBINARY_pyodbc(VARBINARY):
+class _ms_binary_pyodbc(object):
+    """Wraps binary values in dialect-specific Binary wrapper.
+    If the value is null, return a pyodbc-specific BinaryNull
+    object to prevent pyODBC [and FreeTDS] from defaulting binary
+    NULL types to SQLWCHAR and causing implicit conversion errors.
+    """
+
     def bind_processor(self, dialect):
         if dialect.dbapi is None:
             return None
@@ -181,6 +187,14 @@ class _VARBINARY_pyodbc(VARBINARY):
                 # pyodbc-specific
                 return dialect.dbapi.BinaryNull
         return process
+
+
+class _VARBINARY_pyodbc(_ms_binary_pyodbc, VARBINARY):
+    pass
+
+
+class _BINARY_pyodbc(_ms_binary_pyodbc, BINARY):
+    pass
 
 
 class MSExecutionContext_pyodbc(MSExecutionContext):
@@ -240,8 +254,10 @@ class MSDialect_pyodbc(PyODBCConnector, MSDialect):
         {
             sqltypes.Numeric: _MSNumeric_pyodbc,
             sqltypes.Float: _MSFloat_pyodbc,
-            BINARY: _VARBINARY_pyodbc,
+            BINARY: _BINARY_pyodbc,
             VARBINARY: _VARBINARY_pyodbc,
+            # `sqltypes.VARBINARY != VARBINARY`, so this add'l key is needed
+            sqltypes.VARBINARY: _VARBINARY_pyodbc,
             sqltypes.LargeBinary: _VARBINARY_pyodbc,
         }
     )
