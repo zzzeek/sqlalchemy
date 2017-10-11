@@ -6,7 +6,7 @@ from sqlalchemy.dialects import mssql
 from sqlalchemy.dialects.mssql import mxodbc
 from sqlalchemy.testing import fixtures, AssertsCompiledSQL
 from sqlalchemy import sql
-from sqlalchemy import Integer, String, Table, Column, select, MetaData,\
+from sqlalchemy import Integer, Boolean, String, Table, Column, select, MetaData,\
     update, delete, insert, extract, union, func, PrimaryKeyConstraint, \
     UniqueConstraint, Index, Sequence, literal
 from sqlalchemy import testing
@@ -850,6 +850,25 @@ class CompileTest(fixtures.TestBase, AssertsCompiledSQL):
         self.assert_compile(schema.CreateIndex(idx),
                             "CREATE INDEX foo ON test (x) INCLUDE (y)"
                             )
+
+    def test_is_operator(self):
+        metadata = MetaData()
+        tbl = Table(
+            'tbl', metadata,
+            Column("a", Integer),
+            Column("b", Boolean)
+        )
+        s = tbl.select().where(tbl.c.b.is_(True))
+        self.assert_compile(
+            s,
+            "SELECT tbl.a, tbl.b FROM tbl WHERE tbl.b = 1"
+        )
+
+        s = tbl.select().where(tbl.c.b.is_(None))
+        self.assert_compile(
+            s,
+            "SELECT tbl.a, tbl.b FROM tbl WHERE tbl.b IS NULL"
+        )
 
 
 class SchemaTest(fixtures.TestBase):
