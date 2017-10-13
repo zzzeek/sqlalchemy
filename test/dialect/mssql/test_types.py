@@ -934,6 +934,8 @@ class BinaryTest(fixtures.TestBase, AssertsExecutionResults):
             Column('data', mssql.MSVarBinary(8000)),
             Column('data_image', mssql.MSImage),
             Column('data_slice', types.BINARY(100)),
+            Column('data_slice_sql_var', types.VARBINARY(100)),
+            Column('data_slice_mssql_var', mssql.VARBINARY(100)),
             Column('misc', String(30)),
             Column('pickled', PickleType),
             Column('mypickle', MyPickleType),
@@ -984,6 +986,8 @@ class BinaryTest(fixtures.TestBase, AssertsExecutionResults):
                 data=stream1,
                 data_image=stream1,
                 data_slice=stream1[0:100],
+                data_slice_sql_var=stream1[0:100],
+                data_slice_mssql_var=stream1[0:100],
                 pickled=testobj1,
                 mypickle=testobj3,
             )
@@ -994,6 +998,8 @@ class BinaryTest(fixtures.TestBase, AssertsExecutionResults):
                 data=stream2,
                 data_image=stream2,
                 data_slice=stream2[0:99],
+                data_slice_sql_var=stream2[0:99],
+                data_slice_mssql_var=stream2[0:99],
                 pickled=testobj2,
             )
 
@@ -1005,15 +1011,33 @@ class BinaryTest(fixtures.TestBase, AssertsExecutionResults):
                     typemap=dict(
                         data=mssql.MSVarBinary(8000),
                         data_image=mssql.MSImage,
-                        data_slice=types.BINARY(100), pickled=PickleType,
+                        data_slice=types.BINARY(100),
+                        data_slice_sql_var=types.VARBINARY(100),
+                        data_slice_mssql_var=mssql.VARBINARY(100),
+                        pickled=PickleType,
                         mypickle=MyPickleType),
                     bind=testing.db):
             with engine.connect() as conn:
                 result = conn.execute(stmt).fetchall()
             eq_(list(stream1), list(result[0]['data']))
-            paddedstream = list(stream1[0:100])
-            paddedstream.extend(['\x00'] * (100 - len(paddedstream)))
-            eq_(paddedstream, list(result[0]['data_slice']))
+
+            unpaddedstream1 = stream1[0:100]
+            unpaddedstream2 = stream2[0:99]
+            paddedstream1 = list(unpaddedstream1)
+            paddedstream2 = list(unpaddedstream2)
+            if util.py3k:
+                paddedstream1.extend([0] * (100 - len(unpaddedstream1)))
+                paddedstream2.extend([0] * (100 - len(unpaddedstream2)))
+            else:
+                paddedstream1.extend(['\x00'] * (100 - len(unpaddedstream1)))
+                paddedstream2.extend(['\x00'] * (100 - len(unpaddedstream2)))
+            eq_(list(paddedstream1), list(result[0]['data_slice']))
+            eq_(list(paddedstream2), list(result[1]['data_slice']))
+            eq_(list(unpaddedstream1), list(result[0]['data_slice_sql_var']))
+            eq_(list(unpaddedstream2), list(result[1]['data_slice_sql_var']))
+            eq_(list(unpaddedstream1), list(result[0]['data_slice_mssql_var']))
+            eq_(list(unpaddedstream2), list(result[1]['data_slice_mssql_var']))
+
             eq_(list(stream2), list(result[1]['data']))
             eq_(list(stream2), list(result[1]['data_image']))
             eq_(testobj1, result[0]['pickled'])
@@ -1027,14 +1051,15 @@ class BinaryTest(fixtures.TestBase, AssertsExecutionResults):
 
         binary_table = self._fixture(engine)
 
-        stream2 = self._load_stream('binary_data_two.dat')
-
         with engine.connect() as conn:
             conn.execute(
                 binary_table.insert(),
-                primary_id=3,
-                misc='binary_data_two.dat', data_image=None,
-                data_slice=stream2[0:99], pickled=None)
+                primary_id=3, misc='binary_data_two.dat',
+                data_image=None,
+                data_slice=None,
+                data_slice_sql_var=None,
+                data_slice_mssql_var=None,
+                pickled=None)
             for stmt in \
                 binary_table.select(), \
                     text(
@@ -1043,6 +1068,8 @@ class BinaryTest(fixtures.TestBase, AssertsExecutionResults):
                             data=mssql.MSVarBinary(8000),
                             data_image=mssql.MSImage,
                             data_slice=types.BINARY(100),
+                            data_slice_sql_var=types.VARBINARY(100),
+                            data_slice_mssql_var=mssql.VARBINARY(100),
                             pickled=PickleType,
                             mypickle=MyPickleType),
                         bind=testing.db):
@@ -1053,16 +1080,14 @@ class BinaryTest(fixtures.TestBase, AssertsExecutionResults):
                 eq_(
                     row['data_image'], None
                 )
-
-                # the type we used here is 100 bytes
-                # so we will get 100 bytes zero-padded
-                paddedstream = list(stream2[0:99])
-                if util.py3k:
-                    paddedstream.extend([0] * (100 - len(paddedstream)))
-                else:
-                    paddedstream.extend(['\x00'] * (100 - len(paddedstream)))
                 eq_(
-                    list(row['data_slice']), paddedstream
+                    row['data_slice'], None
+                )
+                eq_(
+                    row['data_slice_sql_var'], None
+                )
+                eq_(
+                    row['data_slice_mssql_var'], None
                 )
 
     def _load_stream(self, name, len=3000):
