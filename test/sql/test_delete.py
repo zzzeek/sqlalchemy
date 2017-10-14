@@ -99,3 +99,12 @@ class DeleteTest(_DeleteTestBase, fixtures.TablesTest, AssertsCompiledSQL):
                             'FROM myothertable '
                             'WHERE myothertable.otherid = mytable.myid'
                             ')')
+
+    def test_using(self):
+        table1, table2 = self.tables.mytable, self.tables.myothertable
+        self.assert_compile(delete(table1).using(table2),
+                            'DELETE FROM mytable USING myothertable')
+        self.assert_compile(delete(table1).using(table2,
+                                                 table1.alias('notmytable')),
+                            'DELETE FROM mytable USING myothertable, '
+                            'mytable AS notmytable')
