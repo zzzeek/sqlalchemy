@@ -704,6 +704,14 @@ class SQLTest(fixtures.TestBase, AssertsCompiledSQL):
             'DELETE FROM t1 USING t1, t2'
         )
 
+    def test_delete_using_with_alias(self):
+        t1 = table('t1', column('x'))
+        t2 = table('t2', column('y'))
+        self.assert_compile(
+            sql.delete(t1.alias('a1')).using(t2),
+            'DELETE FROM a1 USING t1 as a1, t2'
+        )
+
 
 class InsertOnDuplicateTest(fixtures.TestBase, AssertsCompiledSQL):
     __dialect__ = mysql.dialect()
