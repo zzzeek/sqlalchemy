@@ -712,6 +712,15 @@ class SQLTest(fixtures.TestBase, AssertsCompiledSQL):
             'DELETE FROM a1 USING t1 as a1, t2'
         )
 
+    def test_delete_using_with_join(self):
+        t1 = table('t1', column('x'))
+        t2 = table('t2', column('y'))
+        self.assert_compile(
+            sql.delete(t1).
+            using(t2.join(t1, onclause=t2.c.y == t1.c.x)),
+            'DELETE FROM t1 USING t2 JOIN t1 ON t2.y = t1.x'
+        )
+
 
 class InsertOnDuplicateTest(fixtures.TestBase, AssertsCompiledSQL):
     __dialect__ = mysql.dialect()
