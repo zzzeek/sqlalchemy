@@ -828,6 +828,8 @@ class Delete(UpdateBase):
         else:
             self._whereclause = None
 
+        self._using_obj = None
+
         self._validate_dialect_kwargs(dialect_kw)
 
     def get_children(self, **kwargs):
@@ -845,6 +847,13 @@ class Delete(UpdateBase):
                                      _literal_as_text(whereclause))
         else:
             self._whereclause = _literal_as_text(whereclause)
+
+    @_generative
+    def using(self, *fromclauses):
+        """Add the given USING clause to a newly returned delete construct."""
+        self._using_obj = util.OrderedSet(
+            _interpret_as_from(fromclause) for fromclause in fromclauses
+        )
 
     def _copy_internals(self, clone=_clone, **kw):
         # TODO: coverage

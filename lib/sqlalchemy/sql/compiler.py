@@ -2232,6 +2232,19 @@ class SQLCompiler(Compiled):
     def _key_getters_for_crud_column(self):
         return crud._key_getters_for_crud_column(self, self.statement)
 
+    def delete_using_clause(self, delete_stmt, from_table, usings,
+                            from_hints, **kw):
+        """Provide a hook to override the generation of an
+        DELETE..USING clause.
+
+        MySQL overrides this.
+
+        """
+        return "USING " + ', '.join(
+            t._compiler_dispatch(self, asfrom=True,
+                                 fromhints=from_hints, **kw)
+            for t in usings)
+
     def visit_delete(self, delete_stmt, asfrom=False, **kw):
         toplevel = not self.stack
 
@@ -2254,8 +2267,16 @@ class SQLCompiler(Compiled):
         if delete_stmt._hints:
             dialect_hints, table_text = self._setup_crud_hints(
                 delete_stmt, table_text)
+        else:
+            dialect_hints = None
 
         text += table_text
+
+        if delete_stmt._using_obj:
+            text += " " + self.delete_using_clause(
+                delete_stmt, delete_stmt.table, delete_stmt._using_obj,
+                dialect_hints, **kw
+            )
 
         if delete_stmt._returning:
             if self.returning_precedes_values:
