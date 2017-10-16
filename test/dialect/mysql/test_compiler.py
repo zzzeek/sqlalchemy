@@ -718,7 +718,7 @@ class SQLTest(fixtures.TestBase, AssertsCompiledSQL):
         self.assert_compile(
             sql.delete(t1).
             using(t2.join(t1, onclause=t2.c.y == t1.c.x)),
-            'DELETE FROM t1 USING t2 JOIN t1 ON t2.y = t1.x'
+            'DELETE FROM t1 USING t2 INNER JOIN t1 ON t2.y = t1.x'
         )
 
 

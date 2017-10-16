@@ -691,6 +691,7 @@ output::
 
 import re
 import sys
+import itertools
 import json
 
 from ... import schema as sa_schema
@@ -1105,7 +1106,9 @@ class MySQLCompiler(compiler.SQLCompiler):
     def delete_using_clause(self, delete_stmt, from_table,
                             usings, from_hints, **kw):
         text = "USING "
-        if from_table not in usings:
+        if from_table not in itertools.chain.from_iterable(
+                i._from_objects for i in usings
+        ):
             text += from_table._compiler_dispatch(self, asfrom=True,
                                                   fromhints=from_hints,
                                                   **kw)
