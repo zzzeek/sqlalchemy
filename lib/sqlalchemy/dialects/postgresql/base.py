@@ -1636,6 +1636,13 @@ class PGCompiler(compiler.SQLCompiler):
 
         return 'ON CONFLICT %s DO UPDATE SET %s' % (target_text, action_text)
 
+    def delete_using_clause(self, delete_stmt, from_table, usings,
+                            from_hints, **kw):
+        return "USING " + ', '.join(
+            t._compiler_dispatch(self, asfrom=True,
+                                 fromhints=from_hints, **kw)
+            for t in usings)
+
 
 class PGDDLCompiler(compiler.DDLCompiler):
 

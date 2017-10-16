@@ -2234,16 +2234,12 @@ class SQLCompiler(Compiled):
 
     def delete_using_clause(self, delete_stmt, from_table, usings,
                             from_hints, **kw):
-        """Provide a hook to override the generation of an
+        """Provide a hook to implement the generation of an
         DELETE..USING clause.
 
-        MySQL overrides this.
-
+        Overridden by PostgreSQL and MySQL.
         """
-        return "USING " + ', '.join(
-            t._compiler_dispatch(self, asfrom=True,
-                                 fromhints=from_hints, **kw)
-            for t in usings)
+        return None
 
     def visit_delete(self, delete_stmt, asfrom=False, **kw):
         toplevel = not self.stack
@@ -2273,10 +2269,12 @@ class SQLCompiler(Compiled):
         text += table_text
 
         if delete_stmt._using_obj:
-            text += " " + self.delete_using_clause(
+            using_text = self.delete_using_clause(
                 delete_stmt, delete_stmt.table, delete_stmt._using_obj,
                 dialect_hints, **kw
             )
+            if using_text:
+                text += " " + using_text
 
         if delete_stmt._returning:
             if self.returning_precedes_values:
