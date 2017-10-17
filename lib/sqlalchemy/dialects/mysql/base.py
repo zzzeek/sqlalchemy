@@ -1720,7 +1720,7 @@ class MySQLDialect(default.DefaultDialect):
 
     def get_isolation_level(self, connection):
         cursor = connection.cursor()
-        if self.server_version_info < (5, 7, 30):
+        if self.server_version_info < (5, 7, 20):
             cursor.execute('SELECT @@tx_isolation')
         else:
             cursor.execute('SELECT @@transaction_isolation')
