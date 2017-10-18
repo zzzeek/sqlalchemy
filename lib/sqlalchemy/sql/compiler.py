@@ -2239,7 +2239,9 @@ class SQLCompiler(Compiled):
 
         Overridden by PostgreSQL and MySQL.
         """
-        return None
+        raise NotImplementedError(
+            "Dialect does not implement DELETE .. USING clause."
+        )
 
     def visit_delete(self, delete_stmt, asfrom=False, **kw):
         toplevel = not self.stack
