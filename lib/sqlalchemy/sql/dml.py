@@ -846,6 +846,21 @@ class Delete(UpdateBase):
         else:
             self._whereclause = _literal_as_text(whereclause)
 
+    @property
+    def _extra_froms(self):
+        # TODO: this could be made memoized
+        # if the memoization is reset on each generative call.
+        froms = []
+        seen = {self.table}
+
+        if self._whereclause is not None:
+            for item in _from_objects(self._whereclause):
+                if not seen.intersection(item._cloned_set):
+                    froms.append(item)
+                seen.update(item._cloned_set)
+
+        return froms
+
     def _copy_internals(self, clone=_clone, **kw):
         # TODO: coverage
         self._whereclause = clone(self._whereclause, **kw)
