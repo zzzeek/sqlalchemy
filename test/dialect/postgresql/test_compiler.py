@@ -1091,6 +1091,16 @@ class CompileTest(fixtures.TestBase, AssertsCompiledSQL):
             "FROM table1 AS foo"
         )
 
+    def test_delete_using(self):
+        table1 = table('mytable', column('x'))
+        table2 = table('myothertable', column('y'))
+        self.assert_compile(delete(table1).using(table2),
+                            'DELETE FROM mytable USING myothertable')
+        self.assert_compile(delete(table1).using(table2,
+                                                 table1.alias('notmytable')),
+                            'DELETE FROM mytable USING myothertable, '
+                            'mytable AS notmytable')
+
 
 class InsertOnConflictTest(fixtures.TestBase, AssertsCompiledSQL):
     __dialect__ = postgresql.dialect()

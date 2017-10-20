@@ -691,6 +691,36 @@ class SQLTest(fixtures.TestBase, AssertsCompiledSQL):
             "t1 FULL OUTER JOIN t2 ON t1.x = t2.y"
         )
 
+    def test_delete_using(self):
+        t1 = table('t1', column('x'))
+        t2 = table('t2', column('y'))
+
+        self.assert_compile(
+            t1.delete().using(t2),
+            'DELETE FROM t1 USING t1, t2'
+        )
+        self.assert_compile(
+            t1.delete().using(t1, t2),
+            'DELETE FROM t1 USING t1, t2'
+        )
+
+    def test_delete_using_with_alias(self):
+        t1 = table('t1', column('x'))
+        t2 = table('t2', column('y'))
+        self.assert_compile(
+            sql.delete(t1.alias('a1')).using(t2),
+            'DELETE FROM a1 USING t1 as a1, t2'
+        )
+
+    def test_delete_using_with_join(self):
+        t1 = table('t1', column('x'))
+        t2 = table('t2', column('y'))
+        self.assert_compile(
+            sql.delete(t1).
+            using(t2.join(t1, onclause=t2.c.y == t1.c.x)),
+            'DELETE FROM t1 USING t2 INNER JOIN t1 ON t2.y = t1.x'
+        )
+
 
 class InsertOnDuplicateTest(fixtures.TestBase, AssertsCompiledSQL):
     __dialect__ = mysql.dialect()

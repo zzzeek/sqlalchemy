@@ -691,6 +691,7 @@ output::
 
 import re
 import sys
+import itertools
 import json
 
 from ... import schema as sa_schema
@@ -1101,6 +1102,23 @@ class MySQLCompiler(compiler.SQLCompiler):
     def update_from_clause(self, update_stmt, from_table,
                            extra_froms, from_hints, **kw):
         return None
+
+    def delete_using_clause(self, delete_stmt, from_table,
+                            usings, from_hints, **kw):
+        text = "USING "
+        if from_table not in itertools.chain.from_iterable(
+                i._from_objects for i in usings
+        ):
+            text += from_table._compiler_dispatch(self, asfrom=True,
+                                                  fromhints=from_hints,
+                                                  **kw)
+            text += ', '
+        text += ', '.join(
+            t._compiler_dispatch(self, asfrom=True, fromhints=from_hints,
+                                 **kw)
+            for t in usings
+        )
+        return text
 
 
 class MySQLDDLCompiler(compiler.DDLCompiler):
