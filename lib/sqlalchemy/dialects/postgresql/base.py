@@ -973,6 +973,12 @@ class MACADDR(sqltypes.TypeEngine):
 PGMacAddr = MACADDR
 
 
+class MONEY(sqltypes.TypeEngine):
+
+    """Provide the PostgreSQL MONEY type."""
+    __visit_name__ = "MONEY"
+PGMacAddr = MONEY
+
 class OID(sqltypes.TypeEngine):
 
     """Provide the PostgreSQL OID type.
@@ -1362,6 +1368,7 @@ ischema_names = {
     'bit': BIT,
     'bit varying': BIT,
     'macaddr': MACADDR,
+    'money': MONEY,
     'oid': OID,
     'double precision': DOUBLE_PRECISION,
     'timestamp': TIMESTAMP,
@@ -1830,6 +1837,9 @@ class PGTypeCompiler(compiler.GenericTypeCompiler):
 
     def visit_MACADDR(self, type_, **kw):
         return "MACADDR"
+
+    def visit_MONEY(self, type_, **kw):
+        return "MONEY"
 
     def visit_OID(self, type_, **kw):
         return "OID"
