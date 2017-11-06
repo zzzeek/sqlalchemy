@@ -13,7 +13,7 @@ from ...sql import sqltypes
 
 
 class _EnumeratedValues(_StringType):
-    def _init_values(self, values, kw):
+    def _init_values(self, values, kw, isset=False):
         self.quoting = kw.pop('quoting', 'auto')
 
         if self.quoting == 'auto' and len(values):
@@ -41,7 +41,10 @@ class _EnumeratedValues(_StringType):
             values = self._strip_values(values)
 
         self._enumerated_values = values
-        length = max([len(v) for v in values] + [0])
+        if isset:
+            length = sum(map(len, values)) + len(values) - 1
+        else:
+            length = max([len(v) for v in values] + [0])
         return values, length
 
     @classmethod
@@ -216,7 +219,7 @@ class SET(_EnumeratedValues):
 
         """
         self.retrieve_as_bitwise = kw.pop('retrieve_as_bitwise', False)
-        values, length = self._init_values(values, kw)
+        values, length = self._init_values(values, kw, True)
         self.values = tuple(values)
         if not self.retrieve_as_bitwise and '' in values:
             raise exc.ArgumentError(
@@ -302,9 +305,12 @@ class SET(_EnumeratedValues):
         return process
 
     def adapt(self, impltype, **kw):
-        kw['retrieve_as_bitwise'] = self.retrieve_as_bitwise
+        values = []
+        if issubclass(impltype, SET):
+            kw['retrieve_as_bitwise'] = self.retrieve_as_bitwise
+            values = self.values
         return util.constructor_copy(
             self, impltype,
-            *self.values,
+            *values,
             **kw
         )
