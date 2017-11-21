@@ -8,7 +8,7 @@ from sqlalchemy import Table, MetaData, Column, select, String, \
     NUMERIC, DECIMAL, Numeric, Float, FLOAT, TIMESTAMP, DATE, \
     DATETIME, TIME, \
     DateTime, Time, Date, Interval, NCHAR, CHAR, CLOB, TEXT, Boolean, \
-    BOOLEAN, LargeBinary, BLOB, SmallInteger, INT, func, cast, literal
+    BOOLEAN, LargeBinary, BLOB, SmallInteger, INT, func, cast, literal, and_
 
 from sqlalchemy.dialects.mysql import insert
 from sqlalchemy.dialects.mysql import base as mysql
@@ -349,6 +349,28 @@ class SQLTest(fixtures.TestBase, AssertsCompiledSQL):
             t.update(t.c.col2 == 456, values={'col1': 123}, mysql_limit=1),
             "UPDATE t SET col1=%s WHERE t.col2 = %s LIMIT 1"
         )
+
+    def test_delete_from(self):
+        t1 = sql.table('t1', sql.column('col1'), sql.column('col2'))
+        t2 = sql.table('t2', sql.column('col1'), sql.column('col2'))
+        t2_alias = t2.alias('t2_alias')
+        t3 = sql.table('t3', sql.column('col1'), sql.column('col2'))
+
+        self.assert_compile(t1.delete(t1.c.col1 == t2.c.col1),
+                            'DELETE FROM t1 '
+                            'USING t1, t2 '
+                            'WHERE t1.col1 = t2.col1')
+
+        self.assert_compile(t1.delete(t1.c.col1 == t2_alias.c.col1),
+                            'DELETE FROM t1 '
+                            'USING t1, t2 AS t2_alias '
+                            'WHERE t1.col1 = t2_alias.col1')
+
+        self.assert_compile(t1.delete(and_(t1.c.col1 == t2.c.col1, t1.c.col2 == t3.c.col2)),
+                            'DELETE FROM t1 '
+                            'USING t1, t2, t3 '
+                            'WHERE t1.col1 = t2.col1 '
+                            'AND t1.col2 = t3.col2')
 
     def test_utc_timestamp(self):
         self.assert_compile(func.utc_timestamp(), "utc_timestamp()")

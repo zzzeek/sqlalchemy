@@ -799,7 +799,7 @@ class Delete(UpdateBase):
                  returning=None,
                  prefixes=None,
                  **dialect_kw):
-        """Construct :class:`.Delete` object.
+        r"""Construct :class:`.Delete` object.
 
         Similar functionality is available via the
         :meth:`~.TableClause.delete` method on
@@ -810,6 +810,23 @@ class Delete(UpdateBase):
         :param whereclause: A :class:`.ClauseElement` describing the ``WHERE``
           condition of the ``DELETE`` statement. Note that the
           :meth:`~Delete.where()` generative method may be used instead.
+
+          The WHERE clause can refer to multiple tables.
+          For databases which support this, a ``DELETE FROM...USING`` clause
+          will be generated, or on MySQL, a multi-table delete.  The statement
+          will fail on databases that don't have support for multi-table
+          delete statements.  A SQL-standard method of referring to additional
+          tables in the WHERE clause is to use a correlated subquery::
+
+             users.delete().where(
+                     users.c.name==select([addresses.c.email_address]).\
+                                 where(and_(addresses.c.user_id==users.c.id,\
+                                        addresses.c.verified == False)).\
+                                 as_scalar()
+                     )
+
+          .. versionchanged:: x.x.x
+              The WHERE clause can refer to multiple tables.
 
         .. seealso::
 
@@ -845,6 +862,21 @@ class Delete(UpdateBase):
                                      _literal_as_text(whereclause))
         else:
             self._whereclause = _literal_as_text(whereclause)
+
+    @property
+    def _extra_froms(self):
+        # TODO: this could be made memoized
+        # if the memoization is reset on each generative call.
+        froms = []
+        seen = {self.table}
+
+        if self._whereclause is not None:
+            for item in _from_objects(self._whereclause):
+                if not seen.intersection(item._cloned_set):
+                    froms.append(item)
+                seen.update(item._cloned_set)
+
+        return froms
 
     def _copy_internals(self, clone=_clone, **kw):
         # TODO: coverage

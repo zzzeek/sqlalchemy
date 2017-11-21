@@ -2232,12 +2232,35 @@ class SQLCompiler(Compiled):
     def _key_getters_for_crud_column(self):
         return crud._key_getters_for_crud_column(self, self.statement)
 
+    def delete_tables_clause(self, delete_stmt, from_table,
+                             extra_froms, **kw):
+        """Provide a hook to override the initial table clause
+        in a DELETE statement.
+
+        MySQL overrides this.
+
+        """
+        kw['asfrom'] = True
+        return from_table._compiler_dispatch(self, iscrud=True, **kw)
+
+    def delete_using_clause(self, delete_stmt,
+                            from_table, extra_froms,
+                            **kw):
+        """Provide a hook to override the generation of an
+        DELETE...USING clause.
+        """
+        return "USING " + ', '.join(
+            t._compiler_dispatch(self, asfrom = True, **kw)
+            for t in extra_froms)
+
     def visit_delete(self, delete_stmt, asfrom=False, **kw):
         toplevel = not self.stack
 
         self.stack.append({'correlate_froms': {delete_stmt.table},
                            "asfrom_froms": {delete_stmt.table},
                            "selectable": delete_stmt})
+
+        extra_froms = delete_stmt._extra_froms
 
         crud._setup_crud_params(self, delete_stmt, crud.ISDELETE, **kw)
 
@@ -2248,8 +2271,8 @@ class SQLCompiler(Compiled):
                                             delete_stmt._prefixes, **kw)
 
         text += "FROM "
-        table_text = delete_stmt.table._compiler_dispatch(
-            self, asfrom=True, iscrud=True)
+        table_text = self.delete_tables_clause(delete_stmt, delete_stmt.table,
+                                               extra_froms, **kw)
 
         if delete_stmt._hints:
             dialect_hints, table_text = self._setup_crud_hints(
@@ -2261,6 +2284,14 @@ class SQLCompiler(Compiled):
             if self.returning_precedes_values:
                 text += " " + self.returning_clause(
                     delete_stmt, delete_stmt._returning)
+
+        if extra_froms:
+            extra_from_text = self.delete_using_clause(
+                delete_stmt,
+                delete_stmt.table,
+                extra_froms, **kw)
+            if extra_from_text:
+                text += " " + extra_from_text
 
         if delete_stmt._whereclause is not None:
             t = delete_stmt._whereclause._compiler_dispatch(self, **kw)

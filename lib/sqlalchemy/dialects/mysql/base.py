@@ -1102,6 +1102,12 @@ class MySQLCompiler(compiler.SQLCompiler):
                            extra_froms, from_hints, **kw):
         return None
 
+    def delete_using_clause(self, delete_stmt,
+                            from_table, extra_froms,
+                            **kw):
+        return "USING " + ', '.join(t._compiler_dispatch(self, asfrom=True, **kw)
+                         for t in [from_table] + list(extra_froms))
+
 
 class MySQLDDLCompiler(compiler.DDLCompiler):
     def get_column_specification(self, column, **kw):

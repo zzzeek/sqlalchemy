@@ -1510,6 +1510,20 @@ class MSSQLCompiler(compiler.SQLCompiler):
                                  fromhints=from_hints, **kw)
             for t in [from_table] + extra_froms)
 
+    def delete_using_clause(self, update_stmt,
+                           from_table, extra_froms,
+                           **kw):
+        """Render the DELETE..FROM clause specific to MSSQL.
+
+        In MSSQL, if the DELETE statement involves an alias of the table to
+        be deleted, then the table itself must be added to the FROM list as
+        well. Otherwise, it is optional. Here, we add it regardless.
+
+        """
+        return "FROM " + ', '.join(
+            t._compiler_dispatch(self, asfrom=True, **kw)
+            for t in extra_froms)
+
 
 class MSSQLStrictCompiler(MSSQLCompiler):
 
