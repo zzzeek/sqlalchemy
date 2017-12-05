@@ -125,7 +125,7 @@ by adding the ``use_batch_mode`` flag to :func:`.create_engine`::
 
     engine = create_engine(
         "postgresql+psycopg2://scott:tiger@host/dbname",
-        use_batch_mode=True)
+        connect_args={'use_batch_mode': True})
 
 Batch mode is considered to be **experimental** at this time, however may
 be enabled by default in a future release.
