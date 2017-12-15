@@ -613,7 +613,7 @@ import operator
 import re
 
 from ... import sql, schema as sa_schema, exc, util
-from ...sql import compiler, expression, util as sql_util, quoted_name
+from ...sql import compiler, expression, util as sql_util, quoted_name, elements
 from ... import engine
 from ...engine import reflection, default
 from ... import types as sqltypes
@@ -1284,6 +1284,15 @@ class MSSQLCompiler(compiler.SQLCompiler):
 
     def visit_false(self, expr, **kw):
         return '0'
+
+    def visit_is__binary(self, binary, operator, **kw):
+        op = '='
+        if isinstance(binary.right, elements.Null):
+            op = 'IS'
+        return "%s %s %s" % \
+               (self.process(binary.left, **kw),
+                op,
+                self.process(binary.right, **kw))
 
     def visit_match_op_binary(self, binary, operator, **kw):
         return "CONTAINS (%s, %s)" % (
