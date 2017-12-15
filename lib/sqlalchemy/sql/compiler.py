@@ -1077,7 +1077,8 @@ class SQLCompiler(Compiled):
                 return self._generate_generic_binary(binary, opstring, **kw)
 
     def visit_mod_binary(self, binary, operator, **kw):
-        if self.preparer._double_percents:
+        if self.preparer._double_percents and \
+                not kw.get('literal_binds', False):
             return self.process(binary.left, **kw) + " %% " + \
                 self.process(binary.right, **kw)
         else:

@@ -2726,6 +2726,15 @@ class SelectTest(fixtures.TestBase, AssertsCompiledSQL):
                       and_, ("a",), ("b",)
                       )
 
+    def test_literal_binds_with_mod_and_double_percents(self):
+        stmt = select([(table1.c.myid % 1).label('col')])
+        self.assert_compile(
+            stmt,
+            "SELECT mytable.myid % 1 AS col FROM mytable",
+            dialect='postgresql',
+            literal_binds=True,
+        )
+
 
 class UnsupportedTest(fixtures.TestBase):
 
