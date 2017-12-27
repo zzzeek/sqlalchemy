@@ -1348,7 +1348,7 @@ class Enum(Emulated, String, SchemaType):
             self.enum_class = enums[0]
             values_callable = kw.pop('values_callable', None)
             if values_callable:
-                self._values_callable = values_callable
+                self.values_callable = values_callable
                 values = values_callable(self.enum_class)
             else:
                 values = list(self.enum_class.__members__)
