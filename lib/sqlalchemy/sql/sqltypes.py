@@ -1277,6 +1277,11 @@ class Enum(Emulated, String, SchemaType):
 
            .. versionadded:: 1.1.0b2
 
+        :param values_callable: A callable which will be passed the PEP-435 compliant
+            enumerated type and which will return a list of values. This allows for
+            alternate usages such as using the string value of an enum to be persisted
+            to the database instead of its name.
+
         """
         self._enum_init(enums, kw)
 
@@ -1341,8 +1346,13 @@ class Enum(Emulated, String, SchemaType):
 
         if len(enums) == 1 and hasattr(enums[0], '__members__'):
             self.enum_class = enums[0]
-            values = list(self.enum_class.__members__)
-            objects = [self.enum_class.__members__[k] for k in values]
+            values_callable = kw.pop('values_callable', None)
+            if values_callable:
+                self._values_callable = values_callable
+                values = values_callable(self.enum_class)
+            else:
+                values = list(self.enum_class.__members__)
+            objects = [self.enum_class.__members__[k] for k in self.enum_class.__members__]
             return values, objects
         else:
             self.enum_class = None
