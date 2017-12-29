@@ -1189,6 +1189,12 @@ class Enum(Emulated, String, SchemaType):
     indicated as integers, are **not** used; the value of each enum can
     therefore be any kind of Python object whether or not it is persistable.
 
+    This behavior can be customized by using the `values_callable` parameter.
+    `values_callable`, when used with a PEP-435-compliant enumerated class,
+    returns a list of values to use. Passing a trivial callable such as
+    ``lambda x: [e.value for e in x]`` allows the use of the string value
+    instead of the name as described above.
+
     .. versionadded:: 1.1 - support for PEP-435-style enumerated
        classes.
 
@@ -1282,6 +1288,8 @@ class Enum(Emulated, String, SchemaType):
             alternate usages such as using the string value of an enum to be persisted
             to the database instead of its name.
 
+            .. versionadded:: TODO
+
         """
         self._enum_init(enums, kw)
 
@@ -1302,6 +1310,7 @@ class Enum(Emulated, String, SchemaType):
         """
         self.native_enum = kw.pop('native_enum', True)
         self.create_constraint = kw.pop('create_constraint', True)
+        self.values_callable = kw.pop('values_callable', None)
 
         values, objects = self._parse_into_values(enums, kw)
         self._setup_for_values(values, objects, kw)
@@ -1346,10 +1355,8 @@ class Enum(Emulated, String, SchemaType):
 
         if len(enums) == 1 and hasattr(enums[0], '__members__'):
             self.enum_class = enums[0]
-            values_callable = kw.pop('values_callable', None)
-            if values_callable:
-                self.values_callable = values_callable
-                values = values_callable(self.enum_class)
+            if self.values_callable:
+                values = self.values_callable(self.enum_class)
             else:
                 values = list(self.enum_class.__members__)
             objects = [self.enum_class.__members__[k] for k in self.enum_class.__members__]

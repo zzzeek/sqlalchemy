@@ -13,6 +13,7 @@ from sqlalchemy import testing
 import datetime
 import decimal
 from sqlalchemy import types as sqltypes
+from enum import Enum as PyEnum
 
 
 class TypesTest(fixtures.TestBase,
@@ -651,6 +652,10 @@ class EnumSetTest(
     __dialect__ = mysql.dialect()
     __backend__ = True
 
+    class StringEnum(PyEnum):
+        AMember = 'a'
+        BMember = 'b'
+
     @testing.provide_metadata
     def test_enum(self):
         """Exercise the ENUM type."""
@@ -672,6 +677,8 @@ class EnumSetTest(
             Column('e5', mysql.ENUM("a", "b")),
             Column('e5generic', Enum("a", "b")),
             Column('e6', mysql.ENUM("'a'", "b")),
+            Column('e7', mysql.ENUM(EnumSetTest.StringEnum, values_callable=lambda x: [e.value for e in x])),
+            Column('e8', mysql.ENUM(EnumSetTest.StringEnum))
         )
 
         eq_(
@@ -698,6 +705,14 @@ class EnumSetTest(
         eq_(
             colspec(enum_table.c.e6),
             "e6 ENUM('''a''','b')")
+        eq_(
+            colspec(enum_table.c.e7),
+            "e7 ENUM('a','b')"
+        )
+        eq_(
+            colspec(enum_table.c.e8),
+            "e8 ENUM('AMember','BMember')"
+        )
         enum_table.create()
 
         assert_raises(
@@ -709,19 +724,27 @@ class EnumSetTest(
             exc.StatementError,
             enum_table.insert().execute,
             e1='c', e2='c', e2generic='c', e3='c',
-            e4='c', e5='c', e5generic='c', e6='c')
+            e4='c', e5='c', e5generic='c', e6='c',
+            e7='c', e8='c')
 
         enum_table.insert().execute()
         enum_table.insert().execute(e1='a', e2='a', e2generic='a', e3='a',
-                                    e4='a', e5='a', e5generic='a', e6="'a'")
+                                    e4='a', e5='a', e5generic='a', e6="'a'",
+                                    e7='a', e8='AMember')
         enum_table.insert().execute(e1='b', e2='b', e2generic='b', e3='b',
-                                    e4='b', e5='b', e5generic='b', e6='b')
+                                    e4='b', e5='b', e5generic='b', e6='b',
+                                    e7='b', e8='BMember')
 
         res = enum_table.select().execute().fetchall()
 
-        expected = [(None, 'a', 'a', None, 'a', None, None, None),
-                    ('a', 'a', 'a', 'a', 'a', 'a', 'a', "'a'"),
-                    ('b', 'b', 'b', 'b', 'b', 'b', 'b', 'b')]
+        expected = [(None, 'a', 'a', None, 'a', None, None, None,
+                     None, None),
+                    ('a', 'a', 'a', 'a', 'a', 'a', 'a', "'a'",
+                     EnumSetTest.StringEnum.AMember,
+                     EnumSetTest.StringEnum.AMember),
+                    ('b', 'b', 'b', 'b', 'b', 'b', 'b', 'b',
+                     EnumSetTest.StringEnum.BMember,
+                     EnumSetTest.StringEnum.BMember)]
 
         eq_(res, expected)
 
