@@ -13,7 +13,7 @@ from sqlalchemy import testing
 import datetime
 import decimal
 from sqlalchemy import types as sqltypes
-from enum import Enum as PyEnum
+from ...sql.test_types import EnumTest
 
 
 class TypesTest(fixtures.TestBase,
@@ -652,10 +652,6 @@ class EnumSetTest(
     __dialect__ = mysql.dialect()
     __backend__ = True
 
-    class StringEnum(PyEnum):
-        AMember = 'a'
-        BMember = 'b'
-
     @testing.provide_metadata
     def test_enum(self):
         """Exercise the ENUM type."""
@@ -677,8 +673,10 @@ class EnumSetTest(
             Column('e5', mysql.ENUM("a", "b")),
             Column('e5generic', Enum("a", "b")),
             Column('e6', mysql.ENUM("'a'", "b")),
-            Column('e7', mysql.ENUM(EnumSetTest.StringEnum, values_callable=lambda x: [e.value for e in x])),
-            Column('e8', mysql.ENUM(EnumSetTest.StringEnum))
+            Column('e7', mysql.ENUM(EnumTest.SomeEnum,
+                                    values_callable=EnumTest.
+                                    get_enum_string_values)),
+            Column('e8', mysql.ENUM(EnumTest.SomeEnum))
         )
 
         eq_(
@@ -707,11 +705,11 @@ class EnumSetTest(
             "e6 ENUM('''a''','b')")
         eq_(
             colspec(enum_table.c.e7),
-            "e7 ENUM('a','b')"
+            "e7 ENUM('1','2','3','a','b')"
         )
         eq_(
             colspec(enum_table.c.e8),
-            "e8 ENUM('AMember','BMember')"
+            "e8 ENUM('one','two','three','AMember','BMember')"
         )
         enum_table.create()
 
@@ -740,11 +738,11 @@ class EnumSetTest(
         expected = [(None, 'a', 'a', None, 'a', None, None, None,
                      None, None),
                     ('a', 'a', 'a', 'a', 'a', 'a', 'a', "'a'",
-                     EnumSetTest.StringEnum.AMember,
-                     EnumSetTest.StringEnum.AMember),
+                     EnumTest.SomeEnum.AMember,
+                     EnumTest.SomeEnum.AMember),
                     ('b', 'b', 'b', 'b', 'b', 'b', 'b', 'b',
-                     EnumSetTest.StringEnum.BMember,
-                     EnumSetTest.StringEnum.BMember)]
+                     EnumTest.SomeEnum.BMember,
+                     EnumTest.SomeEnum.BMember)]
 
         eq_(res, expected)
 
