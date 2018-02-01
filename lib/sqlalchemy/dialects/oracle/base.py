@@ -1569,7 +1569,6 @@ class OracleDialect(default.DefaultDialect):
         text += (
             "\nAND ac.owner = loc.owner"
             "\nAND ac.constraint_name = loc.constraint_name"
-            "\nAND ac.status = 'ENABLED'"
             "\nAND ac.r_owner = rem.owner(+)"
             "\nAND ac.r_constraint_name = rem.constraint_name(+)"
             "\nAND (rem.position IS NULL or loc.position=rem.position)"
