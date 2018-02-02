@@ -1,3 +1,4 @@
+from sqlalchemy.orm.exc import FlushError
 from sqlalchemy.testing import assert_raises_message, assert_raises
 import sqlalchemy as sa
 from sqlalchemy import testing
@@ -1284,6 +1285,29 @@ class SessionEventsTest(_RemoveListeners, _fixtures.FixtureTest):
             event.listen(sess, evt, listener(evt))
 
         return sess, canary
+
+    def test_failed_commit_hook(self):
+        User, users = self.classes.User, self.tables.users
+        mapper(User, users)
+
+        sess = Session()
+
+        processed_failed_commit = []
+        @event.listens_for(sess, "failed_commit")
+        def do_something(session):
+            processed_failed_commit.append(True)
+
+        u = User(name='u1', id=1)
+        sess.add(u)
+        sess.commit()
+
+        u2 = User(name='u2', id=1)
+        sess.add(u2)
+
+        assert_raises(FlushError, sess.commit)
+
+        assert len(processed_failed_commit) == 1
+        assert processed_failed_commit[0]
 
     def test_flush_autocommit_hook(self):
         User, users = self.classes.User, self.tables.users

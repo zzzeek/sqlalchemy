@@ -1285,6 +1285,8 @@ class SessionEvents(event.Events):
 
             :meth:`~.SessionEvents.after_commit`
 
+            :meth:`~.SessionEvents.failed_commit`
+
             :meth:`~.SessionEvents.after_begin`
 
             :meth:`~.SessionEvents.after_transaction_create`
@@ -1321,11 +1323,33 @@ class SessionEvents(event.Events):
 
             :meth:`~.SessionEvents.before_commit`
 
+            :meth:`~.SessionEvents.failed_commit`
+
             :meth:`~.SessionEvents.after_begin`
 
             :meth:`~.SessionEvents.after_transaction_create`
 
             :meth:`~.SessionEvents.after_transaction_end`
+
+        """
+
+    def failed_commit(self, session):
+        """Execute after a commit has raised.
+
+        .. note::
+
+            The :meth:`~.SessionEvents.failed_commit` hook is executed if an
+            exception is raised during the commit process, including
+            :meth:`~.SessionEvents.before_commit` and
+            :meth:`~.SessionEvents.after_commit` event hooks.
+
+            After this hook executes, the exception will continue to be raised.
+
+        .. seealso::
+
+            :meth:`~.SessionEvents.before_commit`
+
+            :meth:`~.SessionEvents.after_commit`
 
         """
 

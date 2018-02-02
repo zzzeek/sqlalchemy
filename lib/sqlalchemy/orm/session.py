@@ -463,18 +463,22 @@ class SessionTransaction(object):
 
     def commit(self):
         self._assert_active(prepared_ok=True)
-        if self._state is not PREPARED:
-            self._prepare_impl()
+        try:
+            if self._state is not PREPARED:
+                self._prepare_impl()
 
-        if self._parent is None or self.nested:
-            for t in set(self._connections.values()):
-                t[1].commit()
+            if self._parent is None or self.nested:
+                for t in set(self._connections.values()):
+                    t[1].commit()
 
-            self._state = COMMITTED
-            self.session.dispatch.after_commit(self.session)
+                self._state = COMMITTED
+                self.session.dispatch.after_commit(self.session)
 
-            if self.session._enable_transaction_accounting:
-                self._remove_snapshot()
+                if self.session._enable_transaction_accounting:
+                    self._remove_snapshot()
+        except:
+            self.session.dispatch.failed_commit(self.session)
+            raise
 
         self.close()
         return self._parent
