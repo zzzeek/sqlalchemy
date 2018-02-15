@@ -172,8 +172,12 @@ class MySQLTableDefinitionParser(object):
 
         name, type_, args = spec['name'], spec['coltype'], spec['arg']
 
+        if type_ == 'as':
+            util.warn("Unsupported computed column %r" % line)
+            return
+
         try:
-            col_type = self.dialect.ischema_names[type_]
+            col_type = self.dialect.ischema_names[type_.lower()]
         except KeyError:
             util.warn("Did not recognize type '%s' of column '%s'" %
                       (type_, name))

@@ -2008,13 +2008,15 @@ class JSON(Indexable, TypeEngine):
 
     """
 
-    def __init__(self, none_as_null=False):
+    def __init__(self, none_as_null=False, collate=None):
         """Construct a :class:`.types.JSON` type.
 
         :param none_as_null=False: if True, persist the value ``None`` as a
          SQL NULL value, not the JSON encoding of ``null``.   Note that
          when this flag is False, the :func:`.null` construct can still
          be used to persist a NULL value::
+        :param collate=None: if None, uses default collate otherwise uses
+        specified collate::
 
              from sqlalchemy import null
              conn.execute(table.insert(), data=null())
@@ -2032,6 +2034,7 @@ class JSON(Indexable, TypeEngine):
 
          """
         self.none_as_null = none_as_null
+        self.collate = collate
 
     class JSONElementType(TypeEngine):
         """common function for index / path elements in a JSON expression."""
