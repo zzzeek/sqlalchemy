@@ -597,7 +597,8 @@ class Session(_SessionClassMethods):
                  weak_identity_map=True, binds=None, extension=None,
                  enable_baked_queries=True,
                  info=None,
-                 query_cls=query.Query):
+                 query_cls=query.Query,
+                 *args, **kwargs):
         r"""Construct a new Session.
 
         See also the :class:`.sessionmaker` function which is used to
@@ -776,6 +777,8 @@ class Session(_SessionClassMethods):
         if not self.autocommit:
             self.begin()
         _sessions[self.hash_key] = self
+
+        super(Session, self).__init__(*args, **kwargs)
 
     connection_callable = None
 
