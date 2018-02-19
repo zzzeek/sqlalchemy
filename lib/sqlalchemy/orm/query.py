@@ -110,7 +110,7 @@ class Query(object):
     _current_path = _path_registry
     _has_mapper_entities = False
 
-    def __init__(self, entities, session=None):
+    def __init__(self, entities, session=None, *args, **kwargs):
         """Construct a :class:`.Query` directly.
 
         E.g.::
@@ -138,6 +138,8 @@ class Query(object):
         self.session = session
         self._polymorphic_adapters = {}
         self._set_entities(entities)
+
+        super(Query, self).__init__(*args, **kwargs)
 
     def _set_entities(self, entities, entity_wrapper=None):
         if entity_wrapper is None:
