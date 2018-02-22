@@ -3,8 +3,9 @@ import os
 from sqlalchemy import *
 from sqlalchemy import event
 from sqlalchemy import sql, util
+from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.orm import *
-from sqlalchemy.ext.horizontal_shard import ShardedSession
+from sqlalchemy.ext.horizontal_shard import ShardedSession, ShardedQuery
 from sqlalchemy.sql import operators
 from sqlalchemy.testing import fixtures
 from sqlalchemy.testing.engines import testing_engine
@@ -274,6 +275,26 @@ class ShardTest(object):
         t = bq(sess).with_post_criteria(
             lambda q: q.set_shard("asia")).one()
         eq_(t.city, tokyo.city)
+
+    def test_refresh(self):
+        sess = self._fixture_data()
+
+        tokyo = sess.query(WeatherLocation).filter_by(city="Tokyo").one()
+        original = ShardedQuery._finalize_instance_loading
+        ShardedQuery._finalize_instance_loading = lambda *args: ''  # pass
+        with testing.mock.patch('sqlalchemy.ext.horizontal_shard.ShardedQuery.instances') as mocked_instances:
+            try:
+                sess.refresh(tokyo)
+            except InvalidRequestError:
+                pass
+        assert mocked_instances.call_count == 4  # call each shard
+        ShardedQuery._finalize_instance_loading = original
+        with testing.mock.patch('sqlalchemy.engine.result.ResultProxy') as mocked_instances:
+            try:
+                sess.refresh(tokyo)
+            except InvalidRequestError:
+                pass
+        assert mocked_instances.call_count == 1
 
     def test_shard_id_event(self):
         canary = []
