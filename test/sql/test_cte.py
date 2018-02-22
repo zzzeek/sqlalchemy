@@ -319,6 +319,32 @@ class CTETest(fixtures.TestBase, AssertsCompiledSQL):
             '(SELECT "CTE".id AS id FROM "CTE") AS anon_2'
         )
 
+    def test_named_alias_no_quote(self):
+        cte = select([literal(1).label("id")]).cte(name='CTE')
+
+        s1 = select([cte.c.id]).alias(name="no_quotes")
+
+        s = select([s1])
+        self.assert_compile(
+            s,
+            'WITH "CTE" AS (SELECT :param_1 AS id) '
+            'SELECT no_quotes.id FROM '
+            '(SELECT "CTE".id AS id FROM "CTE") AS no_quotes'
+        )
+
+    def test_named_alias_quote(self):
+        cte = select([literal(1).label("id")]).cte(name='CTE')
+
+        s1 = select([cte.c.id]).alias(name="Quotes Required")
+
+        s = select([s1])
+        self.assert_compile(
+            s,
+            'WITH "CTE" AS (SELECT :param_1 AS id) '
+            'SELECT "Quotes Required".id FROM '
+            '(SELECT "CTE".id AS id FROM "CTE") AS "Quotes Required"'
+        )
+
     def test_positional_binds(self):
         orders = table('orders',
                        column('order'),
