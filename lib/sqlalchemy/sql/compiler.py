@@ -1,5 +1,5 @@
 # sql/compiler.py
-# Copyright (C) 2005-2017 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2018 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -271,7 +271,7 @@ class Compiled(object):
         if e is None:
             raise exc.UnboundExecutionError(
                 "This Compiled object is not bound to any Engine "
-                "or Connection.")
+                "or Connection.", code="2afi")
         return e._execute_compiled(self, multiparams, params)
 
     def scalar(self, *multiparams, **params):
@@ -540,11 +540,11 @@ class SQLCompiler(Compiled):
                         raise exc.InvalidRequestError(
                             "A value is required for bind parameter %r, "
                             "in parameter group %d" %
-                            (bindparam.key, _group_number))
+                            (bindparam.key, _group_number), code="cd3x")
                     else:
                         raise exc.InvalidRequestError(
                             "A value is required for bind parameter %r"
-                            % bindparam.key)
+                            % bindparam.key, code="cd3x")
 
                 elif bindparam.callable:
                     pd[name] = bindparam.effective_value
@@ -559,11 +559,11 @@ class SQLCompiler(Compiled):
                         raise exc.InvalidRequestError(
                             "A value is required for bind parameter %r, "
                             "in parameter group %d" %
-                            (bindparam.key, _group_number))
+                            (bindparam.key, _group_number), code="cd3x")
                     else:
                         raise exc.InvalidRequestError(
                             "A value is required for bind parameter %r"
-                            % bindparam.key)
+                            % bindparam.key, code="cd3x")
 
                 if bindparam.callable:
                     pd[self.bind_names[bindparam]] = bindparam.effective_value
@@ -732,6 +732,9 @@ class SQLCompiler(Compiled):
             return schema_prefix + \
                 self.preparer.quote(tablename) + \
                 "." + name
+
+    def visit_collation(self, element, **kw):
+        return self.preparer.format_collation(element.collation)
 
     def visit_fromclause(self, fromclause, **kwargs):
         return fromclause.name
@@ -2146,10 +2149,9 @@ class SQLCompiler(Compiled):
         MySQL and MSSQL override this.
 
         """
-        return "FROM " + ', '.join(
-            t._compiler_dispatch(self, asfrom=True,
-                                 fromhints=from_hints, **kw)
-            for t in extra_froms)
+        raise NotImplementedError(
+            "This backend does not support multiple-table "
+            "criteria within UPDATE")
 
     def visit_update(self, update_stmt, asfrom=False, **kw):
         toplevel = not self.stack
@@ -2232,6 +2234,25 @@ class SQLCompiler(Compiled):
     def _key_getters_for_crud_column(self):
         return crud._key_getters_for_crud_column(self, self.statement)
 
+    def delete_extra_from_clause(self, update_stmt,
+                                 from_table, extra_froms,
+                                 from_hints, **kw):
+        """Provide a hook to override the generation of an
+        DELETE..FROM clause.
+
+        This can be used to implement DELETE..USING for example.
+
+        MySQL and MSSQL override this.
+
+        """
+        raise NotImplementedError(
+            "This backend does not support multiple-table "
+            "criteria within DELETE")
+
+    def delete_table_clause(self, delete_stmt, from_table,
+                            extra_froms):
+        return from_table._compiler_dispatch(self, asfrom=True, iscrud=True)
+
     def visit_delete(self, delete_stmt, asfrom=False, **kw):
         toplevel = not self.stack
 
@@ -2241,6 +2262,8 @@ class SQLCompiler(Compiled):
 
         crud._setup_crud_params(self, delete_stmt, crud.ISDELETE, **kw)
 
+        extra_froms = delete_stmt._extra_froms
+
         text = "DELETE "
 
         if delete_stmt._prefixes:
@@ -2248,12 +2271,14 @@ class SQLCompiler(Compiled):
                                             delete_stmt._prefixes, **kw)
 
         text += "FROM "
-        table_text = delete_stmt.table._compiler_dispatch(
-            self, asfrom=True, iscrud=True)
+        table_text = self.delete_table_clause(delete_stmt, delete_stmt.table,
+                                              extra_froms)
 
         if delete_stmt._hints:
             dialect_hints, table_text = self._setup_crud_hints(
                 delete_stmt, table_text)
+        else:
+            dialect_hints = None
 
         text += table_text
 
@@ -2261,6 +2286,15 @@ class SQLCompiler(Compiled):
             if self.returning_precedes_values:
                 text += " " + self.returning_clause(
                     delete_stmt, delete_stmt._returning)
+
+        if extra_froms:
+            extra_from_text = self.delete_extra_from_clause(
+                delete_stmt,
+                delete_stmt.table,
+                extra_froms,
+                dialect_hints, **kw)
+            if extra_from_text:
+                text += " " + extra_from_text
 
         if delete_stmt._whereclause is not None:
             t = delete_stmt._whereclause._compiler_dispatch(self, **kw)
@@ -2323,6 +2357,24 @@ class StrSQLCompiler(SQLCompiler):
         ]
 
         return 'RETURNING ' + ', '.join(columns)
+
+    def update_from_clause(self, update_stmt,
+                           from_table, extra_froms,
+                           from_hints,
+                           **kw):
+        return "FROM " + ', '.join(
+            t._compiler_dispatch(self, asfrom=True,
+                                 fromhints=from_hints, **kw)
+            for t in extra_froms)
+
+    def delete_extra_from_clause(self, update_stmt,
+                           from_table, extra_froms,
+                           from_hints,
+                           **kw):
+        return ', ' + ', '.join(
+            t._compiler_dispatch(self, asfrom=True,
+                                 fromhints=from_hints, **kw)
+            for t in extra_froms)
 
 
 class DDLCompiler(Compiled):
@@ -2912,7 +2964,8 @@ class IdentifierPreparer(object):
     schema_for_object = schema._schema_getter(None)
 
     def __init__(self, dialect, initial_quote='"',
-                 final_quote=None, escape_quote='"', omit_schema=False):
+                 final_quote=None, escape_quote='"',
+                 quote_case_sensitive_collations=True, omit_schema=False):
         """Construct a new ``IdentifierPreparer`` object.
 
         initial_quote
@@ -2933,6 +2986,7 @@ class IdentifierPreparer(object):
         self.escape_quote = escape_quote
         self.escape_to_quote = self.escape_quote * 2
         self.omit_schema = omit_schema
+        self.quote_case_sensitive_collations = quote_case_sensitive_collations
         self._strings = {}
         self._double_percents = self.dialect.paramstyle in ('format', 'pyformat')
 
@@ -3014,6 +3068,12 @@ class IdentifierPreparer(object):
             return self.quote_identifier(ident)
         else:
             return ident
+
+    def format_collation(self, collation_name):
+        if self.quote_case_sensitive_collations:
+            return self.quote(collation_name)
+        else:
+            return collation_name
 
     def format_sequence(self, sequence, use_schema=True):
         name = self.quote(sequence.name)

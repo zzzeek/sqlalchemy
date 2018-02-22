@@ -1,5 +1,4 @@
-# oracle/cx_oracle.py
-# Copyright (C) 2005-2017 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2018 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -223,6 +222,8 @@ class _OracleNumeric(sqltypes.Numeric):
             def process(value):
                 if isinstance(value, (int, float)):
                     return processor(value)
+                elif value is not None and value.is_infinite():
+                    return float(value)
                 else:
                     return value
             return process
@@ -242,7 +243,12 @@ class _OracleNumeric(sqltypes.Numeric):
             outconverter = None
             if precision:
                 if self.asdecimal:
-                    if is_cx_oracle_6:
+                    if default_type == cx_Oracle.NATIVE_FLOAT:
+                        # receiving float and doing Decimal after the fact
+                        # allows for float("inf") to be handled
+                        type_ = default_type
+                        outconverter = decimal.Decimal
+                    elif is_cx_oracle_6:
                         type_ = decimal.Decimal
                     else:
                         type_ = cx_Oracle.STRING
@@ -258,7 +264,10 @@ class _OracleNumeric(sqltypes.Numeric):
                         type_ = cx_Oracle.NATIVE_FLOAT
             else:
                 if self.asdecimal:
-                    if is_cx_oracle_6:
+                    if default_type == cx_Oracle.NATIVE_FLOAT:
+                        type_ = default_type
+                        outconverter = decimal.Decimal
+                    elif is_cx_oracle_6:
                         type_ = decimal.Decimal
                     else:
                         type_ = cx_Oracle.STRING
@@ -308,7 +317,7 @@ class _OracleChar(sqltypes.CHAR):
 
 class _OracleNVarChar(sqltypes.NVARCHAR):
     def get_dbapi_type(self, dbapi):
-        return getattr(dbapi, 'UNICODE', dbapi.STRING)
+        return dbapi.NCHAR
 
 
 class _OracleText(sqltypes.Text):
@@ -376,6 +385,11 @@ class OracleCompiler_cx_oracle(OracleCompiler):
         quote = getattr(name, 'quote', None)
         if quote is True or quote is not False and \
                 self.preparer._bindparam_requires_quotes(name):
+            if kw.get('expanding', False):
+                raise exc.CompileError(
+                    "Can't use expanding feature with parameter name "
+                    "%r on Oracle; it requires quoting which is not supported "
+                    "in this context." % name)
             quoted_name = '"%s"' % name
             self._quoted_bind_names[name] = quoted_name
             return OracleCompiler.bindparam_string(self, quoted_name, **kw)
@@ -608,7 +622,8 @@ class OracleDialect_cx_oracle(OracleDialect):
 
             self._include_setinputsizes = {
                 cx_Oracle.NCLOB, cx_Oracle.CLOB, cx_Oracle.LOB,
-                cx_Oracle.BLOB, cx_Oracle.FIXED_CHAR,
+                cx_Oracle.NCHAR, cx_Oracle.FIXED_NCHAR,
+                cx_Oracle.BLOB, cx_Oracle.FIXED_CHAR, cx_Oracle.TIMESTAMP
             }
 
         self._is_cx_oracle_6 = self.cx_oracle_ver >= (6, )
@@ -802,10 +817,13 @@ class OracleDialect_cx_oracle(OracleDialect):
 
     def is_disconnect(self, e, connection, cursor):
         error, = e.args
-        if isinstance(e, (
-                self.dbapi.InterfaceError, self.dbapi.DatabaseError)):
-            return "not connected" in str(e)
-        elif hasattr(error, 'code'):
+        if isinstance(
+                e,
+                (self.dbapi.InterfaceError, self.dbapi.DatabaseError)
+        ) and "not connected" in str(e):
+            return True
+
+        if hasattr(error, 'code'):
             # ORA-00028: your session has been killed
             # ORA-03114: not connected to ORACLE
             # ORA-03113: end-of-file on communication channel

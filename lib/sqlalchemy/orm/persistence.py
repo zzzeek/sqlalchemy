@@ -1,5 +1,5 @@
 # orm/persistence.py
-# Copyright (C) 2005-2017 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2018 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -1402,7 +1402,7 @@ class BulkEvaluate(BulkUD):
 
         # TODO: detect when the where clause is a trivial primary key match
         self.matched_objects = [
-            obj for (cls, pk), obj in
+            obj for (cls, pk, identity_token), obj in
             query.session.identity_map.items()
             if issubclass(cls, target_cls) and
             eval_condition(obj)]

@@ -890,6 +890,86 @@ class OptionsNoPropTest(_fixtures.FixtureTest):
                               joinedload(eager_option))
 
 
+class PickleTest(PathTest, QueryTest):
+
+    def _option_fixture(self, *arg):
+        return strategy_options._UnboundLoad._from_keys(
+            strategy_options._UnboundLoad.joinedload, arg, True, {})
+
+    def test_modern_opt_getstate(self):
+        User = self.classes.User
+
+        sess = Session()
+        q = sess.query(User)
+
+        opt = self._option_fixture(User.addresses)
+        eq_(
+            opt.__getstate__(),
+            {
+                '_is_chain_link': False,
+                'local_opts': {},
+                'is_class_strategy': False,
+                'path': [(User, 'addresses', None)],
+                'propagate_to_loaders': True,
+                '_to_bind': [opt],
+                'strategy': (('lazy', 'joined'),)}
+        )
+
+    def test_modern_opt_setstate(self):
+        User = self.classes.User
+
+        opt = strategy_options._UnboundLoad.__new__(
+            strategy_options._UnboundLoad)
+        state = {
+            '_is_chain_link': False,
+            'local_opts': {},
+            'is_class_strategy': False,
+            'path': [(User, 'addresses', None)],
+            'propagate_to_loaders': True,
+            '_to_bind': [opt],
+            'strategy': (('lazy', 'joined'),)}
+
+        opt.__setstate__(state)
+
+        query = create_session().query(User)
+        attr = {}
+        load = opt._bind_loader(
+            [ent.entity_zero for ent in query._mapper_entities],
+            query._current_path, attr, False)
+
+        eq_(
+            load.path,
+            inspect(User)._path_registry
+            [User.addresses.property][inspect(self.classes.Address)])
+
+    def test_legacy_opt_setstate(self):
+        User = self.classes.User
+
+        opt = strategy_options._UnboundLoad.__new__(
+            strategy_options._UnboundLoad)
+        state = {
+            '_is_chain_link': False,
+            'local_opts': {},
+            'is_class_strategy': False,
+            'path': [(User, 'addresses')],
+            'propagate_to_loaders': True,
+            '_to_bind': [opt],
+            'strategy': (('lazy', 'joined'),)}
+
+        opt.__setstate__(state)
+
+        query = create_session().query(User)
+        attr = {}
+        load = opt._bind_loader(
+            [ent.entity_zero for ent in query._mapper_entities],
+            query._current_path, attr, False)
+
+        eq_(
+            load.path,
+            inspect(User)._path_registry
+            [User.addresses.property][inspect(self.classes.Address)])
+
+
 class LocalOptsTest(PathTest, QueryTest):
     @classmethod
     def setup_class(cls):
@@ -1088,6 +1168,98 @@ class CacheKeyTest(PathTest, QueryTest):
             [User, "orders"])
 
         opt = joinedload(aliased(User).orders).joinedload(Order.items)
+        eq_(
+            opt._generate_cache_key(query_path),
+            None
+        )
+
+    def test_unbound_cache_key_excluded_of_type_safe(self):
+        User, Address, Order, Item, SubItem = self.classes(
+            'User', 'Address', 'Order', 'Item', 'SubItem')
+        # query of:
+        #
+        # query(User).options(
+        #       subqueryload(User.orders).
+        #       subqueryload(Order.items.of_type(SubItem)))
+        #
+        #
+        # we are lazy loading Address objects from User.addresses
+        # the path excludes our option so cache key should
+        # be None
+
+        query_path = self._make_path_registry([User, "addresses"])
+
+        opt = subqueryload(User.orders).\
+            subqueryload(Order.items.of_type(SubItem))
+        eq_(
+            opt._generate_cache_key(query_path),
+            None
+        )
+
+    def test_unbound_cache_key_excluded_of_type_unsafe(self):
+        User, Address, Order, Item, SubItem = self.classes(
+            'User', 'Address', 'Order', 'Item', 'SubItem')
+        # query of:
+        #
+        # query(User).options(
+        #       subqueryload(User.orders).
+        #       subqueryload(Order.items.of_type(aliased(SubItem))))
+        #
+        #
+        # we are lazy loading Address objects from User.addresses
+        # the path excludes our option so cache key should
+        # be None
+
+        query_path = self._make_path_registry([User, "addresses"])
+
+        opt = subqueryload(User.orders).\
+            subqueryload(Order.items.of_type(aliased(SubItem)))
+        eq_(
+            opt._generate_cache_key(query_path),
+            None
+        )
+
+    def test_bound_cache_key_excluded_of_type_safe(self):
+        User, Address, Order, Item, SubItem = self.classes(
+            'User', 'Address', 'Order', 'Item', 'SubItem')
+        # query of:
+        #
+        # query(User).options(
+        #       subqueryload(User.orders).
+        #       subqueryload(Order.items.of_type(SubItem)))
+        #
+        #
+        # we are lazy loading Address objects from User.addresses
+        # the path excludes our option so cache key should
+        # be None
+
+        query_path = self._make_path_registry([User, "addresses"])
+
+        opt = Load(User).subqueryload(User.orders).\
+            subqueryload(Order.items.of_type(SubItem))
+        eq_(
+            opt._generate_cache_key(query_path),
+            None
+        )
+
+    def test_bound_cache_key_excluded_of_type_unsafe(self):
+        User, Address, Order, Item, SubItem = self.classes(
+            'User', 'Address', 'Order', 'Item', 'SubItem')
+        # query of:
+        #
+        # query(User).options(
+        #       subqueryload(User.orders).
+        #       subqueryload(Order.items.of_type(aliased(SubItem))))
+        #
+        #
+        # we are lazy loading Address objects from User.addresses
+        # the path excludes our option so cache key should
+        # be None
+
+        query_path = self._make_path_registry([User, "addresses"])
+
+        opt = Load(User).subqueryload(User.orders).\
+            subqueryload(Order.items.of_type(aliased(SubItem)))
         eq_(
             opt._generate_cache_key(query_path),
             None

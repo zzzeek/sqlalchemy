@@ -1,5 +1,5 @@
 # testing/requirements.py
-# Copyright (C) 2005-2017 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2018 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -206,6 +206,17 @@ class SuiteRequirements(Requirements):
 
         return exclusions.open()
 
+    @property
+    def group_by_complex_expression(self):
+        """target platform supports SQL expressions in GROUP BY
+
+        e.g.
+
+        SELECT x + y AS somelabel FROM table GROUP BY x + y
+
+        """
+
+        return exclusions.open()
 
     @property
     def sane_rowcount(self):
@@ -398,7 +409,11 @@ class SuiteRequirements(Requirements):
         return exclusions.open()
 
     @property
-    def foreign_key_constraint_option_reflection(self):
+    def foreign_key_constraint_option_reflection_ondelete(self):
+        return exclusions.closed()
+
+    @property
+    def foreign_key_constraint_option_reflection_onupdate(self):
         return exclusions.closed()
 
     @property
@@ -486,6 +501,13 @@ class SuiteRequirements(Requirements):
         datetime.datetime() with microsecond objects."""
 
         return exclusions.open()
+
+    @property
+    def timestamp_microseconds(self):
+        """target dialect supports representation of Python
+        datetime.datetime() with microsecond objects but only
+        if TIMESTAMP is used."""
+        return exclusions.closed()
 
     @property
     def datetime_historic(self):
@@ -693,6 +715,11 @@ class SuiteRequirements(Requirements):
         return exclusions.closed()
 
     @property
+    def delete_from(self):
+        """Target must support DELETE FROM..FROM or DELETE..USING syntax"""
+        return exclusions.closed()
+
+    @property
     def update_where_target_in_subquery(self):
         """Target must support UPDATE where the same table is present in a
         subquery in the WHERE clause.
@@ -739,6 +766,20 @@ class SuiteRequirements(Requirements):
 
         """
         return exclusions.closed()
+
+    @property
+    def order_by_collation(self):
+        def check(config):
+            try:
+                self.get_order_by_collation(config)
+                return False
+            except NotImplementedError:
+                return True
+
+        return exclusions.skip_if(check)
+
+    def get_order_by_collation(self, config):
+        raise NotImplementedError()
 
     @property
     def unicode_connections(self):

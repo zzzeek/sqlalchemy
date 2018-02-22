@@ -3,7 +3,7 @@
 from .. import fixtures, config
 from ..assertions import eq_
 from ..config import requirements
-from sqlalchemy import Integer, Unicode, UnicodeText, select
+from sqlalchemy import Integer, Unicode, UnicodeText, select, TIMESTAMP
 from sqlalchemy import Date, DateTime, Time, MetaData, String, \
     Text, Numeric, Float, literal, Boolean, cast, null, JSON, and_, type_coerce
 from ..schema import Table, Column
@@ -281,6 +281,12 @@ class DateTimeMicrosecondsTest(_DateFixture, fixtures.TablesTest):
     datatype = DateTime
     data = datetime.datetime(2012, 10, 15, 12, 57, 18, 396)
 
+class TimestampMicrosecondsTest(_DateFixture, fixtures.TablesTest):
+    __requires__ = 'timestamp_microseconds',
+    __backend__ = True
+    datatype = TIMESTAMP
+    data = datetime.datetime(2012, 10, 15, 12, 57, 18, 396)
+
 
 class TimeTest(_DateFixture, fixtures.TablesTest):
     __requires__ = 'time',
@@ -380,8 +386,6 @@ class NumericTest(_LiteralRoundTripFixture, fixtures.TestBase):
             filter_=lambda n: n is not None and round(n, 5) or None
         )
 
-    @testing.skip_if(
-        "oracle", "temporary skip until cx_oracle refactor is merged")
     @testing.requires.precision_generic_float_type
     def test_float_custom_scale(self):
         self._do_test(
@@ -391,8 +395,6 @@ class NumericTest(_LiteralRoundTripFixture, fixtures.TestBase):
             check_scale=True
         )
 
-    @testing.skip_if(
-        "oracle", "temporary skip until cx_oracle refactor is merged")
     def test_numeric_as_decimal(self):
         self._do_test(
             Numeric(precision=8, scale=4),
@@ -400,8 +402,6 @@ class NumericTest(_LiteralRoundTripFixture, fixtures.TestBase):
             [decimal.Decimal("15.7563")],
         )
 
-    @testing.skip_if(
-        "oracle", "temporary skip until cx_oracle refactor is merged")
     def test_numeric_as_float(self):
         self._do_test(
             Numeric(precision=8, scale=4, asdecimal=False),
@@ -409,8 +409,6 @@ class NumericTest(_LiteralRoundTripFixture, fixtures.TestBase):
             [15.7563],
         )
 
-    @testing.skip_if(
-        "oracle", "temporary skip until cx_oracle refactor is merged")
     @testing.requires.fetch_null_from_numeric
     def test_numeric_null_as_decimal(self):
         self._do_test(
@@ -427,8 +425,6 @@ class NumericTest(_LiteralRoundTripFixture, fixtures.TestBase):
             [None],
         )
 
-    @testing.skip_if(
-        "oracle", "temporary skip until cx_oracle refactor is merged")
     @testing.requires.floats_to_four_decimals
     def test_float_as_decimal(self):
         self._do_test(
@@ -437,8 +433,6 @@ class NumericTest(_LiteralRoundTripFixture, fixtures.TestBase):
             [decimal.Decimal("15.7563"), None],
         )
 
-    @testing.skip_if(
-        "oracle", "temporary skip until cx_oracle refactor is merged")
     def test_float_as_float(self):
         self._do_test(
             Float(precision=8),
@@ -464,8 +458,6 @@ class NumericTest(_LiteralRoundTripFixture, fixtures.TestBase):
     #    )
     #    eq_(val, expr)
 
-    @testing.skip_if(
-        "oracle", "temporary skip until cx_oracle refactor is merged")
     @testing.requires.precision_numerics_general
     def test_precision_decimal(self):
         numbers = set([
@@ -480,8 +472,6 @@ class NumericTest(_LiteralRoundTripFixture, fixtures.TestBase):
             numbers,
         )
 
-    @testing.skip_if(
-        "oracle", "temporary skip until cx_oracle refactor is merged")
     @testing.requires.precision_numerics_enotation_large
     def test_enotation_decimal(self):
         """test exceedingly small decimals.
@@ -511,7 +501,6 @@ class NumericTest(_LiteralRoundTripFixture, fixtures.TestBase):
             numbers
         )
 
-    @testing.fails_if(testing.requires.broken_cx_oracle6_numerics)
     @testing.requires.precision_numerics_enotation_large
     def test_enotation_decimal_large(self):
         """test exceedingly large decimals.
@@ -877,22 +866,25 @@ class JSONTest(_LiteralRoundTripFixture, fixtures.TablesTest):
         )
 
     def test_unicode_round_trip(self):
-        s = select([
-            cast(
+        with config.db.connect() as conn:
+            conn.execute(
+                self.tables.data_table.insert(),
+                {
+                    "name": "r1",
+                    "data": {
+                        util.u('réveillé'): util.u('réveillé'),
+                        "data": {"k1": util.u('drôle')}
+                    }
+                }
+            )
+
+            eq_(
+                conn.scalar(select([self.tables.data_table.c.data])),
                 {
                     util.u('réveillé'): util.u('réveillé'),
                     "data": {"k1": util.u('drôle')}
                 },
-                self.datatype
             )
-        ])
-        eq_(
-            config.db.scalar(s),
-            {
-                util.u('réveillé'): util.u('réveillé'),
-                "data": {"k1": util.u('drôle')}
-            },
-        )
 
     def test_eval_none_flag_orm(self):
         from sqlalchemy.ext.declarative import declarative_base
@@ -932,5 +924,6 @@ __all__ = ('UnicodeVarcharTest', 'UnicodeTextTest', 'JSONTest',
            'DateTest', 'DateTimeTest', 'TextTest',
            'NumericTest', 'IntegerTest',
            'DateTimeHistoricTest', 'DateTimeCoercedToDateTimeTest',
-           'TimeMicrosecondsTest', 'TimeTest', 'DateTimeMicrosecondsTest',
+           'TimeMicrosecondsTest', 'TimestampMicrosecondsTest', 'TimeTest',
+           'DateTimeMicrosecondsTest',
            'DateHistoricTest', 'StringTest', 'BooleanTest')

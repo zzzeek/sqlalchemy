@@ -245,6 +245,31 @@ if not specified, the attribute defaults to ``None``::
 
 :ticket:`3058`
 
+.. _change_orm_959:
+
+ORM Support of multiple-table deletes
+-------------------------------------
+
+The ORM :meth:`.Query.delete` method supports multiple-table criteria
+for DELETE, as introduced in :ref:`change_959`.   The feature works
+in the same manner as multiple-table criteria for UPDATE, first
+introduced in 0.8 and described at :ref:`change_orm_2365`.
+
+Below, we emit a DELETE against ``SomeEntity``, adding
+a FROM clause (or equivalent, depending on backend)
+against ``SomeOtherEntity``::
+
+    query(SomeEntity).\
+        filter(SomeEntity.id==SomeOtherEntity.id).\
+        filter(SomeOtherEntity.foo=='bar').\
+        delete()
+
+.. seealso::
+
+    :ref:`change_959`
+
+:ticket:`959`
+
 .. _change_3229:
 
 Support for bulk updates of hybrids, composites
@@ -542,6 +567,55 @@ to query across the two proxies ``A.c_values``, ``AtoB.c_value``:
 
 :ticket:`3769`
 
+.. _change_4137:
+
+Identity key enhancements to support sharding
+---------------------------------------------
+
+The identity key structure used by the ORM now contains an additional
+member, so that two identical primary keys that originate from different
+contexts can co-exist within the same identity map.
+
+The example at :ref:`examples_sharding` has been updated to illustrate this
+behavior.  The example shows a sharded class ``WeatherLocation`` that
+refers to a dependent ``WeatherReport`` object, where the ``WeatherReport``
+class is mapped to a table that stores a simple integer primary key.  Two
+``WeatherReport`` objects from different databases may have the same
+primary key value.   The example now illustrates that a new ``identity_token``
+field tracks this difference so that the two objects can co-exist in the
+same identity map::
+
+    tokyo = WeatherLocation('Asia', 'Tokyo')
+    newyork = WeatherLocation('North America', 'New York')
+
+    tokyo.reports.append(Report(80.0))
+    newyork.reports.append(Report(75))
+
+    sess = create_session()
+
+    sess.add_all([tokyo, newyork, quito])
+
+    sess.commit()
+
+    # the Report class uses a simple integer primary key.  So across two
+    # databases, a primary key will be repeated.  The "identity_token" tracks
+    # in memory that these two identical primary keys are local to different
+    # databases.
+
+    newyork_report = newyork.reports[0]
+    tokyo_report = tokyo.reports[0]
+
+    assert inspect(newyork_report).identity_key == (Report, (1, ), "north_america")
+    assert inspect(tokyo_report).identity_key == (Report, (1, ), "asia")
+
+    # the token representing the originating shard is also available directly
+
+    assert inspect(newyork_report).identity_token == "north_america"
+    assert inspect(tokyo_report).identity_token == "asia"
+
+
+:ticket:`4137`
+
 New Features and Improvements - Core
 ====================================
 
@@ -776,6 +850,37 @@ Current backend support includes MySQL, Postgresql, and Oracle.
 
 :ticket:`1546`
 
+.. _change_959:
+
+Multiple-table criteria support for DELETE
+------------------------------------------
+
+The :class:`.Delete` construct now supports multiple-table criteria,
+implemented for those backends which support it, currently these are
+Postgresql, MySQL and Microsoft SQL Server (support is also added to the
+currently non-working Sybase dialect).   The feature works in the same
+was as that of multiple-table criteria for UPDATE, first introduced in
+the 0.7 and 0.8 series.
+
+Given a statement as::
+
+    stmt = users.delete().\
+            where(users.c.id == addresses.c.id).\
+            where(addresses.c.email_address.startswith('ed%'))
+    conn.execute(stmt)
+
+The resulting SQL from the above statement on a Postgresql backend
+would render as::
+
+    DELETE FROM users USING addresses
+    WHERE users.id = addresses.id
+    AND (addresses.email_address LIKE %(email_address_1)s || '%%')
+
+.. seealso::
+
+    :ref:`multi_table_deletes`
+
+:ticket:`959`
 
 .. _change_2694:
 
@@ -792,7 +897,7 @@ is used to avoid conflicts with settings like Postgresql's
 9.1, and MySQL's ``NO_BACKSLASH_ESCAPES`` settings.  The existing "escape" parameter
 can now be used to change the autoescape character, if desired.
 
-.. note::  This feature has been changed as of 1.2.0b4 from its initial
+.. note::  This feature has been changed as of 1.2.0 from its initial
    implementation in 1.2.0b2 such that autoescape is now passed as a boolean
    value, rather than a specific character to use as the escape character.
 
@@ -931,41 +1036,6 @@ localized to the current VALUES clause being processed::
 
 Key Behavioral Changes - ORM
 ============================
-
-.. _change_3740:
-
-Percent signs in literal_column() now conditionally escaped
------------------------------------------------------------
-
-The :obj:`.literal_column` construct now escapes percent sign characters
-conditionally, based on whether or not the DBAPI in use makes use of a
-percent-sign-sensitive paramstyle or not (e.g. 'format' or 'pyformat').
-
-Previously, it was not possible to produce a :obj:`.literal_column`
-construct that stated a single percent sign::
-
-    >>> from sqlalchemy import literal_column
-    >>> print(literal_column('some%symbol'))
-    some%%symbol
-
-The percent sign is now unaffected for dialects that are not set to
-use the 'format' or 'pyformat' paramstyles; dialects such most MySQL
-dialects which do state one of these paramstyles will continue to escape
-as is appropriate::
-
-    >>> from sqlalchemy import literal_column
-    >>> print(literal_column('some%symbol'))
-    some%symbol
-    >>> from sqlalchemy.dialects import mysql
-    >>> print(literal_column('some%symbol').compile(dialect=mysql.dialect()))
-    some%%symbol
-
-As part of this change, the doubling that has been present when using
-operators like :meth:`.ColumnOperators.contains`,
-:meth:`.ColumnOperators.startswith` and :meth:`.ColumnOperators.endswith`
-is also refined to only occur when appropriate.
-
-:ticket:`3740`
 
 .. _change_3934:
 
@@ -1375,6 +1445,42 @@ for on-the-fly boolean operators::
     x -%> :x_1
 
 
+.. _change_3740:
+
+Percent signs in literal_column() now conditionally escaped
+-----------------------------------------------------------
+
+The :obj:`.literal_column` construct now escapes percent sign characters
+conditionally, based on whether or not the DBAPI in use makes use of a
+percent-sign-sensitive paramstyle or not (e.g. 'format' or 'pyformat').
+
+Previously, it was not possible to produce a :obj:`.literal_column`
+construct that stated a single percent sign::
+
+    >>> from sqlalchemy import literal_column
+    >>> print(literal_column('some%symbol'))
+    some%%symbol
+
+The percent sign is now unaffected for dialects that are not set to
+use the 'format' or 'pyformat' paramstyles; dialects such most MySQL
+dialects which do state one of these paramstyles will continue to escape
+as is appropriate::
+
+    >>> from sqlalchemy import literal_column
+    >>> print(literal_column('some%symbol'))
+    some%symbol
+    >>> from sqlalchemy.dialects import mysql
+    >>> print(literal_column('some%symbol').compile(dialect=mysql.dialect()))
+    some%%symbol
+
+As part of this change, the doubling that has been present when using
+operators like :meth:`.ColumnOperators.contains`,
+:meth:`.ColumnOperators.startswith` and :meth:`.ColumnOperators.endswith`
+is also refined to only occur when appropriate.
+
+:ticket:`3740`
+
+
 .. _change_3785:
 
 The column-level COLLATE keyword now quotes the collation name
@@ -1430,6 +1536,7 @@ on by default in a future release.
 
     :ref:`psycopg2_batch_mode`
 
+:ticket:`4109`
 
 .. _change_3959:
 

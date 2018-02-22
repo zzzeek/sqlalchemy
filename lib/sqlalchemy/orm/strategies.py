@@ -1,5 +1,5 @@
 # orm/strategies.py
-# Copyright (C) 2005-2017 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2018 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -1883,7 +1883,7 @@ class SelectInLoader(AbstractRelationshipLoader, util.MemoizedSlots):
                 return
 
         loading.PostLoad.callable_for_path(
-            context, selectin_path, self.key,
+            context, selectin_path, self.parent, self.key,
             self._load_for_path, effective_entity)
 
     @util.dependencies("sqlalchemy.ext.baked")

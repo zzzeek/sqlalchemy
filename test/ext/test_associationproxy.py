@@ -15,6 +15,7 @@ from sqlalchemy.testing.schema import Table, Column
 from sqlalchemy.testing.mock import Mock, call
 from sqlalchemy.testing.assertions import expect_warnings
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.declarative import declared_attr
 
 
 class DictCollection(dict):
@@ -601,8 +602,9 @@ class SetTest(_CollectionOperations):
             self.assert_((p1.children > other) == (control > other))
             self.assert_((p1.children >= other) == (control >= other))
 
+    @testing.requires.python_fixed_issue_8743
     def test_set_comparison_empty_to_empty(self):
-        # test issue #3265 which appears to be python 2.6 specific
+        # test issue #3265 which was fixed in Python version 2.7.8
         Parent = self.Parent
 
         p1 = Parent('P1')
@@ -1281,6 +1283,10 @@ class ComparatorTest(fixtures.MappedTest, AssertsCompiledSQL):
             # nonuselist -> nonuselist
             user = association_proxy('user_keyword', 'user')
 
+            # uselist assoc_proxy -> collection -> assoc_proxy -> scalar object
+            # (o2m relationship, associationproxy(m2o relationship, m2o relationship))
+            singulars = association_proxy("user_keywords", "singular")
+
         class UserKeyword(cls.Comparable):
             def __init__(self, user=None, keyword=None):
                 self.user = user
@@ -1288,6 +1294,8 @@ class ComparatorTest(fixtures.MappedTest, AssertsCompiledSQL):
 
             common_users = association_proxy("keyword", "user")
             keyword_name = association_proxy("keyword", "keyword")
+
+            singular = association_proxy("user", "singular")
 
         class Singular(cls.Comparable):
             def __init__(self, value=None):
@@ -1311,7 +1319,8 @@ class ComparatorTest(fixtures.MappedTest, AssertsCompiledSQL):
             'singular': relationship(Singular)
         })
         mapper(Keyword, keywords, properties={
-            'user_keyword': relationship(UserKeyword, uselist=False)
+            'user_keyword': relationship(UserKeyword, uselist=False),
+            'user_keywords': relationship(UserKeyword)
         })
 
         mapper(UserKeyword, userkeywords, properties={
@@ -1707,6 +1716,40 @@ class ComparatorTest(fixtures.MappedTest, AssertsCompiledSQL):
         )
         self._equivalent(q1, q2)
 
+    def test_filter_contains_chained_any_to_has_to_eq(self):
+        User = self.classes.User
+        Keyword = self.classes.Keyword
+        UserKeyword = self.classes.UserKeyword
+        Singular = self.classes.Singular
+
+        singular = self.session.query(Singular).order_by(Singular.id).first()
+
+        q1 = self.session.query(Keyword).filter(
+            Keyword.singulars.contains(singular)
+        )
+        self.assert_compile(
+            q1,
+            "SELECT keywords.id AS keywords_id, "
+            "keywords.keyword AS keywords_keyword, "
+            "keywords.singular_id AS keywords_singular_id "
+            "FROM keywords "
+            "WHERE EXISTS (SELECT 1 "
+            "FROM userkeywords "
+            "WHERE keywords.id = userkeywords.keyword_id AND "
+            "(EXISTS (SELECT 1 "
+            "FROM users "
+            "WHERE users.id = userkeywords.user_id AND "
+            ":param_1 = users.singular_id)))",
+            checkparams={"param_1": singular.id}
+        )
+
+        q2 = self.session.query(Keyword).filter(
+            Keyword.user_keywords.any(
+                UserKeyword.user.has(User.singular == singular)
+            )
+        )
+        self._equivalent(q1, q2)
+
     def test_has_criterion_nul(self):
         # but we don't allow that with any criterion...
         User = self.classes.User
@@ -1849,6 +1892,9 @@ class DictOfTupleUpdateTest(fixtures.TestBase):
 
 
 class AttributeAccessTest(fixtures.TestBase):
+    def teardown(self):
+        clear_mappers()
+
     def test_resolve_aliased_class(self):
         Base = declarative_base()
 
@@ -1871,6 +1917,187 @@ class AttributeAccessTest(fixtures.TestBase):
         spec = B.a_value
 
         is_(spec.owning_class, B)
+
+    def test_resolved_w_subclass(self):
+        # test for issue #4185, as well as several below
+
+        Base = declarative_base()
+
+        class Mixin(object):
+            @declared_attr
+            def children(cls):
+                return association_proxy('_children', 'value')
+
+        # 1. build parent, Mixin.children gets invoked, we add
+        # Parent.children
+        class Parent(Mixin, Base):
+            __tablename__ = 'parent'
+            id = Column(Integer, primary_key=True)
+
+            _children = relationship("Child")
+
+        class Child(Base):
+            __tablename__ = 'child'
+            parent_id = Column(
+                Integer, ForeignKey(Parent.id), primary_key=True)
+
+        # 2. declarative builds up SubParent, scans through all attributes
+        # over all classes.  Hits Mixin, hits "children", accesses "children"
+        # in terms of the class, e.g. SubParent.children.  SubParent isn't
+        # mapped yet.  association proxy then sets up "owning_class"
+        # as NoneType.
+        class SubParent(Parent):
+            __tablename__ = 'subparent'
+            id = Column(Integer, ForeignKey(Parent.id), primary_key=True)
+
+        configure_mappers()
+
+        # 3. which would break here.
+        p1 = Parent()
+        eq_(p1.children, [])
+
+    def test_resolved_to_correct_class_one(self):
+        Base = declarative_base()
+
+        class Parent(Base):
+            __tablename__ = 'parent'
+            id = Column(Integer, primary_key=True)
+            _children = relationship("Child")
+            children = association_proxy('_children', 'value')
+
+        class Child(Base):
+            __tablename__ = 'child'
+            parent_id = Column(
+                Integer, ForeignKey(Parent.id), primary_key=True)
+
+        class SubParent(Parent):
+            __tablename__ = 'subparent'
+            id = Column(Integer, ForeignKey(Parent.id), primary_key=True)
+
+        is_(SubParent.children.owning_class, Parent)
+
+    def test_resolved_to_correct_class_two(self):
+        Base = declarative_base()
+
+        class Parent(Base):
+            __tablename__ = 'parent'
+            id = Column(Integer, primary_key=True)
+            _children = relationship("Child")
+
+        class Child(Base):
+            __tablename__ = 'child'
+            parent_id = Column(
+                Integer, ForeignKey(Parent.id), primary_key=True)
+
+        class SubParent(Parent):
+            __tablename__ = 'subparent'
+            id = Column(Integer, ForeignKey(Parent.id), primary_key=True)
+            children = association_proxy('_children', 'value')
+
+        is_(SubParent.children.owning_class, SubParent)
+
+    def test_resolved_to_correct_class_three(self):
+        Base = declarative_base()
+
+        class Parent(Base):
+            __tablename__ = 'parent'
+            id = Column(Integer, primary_key=True)
+            _children = relationship("Child")
+
+        class Child(Base):
+            __tablename__ = 'child'
+            parent_id = Column(
+                Integer, ForeignKey(Parent.id), primary_key=True)
+
+        class SubParent(Parent):
+            __tablename__ = 'subparent'
+            id = Column(Integer, ForeignKey(Parent.id), primary_key=True)
+            children = association_proxy('_children', 'value')
+
+        class SubSubParent(SubParent):
+            __tablename__ = 'subsubparent'
+            id = Column(Integer, ForeignKey(SubParent.id), primary_key=True)
+
+        is_(SubSubParent.children.owning_class, SubParent)
+
+    def test_resolved_to_correct_class_four(self):
+        Base = declarative_base()
+
+        class Parent(Base):
+            __tablename__ = 'parent'
+            id = Column(Integer, primary_key=True)
+            _children = relationship("Child")
+            children = association_proxy(
+                '_children', 'value', creator=lambda value: Child(value=value))
+
+        class Child(Base):
+            __tablename__ = 'child'
+            parent_id = Column(
+                Integer, ForeignKey(Parent.id), primary_key=True)
+            value = Column(String)
+
+        class SubParent(Parent):
+            __tablename__ = 'subparent'
+            id = Column(Integer, ForeignKey(Parent.id), primary_key=True)
+
+        sp = SubParent()
+        sp.children = 'c'
+        is_(SubParent.children.owning_class, Parent)
+
+    def test_resolved_to_correct_class_five(self):
+        Base = declarative_base()
+
+        class Mixin(object):
+            children = association_proxy('_children', 'value')
+
+        class Parent(Mixin, Base):
+            __tablename__ = 'parent'
+            id = Column(Integer, primary_key=True)
+            _children = relationship("Child")
+
+        class Child(Base):
+            __tablename__ = 'child'
+            parent_id = Column(
+                Integer, ForeignKey(Parent.id), primary_key=True)
+            value = Column(String)
+
+        # this triggers the owning routine, doesn't fail
+        Mixin.children
+
+        p1 = Parent()
+
+        c1 = Child(value='c1')
+        p1._children.append(c1)
+        is_(Parent.children.owning_class, Parent)
+        eq_(p1.children, ["c1"])
+
+    def test_never_assign_nonetype(self):
+        foo = association_proxy('x', 'y')
+        foo._calc_owner(None, None)
+        is_(foo.owning_class, None)
+
+        class Bat(object):
+            foo = association_proxy('x', 'y')
+
+        Bat.foo
+        is_(Bat.foo.owning_class, None)
+
+        b1 = Bat()
+        assert_raises_message(
+            exc.InvalidRequestError,
+            "This association proxy has no mapped owning class; "
+            "can't locate a mapped property",
+            getattr, b1, "foo"
+        )
+        is_(Bat.foo.owning_class, None)
+
+        # after all that, we can map it
+        mapper(
+            Bat,
+            Table('bat', MetaData(), Column('x', Integer, primary_key=True)))
+
+        # answer is correct
+        is_(Bat.foo.owning_class, Bat)
 
 
 class InfoTest(fixtures.TestBase):

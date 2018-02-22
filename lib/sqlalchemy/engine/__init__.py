@@ -1,5 +1,5 @@
 # engine/__init__.py
-# Copyright (C) 2005-2017 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2018 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -397,6 +397,11 @@ def create_engine(*args, **kwargs):
     :param pool_timeout=30: number of seconds to wait before giving
         up on getting a connection from the pool. This is only used
         with :class:`~sqlalchemy.pool.QueuePool`.
+
+    :param plugins: string list of plugin names to load.  See
+        :class:`.CreateEnginePlugin` for background.
+
+        .. versionadded:: 1.2.3
 
     :param strategy='plain': selects alternate engine implementations.
         Currently available are:

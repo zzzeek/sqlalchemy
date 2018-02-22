@@ -1,16 +1,13 @@
 # mysql/__init__.py
-# Copyright (C) 2005-2017 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2018 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 from . import base, mysqldb, oursql, \
-    pyodbc, zxjdbc, mysqlconnector, pymysql,\
+    pyodbc, zxjdbc, mysqlconnector, pymysql, \
     gaerdbms, cymysql
-
-# default dialect
-base.dialect = mysqldb.dialect
 
 from .base import \
     BIGINT, BINARY, BIT, BLOB, BOOLEAN, CHAR, DATE, DATETIME, \
@@ -19,9 +16,13 @@ from .base import \
     MEDIUMINT, MEDIUMTEXT, NCHAR, \
     NVARCHAR, NUMERIC, SET, SMALLINT, REAL, TEXT, TIME, TIMESTAMP, \
     TINYBLOB, TINYINT, TINYTEXT,\
-    VARBINARY, VARCHAR, YEAR, dialect
+    VARBINARY, VARCHAR, YEAR
 
 from .dml import insert, Insert
+
+# default dialect
+base.dialect = dialect = mysqldb.dialect
+
 
 __all__ = (
     'BIGINT', 'BINARY', 'BIT', 'BLOB', 'BOOLEAN', 'CHAR', 'DATE', 'DATETIME',

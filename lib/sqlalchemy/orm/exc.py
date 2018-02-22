@@ -1,5 +1,5 @@
 # orm/exc.py
-# Copyright (C) 2005-2017 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2018 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -59,6 +59,8 @@ class ObjectDereferencedError(sa_exc.SQLAlchemyError):
 class DetachedInstanceError(sa_exc.SQLAlchemyError):
     """An attempt to access unloaded attributes on a
     mapped instance that is detached."""
+
+    code = "bhk3"
 
 
 class UnmappedInstanceError(UnmappedError):

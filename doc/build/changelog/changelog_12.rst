@@ -11,12 +11,458 @@
         :start-line: 5
 
 .. changelog::
-    :version: 1.2.0b4
+    :version: 1.2.4
     :include_notes_from: unreleased_12
 
 .. changelog::
+    :version: 1.2.3
+    :released: February 16, 2018
+
+    .. change::
+        :tags: bug, oracle
+        :tickets: 4182
+
+        Fixed bug in cx_Oracle disconnect detection, used by pre_ping and other
+        features, where an error could be raised as DatabaseError which includes a
+        numeric error code; previously we weren't checking in this case for a
+        disconnect code.
+
+    .. change::
+        :tags: bug, sqlite
+
+        Fixed the import error raised when a platform
+        has neither pysqlite2 nor sqlite3 installed, such
+        that the sqlite3-related import error is raised,
+        not the pysqlite2 one which is not the actual
+        failure mode.  Pull request courtesy Robin.
+
+    .. change::
+        :tags: bug, orm
+        :tickets: 4175
+
+        Fixed bug where the :class:`.Bundle` object did not
+        correctly report upon the primary :class:`.Mapper` object
+        represened by the bundle, if any.   An immediate
+        side effect of this issue was that the new selectinload
+        loader strategy wouldn't work with the horizontal sharding
+        extension.
+
+    .. change::
+        :tags: bug, sql
+        :tickets: 4180
+
+        Fixed bug where the :class:`.Enum` type wouldn't handle
+        enum "aliases" correctly, when more than one key refers to the
+        same value.  Pull request courtesy Daniel Knell.
+
+
+    .. change::
+        :tags: bug, engine
+        :tickets: 4181
+
+        Fixed bug where events associated with an :class:`Engine`
+        at the class level would be doubled when the
+        :meth:`.Engine.execution_options` method were used.  To
+        achieve this, the semi-private class :class:`.OptionEngine`
+        no longer accepts events directly at the class level
+        and will raise an error; the class only propagates class-level
+        events from its parent :class:`.Engine`.   Instance-level
+        events continue to work as before.
+
+    .. change::
+        :tags: bug, tests
+        :tickets: 3265
+
+        A test added in 1.2 thought to confirm a Python 2.7 behavior turns out to
+        be confirming the behavior only as of Python 2.7.8. Python bug #8743 still
+        impacts set comparison in Python 2.7.7 and earlier, so the test in question
+        involving AssociationSet no longer runs for these older Python 2.7
+        versions.
+
+    .. change::
+        :tags: feature, oracle
+
+        The ON DELETE options for foreign keys are now part of
+        Oracle reflection.  Oracle does not support ON UPDATE
+        cascades.  Pull request courtesy Miroslav Shubernetskiy.
+
+
+
+    .. change::
+        :tags: bug, orm
+        :tickets: 4188
+
+        Fixed bug in concrete inheritance mapping where user-defined
+        attributes such as hybrid properties that mirror the names
+        of mapped attributes from sibling classes would be overwritten by
+        the mapper as non-accessible at the instance level.   Additionally
+        ensured that user-bound descriptors are not implicitly invoked at the class
+        level during the mapper configuration stage.
+
+    .. change::
+        :tags: bug, orm
+        :tickets: 4178
+
+        Fixed bug where the :func:`.orm.reconstructor` event
+        helper would not be recognized if it were applied to the
+        ``__init__()`` method of the mapped class.
+
+    .. change::
+        :tags: bug, engine
+        :tickets: 4170
+
+        The :class:`.URL` object now allows query keys to be specified multiple
+        times where their values will be joined into a list.  This is to support
+        the plugins feature documented at :class:`.CreateEnginePlugin` which
+        documents that "plugin" can be passed multiple times. Additionally, the
+        plugin names can be passed to :func:`.create_engine` outside of the URL
+        using the new :paramref:`.create_engine.plugins` parameter.
+
+    .. change::
+        :tags: feature, sql
+        :tickets: 3906
+
+        Added support for :class:`.Enum` to persist the values of the enumeration,
+        rather than the keys, when using a Python pep-435 style enumerated object.
+        The user supplies a callable function that will return the string values to
+        be persisted.  This allows enumerations against non-string values to be
+        value-persistable as well.  Pull request courtesy Jon Snyder.
+
+    .. change::
+        :tags: feature, orm
+
+        Added new argument :paramref:`.attributes.set_attribute.inititator`
+        to the :func:`.attributes.set_attribute` function, allowing an
+        event token received from a listener function to be propagated
+        to subsequent set events.
+
+.. changelog::
+    :version: 1.2.2
+    :released: January 24, 2018
+
+    .. change::
+        :tags: bug, mssql
+        :tickets: 4164
+
+        Added ODBC error code 10054 to the list of error
+        codes that count as a disconnect for ODBC / MSSQL server.
+
+
+    .. change::
+        :tags: bug, orm
+        :tickets: 4171
+
+        Fixed 1.2 regression regarding new bulk_replace event
+        where a backref would fail to remove an object from the
+        previous owner when a bulk-assignment assigned the
+        object to a new owner.
+
+    .. change::
+        :tags: bug, oracle
+        :tickets: 4163
+
+        The cx_Oracle dialect now calls setinputsizes() with cx_Oracle.NCHAR
+        unconditionally when the NVARCHAR2 datatype, in SQLAlchemy corresponding
+        to sqltypes.Unicode(), is in use.  Per cx_Oracle's author this allows
+        the correct conversions to occur within the Oracle client regardless
+        of the setting for NLS_NCHAR_CHARACTERSET.
+
+    .. change::
+        :tags: bug, mysql
+
+        Added more MySQL 8.0 reserved words to the MySQL dialect
+        for quoting purposes.  Pull request courtesy
+        Riccardo Magliocchetti.
+
+.. changelog::
+    :version: 1.2.1
+    :released: January 15, 2018
+
+    .. change::
+        :tags: bug, orm
+        :tickets: 4159
+
+        Fixed regression where pickle format of a Load / _UnboundLoad object (e.g.
+        loader options) changed and ``__setstate__()`` was raising an
+        UnboundLocalError for an object received from the legacy format, even
+        though an attempt was made to do so.  tests are now added to ensure this
+        works.
+
+    .. change::
+        :tags: bug, ext
+        :tickets: 4150
+
+        Fixed regression in association proxy due to :ticket:`3769`
+        (allow for chained any() / has()) where contains() against
+        an association proxy chained in the form
+        (o2m relationship, associationproxy(m2o relationship, m2o relationship))
+        would raise an error regarding the re-application of contains()
+        on the final link of the chain.
+
+    .. change::
+        :tags: bug, orm
+        :tickets: 4153
+
+        Fixed regression caused by new lazyload caching scheme in :ticket:`3954`
+        where a query that makes use of loader options with of_type would cause
+        lazy loads of unrelated paths to fail with a TypeError.
+
+    .. change::
+        :tags: bug, oracle
+        :tickets: 4157
+
+        Fixed regression where the removal of most setinputsizes
+        rules from cx_Oracle dialect impacted the TIMESTAMP
+        datatype's ability to retrieve fractional seconds.
+
+
+
+    .. change::
+        :tags: bug, tests
+
+        Removed an oracle-specific requirements rule from the public
+        test suite that was interfering with third party dialect
+        suites.
+
+    .. change::
+        :tags: bug, mssql
+        :tickets: 4154
+
+        Fixed regression in 1.2 where newly repaired quoting
+        of collation names in :ticket:`3785` breaks SQL Server,
+        which explicitly does not understand a quoted collation
+        name.   Whether or not mixed-case collation names are
+        quoted or not is now deferred down to a dialect-level
+        decision so that each dialect can prepare these identifiers
+        directly.
+
+    .. change::
+        :tags: bug, orm
+        :tickets: 4156
+
+        Fixed bug in new "selectin" relationship loader where the loader could try
+        to load a non-existent relationship when loading a collection of
+        polymorphic objects, where only some of the mappers include that
+        relationship, typically when :meth:`.PropComparator.of_type` is being used.
+
+    .. change::
+        :tags: bug, tests
+
+        Added a new exclusion rule group_by_complex_expression
+        which disables tests that use "GROUP BY <expr>", which seems
+        to be not viable for at least two third party dialects.
+
+    .. change::
+        :tags: bug, oracle
+
+        Fixed regression in Oracle imports where a missing comma caused
+        an undefined symbol to be present.  Pull request courtesy
+        Miroslav Shubernetskiy.
+
+.. changelog::
+    :version: 1.2.0
+    :released: December 27, 2017
+
+    .. change::
+        :tags: orm, feature
+        :tickets: 4137
+
+        Added a new data member to the identity key tuple
+        used by the ORM's identity map, known as the
+        "identity_token".  This token defaults to None but
+        may be used by database sharding schemes to differentiate
+        objects in memory with the same primary key that come
+        from different databases.   The horizontal sharding
+        extension integrates this token applying the shard
+        identifier to it, thus allowing primary keys to be
+        duplicated across horizontally sharded backends.
+
+        .. seealso::
+
+            :ref:`change_4137`
+
+    .. change::
+        :tags: bug, mysql
+        :tickets: 4115
+
+        Fixed regression from issue 1.2.0b3 where "MariaDB" version comparison can
+        fail for some particular MariaDB version strings under Python 3.
+
+    .. change::
+        :tags: enhancement, sql
+        :tickets: 959
+
+        Implemented "DELETE..FROM" syntax for Postgresql, MySQL, MS SQL Server
+        (as well as within the unsupported Sybase dialect) in a manner similar
+        to how "UPDATE..FROM" works.  A DELETE statement that refers to more than
+        one table will switch into "multi-table" mode and render the appropriate
+        "USING" or multi-table "FROM" clause as understood by the database.
+        Pull request courtesy Pieter Mulder.
+
+        .. seealso::
+
+            :ref:`change_959`
+
+    .. change::
+       :tags: bug, sql
+       :tickets: 2694
+
+       Reworked the new "autoescape" feature introduced in
+       :ref:`change_2694` in 1.2.0b2 to be fully automatic; the escape
+       character now defaults to a forwards slash ``"/"`` and
+       is applied to percent, underscore, as well as the escape
+       character itself, for fully automatic escaping.  The
+       character can also be changed using the "escape" parameter.
+
+       .. seealso::
+
+            :ref:`change_2694`
+
+
+    .. change::
+        :tags: bug, sql
+        :tickets: 4147
+
+        Fixed bug where the :meth:`.Table.tometadata` method would not properly
+        accommodate :class:`.Index` objects that didn't consist of simple
+        column expressions, such as indexes against a :func:`.text` construct,
+        indexes that used SQL expressions or :attr:`.func`, etc.   The routine
+        now copies expressions fully to a new :class:`.Index` object while
+        substituting all table-bound :class:`.Column` objects for those
+        of the target table.
+
+    .. change::
+        :tags: bug, sql
+        :tickets: 4142
+
+        Changed the "visit name" of :class:`.ColumnElement` from "column" to
+        "column_element", so that when this element is used as the basis for a
+        user-defined SQL element, it is not assumed to behave like a table-bound
+        :class:`.ColumnClause` when processed by various SQL traversal utilities,
+        as are commonly used by the ORM.
+
+    .. change::
+        :tags: bug, sql, ext
+        :tickets: 4141
+
+        Fixed issue in :class:`.ARRAY` datatype which is essentially the same
+        issue as that of :ticket:`3832`, except not a regression, where
+        column attachment events on top of :class:`.ARRAY` would not fire
+        correctly, thus interfering with systems which rely upon this.   A key
+        use case that was broken by this is the use of mixins to declare
+        columns that make use of :meth:`.MutableList.as_mutable`.
+
+    .. change::
+        :tags: feature, engine
+        :tickets: 4089
+
+        The "password" attribute of the :class:`.url.URL` object can now be
+        any user-defined or user-subclassed string object that responds to the
+        Python ``str()`` builtin.   The object passed will be maintained as the
+        datamember :attr:`.url.URL.password_original` and will be consulted
+        when the :attr:`.url.URL.password` attribute is read to produce the
+        string value.
+
+    .. change::
+        :tags: bug, orm
+        :tickets: 4130
+
+        Fixed bug in :func:`.contains_eager` query option where making use of a
+        path that used :meth:`.PropComparator.of_type` to refer to a subclass
+        across more than one level of joins would also require that the "alias"
+        argument were provided with the same subtype in order to avoid adding
+        unwanted FROM clauses to the query; additionally,  using
+        :func:`.contains_eager` across subclasses that use :func:`.aliased` objects
+        of subclasses as the :meth:`.PropComparator.of_type` argument will also
+        render correctly.
+
+
+
+
+    .. change::
+        :tags: feature, postgresql
+
+        Added new :class:`.postgresql.MONEY` datatype.  Pull request courtesy
+        Cleber J Santos.
+
+    .. change::
+        :tags: bug, sql
+        :tickets: 4140
+
+        Fixed bug in new "expanding bind parameter" feature whereby if multiple
+        params were used in one statement, the regular expression would not
+        match the parameter name correctly.
+
+    .. change::
+        :tags: enhancement, ext
+        :tickets: 4135
+
+        Added new method :meth:`.baked.Result.with_post_criteria` to baked
+        query system, allowing non-SQL-modifying transformations to take place
+        after the query has been pulled from the cache.  Among other things,
+        this method can be used with :class:`.horizontal_shard.ShardedQuery`
+        to set the shard identifier.   :class:`.horizontal_shard.ShardedQuery`
+        has also been modified such that its :meth:`.ShardedQuery.get` method
+        interacts correctly with that of :class:`.baked.Result`.
+
+    .. change::
+        :tags: bug, oracle
+        :tickets: 4064
+
+        Added some additional rules to fully handle ``Decimal('Infinity')``,
+        ``Decimal('-Infinity')`` values with cx_Oracle numerics when using
+        ``asdecimal=True``.
+
+    .. change::
+        :tags: bug, mssql
+        :tickets: 4121
+
+        Fixed bug where sqltypes.BINARY and sqltypes.VARBINARY datatypes
+        would not include correct bound-value handlers for pyodbc,
+        which allows the pyodbc.NullParam value to be passed that
+        helps with FreeTDS.
+
+
+
+
+    .. change::
+        :tags: feature, misc
+
+        Added a new errors section to the documentation with background
+        about common error messages.   Selected exceptions within SQLAlchemy
+        will include a link in their string output to the relevant section
+        within this page.
+
+    .. change::
+        :tags: bug, orm
+        :tickets: 4032
+
+        The :meth:`.Query.exists` method will now disable eager loaders for when
+        the query is rendered.  Previously, joined-eager load joins would be rendered
+        unnecessarily as well as subquery eager load queries would be needlessly
+        generated.   The new behavior matches that of the :meth:`.Query.subquery`
+        method.
+
+.. changelog::
     :version: 1.2.0b3
+    :released: December 27, 2017
     :released: October 13, 2017
+
+    .. change::
+        :tags: feature, postgresql
+        :tickets: 4109
+
+        Added a new flag ``use_batch_mode`` to the psycopg2 dialect.  This flag
+        enables the use of psycopg2's ``psycopg2.extras.execute_batch``
+        extension when the :class:`.Engine` calls upon
+        ``cursor.executemany()``. This extension provides a critical
+        performance increase by over an order of magnitude when running INSERT
+        statements in batch.  The flag is False by default as it is considered
+        to be experimental for now.
+
+        .. seealso::
+
+            :ref:`change_4109`
 
     .. change::
         :tags: bug, mssql
@@ -413,6 +859,7 @@
 
 .. changelog::
     :version: 1.2.0b2
+    :released: December 27, 2017
     :released: July 24, 2017
 
     .. change:: 4033
@@ -427,6 +874,7 @@
 
 .. changelog::
     :version: 1.2.0b1
+    :released: December 27, 2017
     :released: July 10, 2017
 
     .. change:: scoped_autocommit
@@ -1186,7 +1634,7 @@
         also applies it to all occurrences of the wildcard characters "%"
         and "_" automatically.  Pull request courtesy Diana Clarke.
 
-        .. note::  This feature has been changed as of 1.2.0b4 from its initial
+        .. note::  This feature has been changed as of 1.2.0 from its initial
            implementation in 1.2.0b2 such that autoescape is now passed as a
            boolean value, rather than a specific character to use as the escape
            character.

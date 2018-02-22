@@ -1,5 +1,5 @@
 # postgresql/psycopg2.py
-# Copyright (C) 2005-2017 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2018 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -730,6 +730,7 @@ class PGDialect_psycopg2(PGDialect):
                 'SSL SYSCALL error: Bad file descriptor',
                 'SSL SYSCALL error: EOF detected',
                 'SSL error: decryption failed or bad record mac',
+                'SSL SYSCALL error: Operation timed out',
             ]:
                 idx = str_e.find(msg)
                 if idx >= 0 and '"' not in str_e[:idx]:

@@ -843,6 +843,10 @@ class InvalidGenerationsTest(QueryTest, AssertsCompiledSQL):
         is_(q._mapper_zero(), None)
         is_(q._entity_zero(), None)
 
+        q1 = s.query(Bundle('b1', User.id, User.name))
+        is_(q1._mapper_zero(), inspect(User))
+        is_(q1._entity_zero(), inspect(User))
+
     def test_from_statement(self):
         User = self.classes.User
 
@@ -1487,6 +1491,26 @@ class ExpressionTest(QueryTest, AssertsCompiledSQL):
             "addresses_email_address FROM addresses WHERE "
             "addresses.user_id = (SELECT users.id AS users_id "
             "FROM users WHERE users.id = :id_1)"
+        )
+
+    def test_subquery_no_eagerloads(self):
+        User = self.classes.User
+        s = Session()
+
+        self.assert_compile(
+            s.query(User).options(joinedload(User.addresses)).subquery(),
+            "SELECT users.id, users.name FROM users"
+        )
+
+    def test_exists_no_eagerloads(self):
+        User = self.classes.User
+        s = Session()
+
+        self.assert_compile(
+            s.query(
+                s.query(User).options(joinedload(User.addresses)).exists()
+            ),
+            "SELECT EXISTS (SELECT 1 FROM users) AS anon_1"
         )
 
     def test_named_subquery(self):

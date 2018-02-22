@@ -1,5 +1,5 @@
 # sql/elements.py
-# Copyright (C) 2005-2017 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2018 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -52,7 +52,7 @@ def collate(expression, collation):
     expr = _literal_as_binds(expression)
     return BinaryExpression(
         expr,
-        ColumnClause(collation),
+        CollationClause(collation),
         operators.collate, type_=expr.type)
 
 
@@ -571,7 +571,7 @@ class ColumnElement(operators.ColumnOperators, ClauseElement):
 
     """
 
-    __visit_name__ = 'column'
+    __visit_name__ = 'column_element'
     primary_key = False
     foreign_keys = []
 
@@ -3871,6 +3871,13 @@ class ColumnClause(Immutable, ColumnElement):
         if attach:
             selectable._columns[c.key] = c
         return c
+
+
+class CollationClause(ColumnElement):
+    __visit_name__ = "collation"
+
+    def __init__(self, collation):
+        self.collation = collation
 
 
 class _IdentifiedClause(Executable, ClauseElement):

@@ -1,5 +1,5 @@
 # orm/mapper.py
-# Copyright (C) 2005-2017 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2018 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -1243,6 +1243,10 @@ class Mapper(InspectionAttr):
         event.listen(manager, 'init', _event_on_init, raw=True)
 
         for key, method in util.iterate_attributes(self.class_):
+            if key == '__init__' and hasattr(method, '_sa_original_init'):
+                method = method._sa_original_init
+                if isinstance(method, types.MethodType):
+                    method = method.im_func
             if isinstance(method, types.FunctionType):
                 if hasattr(method, '__sa_reconstructor__'):
                     self._reconstructor = method
@@ -1609,10 +1613,23 @@ class Mapper(InspectionAttr):
         if not self.concrete:
             self._configure_property(key, prop, init=False, setparent=False)
         elif key not in self._props:
-            self._configure_property(
-                key,
-                properties.ConcreteInheritedProperty(),
-                init=init, setparent=True)
+            # determine if the class implements this attribute; if not,
+            # or if it is implemented by the attribute that is handling the
+            # given superclass-mapped property, then we need to report that we
+            # can't use this at the instance level since we are a concrete
+            # mapper and we don't map this.  don't trip user-defined
+            # descriptors that might have side effects when invoked.
+            implementing_attribute = self.class_manager._get_class_attr_mro(
+                key, prop)
+            if implementing_attribute is prop or (isinstance(
+                    implementing_attribute,
+                    attributes.InstrumentedAttribute) and
+                implementing_attribute._parententity is prop.parent
+            ):
+                self._configure_property(
+                    key,
+                    properties.ConcreteInheritedProperty(),
+                    init=init, setparent=True)
 
     def _configure_property(self, key, prop, init=True, setparent=True):
         self._log("_configure_property(%s, %s)", key, prop.__class__.__name__)
@@ -2409,9 +2426,8 @@ class Mapper(InspectionAttr):
                     self.class_.__dict__[assigned_name]):
                 return True
         else:
-            if getattr(self.class_, assigned_name, None) is not None \
-                    and self._is_userland_descriptor(
-                    getattr(self.class_, assigned_name)):
+            attr = self.class_manager._get_class_attr_mro(assigned_name, None)
+            if attr is not None and self._is_userland_descriptor(attr):
                 return True
 
         if self.include_properties is not None and \
@@ -2506,7 +2522,7 @@ class Mapper(InspectionAttr):
         else:
             return True
 
-    def identity_key_from_row(self, row, adapter=None):
+    def identity_key_from_row(self, row, identity_token=None, adapter=None):
         """Return an identity-map key for use in storing/retrieving an
         item from the identity map.
 
@@ -2522,16 +2538,16 @@ class Mapper(InspectionAttr):
             pk_cols = [adapter.columns[c] for c in pk_cols]
 
         return self._identity_class, \
-            tuple(row[column] for column in pk_cols)
+            tuple(row[column] for column in pk_cols), identity_token
 
-    def identity_key_from_primary_key(self, primary_key):
+    def identity_key_from_primary_key(self, primary_key, identity_token=None):
         """Return an identity-map key for use in storing/retrieving an
         item from an identity map.
 
         :param primary_key: A list of values indicating the identifier.
 
         """
-        return self._identity_class, tuple(primary_key)
+        return self._identity_class, tuple(primary_key), identity_token
 
     def identity_key_from_instance(self, instance):
         """Return the identity key for the given instance, based on
@@ -2546,17 +2562,18 @@ class Mapper(InspectionAttr):
         attribute name `key`.
 
         """
-        return self.identity_key_from_primary_key(
-            self.primary_key_from_instance(instance))
+        state = attributes.instance_state(instance)
+        return self._identity_key_from_state(state, attributes.PASSIVE_OFF)
 
-    def _identity_key_from_state(self, state):
+    def _identity_key_from_state(
+            self, state, passive=attributes.PASSIVE_RETURN_NEVER_SET):
         dict_ = state.dict
         manager = state.manager
         return self._identity_class, tuple([
-            manager[self._columntoproperty[col].key].
-            impl.get(state, dict_, attributes.PASSIVE_RETURN_NEVER_SET)
-            for col in self.primary_key
-        ])
+            manager[prop.key].
+            impl.get(state, dict_, passive)
+            for prop in self._identity_key_props
+        ]), state.identity_token
 
     def primary_key_from_instance(self, instance):
         """Return the list of primary key values for the given
@@ -2569,17 +2586,9 @@ class Mapper(InspectionAttr):
 
         """
         state = attributes.instance_state(instance)
-        return self._primary_key_from_state(state, attributes.PASSIVE_OFF)
-
-    def _primary_key_from_state(
-            self, state, passive=attributes.PASSIVE_RETURN_NEVER_SET):
-        dict_ = state.dict
-        manager = state.manager
-        return [
-            manager[prop.key].
-            impl.get(state, dict_, passive)
-            for prop in self._identity_key_props
-        ]
+        identity_key = self._identity_key_from_state(
+            state, attributes.PASSIVE_OFF)
+        return identity_key[1]
 
     @_memoized_configured_property
     def _identity_key_props(self):

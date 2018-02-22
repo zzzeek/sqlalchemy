@@ -1,5 +1,5 @@
 # mysql/enumerated.py
-# Copyright (C) 2005-2017 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2018 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -126,6 +126,7 @@ class ENUM(sqltypes.NativeForEmulated, sqltypes.Enum, _EnumeratedValues):
 
         """
         kw.setdefault("validate_strings", impl.validate_strings)
+        kw.setdefault("values_callable", impl.values_callable)
         return cls(**kw)
 
     def _setup_for_values(self, values, objects, kw):

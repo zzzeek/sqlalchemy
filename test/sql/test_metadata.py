@@ -7,7 +7,7 @@ from sqlalchemy import Integer, String, UniqueConstraint, \
     ForeignKeyConstraint, PrimaryKeyConstraint, ColumnDefault, Index, event,\
     events, Unicode, types as sqltypes, bindparam, \
     Table, Column, Boolean, Enum, func, text, TypeDecorator, \
-    BLANK_SCHEMA
+    BLANK_SCHEMA, ARRAY
 from sqlalchemy import schema, exc
 from sqlalchemy.engine import default
 from sqlalchemy.sql import elements, naming
@@ -1047,8 +1047,11 @@ class ToMetaDataTest(fixtures.TestBase, ComparesTables):
                       Column('id', Integer, primary_key=True),
                       Column('data1', Integer, index=True),
                       Column('data2', Integer),
+                      Index('text', text('data1 + 1')),
                       )
-        Index('multi', table.c.data1, table.c.data2),
+        Index('multi', table.c.data1, table.c.data2)
+        Index('func', func.abs(table.c.data1))
+        Index('multi-func', table.c.data1, func.abs(table.c.data2))
 
         meta2 = MetaData()
         table_c = table.tometadata(meta2)
@@ -1056,7 +1059,7 @@ class ToMetaDataTest(fixtures.TestBase, ComparesTables):
         def _get_key(i):
             return [i.name, i.unique] + \
                 sorted(i.kwargs.items()) + \
-                list(i.columns.keys())
+                [str(col) for col in i.expressions]
 
         eq_(
             sorted([_get_key(i) for i in table.indexes]),
@@ -1649,6 +1652,14 @@ class SchemaTypeTest(fixtures.TestBase):
 
         typ = MyType()
         self._test_before_parent_attach(typ, target_typ, double=True)
+
+    def test_before_parent_attach_array_enclosing_schematype(self):
+        # test for [ticket:4141] which is the same idea as [ticket:3832]
+        # for ARRAY
+
+        typ = ARRAY(String)
+
+        self._test_before_parent_attach(typ)
 
     def test_before_parent_attach_typedec_of_schematype(self):
         class MyType(TypeDecorator, sqltypes.SchemaType):

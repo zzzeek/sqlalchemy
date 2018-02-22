@@ -1,5 +1,5 @@
 # mysql/base.py
-# Copyright (C) 2005-2017 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2018 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -768,8 +768,10 @@ RESERVED_WORDS = set(
 
      'generated', 'optimizer_costs', 'stored', 'virtual',  # 5.7
 
-     'admin', 'except', 'grouping', 'of', 'persist', 'recursive',
-        'role',  # 8.0
+     'admin', 'cume_dist', 'empty', 'except', 'first_value', 'grouping',
+     'groups', 'json_table', 'last_value', 'nth_value', 'ntile', 'of',
+     'over', 'percent_rank', 'persist', 'persist_only', 'rank', 'recursive',
+     'role', 'row', 'rows', 'row_number', 'system', 'window', # 8.0
 
      ])
 
@@ -1101,6 +1103,24 @@ class MySQLCompiler(compiler.SQLCompiler):
     def update_from_clause(self, update_stmt, from_table,
                            extra_froms, from_hints, **kw):
         return None
+
+    def delete_table_clause(self, delete_stmt, from_table,
+                            extra_froms):
+        """If we have extra froms make sure we render any alias as hint."""
+        ashint = False
+        if extra_froms:
+            ashint = True
+        return from_table._compiler_dispatch(
+            self, asfrom=True, iscrud=True, ashint=ashint
+        )
+
+    def delete_extra_from_clause(self, delete_stmt, from_table,
+                           extra_froms, from_hints, **kw):
+        """Render the DELETE .. USING clause specific to MySQL."""
+        return "USING " + ', '.join(
+            t._compiler_dispatch(self, asfrom=True,
+                                 fromhints=from_hints, **kw)
+            for t in [from_table] + extra_froms)
 
 
 class MySQLDDLCompiler(compiler.DDLCompiler):

@@ -1,5 +1,5 @@
 # postgresql/base.py
-# Copyright (C) 2005-2017 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2018 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -925,7 +925,7 @@ from sqlalchemy.types import INTEGER, BIGINT, SMALLINT, VARCHAR, \
 
 AUTOCOMMIT_REGEXP = re.compile(
     r'\s*(?:UPDATE|INSERT|CREATE|DELETE|DROP|ALTER|GRANT|REVOKE|'
-    'IMPORT FOREIGN SCHEMA|REFRESH MATERIALIZED VIEW)',
+    'IMPORT FOREIGN SCHEMA|REFRESH MATERIALIZED VIEW|TRUNCATE)',
     re.I | re.UNICODE)
 
 RESERVED_WORDS = set(
@@ -1257,6 +1257,7 @@ class ENUM(sqltypes.NativeForEmulated, sqltypes.Enum):
         kw.setdefault('inherit_schema', impl.inherit_schema)
         kw.setdefault('metadata', impl.metadata)
         kw.setdefault('_create_events', False)
+        kw.setdefault('values_callable', impl.values_callable)
         return cls(**kw)
 
     def create(self, bind=None, checkfirst=True):
@@ -1646,6 +1647,23 @@ class PGCompiler(compiler.SQLCompiler):
                 )
 
         return 'ON CONFLICT %s DO UPDATE SET %s' % (target_text, action_text)
+
+    def update_from_clause(self, update_stmt,
+                           from_table, extra_froms,
+                           from_hints,
+                           **kw):
+        return "FROM " + ', '.join(
+            t._compiler_dispatch(self, asfrom=True,
+                                 fromhints=from_hints, **kw)
+            for t in extra_froms)
+
+    def delete_extra_from_clause(self, delete_stmt, from_table,
+                           extra_froms, from_hints, **kw):
+        """Render the DELETE .. USING clause specific to PostgresSQL."""
+        return "USING " + ', '.join(
+            t._compiler_dispatch(self, asfrom=True,
+                                 fromhints=from_hints, **kw)
+            for t in extra_froms)
 
 
 class PGDDLCompiler(compiler.DDLCompiler):

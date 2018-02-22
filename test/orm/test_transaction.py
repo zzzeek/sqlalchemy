@@ -2,6 +2,7 @@ from __future__ import with_statement
 from sqlalchemy import (
     testing, exc as sa_exc, event, String, Column, Table, select, func)
 from sqlalchemy.sql import elements
+from sqlalchemy.orm.util import identity_key
 from sqlalchemy.testing import (
     fixtures, engines, eq_, assert_raises, assert_raises_message,
     assert_warnings, mock, expect_warnings, is_, is_not_)
@@ -11,6 +12,7 @@ from sqlalchemy.orm import (
 from sqlalchemy.testing.util import gc_collect
 from test.orm._fixtures import FixtureTest
 from sqlalchemy import inspect
+
 
 class SessionTransactionTest(fixtures.RemovesEvents, FixtureTest):
     run_inserts = None
@@ -1715,8 +1717,36 @@ class NaturalPKRollbackTest(fixtures.MappedTest):
         assert u1 in s
         assert u2 in s
 
-        assert s.identity_map[(User, ('u1',))] is u1
-        assert s.identity_map[(User, ('u2',))] is u2
+        assert s.identity_map[identity_key(User, ('u1',))] is u1
+        assert s.identity_map[identity_key(User, ('u2',))] is u2
+
+    @testing.requires.savepoints
+    def test_key_replaced_by_update_nested(self):
+        users, User = self.tables.users, self.classes.User
+
+        mapper(User, users)
+
+        u1 = User(name='u1')
+
+        s = Session()
+        s.add(u1)
+        s.commit()
+
+        with s.begin_nested():
+            u2 = User(name='u2')
+            s.add(u2)
+            s.flush()
+
+            u2.name = 'u3'
+
+        s.rollback()
+
+        assert u1 in s
+        assert u2 not in s
+
+        u1.name = 'u5'
+
+        s.commit()
 
     def test_multiple_key_replaced_by_update(self):
         users, User = self.tables.users, self.classes.User
@@ -1747,9 +1777,9 @@ class NaturalPKRollbackTest(fixtures.MappedTest):
         assert u2 in s
         assert u3 in s
 
-        assert s.identity_map[(User, ('u1',))] is u1
-        assert s.identity_map[(User, ('u2',))] is u2
-        assert s.identity_map[(User, ('u3',))] is u3
+        assert s.identity_map[identity_key(User, ('u1',))] is u1
+        assert s.identity_map[identity_key(User, ('u2',))] is u2
+        assert s.identity_map[identity_key(User, ('u3',))] is u3
 
     def test_key_replaced_by_oob_insert(self):
         users, User = self.tables.users, self.classes.User
@@ -1774,4 +1804,4 @@ class NaturalPKRollbackTest(fixtures.MappedTest):
         assert u1 in s
         assert u2 not in s
 
-        assert s.identity_map[(User, ('u1',))] is u1
+        assert s.identity_map[identity_key(User, ('u1',))] is u1

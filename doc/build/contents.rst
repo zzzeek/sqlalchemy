@@ -15,6 +15,7 @@ documentation, see :ref:`index_toplevel`.
    core/index
    dialects/index
    faq/index
+   errors
    changelog/index
 
 Indices and tables

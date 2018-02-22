@@ -1,5 +1,5 @@
 # orm/dependency.py
-# Copyright (C) 2005-2017 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2018 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -607,6 +607,7 @@ class ManyToOneDP(DependencyProcessor):
                 (before_delete, parent_pre_updates),
 
                 (parent_pre_updates, child_deletes),
+                (parent_pre_updates, parent_deletes),
             ])
         else:
             uow.dependencies.update([

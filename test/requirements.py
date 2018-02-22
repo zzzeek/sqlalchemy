@@ -110,7 +110,11 @@ class DefaultRequirements(SuiteRequirements):
         return only_on(['oracle'])
 
     @property
-    def foreign_key_constraint_option_reflection(self):
+    def foreign_key_constraint_option_reflection_ondelete(self):
+        return only_on(['postgresql', 'mysql', 'sqlite', 'oracle'])
+
+    @property
+    def foreign_key_constraint_option_reflection_onupdate(self):
         return only_on(['postgresql', 'mysql', 'sqlite'])
 
     @property
@@ -143,6 +147,13 @@ class DefaultRequirements(SuiteRequirements):
 
         """
         return skip_if(["firebird", "mssql+mxodbc"], "not supported by driver")
+
+    @property
+    def no_quoting_special_bind_names(self):
+        """Target database will quote bound paramter names, doesn't support
+        EXPANDING"""
+
+        return skip_if(["oracle"])
 
     @property
     def identity(self):
@@ -315,6 +326,12 @@ class DefaultRequirements(SuiteRequirements):
         """Target must support UPDATE..FROM syntax"""
 
         return only_on(['postgresql', 'mssql', 'mysql'],
+                       "Backend does not support UPDATE..FROM")
+
+    @property
+    def delete_from(self):
+        """Target must support DELETE FROM..FROM or DELETE..USING syntax"""
+        return only_on(['postgresql', 'mssql', 'mysql', 'sybase'],
                        "Backend does not support UPDATE..FROM")
 
     @property
@@ -650,6 +667,23 @@ class DefaultRequirements(SuiteRequirements):
     @property
     def json_type(self):
         return only_on([
+            lambda config:
+                against(config, "mysql") and (
+                    (
+                        not config.db.dialect._is_mariadb and
+                        against(config, "mysql >= 5.7")
+                    )
+                    or (
+                        config.db.dialect._mariadb_normalized_version_info >=
+                        (10, 2, 7)
+                    )
+                ),
+            "postgresql >= 9.3"
+        ])
+
+    @property
+    def reflects_json_type(self):
+        return only_on([
             lambda config: against(config, "mysql >= 5.7") and
             not config.db.dialect._is_mariadb,
             "postgresql >= 9.3"
@@ -684,6 +718,14 @@ class DefaultRequirements(SuiteRequirements):
                         'oracle', 'sybase'])
 
     @property
+    def timestamp_microseconds(self):
+        """target dialect supports representation of Python
+        datetime.datetime() with microsecond objects but only
+        if TIMESTAMP is used."""
+
+        return only_on(['oracle'])
+
+    @property
     def datetime_historic(self):
         """target dialect supports representation of Python
         datetime.datetime() objects with historic (pre 1900) values."""
@@ -702,7 +744,8 @@ class DefaultRequirements(SuiteRequirements):
         """target dialect accepts a datetime object as the target
         of a date column."""
 
-        return fails_on('mysql+mysqlconnector')
+        # does not work as of pyodbc 4.0.22
+        return fails_on('mysql+mysqlconnector') + skip_if("mssql+pyodbc")
 
     @property
     def date_historic(self):
@@ -933,6 +976,23 @@ class DefaultRequirements(SuiteRequirements):
             ('mssql', None, None, 'only simple labels allowed')
         ])
 
+    def get_order_by_collation(self, config):
+        lookup = {
+
+            # will raise without quoting
+            "postgresql": "POSIX",
+
+            "mysql": "latin1_general_ci",
+            "sqlite": "NOCASE",
+
+            # will raise *with* quoting
+            "mssql": "Latin1_General_CI_AS"
+        }
+        try:
+            return lookup[config.db.name]
+        except KeyError:
+            raise NotImplementedError()
+
     @property
     def skip_mysql_on_windows(self):
         """Catchall for a large variety of MySQL on Windows failures"""
@@ -946,11 +1006,23 @@ class DefaultRequirements(SuiteRequirements):
 
     @property
     def ad_hoc_engines(self):
-        return exclusions.skip_if(["oracle"])
+        return exclusions.skip_if(
+            ["oracle"],
+            "works, but Oracle just gets tired with "
+            "this much connection activity")
+
+
 
     @property
     def no_mssql_freetds(self):
         return self.mssql_freetds.not_()
+
+    @property
+    def python_fixed_issue_8743(self):
+        return exclusions.skip_if(
+            lambda: sys.version_info < (2, 7, 8),
+            "Python issue 8743 fixed in Python 2.7.8"
+        )
 
     @property
     def selectone(self):
@@ -1012,15 +1084,6 @@ class DefaultRequirements(SuiteRequirements):
         return only_if(
             lambda config: against(config, 'postgresql') and
             config.db.scalar("show server_encoding").lower() == "utf8"
-        )
-
-    @property
-    def broken_cx_oracle6_numerics(config):
-        return exclusions.LambdaPredicate(
-            lambda config: against(config, 'oracle+cx_oracle') and
-            config.db.dialect.cx_oracle_ver <= (6, 0, 2) and
-            config.db.dialect.cx_oracle_ver > (6, ),
-            "cx_Oracle github issue #77"
         )
 
     @property

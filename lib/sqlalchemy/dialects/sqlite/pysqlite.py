@@ -1,5 +1,5 @@
 # sqlite/pysqlite.py
-# Copyright (C) 2005-2017 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2018 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -332,10 +332,10 @@ class SQLiteDialect_pysqlite(SQLiteDialect):
     def dbapi(cls):
         try:
             from pysqlite2 import dbapi2 as sqlite
-        except ImportError as e:
+        except ImportError:
             try:
                 from sqlite3 import dbapi2 as sqlite  # try 2.5+ stdlib name.
-            except ImportError:
+            except ImportError as e:
                 raise e
         return sqlite
 

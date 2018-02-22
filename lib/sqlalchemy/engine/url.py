@@ -1,5 +1,5 @@
 # engine/url.py
-# Copyright (C) 2005-2017 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2018 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -54,7 +54,7 @@ class URL(object):
                  host=None, port=None, database=None, query=None):
         self.drivername = drivername
         self.username = username
-        self.password = password
+        self.password_original = password
         self.host = host
         if port is not None:
             self.port = int(port)
@@ -83,7 +83,12 @@ class URL(object):
         if self.query:
             keys = list(self.query)
             keys.sort()
-            s += '?' + "&".join("%s=%s" % (k, self.query[k]) for k in keys)
+            s += '?' + "&".join(
+                "%s=%s" % (
+                    k,
+                    element
+                ) for k in keys for element in util.to_list(self.query[k])
+            )
         return s
 
     def __str__(self):
@@ -105,6 +110,17 @@ class URL(object):
             self.database == other.database and \
             self.query == other.query
 
+    @property
+    def password(self):
+        if self.password_original is None:
+            return None
+        else:
+            return util.text_type(self.password_original)
+
+    @password.setter
+    def password(self, password):
+        self.password_original = password
+
     def get_backend_name(self):
         if '+' not in self.drivername:
             return self.drivername
@@ -119,6 +135,7 @@ class URL(object):
 
     def _instantiate_plugins(self, kwargs):
         plugin_names = util.to_list(self.query.get('plugin', ()))
+        plugin_names += kwargs.get('plugins', [])
 
         return [
             plugins.load(plugin_name)(self, kwargs)
@@ -219,10 +236,20 @@ def _parse_rfc1738_args(name):
         if components['database'] is not None:
             tokens = components['database'].split('?', 2)
             components['database'] = tokens[0]
-            query = (
-                len(tokens) > 1 and dict(util.parse_qsl(tokens[1]))) or None
-            if util.py2k and query is not None:
-                query = {k.encode('ascii'): query[k] for k in query}
+
+            if len(tokens) > 1:
+                query = {}
+
+                for key, value in util.parse_qsl(tokens[1]):
+                    if util.py2k:
+                        key = key.encode('ascii')
+                    if key in query:
+                        query[key] = util.to_list(query[key])
+                        query[key].append(value)
+                    else:
+                        query[key] = value
+            else:
+                query = None
         else:
             query = None
         components['query'] = query

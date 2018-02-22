@@ -1161,15 +1161,33 @@ class EnumTest(AssertsCompiledSQL, fixtures.TablesTest):
         # Implements PEP 435 in the minimal fashion needed by SQLAlchemy
         __members__ = OrderedDict()
 
-        def __init__(self, name, value):
+        def __init__(self, name, value, alias=None):
             self.name = name
             self.value = value
             self.__members__[name] = self
             setattr(self.__class__, name, self)
+            if alias:
+                self.__members__[alias] = self
+                setattr(self.__class__, alias, self)
+
+    class SomeOtherEnum(SomeEnum):
+        __members__ = OrderedDict()
 
     one = SomeEnum('one', 1)
     two = SomeEnum('two', 2)
-    three = SomeEnum('three', 3)
+    three = SomeEnum('three', 3, 'four')
+    a_member = SomeEnum('AMember', 'a')
+    b_member = SomeEnum('BMember', 'b')
+
+    other_one = SomeOtherEnum('one', 1)
+    other_two = SomeOtherEnum('two', 2)
+    other_three = SomeOtherEnum('three', 3)
+    other_a_member = SomeOtherEnum('AMember', 'a')
+    other_b_member = SomeOtherEnum('BMember', 'b')
+
+    @staticmethod
+    def get_enum_string_values(some_enum):
+        return [str(v.value) for v in some_enum.__members__.values()]
 
     @classmethod
     def define_tables(cls, metadata):
@@ -1192,6 +1210,14 @@ class EnumTest(AssertsCompiledSQL, fixtures.TablesTest):
             'stdlib_enum_table', metadata,
             Column("id", Integer, primary_key=True),
             Column('someenum', Enum(cls.SomeEnum))
+        )
+
+        Table(
+            'stdlib_enum_table2', metadata,
+            Column("id", Integer, primary_key=True),
+            Column('someotherenum',
+                   Enum(cls.SomeOtherEnum,
+                        values_callable=EnumTest.get_enum_string_values))
         )
 
     def test_python_type(self):
@@ -1498,6 +1524,10 @@ class EnumTest(AssertsCompiledSQL, fixtures.TablesTest):
             {'id': 1, 'someenum': self.SomeEnum.two},
             {'id': 2, 'someenum': self.SomeEnum.two},
             {'id': 3, 'someenum': self.SomeEnum.one},
+            {'id': 4, 'someenum': self.SomeEnum.three},
+            {'id': 5, 'someenum': self.SomeEnum.four},
+            {'id': 6, 'someenum': 'three'},
+            {'id': 7, 'someenum': 'four'},
         ])
 
         eq_(
@@ -1507,6 +1537,31 @@ class EnumTest(AssertsCompiledSQL, fixtures.TablesTest):
                 (1, self.SomeEnum.two),
                 (2, self.SomeEnum.two),
                 (3, self.SomeEnum.one),
+                (4, self.SomeEnum.three),
+                (5, self.SomeEnum.three),
+                (6, self.SomeEnum.three),
+                (7, self.SomeEnum.three),
+            ]
+        )
+
+    def test_pep435_enum_values_callable_round_trip(self):
+        stdlib_enum_table_custom_values =\
+            self.tables['stdlib_enum_table2']
+
+        stdlib_enum_table_custom_values.insert().execute([
+            {'id': 1, 'someotherenum': self.SomeOtherEnum.AMember},
+            {'id': 2, 'someotherenum': self.SomeOtherEnum.BMember},
+            {'id': 3, 'someotherenum': self.SomeOtherEnum.AMember}
+        ])
+
+        eq_(
+            stdlib_enum_table_custom_values.select().
+            order_by(stdlib_enum_table_custom_values.c.id).execute().
+            fetchall(),
+            [
+                (1, self.SomeOtherEnum.AMember),
+                (2, self.SomeOtherEnum.BMember),
+                (3, self.SomeOtherEnum.AMember)
             ]
         )
 
@@ -1533,7 +1588,13 @@ class EnumTest(AssertsCompiledSQL, fixtures.TablesTest):
         is_(e1.adapt(Enum).metadata, e1.metadata)
         e1 = Enum(self.SomeEnum)
         eq_(e1.adapt(ENUM).name, 'someenum')
-        eq_(e1.adapt(ENUM).enums, ['one', 'two', 'three'])
+        eq_(e1.adapt(ENUM).enums,
+            ['one', 'two', 'three', 'four', 'AMember', 'BMember'])
+
+        e1_vc = Enum(self.SomeOtherEnum,
+                     values_callable=EnumTest.get_enum_string_values)
+        eq_(e1_vc.adapt(ENUM).name, 'someotherenum')
+        eq_(e1_vc.adapt(ENUM).enums, ['1', '2', '3', 'a', 'b'])
 
     @testing.provide_metadata
     def test_create_metadata_bound_no_crash(self):

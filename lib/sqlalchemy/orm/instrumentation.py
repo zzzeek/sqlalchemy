@@ -1,5 +1,5 @@
 # orm/instrumentation.py
-# Copyright (C) 2005-2017 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2018 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -115,6 +115,41 @@ class ClassManager(dict):
         # raises unless self.mapper has been assigned
         raise exc.UnmappedClassError(self.class_)
 
+    def _locate_owning_manager(self, attribute):
+        """Scan through all instrumented classes in our hierarchy
+        searching for the given object as an attribute, and return
+        the bottommost owner.
+
+        E.g.::
+
+            foo = foobar()
+
+            class Parent:
+                attr = foo
+
+            class Child(Parent):
+                pass
+
+        Child.manager._locate_owning_manager(foo) would
+        give us Parent.
+
+        Needed by association proxy to correctly figure out the
+        owning class when the attribute is accessed.
+
+        """
+
+        stack = [None]
+        for supercls in self.class_.__mro__:
+            mgr = manager_of_class(supercls)
+            if not mgr:
+                continue
+            for key in set(supercls.__dict__):
+                val = supercls.__dict__[key]
+                if val is attribute:
+                    stack.append(mgr)
+                    continue
+        return stack[-1]
+
     def _all_sqla_attributes(self, exclude=None):
         """return an iterator of all classbound attributes that are
         implement :class:`.InspectionAttr`.
@@ -132,6 +167,15 @@ class ClassManager(dict):
                 val = supercls.__dict__[key]
                 if isinstance(val, interfaces.InspectionAttr):
                     yield key, val
+
+    def _get_class_attr_mro(self, key, default=None):
+        """return an attribute on the class without tripping it."""
+
+        for supercls in self.class_.__mro__:
+            if key in supercls.__dict__:
+                return supercls.__dict__[key]
+        else:
+            return default
 
     def _attr_has_impl(self, key):
         """Return True if the given attribute is fully initialized.
@@ -519,6 +563,7 @@ def __init__(%(apply_pos)s):
     exec(func_text, env)
     __init__ = env['__init__']
     __init__.__doc__ = original__init__.__doc__
+    __init__._sa_original_init = original__init__
 
     if func_defaults:
         __init__.__defaults__ = func_defaults

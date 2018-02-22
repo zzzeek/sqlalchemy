@@ -1,5 +1,5 @@
 # sql/operators.py
-# Copyright (C) 2005-2017 the SQLAlchemy authors and contributors
+# Copyright (C) 2005-2018 the SQLAlchemy authors and contributors
 # <see AUTHORS file>
 #
 # This module is part of SQLAlchemy and is released under
@@ -644,7 +644,7 @@ class ColumnOperators(Operators):
 
           .. versionadded:: 1.2
 
-          .. versionchanged:: 1.2.0b4 The
+          .. versionchanged:: 1.2.0 The
             :paramref:`.ColumnOperators.startswith.autoescape` parameter is
              now a simple boolean rather than a character; the escape
              character itself is also escaped, and defaults to a forwards
@@ -732,7 +732,7 @@ class ColumnOperators(Operators):
 
           .. versionadded:: 1.2
 
-          .. versionchanged:: 1.2.0b4 The
+          .. versionchanged:: 1.2.0 The
             :paramref:`.ColumnOperators.endswith.autoescape` parameter is
              now a simple boolean rather than a character; the escape
              character itself is also escaped, and defaults to a forwards
@@ -820,7 +820,7 @@ class ColumnOperators(Operators):
 
           .. versionadded:: 1.2
 
-          .. versionchanged:: 1.2.0b4 The
+          .. versionchanged:: 1.2.0 The
             :paramref:`.ColumnOperators.contains.autoescape` parameter is
              now a simple boolean rather than a character; the escape
              character itself is also escaped, and defaults to a forwards
