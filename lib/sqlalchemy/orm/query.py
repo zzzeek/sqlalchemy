@@ -70,7 +70,7 @@ class Query(object):
 
     """
 
-    _enable_single_entity = True
+    _only_return_tuples = False
     _enable_eagerloads = True
     _enable_assertions = True
     _with_labels = False
@@ -605,15 +605,12 @@ class Query(object):
         return self.enable_eagerloads(False).with_labels().statement
 
     @_generative()
-    def enable_single_entity(self, value):
-        """When set to True, a query defined with a single entity will return a
-        single entity result. This is the default.
-
-        When set to False, the query results will always be a KeyedTuple, even
-        for single element queries.
+    def only_return_tuples(self, value):
+        """When set to True, the query results will always be a KeyedTuple, even
+        for single element queries. The default is False.
 
         """
-        self._enable_single_entity = value
+        self._only_return_tuples = value
 
     @_generative()
     def enable_eagerloads(self, value):

@@ -47,6 +47,28 @@ class MiscTest(QueryTest):
         assert q1.session is s1
 
 
+class OnlyReturnTuplesTest(QueryTest):
+    def test_single_entity_false(self):
+        User = self.classes.User
+        row = create_session().query(User).first()
+        assert isinstance(row, User)
+
+    def test_single_entity_true(self):
+        User = self.classes.User
+        row = create_session().query(User).only_return_tuples(True).first()
+        assert isinstance(row, tuple)
+
+    def test_multiple_false(self):
+        User = self.classes.User
+        row = create_session().query(User.id, User).first()
+        assert isinstance(row, tuple)
+
+    def test_multiple_true(self):
+        User = self.classes.User
+        row = create_session().query(User.id, User).only_return_tuples(True).first()
+        assert isinstance(row, tuple)
+
+
 class RowTupleTest(QueryTest):
     run_setup_mappers = None
 
