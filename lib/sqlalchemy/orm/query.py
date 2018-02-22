@@ -609,8 +609,8 @@ class Query(object):
         """When set to True, a query defined with a single entity will return a
         single entity result. This is the default.
 
-        When set to False, the query results will be a KeyedTuple of one
-        element.
+        When set to False, the query results will always be a KeyedTuple, even
+        for single element queries.
 
         """
         self._enable_single_entity = value
