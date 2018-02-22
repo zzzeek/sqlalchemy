@@ -40,6 +40,10 @@ class ShardedQuery(Query):
         q._shard_id = shard_id
         return q
 
+    def _finalize_instance_loading(self, key):
+        if self._shard_id is None:
+            self._shard_id = key[2]
+
     def _execute_and_instances(self, context):
         def iter_for_shard(shard_id):
             context.attributes['shard_id'] = shard_id

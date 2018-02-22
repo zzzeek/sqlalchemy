@@ -869,6 +869,9 @@ class Query(object):
         """
         return self._get_impl(ident, loading.load_on_ident)
 
+    def _finalize_instance_loading(self, key):
+        pass
+
     def _get_impl(self, ident, fallback_fn):
         # convert composite types to individual args
         if hasattr(ident, '__composite_values__'):

@@ -226,7 +226,7 @@ def load_on_ident(query, key,
         only_load_props=only_load_props,
         refresh_state=refresh_state)
     q._order_by = None
-
+    q._finalize_instance_loading(key)
     try:
         return q.one()
     except orm_exc.NoResultFound:
