@@ -37,7 +37,8 @@ def instances(query, cursor, context):
 
     filtered = query._has_mapper_entities
 
-    single_entity = len(query._entities) == 1 and \
+    single_entity = query._enable_single_entity and \
+        len(query._entities) == 1 and \
         query._entities[0].supports_single_entity
 
     if filtered:
