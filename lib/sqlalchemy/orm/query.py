@@ -606,8 +606,8 @@ class Query(object):
 
     @_generative()
     def only_return_tuples(self, value):
-        """When set to True, the query results will always be a KeyedTuple, even
-        for single element queries. The default is False.
+        """When set to True, the query results will always be a tuple,
+        specifically for single element queries. The default is False.
 
         """
         self._only_return_tuples = value
