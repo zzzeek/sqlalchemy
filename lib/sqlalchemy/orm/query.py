@@ -70,6 +70,7 @@ class Query(object):
 
     """
 
+    _only_return_tuples = False
     _enable_eagerloads = True
     _enable_assertions = True
     _with_labels = False
@@ -602,6 +603,14 @@ class Query(object):
 
     def __clause_element__(self):
         return self.enable_eagerloads(False).with_labels().statement
+
+    @_generative()
+    def only_return_tuples(self, value):
+        """When set to True, the query results will always be a tuple,
+        specifically for single element queries. The default is False.
+
+        """
+        self._only_return_tuples = value
 
     @_generative()
     def enable_eagerloads(self, value):
