@@ -214,8 +214,6 @@ initcutils(void)
 #endif
 
 #if PY_MAJOR_VERSION >= 3
-    if (m == NULL)
-        return NULL;
     return m;
 #else
     if (m == NULL)
