@@ -32,6 +32,9 @@ SERVER_SIDE_CURSOR_RE = re.compile(
     r'\s*SELECT',
     re.I | re.UNICODE)
 
+EMPTY_SET_QUERY = 'SELECT 1 ' \
+                  'FROM (SELECT 1) as placeholder_table ' \
+                  'WHERE 1!=1'
 
 class DefaultDialect(interfaces.Dialect):
     """Default implementation of Dialect"""
@@ -732,10 +735,15 @@ class DefaultExecutionContext(interfaces.ExecutionContext):
             if parameter.expanding:
                 values = compiled_params.pop(name)
                 if not values:
-                    raise exc.InvalidRequestError(
-                        "'expanding' parameters can't be used with an "
-                        "empty list"
+                    to_update = [
+                        ("%s_%s" % (name, 1), EMPTY_SET_QUERY)
+                    ]
+                    replacement_expressions[name] = ", ".join(
+                        self.compiled.bindtemplate % {
+                            "name": key}
+                        for key, value in to_update
                     )
+
                 elif isinstance(values[0], (tuple, list)):
                     to_update = [
                         ("%s_%s_%s" % (name, i, j), value)
