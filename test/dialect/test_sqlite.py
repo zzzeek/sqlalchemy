@@ -771,13 +771,13 @@ class SQLTest(fixtures.TestBase, AssertsCompiledSQL):
                             'ON CONFLICT FAIL', dialect=sqlite.dialect())
 
     def test_on_conflict_clause_column_many_clause(self):
-        clause = {'not_null': 'FAIL', 'primary_key': 'IGNORE'}
+        on_conflict = {'not_null': 'FAIL', 'primary_key': 'IGNORE'}
 
         meta = MetaData()
         t = Table(
             'n', meta,
             Column('test', Integer, nullable=False, primary_key=True,
-                   sqlite_on_conflict=clause)
+                   sqlite_on_conflict=on_conflict)
         )
 
         self.assert_compile(CreateTable(t),
