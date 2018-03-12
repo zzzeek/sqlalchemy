@@ -866,8 +866,15 @@ class SQLiteDDLCompiler(compiler.DDLCompiler):
         if default is not None:
             colspec += " DEFAULT " + default
 
+        on_conflict_dict = column.dialect_options['sqlite']['on_conflict']
+
         if not column.nullable:
             colspec += " NOT NULL"
+
+            if on_conflict_dict is not None:
+                on_conflict_clause = on_conflict_dict.get('not_null')
+                if on_conflict_clause is not None:
+                    colspec += " ON CONFLICT " + on_conflict_clause
 
         if column.primary_key:
             if (
@@ -882,7 +889,14 @@ class SQLiteDDLCompiler(compiler.DDLCompiler):
                     len(column.table.primary_key.columns) == 1 and
                     issubclass(column.type._type_affinity, sqltypes.Integer) and
                     not column.foreign_keys):
-                colspec += " PRIMARY KEY AUTOINCREMENT"
+                colspec += " PRIMARY KEY"
+
+                if on_conflict_dict is not None:
+                    on_conflict_clause = on_conflict_dict.get('primary_key')
+                    if on_conflict_clause is not None:
+                        colspec += " ON CONFLICT " + on_conflict_clause
+
+                colspec += " AUTOINCREMENT"
 
         return colspec
 
@@ -898,8 +912,60 @@ class SQLiteDDLCompiler(compiler.DDLCompiler):
                     not c.foreign_keys):
                 return None
 
-        return super(SQLiteDDLCompiler, self).visit_primary_key_constraint(
-            constraint)
+        text = super(
+            SQLiteDDLCompiler,
+            self).visit_primary_key_constraint(constraint)
+
+        on_conflict_clause = constraint.dialect_options['sqlite']['on_conflict']
+        if len(constraint.columns) == 1:
+            on_conflict_dict = list(constraint)[0].dialect_options['sqlite']['on_conflict']
+            if on_conflict_dict is not None:
+                on_conflict_clause = on_conflict_dict.get('primary_key')
+
+        if on_conflict_clause is not None:
+            text += " ON CONFLICT " + on_conflict_clause
+
+        return text
+
+    def visit_unique_constraint(self, constraint):
+        text = super(
+            SQLiteDDLCompiler,
+            self).visit_unique_constraint(constraint)
+
+        on_conflict_clause = constraint.dialect_options['sqlite']['on_conflict']
+        if len(constraint.columns) == 1:
+            on_conflict_dict = list(constraint)[0].dialect_options['sqlite']['on_conflict']
+            if on_conflict_dict is not None:
+                on_conflict_clause = on_conflict_dict.get('unique')
+
+        if on_conflict_clause is not None:
+            text += " ON CONFLICT " + on_conflict_clause
+
+        return text
+
+    def visit_check_constraint(self, constraint):
+        text = super(
+            SQLiteDDLCompiler,
+            self).visit_check_constraint(constraint)
+
+        on_conflict_clause = constraint.dialect_options['sqlite']['on_conflict']
+
+        if on_conflict_clause is not None:
+            text += " ON CONFLICT " + on_conflict_clause
+
+        return text
+
+    def visit_column_check_constraint(self, constraint):
+        text = super(
+            SQLiteDDLCompiler,
+            self).visit_column_check_constraint(constraint)
+
+        if constraint.dialect_options['sqlite']['on_conflict'] is not None:
+            raise exc.CompileError(
+                "SQLite does not support on conflict clause for "
+                "column check constraint")
+
+        return text
 
     def visit_foreign_key_constraint(self, constraint):
 
@@ -1059,6 +1125,12 @@ class SQLiteDialect(default.DefaultDialect):
         }),
         (sa_schema.Index, {
             "where": None,
+        }),
+        (sa_schema.Column, {
+            "on_conflict": None,
+        }),
+        (sa_schema.Constraint, {
+            "on_conflict": None,
         }),
     ]
 
