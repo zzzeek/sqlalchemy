@@ -12,23 +12,6 @@ class JSON(sqltypes.JSON):
     .. _`loadable extension`: https://www.sqlite.org/loadext.html
     """
 
-    class Comparator(sqltypes.JSON.Comparator):
-        """Define comparison operations for :class:`.JSON`."""
-
-        def _setup_getitem(self, index):
-            operator, index, _ = super()._setup_getitem(index)
-            # https://www.sqlite.org/json1.html#jex
-            # "the SQL datatype of the result is NULL for a JSON null, INTEGER
-            # or REAL for a JSON numeric value, an INTEGER zero for a JSON false
-            # value, an INTEGER one for a JSON true value, the dequoted text for
-            # a JSON string value, and a text representation for JSON object and
-            # array values. If there are multiple path arguments (P1, P2, and so
-            # forth) then this routine returns SQLite text which is a
-            # well-formed JSON array holding the various values."
-            return operator, index, sqltypes.NullType()
-
-    comparator_factory = Comparator
-
 
 # TODO: MySQL and SQLite seem to share the same JSON path syntax, maybe unify?
 class _FormatTypeMixin(object):

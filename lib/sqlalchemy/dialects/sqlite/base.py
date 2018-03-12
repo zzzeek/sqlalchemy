@@ -861,12 +861,12 @@ class SQLiteCompiler(compiler.SQLCompiler):
                              self.process(binary.right))
 
     def visit_json_getitem_op_binary(self, binary, operator, **kw):
-        return "JSON_EXTRACT(%s, %s)" % (
+        return "JSON_QUOTE(JSON_EXTRACT(%s, %s))" % (
             self.process(binary.left, **kw),
             self.process(binary.right, **kw))
 
     def visit_json_path_getitem_op_binary(self, binary, operator, **kw):
-        return "JSON_EXTRACT(%s, %s)" % (
+        return "JSON_QUOTE(JSON_EXTRACT(%s, %s))" % (
             self.process(binary.left, **kw),
             self.process(binary.right, **kw))
 
