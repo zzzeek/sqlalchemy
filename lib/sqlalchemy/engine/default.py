@@ -735,14 +735,8 @@ class DefaultExecutionContext(interfaces.ExecutionContext):
             if parameter.expanding:
                 values = compiled_params.pop(name)
                 if not values:
-                    to_update = [
-                        ("%s_%s" % (name, 1), EMPTY_SET_QUERY)
-                    ]
-                    replacement_expressions[name] = ", ".join(
-                        self.compiled.bindtemplate % {
-                            "name": key}
-                        for key, value in to_update
-                    )
+                    to_update = []
+                    replacement_expressions[name] = EMPTY_SET_QUERY
 
                 elif isinstance(values[0], (tuple, list)):
                     to_update = [
