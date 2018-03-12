@@ -855,6 +855,7 @@ class SQLiteCompiler(compiler.SQLCompiler):
         return "%s IS %s" % (self.process(binary.left),
                              self.process(binary.right))
 
+
 class SQLiteDDLCompiler(compiler.DDLCompiler):
 
     def get_column_specification(self, column, **kwargs):
