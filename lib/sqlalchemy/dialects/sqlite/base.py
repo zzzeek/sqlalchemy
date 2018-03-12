@@ -478,7 +478,7 @@ from ...sql import compiler
 from ...types import (BLOB, BOOLEAN, CHAR, DECIMAL, FLOAT,
                       INTEGER, REAL, NUMERIC, SMALLINT, TEXT,
                       TIMESTAMP, VARCHAR)
-from .json import JSON
+from .json import JSON, JSONIndexType, JSONPathType
 
 
 class _DateTimeMixin(object):
@@ -755,6 +755,8 @@ colspecs = {
     sqltypes.Date: DATE,
     sqltypes.DateTime: DATETIME,
     sqltypes.JSON: JSON,
+    sqltypes.JSON.JSONIndexType: JSONIndexType,
+    sqltypes.JSON.JSONPathType: JSONPathType,
     sqltypes.Time: TIME,
 }
 
@@ -857,6 +859,16 @@ class SQLiteCompiler(compiler.SQLCompiler):
     def visit_isnot_distinct_from_binary(self, binary, operator, **kw):
         return "%s IS %s" % (self.process(binary.left),
                              self.process(binary.right))
+
+    def visit_json_getitem_op_binary(self, binary, operator, **kw):
+        return "JSON_EXTRACT(%s, %s)" % (
+            self.process(binary.left, **kw),
+            self.process(binary.right, **kw))
+
+    def visit_json_path_getitem_op_binary(self, binary, operator, **kw):
+        return "JSON_EXTRACT(%s, %s)" % (
+            self.process(binary.left, **kw),
+            self.process(binary.right, **kw))
 
 
 class SQLiteDDLCompiler(compiler.DDLCompiler):
