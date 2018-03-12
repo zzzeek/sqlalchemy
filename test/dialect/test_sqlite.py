@@ -219,6 +219,34 @@ class TestTypes(fixtures.TestBase, AssertsExecutionResults):
                 isinstance(bindproc(util.u('some string')), util.text_type)
 
 
+class JSONTest(fixtures.TestBase):
+
+    __requires__ = ('json_type', )
+    __only_on__ = 'sqlite'
+
+    @testing.provide_metadata
+    def test_rudimentary_roundtrip(self):
+        sqlite_json = Table(
+            'json_test', self.metadata,
+            Column('foo', sqlite.JSON)
+        )
+
+        self.metadata.create_all()
+
+        value = {
+            'json': {'foo': 'bar'},
+            'recs': ['one', 'two']
+        }
+
+        with testing.db.connect() as conn:
+            conn.execute(sqlite_json.insert(), foo=value)
+
+            eq_(
+                conn.scalar(select([sqlite_json.c.foo])),
+                value
+            )
+
+
 class DateTimeTest(fixtures.TestBase, AssertsCompiledSQL):
 
     def test_time_microseconds(self):

@@ -678,7 +678,8 @@ class DefaultRequirements(SuiteRequirements):
                         (10, 2, 7)
                     )
                 ),
-            "postgresql >= 9.3"
+            "postgresql >= 9.3",
+            "sqlite >= 3.9"
         ])
 
     @property
@@ -686,7 +687,8 @@ class DefaultRequirements(SuiteRequirements):
         return only_on([
             lambda config: against(config, "mysql >= 5.7") and
             not config.db.dialect._is_mariadb,
-            "postgresql >= 9.3"
+            "postgresql >= 9.3",
+            "sqlite >= 3.9"
         ])
 
     @property
