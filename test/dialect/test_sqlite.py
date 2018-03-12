@@ -225,6 +225,19 @@ class JSONTest(fixtures.TestBase):
     __only_on__ = 'sqlite'
 
     @testing.provide_metadata
+    @testing.requires.reflects_json_type
+    def test_reflection(self):
+        Table(
+            'json_test', self.metadata,
+            Column('foo', sqlite.JSON)
+        )
+        self.metadata.create_all()
+
+        reflected = Table('json_test', MetaData(), autoload_with=testing.db)
+        is_(reflected.c.foo.type._type_affinity, sqltypes.JSON)
+        assert isinstance(reflected.c.foo.type, sqlite.JSON)
+
+    @testing.provide_metadata
     def test_rudimentary_roundtrip(self):
         sqlite_json = Table(
             'json_test', self.metadata,
@@ -244,6 +257,27 @@ class JSONTest(fixtures.TestBase):
             eq_(
                 conn.scalar(select([sqlite_json.c.foo])),
                 value
+            )
+
+    @testing.provide_metadata
+    def test_extra_subobject(self):
+        sqlite_json = Table(
+            'json_test', self.metadata,
+            Column('foo', sqlite.JSON)
+        )
+
+        self.metadata.create_all()
+
+        value = {
+            'json': {'foo': 'bar'},
+        }
+
+        with testing.db.connect() as conn:
+            conn.execute(sqlite_json.insert(), foo=value)
+
+            eq_(
+                conn.scalar(select([sqlite_json.c.foo['json']])),
+                value['json']
             )
 
 
