@@ -260,7 +260,7 @@ class JSONTest(fixtures.TestBase):
             )
 
     @testing.provide_metadata
-    def test_extra_subobject(self):
+    def test_extract_subobject(self):
         sqlite_json = Table(
             'json_test', self.metadata,
             Column('foo', sqlite.JSON)
