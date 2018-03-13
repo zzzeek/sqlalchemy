@@ -60,6 +60,7 @@ BIND_TEMPLATES = {
     'qmark': "?",
     'format': "%%s",
     'numeric': ":[_POSITION]",
+    'dollar': "$[_POSITION]",
     'named': ":%(name)s"
 }
 
@@ -435,7 +436,7 @@ class SQLCompiler(Compiled):
         self.positional = dialect.positional
         if self.positional:
             self.positiontup = []
-            self._numeric_binds = dialect.paramstyle == "numeric"
+            self._numeric_binds = dialect.paramstyle in ("numeric", "dollar")
         self.bindtemplate = BIND_TEMPLATES[dialect.paramstyle]
 
         self.ctes = None

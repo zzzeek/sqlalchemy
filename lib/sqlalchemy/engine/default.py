@@ -200,7 +200,8 @@ class DefaultDialect(interfaces.Dialect):
             self.paramstyle = self.default_paramstyle
         if implicit_returning is not None:
             self.implicit_returning = implicit_returning
-        self.positional = self.paramstyle in ('qmark', 'format', 'numeric')
+        self.positional = self.paramstyle in ('qmark', 'format', 'numeric',
+                                              'dollar')
         self.identifier_preparer = self.preparer(self)
         self.type_compiler = self.type_compiler(self)
         if supports_right_nested_joins is not None:

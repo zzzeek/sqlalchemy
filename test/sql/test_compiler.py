@@ -432,6 +432,11 @@ class SelectTest(fixtures.TestBase, AssertsCompiledSQL):
         )
         self.assert_compile(
             stmt,
+            "select $1, $2, $3 from sometable",
+            dialect=default.DefaultDialect(paramstyle='dollar')
+        )
+        self.assert_compile(
+            stmt,
             "select %(foo)s, %(bar)s, %(bat)s from sometable",
             dialect=default.DefaultDialect(paramstyle='pyformat')
         )
