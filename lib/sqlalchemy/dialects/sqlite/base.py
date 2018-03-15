@@ -989,6 +989,12 @@ class SQLiteTypeCompiler(compiler.GenericTypeCompiler):
             return "TIME_CHAR"
 
     def visit_JSON(self, type_, **kw):
+        # TODO: JSON has NUMERIC affinity, not TEXT.
+        # If a user stores a JSON numeric value, it will be stored using
+        # NUMERIC storage class, which will blow up deserialization.
+        # As an alternative this could be for example JSONTEXT or some
+        # such, which would allow reflection to recognize JSON columns,
+        # and would ensure TEXT affinity.
         return "JSON"
 
 
