@@ -612,7 +612,10 @@ class LazyLoader(AbstractRelationshipLoader, util.MemoizedSlots):
             if _none_set.issuperset(ident):
                 return None
 
-            ident_key = self.mapper.identity_key_from_primary_key(ident)
+            ident_key = self.mapper.identity_key_from_primary_key(
+                ident,
+                identity_token=state.identity_token
+            )
             instance = loading.get_from_identity(session, ident_key, passive)
             if instance is not None:
                 return instance
