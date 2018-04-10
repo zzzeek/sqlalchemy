@@ -499,6 +499,47 @@ class RoundTripIndexTest(fixtures.TestBase):
         eq_(len(reflectedtable.indexes), 5)
 
 
+class RoundTripNumericTypeTest(fixtures.TestBase):
+    """
+    Oracle stores INTEGER as a NUMBER with NULL precision and scale == 0
+    """
+    __only_on__ = 'oracle'
+    __backend__ = True
+
+    @testing.provide_metadata
+    def test_types(self):
+        from sqlalchemy.dialects.oracle import NUMBER
+        from operator import attrgetter
+        # important NUMBER attributes:
+        testattrs = attrgetter(
+            '__class__',
+            'precision',
+            'scale',
+        )
+        metadata = self.metadata
+        orig_table = Table("numtable",
+            metadata,
+            Column("number_col", NUMBER),
+            Column("integer_col", Integer),
+            Column("numeric_col", Numeric),
+        )
+        metadata.create_all()
+        mirror = MetaData(testing.db)
+        mirror.reflect()
+        table = mirror.tables[orig_table.name]
+        orig_col_types = [c.type for c in table.c]
+        metadata.drop_all()
+        mirror.create_all()
+        inspect = MetaData(testing.db)
+        inspect.reflect()
+        table = inspect.tables[orig_table.name]
+        rebuilt_col_types = [c.type for c in table.c]
+        # Now, check whether types are still as originally reflected:
+        for o, r, col in zip(orig_col_types, rebuilt_col_types, orig_table.c):
+            assert testattrs(o) == testattrs(r), (
+                "%s was type %r and changed to type %r" % (col, o, r))
+
+
 class DBLinkReflectionTest(fixtures.TestBase):
     __requires__ = 'oracle_test_dblink',
     __only_on__ = 'oracle'

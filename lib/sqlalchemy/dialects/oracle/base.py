@@ -596,6 +596,9 @@ class OracleTypeCompiler(compiler.GenericTypeCompiler):
             scale = getattr(type_, 'scale', None)
 
         if precision is None:
+            # Oracle stores INTEGER as NULL precision and 0 scale:
+            if scale == 0 and name == "NUMBER":
+                return "INTEGER"
             return name
         elif scale is None:
             n = "%(name)s(%(precision)s)"
