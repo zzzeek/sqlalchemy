@@ -1,7 +1,7 @@
 # coding: utf-8
 
 
-from sqlalchemy.testing import eq_
+from sqlalchemy.testing import eq_, is_
 from sqlalchemy import exc
 from sqlalchemy.sql import table
 from sqlalchemy.testing import fixtures, AssertsCompiledSQL
@@ -12,7 +12,8 @@ from sqlalchemy import Integer, Text, LargeBinary, Unicode, UniqueConstraint,\
     literal_column, VARCHAR, create_engine, Date, NVARCHAR, \
     ForeignKeyConstraint, Sequence, Float, DateTime, cast, UnicodeText, \
     union, except_, type_coerce, or_, outerjoin, DATE, NCHAR, outparam, \
-    PrimaryKeyConstraint, FLOAT
+    PrimaryKeyConstraint, FLOAT, INTEGER
+from sqlalchemy.dialects.oracle.base import NUMBER
 from sqlalchemy.testing import assert_raises
 from sqlalchemy.testing.engines import testing_engine
 from sqlalchemy.testing.schema import Table, Column
@@ -499,47 +500,6 @@ class RoundTripIndexTest(fixtures.TestBase):
         eq_(len(reflectedtable.indexes), 5)
 
 
-class RoundTripNumericTypeTest(fixtures.TestBase):
-    """
-    Oracle stores INTEGER as a NUMBER with NULL precision and scale == 0
-    """
-    __only_on__ = 'oracle'
-    __backend__ = True
-
-    @testing.provide_metadata
-    def test_types(self):
-        from sqlalchemy.dialects.oracle import NUMBER
-        from operator import attrgetter
-        # important NUMBER attributes:
-        testattrs = attrgetter(
-            '__class__',
-            'precision',
-            'scale',
-        )
-        metadata = self.metadata
-        orig_table = Table("numtable",
-            metadata,
-            Column("number_col", NUMBER),
-            Column("integer_col", Integer),
-            Column("numeric_col", Numeric),
-        )
-        metadata.create_all()
-        mirror = MetaData(testing.db)
-        mirror.reflect()
-        table = mirror.tables[orig_table.name]
-        orig_col_types = [c.type for c in table.c]
-        metadata.drop_all()
-        mirror.create_all()
-        inspect = MetaData(testing.db)
-        inspect.reflect()
-        table = inspect.tables[orig_table.name]
-        rebuilt_col_types = [c.type for c in table.c]
-        # Now, check whether types are still as originally reflected:
-        for o, r, col in zip(orig_col_types, rebuilt_col_types, orig_table.c):
-            assert testattrs(o) == testattrs(r), (
-                "%s was type %r and changed to type %r" % (col, o, r))
-
-
 class DBLinkReflectionTest(fixtures.TestBase):
     __requires__ = 'oracle_test_dblink',
     __only_on__ = 'oracle'
@@ -575,3 +535,46 @@ class DBLinkReflectionTest(fixtures.TestBase):
         eq_(list(t.primary_key), [t.c.id])
 
 
+class TypeReflectionTest(fixtures.TestBase):
+    __only_on__ = 'oracle'
+    __backend__ = True
+
+    @testing.provide_metadata
+    def _run_test(self, specs, attributes):
+        columns = [Column('c%i' % (i + 1), t[0]) for i, t in enumerate(specs)]
+        m = self.metadata
+        Table('oracle_types', m, *columns)
+        m.create_all()
+        m2 = MetaData(testing.db)
+        table = Table('oracle_types', m2, autoload=True)
+        for i, (reflected_col, spec) in enumerate(zip(table.c, specs)):
+            expected_spec = spec[1]
+            reflected_type = reflected_col.type
+            is_(type(reflected_type), type(expected_spec))
+            for attr in attributes:
+                eq_(
+                    getattr(reflected_type, attr),
+                    getattr(expected_spec, attr),
+                    "Column %s: Attribute %s value of %s does not "
+                    "match %s for type %s" % (
+                        "c%i" % (i + 1),
+                        attr,
+                        getattr(reflected_type, attr),
+                        getattr(expected_spec, attr),
+                        spec[0]
+                    )
+                )
+
+    def test_integer_types(self):
+        specs = [
+            (Integer, INTEGER(),),
+            (Numeric, INTEGER(),),
+        ]
+        self._run_test(specs, [])
+
+    def test_number_types(self):
+        specs = [
+            (Numeric(5, 2), NUMBER(5, 2),),
+            (NUMBER, NUMBER(),),
+        ]
+        self._run_test(specs, ['precision', 'scale'])
