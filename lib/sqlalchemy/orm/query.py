@@ -2662,7 +2662,7 @@ class Query(object):
             :attr:`.Query.statement` accessor, however.
 
         :param \*expr: optional column expressions.  When present,
-         the PostgreSQL dialect will render a ``DISTINCT ON (<expressions>>)``
+         the PostgreSQL dialect will render a ``DISTINCT ON (<expressions>)``
          construct.
 
         """
