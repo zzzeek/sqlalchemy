@@ -2644,7 +2644,7 @@ class Query(object):
         self._offset = offset
 
     @_generative(_no_statement_condition)
-    def distinct(self, *criterion):
+    def distinct(self, *expr):
         r"""Apply a ``DISTINCT`` to the query and return the newly resulting
         ``Query``.
 
@@ -2666,14 +2666,14 @@ class Query(object):
          construct.
 
         """
-        if not criterion:
+        if not expr:
             self._distinct = True
         else:
-            criterion = self._adapt_col_list(criterion)
+            expr = self._adapt_col_list(expr)
             if isinstance(self._distinct, list):
-                self._distinct += criterion
+                self._distinct += expr
             else:
-                self._distinct = criterion
+                self._distinct = expr
 
     @_generative()
     def prefix_with(self, *prefixes):
