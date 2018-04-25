@@ -1023,9 +1023,13 @@ class Connection(Connectable):
 
         distilled_params = _distill_params(multiparams, params)
         if distilled_params:
-            # note this is usually dict but we support RowProxy
-            # as well; but dict.keys() as an iterable is OK
-            keys = distilled_params[0].keys()
+            # note this is usually dict but we support RowProxy as well; but
+            # dict.keys() as an iterable is OK. Note that in Python 3 and
+            # later, a dict_keys instance keeps a reference to the underlying
+            # dict and therefore to the values. We explicitly copy the keys as
+            # a list to ensure that cached entries do not hold a reference to
+            # the parameter values.
+            keys = list(distilled_params[0].keys())
         else:
             keys = []
 
