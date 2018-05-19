@@ -2158,6 +2158,7 @@ class PGDialect(default.DefaultDialect):
 
     supports_native_enum = True
     supports_native_boolean = True
+    supports_native_decimal = True
     supports_smallserial = True
 
     supports_sequences = True
