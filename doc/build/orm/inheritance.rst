@@ -34,9 +34,9 @@ inheritance path - if the class is the base class, the default behavior
 is to include only the base table in the SELECT.   In all cases, the
 ultimate class to instantiate for a given row is determined by a discriminator
 column or expression that works against the base table.    A subclass
-loaded against the base table only will have only base attributes
+loaded against the base table will only have base attributes
 populated at first; the additional attributes will :term:`lazy load` when
-they are accessed.  Options also exist to query for all
+they are accessed.  There are additional options which allow to query for all
 columns across multiple tables/subclasses up front.
 
 The base class in a joined inheritance hierarchy is configured with
