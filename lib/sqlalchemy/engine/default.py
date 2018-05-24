@@ -18,7 +18,7 @@ import random
 from . import reflection, interfaces, result
 from ..sql import compiler, expression, schema
 from .. import types as sqltypes
-from .. import exc, util, pool, processors
+from .. import exc, util, pool, processors, select, text
 import codecs
 import weakref
 from .. import event
@@ -32,9 +32,6 @@ SERVER_SIDE_CURSOR_RE = re.compile(
     r'\s*SELECT',
     re.I | re.UNICODE)
 
-EMPTY_SET_QUERY = 'SELECT 1 ' \
-                  'FROM (SELECT 1) as placeholder_table ' \
-                  'WHERE 1!=1'
 
 class DefaultDialect(interfaces.Dialect):
     """Default implementation of Dialect"""
@@ -736,8 +733,13 @@ class DefaultExecutionContext(interfaces.ExecutionContext):
                 values = compiled_params.pop(name)
                 if not values:
                     to_update = []
-                    replacement_expressions[name] = EMPTY_SET_QUERY
-
+                    replacement_expressions[name] = str(
+                        select([1]).select_from(
+                            select([1]).alias('placeholer').where(
+                                text("1!=1")
+                            )
+                    ))
+                
                 elif isinstance(values[0], (tuple, list)):
                     to_update = [
                         ("%s_%s_%s" % (name, i, j), value)
