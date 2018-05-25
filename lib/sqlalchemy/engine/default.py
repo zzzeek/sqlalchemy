@@ -18,7 +18,7 @@ import random
 from . import reflection, interfaces, result
 from ..sql import compiler, expression, schema
 from .. import types as sqltypes
-from .. import exc, util, pool, processors
+from .. import exc, util, pool, processors, select, text
 import codecs
 import weakref
 from .. import event
@@ -733,10 +733,12 @@ class DefaultExecutionContext(interfaces.ExecutionContext):
             if parameter.expanding:
                 values = compiled_params.pop(name)
                 if not values:
-                    raise exc.InvalidRequestError(
-                        "'expanding' parameters can't be used with an "
-                        "empty list"
+                    to_update = []
+                    replacement_expressions[name] = (
+                        self.dialect.statement_compiler(self.dialect, None)
+                            .visit_empty_set_expr()
                     )
+                
                 elif isinstance(values[0], (tuple, list)):
                     to_update = [
                         ("%s_%s_%s" % (name, i, j), value)

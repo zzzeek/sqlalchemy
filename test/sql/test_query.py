@@ -455,13 +455,11 @@ class QueryTest(fixtures.TestBase):
                 [(7, 'jack'), (8, 'fred')]
             )
 
-            assert_raises_message(
-                exc.StatementError,
-                "'expanding' parameters can't be used with an empty list",
-                conn.execute,
-                stmt, {"uname": []}
+            eq_(
+                conn.execute(stmt, {"uname": []}).fetchall(),
+                []
             )
-
+            
             assert_raises_message(
                 exc.StatementError,
                 "'expanding' parameters can't be used with executemany()",
@@ -469,6 +467,16 @@ class QueryTest(fixtures.TestBase):
                 users.update().where(
                     users.c.user_name.in_(bindparam('uname', expanding=True))
                 ), [{"uname": ['fred']}, {"uname": ['ed']}]
+            )
+
+    def test_null_in_empty_set_is_false(self):
+        with testing.db.connect() as conn:
+            stmt = "SELECT NULL IN (SELECT 1 " \
+                   "FROM (SELECT 1) as placeholder_table WHERE 1!=1);"
+
+            in_(
+                conn.execute(stmt).fetchone()[0],
+                (0, False)  # False values may depend on the DB
             )
 
     @testing.requires.no_quoting_special_bind_names
