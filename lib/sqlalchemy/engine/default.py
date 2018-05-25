@@ -733,12 +733,10 @@ class DefaultExecutionContext(interfaces.ExecutionContext):
                 values = compiled_params.pop(name)
                 if not values:
                     to_update = []
-                    replacement_expressions[name] = str(
-                        select([1]).select_from(
-                            select([1]).alias('placeholer').where(
-                                text("1!=1")
-                            )
-                    ))
+                    replacement_expressions[name] = (
+                        self.dialect.statement_compiler(self.dialect, None)
+                            .visit_empty_set_expr()
+                    )
                 
                 elif isinstance(values[0], (tuple, list)):
                     to_update = [

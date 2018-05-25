@@ -407,6 +407,30 @@ class ExpandingBoundInTest(fixtures.TablesTest):
             [(2, ), (3, ), (4, )],
             params={"q": [(2, 3), (3, 4), (4, 5)]},
         )
+        
+    def test_empty_set(self):
+        table = self.tables.some_table
+    
+        stmt = select([table.c.id]).where(
+            table.c.x.in_(bindparam('q', expanding=True))).order_by(table.c.id)
+    
+        self._assert_result(
+            stmt,
+            [],
+            params={"q": []},
+        )
+
+    def test_empty_set_negation(self):
+        table = self.tables.some_table
+    
+        stmt = select([table.c.id]).where(
+            table.c.x.notin_(bindparam('q', expanding=True))).order_by(table.c.id)
+    
+        self._assert_result(
+            stmt,
+            [(1, ), (2, ), (3, ), (4, )],
+            params={"q": []},
+        )
 
 
 class LikeFunctionsTest(fixtures.TablesTest):
