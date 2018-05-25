@@ -1062,7 +1062,7 @@ class SQLCompiler(Compiled):
         return 'SELECT 1 FROM (SELECT 1) as placeholder_table WHERE 1!=1'
     
     def visit_binary(self, binary, override_operator=None,
-             eager_grouping=False, **kw):
+                     eager_grouping=False, **kw):
 
         # don't allow "? = ?" to render
         if self.ansi_bind_rules and \
