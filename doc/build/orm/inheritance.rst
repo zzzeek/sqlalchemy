@@ -31,13 +31,13 @@ In joined table inheritance, each class along a hierarchy of classes
 is represented by a distinct table.  Querying for a particular subclass
 in the hierarchy will render as a SQL JOIN along all tables in its
 inheritance path. If the queried class is the base class, the **default behavior
-is to include only the base table** in a SELECT clause.   In all cases, the
+is to include only the base table** in a SELECT statement.   In all cases, the
 ultimate class to instantiate for a given row is determined by a discriminator
 column or an expression that works against the base table.    When a subclass
 is loaded **only** against a base table, resulting objects will have base attributes
-populated at first; attributes determined by the subclass will :term:`lazy load` when
-they are accessed.    Alterlatively, there are options which can 
-change the default behavior and allow to query for all columns across
+populated at first; attributes that are local to the subclass will :term:`lazy load`
+when they are accessed.    Alternatively, there are options which can change
+the default behavior, allowing the query to include columns corresponding to
 multiple tables/subclasses up front.
 
 The base class in a joined inheritance hierarchy is configured with
