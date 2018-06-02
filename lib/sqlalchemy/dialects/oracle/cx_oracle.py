@@ -650,6 +650,7 @@ class OracleDialect_cx_oracle(OracleDialect):
         self.auto_convert_lobs = auto_convert_lobs
         self.coerce_to_unicode = coerce_to_unicode
         self.coerce_to_decimal = coerce_to_decimal
+        self.is_timesten = False
 
         cx_Oracle = self.dbapi
 
@@ -718,9 +719,12 @@ class OracleDialect_cx_oracle(OracleDialect):
         # NLS_TERRITORY or formatting behavior of the DB, we opt
         # to just look at it
 
-        self._decimal_char = connection.scalar(
-            "select value from nls_session_parameters "
-            "where parameter = 'NLS_NUMERIC_CHARACTERS'")[0]
+        if self.is_timesten:
+            self._decimal_char = '.'
+        else:
+            self._decimal_char = connection.scalar(
+                "select value from nls_session_parameters "
+                "where parameter = 'NLS_NUMERIC_CHARACTERS'")[0]
         if self._decimal_char != '.':
             _detect_decimal = self._detect_decimal
             _to_decimal = self._to_decimal
@@ -809,7 +813,10 @@ class OracleDialect_cx_oracle(OracleDialect):
 
         database = url.database
         service_name = dialect_opts.get('service_name', None)
-        if database or service_name:
+        if database.endswith(':timesten_direct') or database.endswith(':timesten_client'):
+            dsn = url.host + '/' + database
+            self.is_timesten = True
+        elif database or service_name:
             # if we have a database, then we have a remote host
             port = url.port
             if port:
