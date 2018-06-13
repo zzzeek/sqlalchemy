@@ -90,7 +90,11 @@ class DefaultEngineStrategy(EngineStrategy):
 
         # assemble connection arguments
         (cargs, cparams) = dialect.create_connect_args(u)
-        cparams.update(pop_kwarg('connect_args', {}))
+        connect_args = pop_kwarg('connect_args', {})
+        if connect_args and cparams.get('client_flag'):
+            client_flag = connect_args.pop('client_flag', 0)
+            cparams['client_flag'] |= client_flag
+        cparams.update(connect_args)
         cargs = list(cargs)  # allow mutability
 
         # look for existing pool or create
