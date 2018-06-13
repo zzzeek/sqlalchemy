@@ -155,7 +155,7 @@ including select statements or direct function calls::
         Column('create_date', DateTime, default=func.now()),
 
         # define 'key' to pull its default from the 'keyvalues' table
-        Column('key', String(20), default=keyvalues.select(keyvalues.c.type='type1', limit=1)),
+        Column('key', String(20), default=keyvalues.select(keyvalues.c.type=='type1', limit=1)),
 
         # define 'last_modified' to use the current_timestamp SQL function on update
         Column('last_modified', DateTime, onupdate=func.utc_timestamp())
