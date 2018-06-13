@@ -2126,7 +2126,7 @@ class JSON(Indexable, TypeEngine):
     def bind_processor(self, dialect):
         string_process = self._str_impl.bind_processor(dialect)
 
-        json_serializer = dialect._json_serializer or json.dumps
+        json_serializer = getattr(dialect, '_json_serializer', None) or json.dumps
 
         def process(value):
             if value is self.NULL:
@@ -2145,7 +2145,7 @@ class JSON(Indexable, TypeEngine):
 
     def result_processor(self, dialect, coltype):
         string_process = self._str_impl.result_processor(dialect, coltype)
-        json_deserializer = dialect._json_deserializer or json.loads
+        json_deserializer = getattr(dialect, '_json_deserializer', None) or json.loads
 
         def process(value):
             if value is None:
