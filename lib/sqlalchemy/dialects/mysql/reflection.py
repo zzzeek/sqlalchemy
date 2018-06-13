@@ -179,8 +179,12 @@ class MySQLTableDefinitionParser(object):
 
         name, type_, args = spec['name'], spec['coltype'], spec['arg']
 
+        if type_ == 'as':
+            util.warn("Unsupported computed column %r" % line)
+            return
+
         try:
-            col_type = self.dialect.ischema_names[type_]
+            col_type = self.dialect.ischema_names[type_.lower()]
         except KeyError:
             util.warn("Did not recognize type '%s' of column '%s'" %
                       (type_, name))
@@ -213,6 +217,10 @@ class MySQLTableDefinitionParser(object):
             if issubclass(col_type, SET) and '' in type_args:
                 type_kw['retrieve_as_bitwise'] = True
 
+        if col_type == sqltypes.NullType:
+            # Can't pass any arguments to null type.
+            type_args, type_kw = [], {}
+        
         type_instance = col_type(*type_args, **type_kw)
 
         col_kw = {}
