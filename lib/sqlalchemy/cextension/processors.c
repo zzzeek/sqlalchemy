@@ -9,6 +9,8 @@ the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 #include <Python.h>
 #include <datetime.h>
+#include <string.h>
+#include <stdlib.h>
 
 #define MODULE_NAME "cprocessors"
 #define MODULE_DOC "Module containing C versions of data processing functions."
@@ -68,7 +70,9 @@ str_to_datetime(PyObject *self, PyObject *arg)
 #endif
     const char *str;
     int numparsed;
-    unsigned int year, month, day, hour, minute, second, microsecond = 0;
+    char microsecond[] = "000000";
+    char ms[] = "000000";
+    unsigned int year, month, day, hour, minute, second = 0;
     PyObject *err_repr;
 
     if (arg == Py_None)
@@ -114,8 +118,8 @@ str_to_datetime(PyObject *self, PyObject *arg)
     not accept "2000-01-01 00:00:00.". I don't know which is better, but they
     should be coherent.
     */
-    numparsed = sscanf(str, "%4u-%2u-%2u %2u:%2u:%2u.%6u", &year, &month, &day,
-                       &hour, &minute, &second, &microsecond);
+    numparsed = sscanf(str, "%4u-%2u-%2u %2u:%2u:%2u.%6s", &year, &month, &day,
+                       &hour, &minute, &second, ms);
 #if PY_MAJOR_VERSION >= 3
     Py_DECREF(bytes);
 #endif
@@ -141,8 +145,12 @@ str_to_datetime(PyObject *self, PyObject *arg)
         Py_DECREF(err_repr);
         return NULL;
     }
+
+    for(unsigned long i=0; i<strlen(ms); i++){
+        microsecond[i] = ms[i];
+    }
     return PyDateTime_FromDateAndTime(year, month, day,
-                                      hour, minute, second, microsecond);
+                                      hour, minute, second, atoi(microsecond));
 }
 
 static PyObject *
@@ -153,8 +161,10 @@ str_to_time(PyObject *self, PyObject *arg)
     PyObject *err_bytes;
 #endif
     const char *str;
+    char microsecond[] = "000000";
+    char ms[] = "000000";
     int numparsed;
-    unsigned int hour, minute, second, microsecond = 0;
+    unsigned int hour, minute, second = 0;
     PyObject *err_repr;
 
     if (arg == Py_None)
@@ -199,8 +209,8 @@ str_to_time(PyObject *self, PyObject *arg)
     not accept "00:00:00.". I don't know which is better, but they should be
     coherent.
     */
-    numparsed = sscanf(str, "%2u:%2u:%2u.%6u", &hour, &minute, &second,
-                       &microsecond);
+    numparsed = sscanf(str, "%2u:%2u:%2u.%6s", &hour, &minute, &second,
+                       ms);
 #if PY_MAJOR_VERSION >= 3
     Py_DECREF(bytes);
 #endif
@@ -226,7 +236,10 @@ str_to_time(PyObject *self, PyObject *arg)
         Py_DECREF(err_repr);
         return NULL;
     }
-    return PyTime_FromTime(hour, minute, second, microsecond);
+    for(unsigned long i=0; i<strlen(ms); i++){
+        microsecond[i] = ms[i];
+    }
+    return PyTime_FromTime(hour, minute, second, atoi(microsecond));
 }
 
 static PyObject *

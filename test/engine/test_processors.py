@@ -86,6 +86,22 @@ class _DateProcessorTest(fixtures.TestBase):
             self.module.str_to_time, "5:a"
         )
 
+    def test_datetime_microseconds(self):
+        dt = str(self.module.str_to_datetime('2018-01-02 03:45:30.456'))
+        eq_(dt, '2018-01-02 03:45:30.456000')
+
+    def test_datetime_microseconds2(self):
+        dt = str(self.module.str_to_datetime('2018-01-02 03:45:30.00456'))
+        eq_(dt, '2018-01-02 03:45:30.004560')
+
+    def test_time_microseconds(self):
+        dt = str(self.module.str_to_time('03:45:30.456'))
+        eq_(dt, '03:45:30.456000')
+
+    def test_time_microseconds2(self):
+        dt = str(self.module.str_to_time('03:45:30.00456'))
+        eq_(dt, '03:45:30.004560')
+
 
 class PyDateProcessorTest(_DateProcessorTest):
     @classmethod
