@@ -45,7 +45,10 @@ def str_to_datetime_processor_factory(regexp, type_):
                     list(map(int, iter(groups.values())))
                 ))))
             else:
-                return type_(*list(map(int, m.groups(0))))
+                groups = list(m.groups('0'))
+                if len(groups) in (4, 7):  # Time or Datetime with microseconds
+                    groups[-1] = groups[-1].ljust(6, '0')
+                return type_(*list(map(int, groups)))
     return process
 
 
