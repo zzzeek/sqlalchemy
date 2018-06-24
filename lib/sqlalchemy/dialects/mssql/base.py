@@ -1897,6 +1897,8 @@ class MSDialect(default.DefaultDialect):
             raise NotImplementedError(
                 "Can't fetch isolation level prior to SQL Server 2005")
 
+        err = None
+
         views = ("sys.dm_exec_sessions", "sys.dm_pdw_nodes_exec_sessions")
         for view in views:
             cursor = connection.cursor()
@@ -1920,9 +1922,14 @@ class MSDialect(default.DefaultDialect):
             finally:
                 cursor.close()
 
-        util.warn(
-            "Could not fetch transaction isolation level, "
-            "tried views: %s; final error was: %s" % (views, err))
+        warning_msg = ("Could not fetch transaction isolation level, "
+                       "tried views: %s" % (views,))
+
+        if err:
+            warning_msg += ("; final error was: %s" % (err,))
+
+        util.warn(warning_msg)
+
         raise NotImplementedError(
             "Can't fetch isolation level on this particular "
             "SQL Server version"
