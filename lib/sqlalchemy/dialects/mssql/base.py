@@ -2245,6 +2245,8 @@ class MSDialect(default.DefaultDialect):
                                 C.c.constraint_name == RR.c.constraint_name,
                                 R.c.constraint_name ==
                                 RR.c.unique_constraint_name,
+                                R.c.constraint_schema ==
+                                RR.c.unique_constraint_schema,
                                 C.c.ordinal_position == R.c.ordinal_position
                                 ),
                        order_by=[RR.c.constraint_name, R.c.ordinal_position]
