@@ -2345,6 +2345,11 @@ class TestProperties(fixtures.TestBase):
             eq_(props._data, p._data)
             eq_(props.keys(), p.keys())
 
+    def test_keys_in_dir(self):
+        data = {'hello': 'bla'}
+        props = util.Properties(data)
+        assert 'hello' in dir(props)
+
     def test_pickle_immuatbleprops(self):
         data = {'hello': 'bla'}
         props = util.Properties(data).as_immutable()
