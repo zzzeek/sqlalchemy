@@ -119,6 +119,55 @@ class ReflectionTest(fixtures.TestBase, ComparesTables, AssertsCompiledSQL):
         assert isinstance(t1.c.data.type, types.NullType)
 
     @testing.provide_metadata
+    def test_cross_schema_foreign_key_reflection(self):
+        testing.db.execute("""CREATE SCHEMA test_schema""")
+        testing.db.execute("""CREATE SCHEMA test_schema_2""")
+
+        testing.db.execute("""CREATE TABLE [test_schema].[subject] (
+        ID [INT],
+        CONSTRAINT [PK] PRIMARY KEY CLUSTERED ([ID] ASC)
+        )""")
+
+        # A decoy table -- identical but differs in which schema it's in
+        # It is important that the name of the PK is explicitly defined
+        # and is identical to that on the test_schema.subject table
+        testing.db.execute("""CREATE TABLE [test_schema_2].[subject] (
+        ID [INT],
+        CONSTRAINT [PK] PRIMARY KEY CLUSTERED ([ID] ASC)
+        )""")
+
+        testing.db.execute("""CREATE TABLE [test_schema].[referrer] (
+        ID[INT] PRIMARY KEY,
+        FK[INT])""")
+
+        testing.db.execute("""
+        ALTER TABLE [test_schema].[referrer] ADD CONSTRAINT [FK_CONSNT]
+        FOREIGN KEY([FK])
+        REFERENCES [test_schema].[subject] ([ID])""")
+
+        meta=MetaData()
+
+        # This following call will raise an ArgumentError with
+        # "ForeignKeyConstraint with duplicate source
+        # column references are not supported."
+        # If the reflection is unable to distinguish that the
+        # foreign keys in schemas test_schema and test_schema2 are different
+        # as they are in different schemas
+        try:
+            Table('referrer', meta, schema='test_schema', autoload=True,
+                                autoload_with=testing.db)
+        except:
+            raise
+        finally:
+            testing.db.execute("ALTER TABLE test_schema.referrer DROP CONSTRAINT [FK_CONSNT]")
+            testing.db.execute("DROP TABLE test_schema_2.subject")
+            testing.db.execute("DROP TABLE test_schema.subject")
+            testing.db.execute("DROP TABLE test_schema.referrer")
+            testing.db.execute("DROP SCHEMA test_schema")
+            testing.db.execute("DROP SCHEMA test_schema_2")
+
+
+    @testing.provide_metadata
     def test_db_qualified_items(self):
         metadata = self.metadata
         Table('foo', metadata, Column('id', Integer, primary_key=True))
