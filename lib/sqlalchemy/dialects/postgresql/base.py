@@ -2451,7 +2451,8 @@ class PGDialect(default.DefaultDialect):
             FROM pg_catalog.pg_class c
             LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
             WHERE (%s)
-            AND c.relname = :table_name AND c.relkind in ('r', 'v', 'm', 'f')
+            AND c.relname = :table_name 
+            AND c.relkind in ('r', 'v', 'm', 'f', 'p')
         """ % schema_where_clause
         # Since we're binding to unicode, table_name and schema_name must be
         # unicode.
