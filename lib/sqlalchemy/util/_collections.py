@@ -185,7 +185,7 @@ class Properties(object):
         return iter(list(self._data.values()))
 
     def __dir__(self):
-        return super().__dir__() + [str(k) for k in self._data.keys()]
+        return super(Properties, self).__dir__() + [str(k) for k in self._data.keys()]
 
     def __add__(self, other):
         return list(self) + list(other)
