@@ -340,15 +340,21 @@ an error or to skip performing an UPDATE.
 ``ON DUPLICATE KEY UPDATE`` is used to perform an update of the already
 existing row, using any combination of new values as well as values
 from the proposed insertion.   These values are specified using
-keyword arguments passed to the
+either single positional argument or keyword arguments passed to the
 :meth:`~.mysql.dml.Insert.on_duplicate_key_update`
 given column key values (usually the name of the column, unless it
 specifies :paramref:`.Column.key`) as keys and literal or SQL expressions
 as values::
 
     on_duplicate_key_stmt = insert_stmt.on_duplicate_key_update(
-        data="some data"
-        updated_at=func.current_timestamp()
+        {"data": "some data", "updated_at": func.current_timestamp()},
+    )
+
+or alternatively::
+
+    on_duplicate_key_stmt = insert_stmt.on_duplicate_key_update(
+        data="some data",
+        updated_at=func.current_timestamp(),
     )
 
 .. warning::
@@ -358,6 +364,17 @@ as values::
     e.g. those specified using :paramref:`.Column.onupdate`.
     These values will not be exercised for an ON DUPLICATE KEY style of UPDATE,
     unless they are manually specified explicitly in the parameters.
+
+In order to preserve the order of parameters given to the
+:meth:`~.mysql.dml.Insert.on_duplicate_key_update` a list of 2-tuples can be passed,
+which has a special meaning to render the UPDATE clauses in supplied order::
+
+    on_duplicate_key_stmt = insert_stmt.on_duplicate_key_update(
+        [
+            ("data", "some data"),
+            ("updated_at", func.current_timestamp()),
+        ],
+    )
 
 In order to refer to the proposed insertion row, the special alias
 :attr:`~.mysql.dml.Insert.inserted` is available as an attribute on
@@ -381,6 +398,11 @@ When rendered, the "inserted" namespace will produce the expression
 ``VALUES(<columnname>)``.
 
 .. versionadded:: 1.2 Added support for MySQL ON DUPLICATE KEY UPDATE clause
+
+.. versionchanged:: TBD
+   Added support for single positional argument which accepts either
+   a dictionary or list of 2-tuples which can be used to preserve order
+   of parameters.
 
 
 
@@ -899,10 +921,21 @@ class MySQLCompiler(compiler.SQLCompiler):
             self.process(binary.right, **kw))
 
     def visit_on_duplicate_key_update(self, on_duplicate, **kw):
-        cols = self.statement.table.c
+        if on_duplicate._parameter_ordering:
+            parameter_ordering = [
+                elements._column_as_key(key) for key in on_duplicate._parameter_ordering
+            ]
+            ordered_keys = set(parameter_ordering)
+            cols = [
+                self.statement.table.c[key] for key in parameter_ordering
+                if key in self.statement.table.c
+            ] + [
+                c for c in self.statement.table.c if c.key not in ordered_keys
+            ]
+        else:
+            cols = self.statement.table.c
 
         clauses = []
-        # traverse in table column order
         for column in cols:
             val = on_duplicate.update.get(column.key)
             if val is None:
@@ -922,7 +955,7 @@ class MySQLCompiler(compiler.SQLCompiler):
             name_text = self.preparer.quote(column.name)
             clauses.append("%s = %s" % (name_text, value_text))
 
-        non_matching = set(on_duplicate.update) - set(cols.keys())
+        non_matching = set(on_duplicate.update) - set(c.key for c in cols)
         if non_matching:
             util.warn(
                 'Additional column names not matching '
