@@ -23,7 +23,7 @@ from time import time as _time
 from .compat import threading
 
 
-__all__ = ['Empty', 'Full', 'Queue']
+__all__ = ['Empty', 'Full', 'Queue', 'Stack']
 
 
 class Empty(Exception):
@@ -197,3 +197,10 @@ class Queue:
     # Get an item from the queue
     def _get(self):
         return self.queue.popleft()
+
+
+class Stack(Queue):
+    """Stack data structure for SQLAlchemy. Popping from the right will make default Queue data structure to the Stack.
+    """
+    def _get(self):
+        return self.queue.pop()
