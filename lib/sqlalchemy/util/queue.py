@@ -23,7 +23,7 @@ from time import time as _time
 from .compat import threading
 
 
-__all__ = ['Empty', 'Full', 'Queue', 'Stack']
+__all__ = ['Empty', 'Full', 'Queue']
 
 
 class Empty(Exception):
