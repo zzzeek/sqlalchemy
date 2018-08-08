@@ -30,7 +30,7 @@ class QueuePool(Pool):
 
     """
 
-    def __init__(self, creator, pool_size=5, max_overflow=10, timeout=30,
+    def __init__(self, creator, pool_size=5, max_overflow=10, timeout=30, use_lifo=False,
                  **kw):
         r"""
         Construct a QueuePool.
@@ -63,6 +63,17 @@ class QueuePool(Pool):
         :param timeout: The number of seconds to wait before giving up
           on returning a connection. Defaults to 30.
 
+        :param use_lifo: If this Pool provides connections LIFO basis.
+          If False, this pool uses FIFO. If the Pool uses LIFO,
+          the database could reduce the number of connections during the
+          non-peak time as the Pool will assign the connection that was
+          recently returned back to the pool for the next connection
+          checkout. Note that some connections in the pool could be
+          disconnected if the connection is idle for longer than the
+          database timeout. Therefore to use LIFO, make sure to set
+          ``recycle`` shorter than the database's timeout period.
+          Default to False (FIFO).
+
         :param \**kw: Other keyword arguments including
           :paramref:`.Pool.recycle`, :paramref:`.Pool.echo`,
           :paramref:`.Pool.reset_on_return` and others are passed to the
@@ -70,7 +81,7 @@ class QueuePool(Pool):
 
         """
         Pool.__init__(self, creator, **kw)
-        self._pool = sqla_queue.Queue(pool_size)
+        self._pool = sqla_queue.Queue(pool_size, use_lifo=use_lifo)
         self._overflow = 0 - pool_size
         self._max_overflow = max_overflow
         self._timeout = timeout
@@ -175,56 +186,6 @@ class QueuePool(Pool):
 
     def checkedout(self):
         return self._pool.maxsize - self._pool.qsize() + self._overflow
-
-
-class StackPool(QueuePool):
-    """
-    A pool which uses the Stack data structure.
-
-    SQLAlchemy uses Queue data structure as default to provides the connection pool to threads round-robin basis.
-    Which leads to maintain all connections though the server's load isn't that high enough to maintain all connections.
-    """
-    def __init__(self, creator, pool_size=5, max_overflow=10, timeout=30, **kw):
-        r"""
-        Construct a StackPool.
-
-        :param creator: a callable function that returns a DB-API
-          connection object, same as that of :paramref:`.Pool.creator`.
-
-        :param pool_size: The size of the pool to be maintained,
-          defaults to 5. This is the largest number of connections that
-          will be kept persistently in the pool. Note that the pool
-          begins with no connections; once this number of connections
-          is requested, that number of connections will remain.
-          ``pool_size`` can be set to 0 to indicate no size limit; to
-          disable pooling, use a :class:`~sqlalchemy.pool.NullPool`
-          instead.
-
-        :param max_overflow: The maximum overflow size of the
-          pool. When the number of checked-out connections reaches the
-          size set in pool_size, additional connections will be
-          returned up to this limit. When those additional connections
-          are returned to the pool, they are disconnected and
-          discarded. It follows then that the total number of
-          simultaneous connections the pool will allow is pool_size +
-          `max_overflow`, and the total number of "sleeping"
-          connections the pool will allow is pool_size. `max_overflow`
-          can be set to -1 to indicate no overflow limit; no limit
-          will be placed on the total number of concurrent
-          connections. Defaults to 10.
-
-        :param timeout: The number of seconds to wait before giving up
-          on returning a connection. Defaults to 30.
-
-        :param \**kw: Other keyword arguments including
-          :paramref:`.Pool.recycle`, :paramref:`.Pool.echo`,
-          :paramref:`.Pool.reset_on_return` and others are passed to the
-          :class:`.Pool` constructor.
-
-        """
-
-        super(StackPool, self).__init__(creator, pool_size, max_overflow, timeout, **kw)
-        self._pool = sqla_queue.Stack(pool_size)
 
 
 class NullPool(Pool):
