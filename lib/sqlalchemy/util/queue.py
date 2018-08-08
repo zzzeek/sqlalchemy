@@ -44,7 +44,7 @@ class Queue:
 
         If `maxsize` is <= 0, the queue size is infinite.
 
-        If `use_fifo` is False, this Queue acts like Stack (LIFO).
+        If `use_lifo` is True, this Queue acts like a Stack (LIFO).
         """
 
         self._init(maxsize)
