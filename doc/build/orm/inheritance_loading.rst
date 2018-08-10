@@ -38,7 +38,9 @@ examples introduced in :ref:`inheritance_toplevel`.
 
 Normally, when a :class:`.Query` specifies the base class of an
 inheritance hierarchy, only the columns that are local to that base
-class are queried::
+class are queried:
+
+.. sourcecode:: python
 
     session.query(Employee).all()
 
@@ -59,7 +61,9 @@ To solve both of these issues, the :func:`.orm.with_polymorphic` function
 provides a special :class:`.AliasedClass` that represents a range of
 columns across subclasses. This object can be used in a :class:`.Query`
 like any other alias.  When queried, it represents all the columns present in
-the classes given::
+the classes given:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import with_polymorphic
 
@@ -239,7 +243,9 @@ previous example, ``eng_plus_manager`` becomes the entity that we use to refer t
 three-way outer join above.  It also includes namespaces for each class named
 in the list of classes, so that attributes specific to those subclasses can be
 called upon as well.   The following example illustrates calling upon attributes
-specific to ``Engineer`` as well as ``Manager`` in terms of ``eng_plus_manager``::
+specific to ``Engineer`` as well as ``Manager`` in terms of ``eng_plus_manager``:
+
+.. sourcecode:: python
 
     eng_plus_manager = with_polymorphic(Employee, [Engineer, Manager])
     query = session.query(eng_plus_manager).filter(
@@ -262,7 +268,9 @@ equation.   So just as eager loading for relationships can be specified
 as a configurational option, the :paramref:`.mapper.with_polymorphic`
 configuration parameter allows an entity to use a polymorphic load by
 default.  We can add the parameter to our ``Employee`` mapping
-first introduced at :ref:`joined_inheritance`::
+first introduced at :ref:`joined_inheritance`:
+
+.. sourcecode:: python
 
     class Employee(Base):
         __tablename__ = 'employee'
@@ -294,7 +302,9 @@ a subset of classes.  However, when using Declarative, providing classes
 to this list is not directly possible as the subclasses we'd like to add
 are not available yet.   Instead, we can specify on each subclass
 that they should individually participate in polymorphic loading by
-default using the :paramref:`.mapper.polymorphic_load` parameter::
+default using the :paramref:`.mapper.polymorphic_load` parameter:
+
+.. sourcecode:: python
 
     class Engineer(Employee):
         __tablename__ = 'engineer'
@@ -330,7 +340,9 @@ flexible in its usage patterns in that it only applies to the first entity
 of the :class:`.Query`.   It then takes effect for all occurences of
 that entity, so that the entity (and its subclasses) can be referred to
 directly, rather than using an alias object.  For simple cases it might be
-considered to be more succinct::
+considered to be more succinct:
+
+.. sourcecode:: python
 
     session.query(Employee).\
         with_polymorphic([Engineer, Manager]).\
@@ -359,7 +371,9 @@ mapping, primarily when using joined table inheritance, is to use polymorphic
 feature which works similarly to the :ref:`selectin_eager_loading` feature
 of relationship loading.   Given our example mapping, we can instruct
 a load of ``Employee`` to emit an extra SELECT per subclass by using
-the :func:`.orm.selectin_polymorphic` loader option::
+the :func:`.orm.selectin_polymorphic` loader option:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import selectin_polymorphic
 
@@ -400,7 +414,9 @@ be emitted:
 
 We can similarly establish the above style of loading to take place
 by default by specifying the :paramref:`.mapper.polymorphic_load` parameter,
-using the value ``"selectin"`` on a per-subclass basis::
+using the value ``"selectin"`` on a per-subclass basis:
+
+.. sourcecode:: python
 
     class Employee(Base):
         __tablename__ = 'employee'
@@ -443,7 +459,9 @@ loader options that apply towards ``Engineer`` or ``Manager``, which will take
 effect when the secondary SELECT is emitted.  Below we assume ``Manager`` has
 an additional relationship ``Manager.paperwork``, that we'd like to eagerly
 load as well.  We can use any type of eager loading, such as joined eager
-loading via the :func:`.joinedload` function::
+loading via the :func:`.joinedload` function:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import joinedload
     from sqlalchemy.orm import selectin_polymorphic
@@ -495,7 +513,9 @@ using selectin loading to load a joined-inheritance subtable, which then
 uses "with_polymorphic" to refer to further sub-classes, which may be
 joined- or single-table inheritanace.  If we added a class ``VicePresident`` that
 extends ``Manager`` using single-table inheritance, we could ensure that
-a load of ``Manager`` also fully loads ``VicePresident`` subtypes at the same time::
+a load of ``Manager`` also fully loads ``VicePresident`` subtypes at the same time:
+
+.. sourcecode:: python
 
     # use "Employee" example from the enclosing section
 
@@ -544,7 +564,9 @@ similarly to the following:
 Combining "selectin" polymorhic loading with query-time
 :func:`.orm.with_polymorphic` usage is also possible (though this is very
 outer-space stuff!); assuming the above mappings had no ``polymorphic_load``
-set up, we could get the same result as follows::
+set up, we could get the same result as follows:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import with_polymorphic, selectin_polymorphic
 
@@ -612,14 +634,18 @@ a join from ``company`` to ``employee``, without including ``engineer`` or
 ``manager`` in the mix. If we wish to have criterion which is specifically
 against the ``Engineer`` class, we can tell those methods to join or subquery
 against the set of columns representing the subclass using the
-:meth:`~.orm.interfaces.PropComparator.of_type` operator::
+:meth:`~.orm.interfaces.PropComparator.of_type` operator:
+
+.. sourcecode:: python
 
     session.query(Company).\
         join(Company.employees.of_type(Engineer)).\
         filter(Engineer.engineer_info=='someinfo')
 
 Similarly, to join from ``Company`` to the polymorphic entity that includes both
-``Engineer`` and ``Manager`` columns::
+``Engineer`` and ``Manager`` columns:
+
+.. sourcecode:: python
 
     manager_and_engineer = with_polymorphic(
                                 Employee, [Manager, Engineer])
@@ -635,7 +661,9 @@ Similarly, to join from ``Company`` to the polymorphic entity that includes both
 
 The :meth:`.PropComparator.any` and :meth:`.PropComparator.has` operators also
 can be used with :func:`~sqlalchemy.orm.interfaces.PropComparator.of_type`,
-such as when the embedded criterion is in terms of a subclass::
+such as when the embedded criterion is in terms of a subclass:
+
+.. sourcecode:: python
 
     session.query(Company).\
             filter(
@@ -652,7 +680,9 @@ The :func:`.joinedload`, :func:`.subqueryload`, :func:`.contains_eager` and
 other eagerloader options support
 paths which make use of :func:`~.PropComparator.of_type`.
 Below, we load ``Company`` rows while eagerly loading related ``Engineer``
-objects, querying the ``employee`` and ``engineer`` tables simultaneously::
+objects, querying the ``employee`` and ``engineer`` tables simultaneously:
+
+.. sourcecode:: python
 
     session.query(Company).\
         options(
@@ -664,7 +694,9 @@ objects, querying the ``employee`` and ``engineer`` tables simultaneously::
 As is the case with :meth:`.Query.join`, :meth:`~.PropComparator.of_type`
 can be used to combine eager loading and :func:`.orm.with_polymorphic`,
 so that all sub-attributes of all referenced subtypes
-can be loaded::
+can be loaded:
+
+.. sourcecode:: python
 
     manager_and_engineer = with_polymorphic(
                                 Employee, [Manager, Engineer],
@@ -698,7 +730,9 @@ Once :meth:`~.PropComparator.of_type` is the target of the eager load,
 that's the entity we would use for subsequent chaining, not the original class
 or derived class.  If we wanted to further eager load a collection on the
 eager-loaded ``Engineer`` class, we access this class from the namespace of the
-:func:`.orm.with_polymorphic` object::
+:func:`.orm.with_polymorphic` object:
+
+.. sourcecode:: python
 
     session.query(Company).\
         options(
@@ -714,7 +748,9 @@ Loading objects with joined table inheritance
 
 When using joined table inheritance, if we query for a specific subclass
 that represents a JOIN of two tables such as our ``Engineer`` example
-from the inheritance section, the SQL emitted is a join::
+from the inheritance section, the SQL emitted is a join:
+
+.. sourcecode:: python
 
     session.query(Engineer).all()
 
@@ -733,7 +769,9 @@ We will then get a collection of ``Engineer`` objects back, which will
 contain all columns from ``employee`` and ``engineer`` loaded.
 
 However, when emitting a :class:`.Query` against a base class, the behavior
-is to load only from the base table::
+is to load only from the base table:
+
+.. sourcecode:: python
 
     session.query(Employee).all()
 
@@ -774,7 +812,9 @@ The :func:`.orm.with_polymorphic`
 function and related configuration options allow us to instead emit a JOIN up
 front which will conditionally load against ``employee``, ``engineer``, or
 ``manager``, very much like joined eager loading works for relationships,
-removing the necessity for a second per-entity load::
+removing the necessity for a second per-entity load:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import with_polymorphic
 
@@ -819,7 +859,9 @@ In modern Declarative, single inheritance mappings produce :class:`.Column`
 objects that are mapped only to a subclass, and not available from the
 superclass, even though they are present on the same table.
 In our example from :ref:`single_inheritance`, the ``Manager`` mapping for example had a
-:class:`.Column` specified::
+:class:`.Column` specified:
+
+.. sourcecode:: python
 
     class Manager(Employee):
         manager_data = Column(String(50))
@@ -870,7 +912,9 @@ for those columns, in a similar way to joined inheritance::
 The :func:`.orm.with_polymorphic` function serves a similar role as  joined
 inheritance in the case of single inheritance; it allows both for eager loading
 of subclass attributes as well as specification of subclasses in a query,
-just without the overhead of using OUTER JOIN::
+just without the overhead of using OUTER JOIN:
+
+.. sourcecode:: python
 
     employee_poly = with_polymorphic(Employee, '*')
 

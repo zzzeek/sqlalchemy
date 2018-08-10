@@ -5,7 +5,9 @@ Basic Relationship Patterns
 
 A quick walkthrough of the basic relational patterns.
 
-The imports used for each of the following sections is as follows::
+The imports used for each of the following sections is as follows:
+
+.. sourcecode:: python
 
     from sqlalchemy import Table, Column, Integer, ForeignKey
     from sqlalchemy.orm import relationship
@@ -19,7 +21,9 @@ One To Many
 
 A one to many relationship places a foreign key on the child table referencing
 the parent.  :func:`.relationship` is then specified on the parent, as referencing
-a collection of items represented by the child::
+a collection of items represented by the child:
+
+.. sourcecode:: python
 
     class Parent(Base):
         __tablename__ = 'parent'
@@ -33,7 +37,9 @@ a collection of items represented by the child::
 
 To establish a bidirectional relationship in one-to-many, where the "reverse"
 side is a many to one, specify an additional :func:`.relationship` and connect
-the two using the :paramref:`.relationship.back_populates` parameter::
+the two using the :paramref:`.relationship.back_populates` parameter:
+
+.. sourcecode:: python
 
     class Parent(Base):
         __tablename__ = 'parent'
@@ -50,7 +56,9 @@ the two using the :paramref:`.relationship.back_populates` parameter::
 
 Alternatively, the :paramref:`~.relationship.backref` option may be used
 on a single :func:`.relationship` instead of using
-:paramref:`~.relationship.back_populates`::
+:paramref:`~.relationship.back_populates`:
+
+.. sourcecode:: python
 
     class Parent(Base):
         __tablename__ = 'parent'
@@ -63,7 +71,9 @@ Many To One
 
 Many to one places a foreign key in the parent table referencing the child.
 :func:`.relationship` is declared on the parent, where a new scalar-holding
-attribute will be created::
+attribute will be created:
+
+.. sourcecode:: python
 
     class Parent(Base):
         __tablename__ = 'parent'
@@ -77,7 +87,9 @@ attribute will be created::
 
 Bidirectional behavior is achieved by adding a second :func:`.relationship`
 and applying the :paramref:`.relationship.back_populates` parameter
-in both directions::
+in both directions:
+
+.. sourcecode:: python
 
     class Parent(Base):
         __tablename__ = 'parent'
@@ -91,7 +103,9 @@ in both directions::
         parents = relationship("Parent", back_populates="child")
 
 Alternatively, the :paramref:`~.relationship.backref` parameter
-may be applied to a single :func:`.relationship`, such as ``Parent.child``::
+may be applied to a single :func:`.relationship`, such as ``Parent.child``:
+
+.. sourcecode:: python
 
     class Parent(Base):
         __tablename__ = 'parent'
@@ -107,7 +121,9 @@ One To One
 One To One is essentially a bidirectional relationship with a scalar
 attribute on both sides. To achieve this, the :paramref:`~.relationship.uselist` flag indicates
 the placement of a scalar attribute instead of a collection on the "many" side
-of the relationship. To convert one-to-many into one-to-one::
+of the relationship. To convert one-to-many into one-to-one:
+
+.. sourcecode:: python
 
     class Parent(Base):
         __tablename__ = 'parent'
@@ -120,7 +136,9 @@ of the relationship. To convert one-to-many into one-to-one::
         parent_id = Column(Integer, ForeignKey('parent.id'))
         parent = relationship("Parent", back_populates="child")
 
-Or for many-to-one::
+Or for many-to-one:
+
+.. sourcecode:: python
 
     class Parent(Base):
         __tablename__ = 'parent'
@@ -135,7 +153,9 @@ Or for many-to-one::
 
 As always, the :paramref:`.relationship.backref` and :func:`.backref` functions
 may be used in lieu of the :paramref:`.relationship.back_populates` approach;
-to specify ``uselist`` on a backref, use the :func:`.backref` function::
+to specify ``uselist`` on a backref, use the :func:`.backref` function:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import backref
 
@@ -155,7 +175,9 @@ Many to Many adds an association table between two classes. The association
 table is indicated by the :paramref:`~.relationship.secondary` argument to
 :func:`.relationship`.  Usually, the :class:`.Table` uses the :class:`.MetaData`
 object associated with the declarative base class, so that the :class:`.ForeignKey`
-directives can locate the remote tables with which to link::
+directives can locate the remote tables with which to link:
+
+.. sourcecode:: python
 
     association_table = Table('association', Base.metadata,
         Column('left_id', Integer, ForeignKey('left.id')),
@@ -174,7 +196,9 @@ directives can locate the remote tables with which to link::
 
 For a bidirectional relationship, both sides of the relationship contain a
 collection.  Specify using :paramref:`.relationship.back_populates`, and
-for each :func:`.relationship` specify the common association table::
+for each :func:`.relationship` specify the common association table:
+
+.. sourcecode:: python
 
     association_table = Table('association', Base.metadata,
         Column('left_id', Integer, ForeignKey('left.id')),
@@ -199,7 +223,9 @@ for each :func:`.relationship` specify the common association table::
 
 When using the :paramref:`~.relationship.backref` parameter instead of
 :paramref:`.relationship.back_populates`, the backref will automatically use
-the same :paramref:`~.relationship.secondary` argument for the reverse relationship::
+the same :paramref:`~.relationship.secondary` argument for the reverse relationship:
+
+.. sourcecode:: python
 
     association_table = Table('association', Base.metadata,
         Column('left_id', Integer, ForeignKey('left.id')),
@@ -221,7 +247,9 @@ The :paramref:`~.relationship.secondary` argument of :func:`.relationship` also 
 that returns the ultimate argument, which is evaluated only when mappers are
 first used.   Using this, we can define the ``association_table`` at a later
 point, as long as it's available to the callable after all module initialization
-is complete::
+is complete:
+
+.. sourcecode:: python
 
     class Parent(Base):
         __tablename__ = 'left'
@@ -231,7 +259,9 @@ is complete::
                         backref="parents")
 
 With the declarative extension in use, the traditional "string name of the table"
-is accepted as well, matching the name of the table as stored in ``Base.metadata.tables``::
+is accepted as well, matching the name of the table as stored in ``Base.metadata.tables``:
+
+.. sourcecode:: python
 
     class Parent(Base):
         __tablename__ = 'left'
@@ -249,14 +279,18 @@ A behavior which is unique to the :paramref:`~.relationship.secondary` argument 
 is that the :class:`.Table` which is specified here is automatically subject
 to INSERT and DELETE statements, as objects are added or removed from the collection.
 There is **no need to delete from this table manually**.   The act of removing a
-record from the collection will have the effect of the row being deleted on flush::
+record from the collection will have the effect of the row being deleted on flush:
+
+.. sourcecode:: python
 
     # row will be deleted from the "secondary" table
     # automatically
     myparent.children.remove(somechild)
 
 A question which often arises is how the row in the "secondary" table can be deleted
-when the child object is handed directly to :meth:`.Session.delete`::
+when the child object is handed directly to :meth:`.Session.delete`:
+
+.. sourcecode:: python
 
     session.delete(somechild)
 
@@ -306,7 +340,9 @@ class references the right side via many-to-one.  Below we illustrate
 an association table mapped to the ``Association`` class which
 includes a column called ``extra_data``, which is a string value that
 is stored along with each association between ``Parent`` and
-``Child``::
+``Child``:
+
+.. sourcecode:: python
 
     class Association(Base):
         __tablename__ = 'association'
@@ -325,7 +361,9 @@ is stored along with each association between ``Parent`` and
         id = Column(Integer, primary_key=True)
 
 As always, the bidirectional version makes use of :paramref:`.relationship.back_populates`
-or :paramref:`.relationship.backref`::
+or :paramref:`.relationship.backref`:
+
+.. sourcecode:: python
 
     class Association(Base):
         __tablename__ = 'association'
@@ -348,7 +386,9 @@ or :paramref:`.relationship.backref`::
 Working with the association pattern in its direct form requires that child
 objects are associated with an association instance before being appended to
 the parent; similarly, access from parent to child goes through the
-association object::
+association object:
+
+.. sourcecode:: python
 
     # create parent, append a child via association
     p = Parent()
@@ -379,7 +419,9 @@ associated object, and a second to a target attribute.
   ``Child.parent_associations`` in Python; while all of these relationships will continue
   to function normally by themselves, changes on one will not show up in another
   until the :class:`.Session` is expired, which normally occurs automatically
-  after :meth:`.Session.commit`::
+  after :meth:`.Session.commit`:
+
+    .. sourcecode:: python
 
         class Association(Base):
             __tablename__ = 'association'
@@ -405,7 +447,9 @@ associated object, and a second to a target attribute.
   others automatically, writing the same data to both relationships will cause
   conflicting INSERT or DELETE statements as well, such as below where we
   establish the same relationship between a ``Parent`` and ``Child`` object
-  twice::
+  twice:
+
+    .. sourcecode:: python
 
         p1 = Parent()
         c1 = Child()

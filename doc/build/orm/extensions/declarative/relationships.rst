@@ -16,7 +16,9 @@ feature that the class specified to :func:`~sqlalchemy.orm.relationship`
 may be a string name.  The "class registry" associated with ``Base``
 is used at mapper compilation time to resolve the name into the actual
 class object, which is expected to have been defined once the mapper
-configuration is used::
+configuration is used:
+
+.. sourcecode:: python
 
     class User(Base):
         __tablename__ = 'users'
@@ -34,7 +36,9 @@ configuration is used::
 
 Column constructs, since they are just that, are immediately usable,
 as below where we define a primary join condition on the ``Address``
-class using them::
+class using them:
+
+.. sourcecode:: python
 
     class Address(Base):
         __tablename__ = 'addresses'
@@ -51,7 +55,9 @@ evaluated as Python expressions.  The full namespace available within
 this evaluation includes all classes mapped for this declarative base,
 as well as the contents of the ``sqlalchemy`` package, including
 expression functions like :func:`~sqlalchemy.sql.expression.desc` and
-:attr:`~sqlalchemy.sql.expression.func`::
+:attr:`~sqlalchemy.sql.expression.func`:
+
+.. sourcecode:: python
 
     class User(Base):
         # ....
@@ -61,7 +67,9 @@ expression functions like :func:`~sqlalchemy.sql.expression.desc` and
 
 For the case where more than one module contains a class of the same name,
 string class names can also be specified as module-qualified paths
-within any of these string expressions::
+within any of these string expressions:
+
+.. sourcecode:: python
 
     class User(Base):
         # ....
@@ -73,7 +81,9 @@ within any of these string expressions::
 The qualified path can be any partial path that removes ambiguity between
 the names.  For example, to disambiguate between
 ``myapp.model.address.Address`` and ``myapp.model.lookup.Address``,
-we can specify ``address.Address`` or ``lookup.Address``::
+we can specify ``address.Address`` or ``lookup.Address``:
+
+.. sourcecode:: python
 
     class User(Base):
         # ....
@@ -88,7 +98,9 @@ we can specify ``address.Address`` or ``lookup.Address``::
 
 Two alternatives also exist to using string-based attributes.  A lambda
 can also be used, which will be evaluated after all mappers have been
-configured::
+configured:
+
+.. sourcecode:: python
 
     class User(Base):
         # ...
@@ -97,7 +109,9 @@ configured::
                              primaryjoin=lambda: Address.user_id==User.id)
 
 Or, the relationship can be added to the class explicitly after the classes
-are available::
+are available:
+
+.. sourcecode:: python
 
     User.addresses = relationship(Address,
                               primaryjoin=Address.user_id==User.id)
@@ -115,7 +129,9 @@ with declarative as with traditional mappings. The
 :func:`.relationship` is as usual passed a
 :class:`.Table` object, which is typically declared in the
 traditional way.  The :class:`.Table` usually shares
-the :class:`.MetaData` object used by the declarative base::
+the :class:`.MetaData` object used by the declarative base:
+
+.. sourcecode:: python
 
     keywords = Table(
         'keywords', Base.metadata,
@@ -130,7 +146,9 @@ the :class:`.MetaData` object used by the declarative base::
 
 Like other :func:`~sqlalchemy.orm.relationship` arguments, a string is accepted
 as well, passing the string name of the table as defined in the
-``Base.metadata.tables`` collection::
+``Base.metadata.tables`` collection:
+
+.. sourcecode:: python
 
     class Author(Base):
         __tablename__ = 'authors'

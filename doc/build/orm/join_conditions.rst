@@ -17,7 +17,9 @@ One of the most common situations to deal with is when
 there are more than one foreign key path between two tables.
 
 Consider a ``Customer`` class that contains two foreign keys to an ``Address``
-class::
+class:
+
+.. sourcecode:: python
 
     from sqlalchemy import Integer, ForeignKey, String, Column
     from sqlalchemy.ext.declarative import declarative_base
@@ -61,7 +63,9 @@ or other missing information.
 
 In this case, the message wants us to qualify each :func:`.relationship`
 by instructing for each one which foreign key column should be considered, and
-the appropriate form is as follows::
+the appropriate form is as follows:
+
+.. sourcecode:: python
 
     class Customer(Base):
         __tablename__ = 'customer'
@@ -87,12 +91,16 @@ foreign key column of an associated ``Customer`` object during a flush.
 
 When specifying ``foreign_keys`` with Declarative, we can also use string
 names to specify, however it is important that if using a list, the **list
-is part of the string**::
+is part of the string**:
+
+.. sourcecode:: python
 
         billing_address = relationship("Address", foreign_keys="[Customer.billing_address_id]")
 
 In this specific example, the list is not necessary in any case as there's only
-one :class:`.Column` we need::
+one :class:`.Column` we need:
+
+.. sourcecode:: python
 
         billing_address = relationship("Address", foreign_keys="Customer.billing_address_id")
 
@@ -117,7 +125,9 @@ argument in the case when a "secondary" table is used.
 In the example below, using the ``User`` class
 as well as an ``Address`` class which stores a street address,  we
 create a relationship ``boston_addresses`` which will only
-load those ``Address`` objects which specify a city of "Boston"::
+load those ``Address`` objects which specify a city of "Boston":
+
+.. sourcecode:: python
 
     from sqlalchemy import Integer, ForeignKey, String, Column
     from sqlalchemy.ext.declarative import declarative_base
@@ -187,7 +197,9 @@ establish such a join.
 Below, a class ``HostEntry`` joins to itself, equating the string ``content``
 column to the ``ip_address`` column, which is a PostgreSQL type called ``INET``.
 We need to use :func:`.cast` in order to cast one side of the join to the
-type of the other::
+type of the other:
+
+.. sourcecode:: python
 
     from sqlalchemy import cast, String, Column, Integer
     from sqlalchemy.orm import relationship
@@ -226,7 +238,9 @@ applies by itself to the join condition given the :paramref:`~.relationship.fore
 be more succinct when an explicit join condition is present, and additionally
 serve to mark exactly the column that is "foreign" or "remote" independent
 of whether that column is stated multiple times or within complex
-SQL expressions::
+SQL expressions:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import foreign, remote
 
@@ -253,7 +267,9 @@ Using custom operators in join conditions
 Another use case for relationships is the use of custom operators, such
 as PostgreSQL's "is contained within" ``<<`` operator when joining with
 types such as :class:`.postgresql.INET` and :class:`.postgresql.CIDR`.
-For custom operators we use the :meth:`.Operators.op` function::
+For custom operators we use the :meth:`.Operators.op` function:
+
+.. sourcecode:: python
 
     inet_column.op("<<")(cidr_column)
 
@@ -263,11 +279,15 @@ when it examines our primaryjoin condition, it specifically looks for operators
 used for **comparisons**, and this is typically a fixed list containing known
 comparison operators such as ``==``, ``<``, etc.   So for our custom operator
 to participate in this system, we need it to register as a comparison operator
-using the :paramref:`~.Operators.op.is_comparison` parameter::
+using the :paramref:`~.Operators.op.is_comparison` parameter:
+
+.. sourcecode:: python
 
     inet_column.op("<<", is_comparison=True)(cidr_column)
 
-A complete example::
+A complete example:
+
+.. sourcecode:: python
 
     class IPA(Base):
         __tablename__ = 'ip_address'
@@ -286,7 +306,9 @@ A complete example::
         id = Column(Integer, primary_key=True)
         v4representation = Column(CIDR)
 
-Above, a query such as::
+Above, a query such as:
+
+.. sourcecode:: python
 
     session.query(IPA).join(IPA.network)
 
@@ -313,7 +335,9 @@ referred to both by the ``Writer`` object and the ``Article`` object
 using a composite primary key scheme that includes ``magazine_id``
 for both; then to make ``Article`` refer to ``Writer`` as well,
 ``Article.magazine_id`` is involved in two separate relationships;
-``Article.magazine`` and ``Article.writer``::
+``Article.magazine`` and ``Article.writer``:
+
+.. sourcecode:: python
 
     class Magazine(Base):
         __tablename__ = 'magazine'
@@ -386,7 +410,9 @@ all three of the following features:
    of this relationship.
 
 To get just #1 and #2, we could specify only ``Article.writer_id`` as the
-"foreign keys" for ``Article.writer``::
+"foreign keys" for ``Article.writer``:
+
+.. sourcecode:: python
 
     class Article(Base):
         # ...
@@ -408,7 +434,9 @@ Therefore, to get at all of #1, #2, and #3, we express the join condition
 as well as which columns to be written by combining
 :paramref:`~.relationship.primaryjoin` fully, along with either the
 :paramref:`~.relationship.foreign_keys` argument, or more succinctly by
-annotating with :func:`~.orm.foreign`::
+annotating with :func:`~.orm.foreign`:
+
+.. sourcecode:: python
 
     class Article(Base):
         # ...
@@ -439,7 +467,9 @@ system.   Essentially, when :func:`.foreign` and :func:`.remote` are
 on the *same* side of the comparison expression, the relationship is considered
 to be "one to many"; when they are on *different* sides, the relationship
 is considered to be "many to one".   For the comparison we'll use here,
-we'll be dealing with collections so we keep things configured as "one to many"::
+we'll be dealing with collections so we keep things configured as "one to many":
+
+.. sourcecode:: python
 
     class Element(Base):
         __tablename__ = 'element'
@@ -474,7 +504,9 @@ Many to many relationships can be customized by one or both of :paramref:`~.rela
 and :paramref:`~.relationship.secondaryjoin` - the latter is significant for a relationship that
 specifies a many-to-many reference using the :paramref:`~.relationship.secondary` argument.
 A common situation which involves the usage of :paramref:`~.relationship.primaryjoin` and :paramref:`~.relationship.secondaryjoin`
-is when establishing a many-to-many relationship from a class to itself, as shown below::
+is when establishing a many-to-many relationship from a class to itself, as shown below:
+
+.. sourcecode:: python
 
     from sqlalchemy import Integer, ForeignKey, String, Column, Table
     from sqlalchemy.ext.declarative import declarative_base
@@ -510,7 +542,9 @@ and :paramref:`~.relationship.secondaryjoin` arguments using strings, which is s
 in the case that our configuration does not have either the ``Node.id`` column
 object available yet or the ``node_to_node`` table perhaps isn't yet available.
 When referring to a plain :class:`.Table` object in a declarative string, we
-use the string name of the table as it is present in the :class:`.MetaData`::
+use the string name of the table as it is present in the :class:`.MetaData`:
+
+.. sourcecode:: python
 
     class Node(Base):
         __tablename__ = 'node'
@@ -524,7 +558,9 @@ use the string name of the table as it is present in the :class:`.MetaData`::
         )
 
 A classical mapping situation here is similar, where ``node_to_node`` can be joined
-to ``node.c.id``::
+to ``node.c.id``:
+
+.. sourcecode:: python
 
     from sqlalchemy import Integer, ForeignKey, String, Column, Table, MetaData
     from sqlalchemy.orm import relationship, mapper
@@ -578,7 +614,9 @@ list.
 In more recent versions of SQLAlchemy, the :paramref:`~.relationship.secondary`
 parameter can be used in some of these cases in order to provide a composite
 target consisting of multiple tables.   Below is an example of such a
-join condition (requires version 0.9.2 at least to function as is)::
+join condition (requires version 0.9.2 at least to function as is):
+
+.. sourcecode:: python
 
     class A(Base):
         __tablename__ = 'a'
@@ -666,7 +704,9 @@ for our class, we use the :paramref:`~.mapper.non_primary` flag.
 Below illustrates a :func:`.relationship` with a simple join from ``A`` to
 ``B``, however the primaryjoin condition is augmented with two additional
 entities ``C`` and ``D``, which also must have rows that line up with
-the rows in both ``A`` and ``B`` simultaneously::
+the rows in both ``A`` and ``B`` simultaneously:
+
+.. sourcecode:: python
 
     class A(Base):
         __tablename__ = 'a'

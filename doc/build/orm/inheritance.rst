@@ -42,7 +42,9 @@ multiple tables/subclasses up front.
 
 The base class in a joined inheritance hierarchy is configured with
 additional arguments that will refer to the polymorphic discriminator
-column as well as the identifier for the base class::
+column as well as the identifier for the base class:
+
+.. sourcecode:: python
 
     class Employee(Base):
         __tablename__ = 'employee'
@@ -77,7 +79,9 @@ statement as the polymorphic discriminator.
 We next define ``Engineer`` and ``Manager`` subclasses of ``Employee``.
 Each contains columns that represent the attributes unique to the subclass
 they represent. Each table also must contain a primary key column (or
-columns), as well as a foreign key reference to the parent table::
+columns), as well as a foreign key reference to the parent table:
+
+.. sourcecode:: python
 
     class Engineer(Employee):
         __tablename__ = 'engineer'
@@ -131,7 +135,9 @@ relationship involving a joined-inheritance class should target the class
 in the hierarchy that also corresponds to the foreign key constraint;
 below, as the ``employee`` table has a foreign key constraint back to
 the ``company`` table, the relationships are set up between ``Company``
-and ``Employee``::
+and ``Employee``:
+
+.. sourcecode:: python
 
     class Company(Base):
         __tablename__ = 'company'
@@ -162,7 +168,9 @@ If the foreign key constraint is on a table corresponding to a subclass,
 the relationship should target that subclass instead.  In the example
 below, there is a foreign
 key constraint from ``manager`` to ``company``, so the relationships are
-established between the ``Manager`` and ``Company`` classes::
+established between the ``Manager`` and ``Company`` classes:
+
+.. sourcecode:: python
 
     class Company(Base):
         __tablename__ = 'company'
@@ -235,7 +243,9 @@ differentiated from each other.
 Even though subclasses share the base table for all of their attributes,
 when using Declarative,  :class:`.Column` objects may still be specified on
 subclasses, indicating that the column is to be mapped only to that subclass;
-the :class:`.Column` will be applied to the same base :class:`.Table` object::
+the :class:`.Column` will be applied to the same base :class:`.Table` object:
+
+.. sourcecode:: python
 
     class Employee(Base):
         __tablename__ = 'employee'
@@ -272,7 +282,9 @@ Relationships with Single Table Inheritance
 Relationships are fully supported with single table inheritance.   Configuration
 is done in the same manner as that of joined inheritance; a foreign key
 attribute should be on the same class that's the "foreign" side of the
-relationship::
+relationship:
+
+.. sourcecode:: python
 
     class Company(Base):
         __tablename__ = 'company'
@@ -311,7 +323,9 @@ relationship::
 Also, like the case of joined inheritance, we can create relationships
 that involve a specific subclass.   When queried, the SELECT statement will
 include a WHERE clause that limits the class selection to that subclass
-or subclasses::
+or subclasses:
+
+.. sourcecode:: python
 
     class Company(Base):
         __tablename__ = 'company'
@@ -402,7 +416,9 @@ classes is also more awkward.
 To establish a class as using concrete inheritance, add the
 :paramref:`.mapper.concrete` parameter within the ``__mapper_args__``.
 This indicates to Declarative as well as the mapping that the superclass
-table should not be considered as part of the mapping::
+table should not be considered as part of the mapping:
+
+.. sourcecode:: python
 
     class Employee(Base):
         __tablename__ = 'employee'
@@ -472,7 +488,9 @@ Declarative provides helper classes :class:`.ConcreteBase` and
 :class:`.AbstractConcreteBase` which handle this issue behind the scenes.
 
 Using :class:`.ConcreteBase`, we can set up our concrete mapping in
-almost the same way as we do other forms of inheritance mappings::
+almost the same way as we do other forms of inheritance mappings:
+
+.. sourcecode:: python
 
     from sqlalchemy.ext.declarative import ConcreteBase
 
@@ -570,7 +588,9 @@ database, only the subclasses.  In other words, the base class is
 Normally, when one would like to map two different subclasses to individual
 tables, and leave the base class unmapped, this can be achieved very easily.
 When using Declarative, just declare the
-base class with the ``__abstract__`` indicator::
+base class with the ``__abstract__`` indicator:
+
+.. sourcecode:: python
 
     class Employee(Base):
         __abstract__ = True
@@ -619,7 +639,9 @@ table, however the ``Employee`` mapper will be mapped directly to the
 :paramref:`.mapper.with_polymorphic` parameter.
 
 To help with this, Declarative offers a variant of the :class:`.ConcreteBase`
-class called :class:`.AbstractConcreteBase` which achieves this automatically::
+class called :class:`.AbstractConcreteBase` which achieves this automatically:
+
+.. sourcecode:: python
 
     from sqlalchemy.ext.declarative import AbstractConcreteBase
 
@@ -671,7 +693,9 @@ to the mappings.   These are illustrated here to clarify the role
 of the :func:`.polymorphic_union` function in terms of mapping.
 
 A **semi-classical mapping** for example makes use of Declarative, but
-establishes the :class:`.Table` objects separately::
+establishes the :class:`.Table` objects separately:
+
+.. sourcecode:: python
 
     metadata = Base.metadata
 
@@ -695,7 +719,9 @@ establishes the :class:`.Table` objects separately::
         Column('engineer_info', String(50)),
     )
 
-Next, the UNION is produced using :func:`.polymorphic_union`::
+Next, the UNION is produced using :func:`.polymorphic_union`:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import polymorphic_union
 
@@ -708,7 +734,9 @@ Next, the UNION is produced using :func:`.polymorphic_union`::
 With the above :class:`.Table` objects, the mappings can be produced using "semi-classical" style,
 where we use Declarative in conjunction with the ``__table__`` argument;
 our polymorphic union above is passed via ``__mapper_args__`` to
-the :paramref:`.mapper.with_polymorphic` parameter::
+the :paramref:`.mapper.with_polymorphic` parameter:
+
+.. sourcecode:: python
 
     class Employee(Base):
         __table__ = employee_table
@@ -732,7 +760,9 @@ the :paramref:`.mapper.with_polymorphic` parameter::
 
 Alternatvely, the same :class:`.Table` objects can be used in
 fully "classical" style, without using Declarative at all.
-A constructor similar to that supplied by Declarative is illustrated::
+A constructor similar to that supplied by Declarative is illustrated:
+
+.. sourcecode:: python
 
     class Employee(object):
         def __init__(self, **kw):
@@ -762,7 +792,9 @@ The "abstract" example can also be mapped using "semi-classical" or "classical"
 style.  The difference is that instead of applying the "polymorphic union"
 to the :paramref:`.mapper.with_polymorphic` parameter, we apply it directly
 as the mapped selectable on our basemost mapper.  The semi-classical
-mapping is illustrated below::
+mapping is illustrated below:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import polymorphic_union
 
@@ -814,7 +846,9 @@ to ``Employee``, indicating that the collection may include both
 ``Engineer`` and ``Manager`` objects, that implies that ``Employee`` must
 have polymorphic loading capabilities and also that each table to be related
 must have a foreign key back to the ``company`` table.  An example of
-such a configuration is as follows::
+such a configuration is as follows:
+
+.. sourcecode:: python
 
     from sqlalchemy.ext.declarative import ConcreteBase
 
@@ -874,7 +908,9 @@ instance level.  Instead, a distinct
 bi-directional behavior in terms of three separate relationships which
 serve as the opposite of ``Company.employees``, the
 :paramref:`.relationship.back_populates` parameter is used between
-each of the relationships::
+each of the relationships:
+
+.. sourcecode:: python
 
     from sqlalchemy.ext.declarative import ConcreteBase
 

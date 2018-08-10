@@ -19,7 +19,9 @@ Individual columns can be lazy loaded by themselves or placed into groups that
 lazy-load together, using the :func:`.orm.deferred` function to
 mark them as "deferred". In the example below, we define a mapping that will load each of
 ``.excerpt`` and ``.photo`` in separate, individual-row SELECT statements when each
-attribute is first referenced on the individual object instance::
+attribute is first referenced on the individual object instance:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import deferred
     from sqlalchemy import Integer, String, Text, Binary, Column
@@ -34,7 +36,9 @@ attribute is first referenced on the individual object instance::
         photo = deferred(Column(Binary))
 
 Classical mappings as always place the usage of :func:`.orm.deferred` in the
-``properties`` dictionary against the table-bound :class:`.Column`::
+``properties`` dictionary against the table-bound :class:`.Column`:
+
+.. sourcecode:: python
 
     mapper(Book, book_table, properties={
         'photo':deferred(book_table.c.photo)
@@ -44,7 +48,9 @@ Deferred columns can be associated with a "group" name, so that they load
 together when any of them are first accessed.  The example below defines a
 mapping with a ``photos`` deferred group.  When one ``.photo`` is accessed, all three
 photos will be loaded in one SELECT statement. The ``.excerpt`` will be loaded
-separately when it is accessed::
+separately when it is accessed:
+
+.. sourcecode:: python
 
     class Book(Base):
         __tablename__ = 'book'
@@ -58,7 +64,9 @@ separately when it is accessed::
         photo3 = deferred(Column(Binary), group='photos')
 
 You can defer or undefer columns at the :class:`~sqlalchemy.orm.query.Query`
-level using options, including :func:`.orm.defer` and :func:`.orm.undefer`::
+level using options, including :func:`.orm.defer` and :func:`.orm.undefer`:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import defer, undefer
 
@@ -68,7 +76,9 @@ level using options, including :func:`.orm.defer` and :func:`.orm.undefer`::
     query.all()
 
 :func:`.orm.deferred` attributes which are marked with a "group" can be undeferred
-using :func:`.orm.undefer_group`, sending in the group name::
+using :func:`.orm.undefer_group`, sending in the group name:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import undefer_group
 
@@ -79,7 +89,9 @@ Load Only Cols
 --------------
 
 An arbitrary set of columns can be selected as "load only" columns, which will
-be loaded while deferring all other columns on a given entity, using :func:`.orm.load_only`::
+be loaded while deferring all other columns on a given entity, using :func:`.orm.load_only`:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import load_only
 
@@ -93,7 +105,9 @@ Deferred Loading with Multiple Entities
 ---------------------------------------
 
 To specify column deferral options within a :class:`.Query` that loads multiple types
-of entity, the :class:`.Load` object can specify which parent entity to start with::
+of entity, the :class:`.Load` object can specify which parent entity to start with:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import Load
 
@@ -107,7 +121,9 @@ To specify column deferral options along the path of various relationships,
 the options support chaining, where the loading style of each relationship
 is specified first, then is chained to the deferral options.  Such as, to load
 ``Book`` instances, then joined-eager-load the ``Author``, then apply deferral
-options to the ``Author`` entity::
+options to the ``Author`` entity:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import joinedload
 
@@ -117,7 +133,9 @@ options to the ``Author`` entity::
             )
 
 In the case where the loading style of parent relationships should be left
-unchanged, use :func:`.orm.defaultload`::
+unchanged, use :func:`.orm.defaultload`:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import defaultload
 
@@ -156,7 +174,9 @@ namespace.
 
 .. versionadded:: 0.9.0
 
-The bundle allows columns to be grouped together::
+The bundle allows columns to be grouped together:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import Bundle
 
@@ -170,7 +190,9 @@ the :class:`.Query` and a set of "row processor" functions at query execution
 time; these processor functions when given a result row will return the
 individual attribute value, which can then be adapted into any kind of
 return data structure.  Below illustrates replacing the usual :class:`.KeyedTuple`
-return structure with a straight Python dictionary::
+return structure with a straight Python dictionary:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import Bundle
 
@@ -189,7 +211,9 @@ return structure with a straight Python dictionary::
    method of custom :class:`.Bundle` classes now accepts only a single
    "row" argument.
 
-A result from the above bundle will return dictionary values::
+A result from the above bundle will return dictionary values:
+
+.. sourcecode:: python
 
     bn = DictBundle('mybundle', MyClass.data1, MyClass.data2)
     for row in session.query(bn).filter(bn.c.data1 == 'd1'):

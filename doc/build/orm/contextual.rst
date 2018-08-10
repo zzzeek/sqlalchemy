@@ -34,7 +34,9 @@ A :class:`.scoped_session` is constructed by calling it, passing it a
 **factory** which can create new :class:`.Session` objects.   A factory
 is just something that produces a new object when called, and in the
 case of :class:`.Session`, the most common factory is the :class:`.sessionmaker`,
-introduced earlier in this section.  Below we illustrate this usage::
+introduced earlier in this section.  Below we illustrate this usage:
+
+.. sourcecode:: pycon
 
     >>> from sqlalchemy.orm import scoped_session
     >>> from sqlalchemy.orm import sessionmaker
@@ -43,14 +45,18 @@ introduced earlier in this section.  Below we illustrate this usage::
     >>> Session = scoped_session(session_factory)
 
 The :class:`.scoped_session` object we've created will now call upon the
-:class:`.sessionmaker` when we "call" the registry::
+:class:`.sessionmaker` when we "call" the registry:
+
+.. sourcecode:: pycon
 
     >>> some_session = Session()
 
 Above, ``some_session`` is an instance of :class:`.Session`, which we
 can now use to talk to the database.   This same :class:`.Session` is also
 present within the :class:`.scoped_session` registry we've created.   If
-we call upon the registry a second time, we get back the **same** :class:`.Session`::
+we call upon the registry a second time, we get back the **same** :class:`.Session`:
+
+.. sourcecode:: pycon
 
     >>> some_other_session = Session()
     >>> some_session is some_other_session
@@ -60,7 +66,9 @@ This pattern allows disparate sections of the application to call upon a global
 :class:`.scoped_session`, so that all those areas may share the same session
 without the need to pass it explicitly.   The :class:`.Session` we've established
 in our registry will remain, until we explicitly tell our registry to dispose of it,
-by calling :meth:`.scoped_session.remove`::
+by calling :meth:`.scoped_session.remove`:
+
+.. sourcecode:: pycon
 
     >>> Session.remove()
 
@@ -71,7 +79,9 @@ itself.  "Releasing" here means that connections are returned to their connectio
 
 At this point, the :class:`.scoped_session` object is "empty", and will create
 a **new** :class:`.Session` when called again.  As illustrated below, this
-is not the same :class:`.Session` we had before::
+is not the same :class:`.Session` we had before:
+
+.. sourcecode:: pycon
 
     >>> new_session = Session()
     >>> new_session is some_session
@@ -89,7 +99,9 @@ for all who ask for it.  As a means of producing more transparent access to this
 :class:`.Session`, the :class:`.scoped_session` also includes **proxy behavior**,
 meaning that the registry itself can be treated just like a :class:`.Session`
 directly; when methods are called on this object, they are **proxied** to the
-underlying :class:`.Session` being maintained by the registry::
+underlying :class:`.Session` being maintained by the registry:
+
+.. sourcecode:: python
 
     Session = scoped_session(some_factory)
 
@@ -229,7 +241,9 @@ some kind of ``Request`` object that represents the current request being proces
 If the ``Request`` object is hashable, then this function can be easily integrated with
 :class:`.scoped_session` to associate the :class:`.Session` with the request.  Below we illustrate
 this in conjunction with a hypothetical event marker provided by the web framework
-``on_request_end``, which allows code to be invoked whenever a request ends::
+``on_request_end``, which allows code to be invoked whenever a request ends:
+
+.. sourcecode:: python
 
     from my_web_framework import get_current_request, on_request_end
     from sqlalchemy.orm import scoped_session, sessionmaker

@@ -24,7 +24,9 @@ otherwise, the given value is used.
 Scalar Defaults
 ---------------
 
-The simplest kind of default is a scalar value used as the default value of a column::
+The simplest kind of default is a scalar value used as the default value of a column:
+
+.. sourcecode:: python
 
     Table("mytable", meta,
         Column("somecolumn", Integer, default=12)
@@ -35,7 +37,9 @@ other value is supplied.
 
 A scalar value may also be associated with an UPDATE statement, though this is
 not very common (as UPDATE statements are usually looking for dynamic
-defaults)::
+defaults):
+
+.. sourcecode:: python
 
     Table("mytable", meta,
         Column("somecolumn", Integer, onupdate=25)
@@ -49,7 +53,9 @@ The :paramref:`.Column.default` and :paramref:`.Column.onupdate` keyword argumen
 functions. These functions are invoked at the time of insert or update if no
 other value for that column is supplied, and the value returned is used for
 the column's value. Below illustrates a crude "sequence" that assigns an
-incrementing counter to a primary key column::
+incrementing counter to a primary key column:
+
+.. sourcecode:: python
 
     # a function which counts upwards
     i = 0
@@ -72,7 +78,9 @@ well as the section on :class:`~sqlalchemy.schema.Sequence` later in this
 chapter for background on standard primary key generation techniques.
 
 To illustrate onupdate, we assign the Python ``datetime`` function ``now`` to
-the :paramref:`.Column.onupdate` attribute::
+the :paramref:`.Column.onupdate` attribute:
+
+.. sourcecode:: python
 
     import datetime
 
@@ -103,7 +111,9 @@ being executed, including its source expression, the parameters associated with
 it and the cursor. The typical use case for this context with regards to
 default generation is to have access to the other values being inserted or
 updated on the row. To access the context, provide a function that accepts a
-single ``context`` argument::
+single ``context`` argument:
+
+.. sourcecode:: python
 
     def mydefault(context):
         return context.get_current_parameters()['counter'] + 12
@@ -147,7 +157,9 @@ Client-Invoked SQL Expressions
 
 The :paramref:`.Column.default` and :paramref:`.Column.onupdate` keywords may
 also be passed SQL expressions, which are in most cases rendered inline within the
-INSERT or UPDATE statement::
+INSERT or UPDATE statement:
+
+.. sourcecode:: python
 
     t = Table("mytable", meta,
         Column('id', Integer, primary_key=True),
@@ -257,7 +269,9 @@ Columns which generate a new value on INSERT or UPDATE based on other
 server-side database mechanisms, such as database-specific auto-generating
 behaviors such as seen with TIMESTAMP columns on some platforms, as well as
 custom triggers that invoke upon INSERT or UPDATE to generate a new value,
-may be called out using :class:`.FetchedValue` as a marker::
+may be called out using :class:`.FetchedValue` as a marker:
+
+.. sourcecode:: python
 
     t = Table('test', meta,
         Column('id', Integer, primary_key=True),
@@ -297,7 +311,9 @@ otherwise ignored.
 The :class:`~sqlalchemy.schema.Sequence` may be placed on any column as a
 "default" generator to be used during INSERT operations, and can also be
 configured to fire off during UPDATE operations if desired. It is most
-commonly used in conjunction with a single integer primary key column::
+commonly used in conjunction with a single integer primary key column:
+
+.. sourcecode:: python
 
     table = Table("cartitems", meta,
         Column(
@@ -349,7 +365,9 @@ Executing a Sequence Standalone
 A SEQUENCE is a first class schema object in SQL and can be used to generate
 values independently in the database.   If you have a :class:`.Sequence`
 object, it can be invoked with its "next value" instruction by
-passing it directly to a SQL execution method::
+passing it directly to a SQL execution method:
+
+.. sourcecode:: python
 
     with my_engine.connect() as conn:
         seq = Sequence('some_sequence')
@@ -358,7 +376,9 @@ passing it directly to a SQL execution method::
 In order to embed the "next value" function of a :class:`.Sequence`
 inside of a SQL statement like a SELECT or INSERT, use the :meth:`.Sequence.next_value`
 method, which will render at statement compilation time a SQL function that is
-appropriate for the target backend::
+appropriate for the target backend:
+
+.. sourcecode:: pycon
 
     >>> my_seq = Sequence('some_sequence')
     >>> stmt = select([my_seq.next_value()])
@@ -371,7 +391,9 @@ Associating a Sequence with the MetaData
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For many years, the SQLAlchemy documentation referred to the
-example of associating a :class:`.Sequence` with a table as follows::
+example of associating a :class:`.Sequence` with a table as follows:
+
+.. sourcecode:: python
 
     table = Table("cartitems", meta,
         Column("cart_id", Integer, Sequence('cart_id_seq'),
@@ -382,7 +404,9 @@ example of associating a :class:`.Sequence` with a table as follows::
 
 While the above is a prominent idiomatic pattern, it is recommended that
 the :class:`.Sequence` in most cases be explicitly associated with the
-:class:`.MetaData`, using the :paramref:`.Sequence.metadata` parameter::
+:class:`.MetaData`, using the :paramref:`.Sequence.metadata` parameter:
+
+.. sourcecode:: python
 
     table = Table("cartitems", meta,
         Column(
@@ -432,7 +456,9 @@ Associating a Sequence as the Server Side Default
    database.  It does not work with Oracle.
 
 The preceding sections illustrate how to associate a :class:`.Sequence` with a
-:class:`.Column` as the **Python side default generator**::
+:class:`.Column` as the **Python side default generator**:
+
+.. sourcecode:: python
 
     Column(
         "cart_id", Integer, Sequence('cart_id_seq', metadata=meta),
@@ -450,7 +476,9 @@ parameter in conjunction with the value-generation function of the
 sequence, available from the :meth:`.Sequence.next_value` method.  Below
 we illustrate the same :class:`.Sequence` being associated with the
 :class:`.Column` both as the Python-side default generator as well as
-the server-side default generator::
+the server-side default generator:
+
+.. sourcecode:: python
 
     cart_id_seq = Sequence('cart_id_seq', metadata=meta)
     table = Table("cartitems", meta,
@@ -461,7 +489,9 @@ the server-side default generator::
         Column("createdate", DateTime())
     )
 
-or with the ORM::
+or with the ORM:
+
+.. sourcecode:: python
 
     class CartItem(Base):
         __tablename__ = 'cartitems'

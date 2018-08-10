@@ -13,7 +13,9 @@ A quick way to add a "validation" routine to an attribute is to use the
 an exception, halting the process of mutating the attribute's value, or can
 change the given value into something different. Validators, like all
 attribute extensions, are only called by normal userland code; they are not
-issued when the ORM is populating the object::
+issued when the ORM is populating the object:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import validates
 
@@ -35,7 +37,9 @@ issued when the ORM is populating the object::
 
 
 Validators also receive collection append events, when items are added to a
-collection::
+collection:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import validates
 
@@ -55,7 +59,9 @@ remove events, as the typical expectation is that a value being discarded
 doesn't require validation.  However, :func:`.validates` supports reception
 of these events by specifying ``include_removes=True`` to the decorator.  When
 this flag is set, the validation function must receive an additional boolean
-argument which if ``True`` indicates that the operation is a removal::
+argument which if ``True`` indicates that the operation is a removal:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import validates
 
@@ -76,7 +82,9 @@ argument which if ``True`` indicates that the operation is a removal::
 The case where mutually dependent validators are linked via a backref
 can also be tailored, using the ``include_backrefs=False`` option; this option,
 when set to ``False``, prevents a validation function from emitting if the
-event occurs as a result of a backref::
+event occurs as a result of a backref:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import validates
 
@@ -110,7 +118,9 @@ A more comprehensive way to produce modified behavior for an attribute is to
 use :term:`descriptors`.  These are commonly used in Python using the ``property()``
 function. The standard SQLAlchemy technique for descriptors is to create a
 plain descriptor, and to have it read/write from a mapped attribute with a
-different name. Below we illustrate this using Python 2.6-style properties::
+different name. Below we illustrate this using Python 2.6-style properties:
+
+.. sourcecode:: python
 
     class EmailAddress(Base):
         __tablename__ = 'email_address'
@@ -136,7 +146,9 @@ The approach above will work, but there's more we can add. While our
 descriptor and into the ``_email`` mapped attribute, the class level
 ``EmailAddress.email`` attribute does not have the usual expression semantics
 usable with :class:`.Query`. To provide these, we instead use the
-:mod:`~sqlalchemy.ext.hybrid` extension as follows::
+:mod:`~sqlalchemy.ext.hybrid` extension as follows:
+
+.. sourcecode:: python
 
     from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -185,7 +197,9 @@ attribute, including defining separate behaviors when the attribute is
 accessed at the instance level versus at the class/expression level, using the
 :meth:`.hybrid_property.expression` modifier. Such as, if we wanted to add a
 host name automatically, we might define two sets of string manipulation
-logic::
+logic:
+
+.. sourcecode:: python
 
     class EmailAddress(Base):
         __tablename__ = 'email_address'
@@ -240,7 +254,9 @@ Synonyms are a mapper-level construct that allow any attribute on a class
 to "mirror" another attribute that is mapped.
 
 In the most basic sense, the synonym is an easy way to make a certain
-attribute available by an additional name::
+attribute available by an additional name:
+
+.. sourcecode:: python
 
     class MyClass(Base):
         __tablename__ = 'my_table'
@@ -252,7 +268,9 @@ attribute available by an additional name::
 
 The above class ``MyClass`` has two attributes, ``.job_status`` and
 ``.status`` that will behave as one attribute, both at the expression
-level::
+level:
+
+.. sourcecode:: pycon
 
     >>> print(MyClass.job_status == 'some_status')
     my_table.job_status = :job_status_1
@@ -260,7 +278,9 @@ level::
     >>> print(MyClass.status == 'some_status')
     my_table.job_status = :job_status_1
 
-and at the instance level::
+and at the instance level:
+
+.. sourcecode:: pycon
 
     >>> m1 = MyClass(status='x')
     >>> m1.status, m1.job_status
@@ -276,7 +296,9 @@ as well as synonyms themselves.
 
 Beyond a simple mirror, :func:`.synonym` can also be made to reference
 a user-defined :term:`descriptor`.  We can supply our
-``status`` synonym with a ``@property``::
+``status`` synonym with a ``@property``:
+
+.. sourcecode:: python
 
     class MyClass(Base):
         __tablename__ = 'my_table'
@@ -291,7 +313,9 @@ a user-defined :term:`descriptor`.  We can supply our
         job_status = synonym("status", descriptor=job_status)
 
 When using Declarative, the above pattern can be expressed more succinctly
-using the :func:`.synonym_for` decorator::
+using the :func:`.synonym_for` decorator:
+
+.. sourcecode:: python
 
     from sqlalchemy.ext.declarative import synonym_for
 

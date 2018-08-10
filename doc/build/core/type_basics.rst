@@ -192,7 +192,9 @@ database's dialect module. See the :ref:`dialect_toplevel`
 reference for the database you're interested in.
 
 For example, MySQL has a ``BIGINT`` type and PostgreSQL has an
-``INET`` type.  To use these, import them from the module explicitly::
+``INET`` type.  To use these, import them from the module explicitly:
+
+.. sourcecode:: python
 
     from sqlalchemy.dialects import mysql
 
@@ -201,7 +203,9 @@ For example, MySQL has a ``BIGINT`` type and PostgreSQL has an
         Column('enumerates', mysql.ENUM('a', 'b', 'c'))
     )
 
-Or some PostgreSQL types::
+Or some PostgreSQL types:
+
+.. sourcecode:: python
 
     from sqlalchemy.dialects import postgresql
 
@@ -213,7 +217,9 @@ Or some PostgreSQL types::
 Each dialect provides the full set of typenames supported by
 that backend within its `__all__` collection, so that a simple
 `import *` or similar will import all supported types as
-implemented for that backend::
+implemented for that backend:
+
+.. sourcecode:: python
 
     from sqlalchemy.dialects.postgresql import *
 
@@ -229,7 +235,9 @@ sqlalchemy.types, and INET is specific to the PostgreSQL dialect.
 Some dialect level types have the same name as the SQL standard type,
 but also provide additional arguments.  For example, MySQL implements
 the full range of character and string types including additional arguments
-such as `collation` and `charset`::
+such as `collation` and `charset`:
+
+.. sourcecode:: python
 
     from sqlalchemy.dialects.mysql import VARCHAR, TEXT
 

@@ -40,7 +40,9 @@ following text represents the expected return value.
 Version Check
 =============
 
-A quick check to verify that we are on at least **version 1.3** of SQLAlchemy::
+A quick check to verify that we are on at least **version 1.3** of SQLAlchemy:
+
+.. sourcecode:: pycon
 
     >>> import sqlalchemy
     >>> sqlalchemy.__version__ # doctest:+SKIP
@@ -50,7 +52,9 @@ Connecting
 ==========
 
 For this tutorial we will use an in-memory-only SQLite database. To connect we
-use :func:`~sqlalchemy.create_engine`::
+use :func:`~sqlalchemy.create_engine`:
+
+.. sourcecode:: pycon
 
     >>> from sqlalchemy import create_engine
     >>> engine = create_engine('sqlite:///:memory:', echo=True)
@@ -102,7 +106,9 @@ maintains a catalog of classes and
 tables relative to that base - this is known as the **declarative base class**.  Our
 application will usually have just one instance of this base in a commonly
 imported module.   We create the base class using the :func:`.declarative_base`
-function, as follows::
+function, as follows:
+
+.. sourcecode:: pycon
 
     >>> from sqlalchemy.ext.declarative import declarative_base
 
@@ -113,7 +119,9 @@ of it.  We will start with just a single table called ``users``, which will stor
 records for the end-users using our application.
 A new class called ``User`` will be the class to which we map this table.  Within
 the class, we define details about the table to which we'll be mapping, primarily
-the table name, and names and datatypes of columns::
+the table name, and names and datatypes of columns:
+
+.. sourcecode:: pycon
 
     >>> from sqlalchemy import Column, Integer, String
     >>> class User(Base):
@@ -165,7 +173,9 @@ Create a Schema
 With our ``User`` class constructed via the Declarative system, we have defined information about
 our table, known as :term:`table metadata`.   The object used by SQLAlchemy to represent
 this information for a specific table is called the :class:`.Table` object, and here Declarative has made
-one for us.  We can see this object by inspecting the ``__table__`` attribute::
+one for us.  We can see this object by inspecting the ``__table__`` attribute:
+
+.. sourcecode:: pycon
 
     >>> User.__table__ # doctest: +NORMALIZE_WHITESPACE
     Table('users', MetaData(bind=None),
@@ -228,7 +238,9 @@ the actual ``CREATE TABLE`` statement:
     this is a valid datatype, but on others, it's not allowed. So if running
     this tutorial on one of those databases, and you wish to use SQLAlchemy to
     issue CREATE TABLE, a "length" may be provided to the :class:`~sqlalchemy.types.String` type as
-    below::
+    below:
+
+    .. sourcecode:: python
 
         Column(String(50))
 
@@ -238,13 +250,17 @@ the actual ``CREATE TABLE`` statement:
 
     Additionally, Firebird and Oracle require sequences to generate new
     primary key identifiers, and SQLAlchemy doesn't generate or assume these
-    without being instructed. For that, you use the :class:`~sqlalchemy.schema.Sequence` construct::
+    without being instructed. For that, you use the :class:`~sqlalchemy.schema.Sequence` construct:
+
+    .. sourcecode:: python
 
         from sqlalchemy import Sequence
         Column(Integer, Sequence('user_id_seq'), primary_key=True)
 
     A full, foolproof :class:`~sqlalchemy.schema.Table` generated via our declarative
-    mapping is therefore::
+    mapping is therefore:
+
+    .. sourcecode:: python
 
         class User(Base):
             __tablename__ = 'users'
@@ -302,20 +318,26 @@ database is the :class:`~sqlalchemy.orm.session.Session`. When we first set up
 the application, at the same level as our :func:`~sqlalchemy.create_engine`
 statement, we define a :class:`~sqlalchemy.orm.session.Session` class which
 will serve as a factory for new :class:`~sqlalchemy.orm.session.Session`
-objects::
+objects:
+
+.. sourcecode:: pycon
 
     >>> from sqlalchemy.orm import sessionmaker
     >>> Session = sessionmaker(bind=engine)
 
 In the case where your application does not yet have an
 :class:`~sqlalchemy.engine.Engine` when you define your module-level
-objects, just set it up like this::
+objects, just set it up like this:
+
+.. sourcecode:: pycon
 
     >>> Session = sessionmaker()
 
 Later, when you create your engine with :func:`~sqlalchemy.create_engine`,
 connect it to the :class:`~sqlalchemy.orm.session.Session` using
-:meth:`~.sessionmaker.configure`::
+:meth:`~.sessionmaker.configure`:
+
+.. sourcecode:: pycon
 
     >>> Session.configure(bind=engine)  # once engine is available
 
@@ -335,7 +357,9 @@ new :class:`~sqlalchemy.orm.session.Session` objects which are bound to our
 database. Other transactional characteristics may be defined when calling
 :class:`~.sessionmaker` as well; these are described in a later
 chapter. Then, whenever you need to have a conversation with the database, you
-instantiate a :class:`~sqlalchemy.orm.session.Session`::
+instantiate a :class:`~sqlalchemy.orm.session.Session`:
+
+.. sourcecode:: pycon
 
     >>> session = Session()
 
@@ -349,7 +373,9 @@ session object.
 Adding and Updating Objects
 ===========================
 
-To persist our ``User`` object, we :meth:`~.Session.add` it to our :class:`~sqlalchemy.orm.session.Session`::
+To persist our ``User`` object, we :meth:`~.Session.add` it to our :class:`~sqlalchemy.orm.session.Session`:
+
+.. sourcecode:: pycon
 
     >>> ed_user = User(name='ed', fullname='Ed Jones', password='edspassword')
     >>> session.add(ed_user)
@@ -387,7 +413,9 @@ added:
 In fact, the :class:`~sqlalchemy.orm.session.Session` has identified that the
 row returned is the **same** row as one already represented within its
 internal map of objects, so we actually got back the identical instance as
-that which we just added::
+that which we just added:
+
+.. sourcecode:: pycon
 
     >>> ed_user is our_user
     True
@@ -747,26 +775,34 @@ Common Filter Operators
 Here's a rundown of some of the most common operators used in
 :func:`~sqlalchemy.orm.query.Query.filter`:
 
-* :meth:`equals <.ColumnOperators.__eq__>`::
+* :meth:`equals <.ColumnOperators.__eq__>`:
+
+.. sourcecode:: python
 
     query.filter(User.name == 'ed')
 
-* :meth:`not equals <.ColumnOperators.__ne__>`::
+* :meth:`not equals <.ColumnOperators.__ne__>`:
+
+.. sourcecode:: python
 
     query.filter(User.name != 'ed')
 
-* :meth:`LIKE <.ColumnOperators.like>`::
+* :meth:`LIKE <.ColumnOperators.like>`:
 
-    query.filter(User.name.like('%ed%'))
+    .. sourcecode:: python
+
+        query.filter(User.name.like('%ed%'))
 
  .. note:: :meth:`.ColumnOperators.like` renders the LIKE operator, which
     is case insensitive on some backends, and case sensitive
     on others.  For guaranteed case-insensitive comparisons, use
     :meth:`.ColumnOperators.ilike`.
 
-* :meth:`ILIKE <.ColumnOperators.ilike>` (case-insensitive LIKE)::
+* :meth:`ILIKE <.ColumnOperators.ilike>` (case-insensitive LIKE):
 
-    query.filter(User.name.ilike('%ed%'))
+    .. sourcecode:: python
+
+        query.filter(User.name.ilike('%ed%'))
 
  .. note:: most backends don't support ILIKE directly.  For those,
     the :meth:`.ColumnOperators.ilike` operator renders an expression
@@ -781,35 +817,43 @@ Here's a rundown of some of the most common operators used in
         session.query(User.name).filter(User.name.like('%ed%'))
     ))
 
-* :meth:`NOT IN <.ColumnOperators.notin_>`::
+* :meth:`NOT IN <.ColumnOperators.notin_>`:
+
+.. sourcecode:: python
 
     query.filter(~User.name.in_(['ed', 'wendy', 'jack']))
 
-* :meth:`IS NULL <.ColumnOperators.is_>`::
+* :meth:`IS NULL <.ColumnOperators.is_>`:
+
+.. sourcecode:: python
 
     query.filter(User.name == None)
 
     # alternatively, if pep8/linters are a concern
     query.filter(User.name.is_(None))
 
-* :meth:`IS NOT NULL <.ColumnOperators.isnot>`::
+* :meth:`IS NOT NULL <.ColumnOperators.isnot>`:
+
+.. sourcecode:: python
 
     query.filter(User.name != None)
 
     # alternatively, if pep8/linters are a concern
     query.filter(User.name.isnot(None))
 
-* :func:`AND <.sql.expression.and_>`::
+* :func:`AND <.sql.expression.and_>`:
 
-    # use and_()
-    from sqlalchemy import and_
-    query.filter(and_(User.name == 'ed', User.fullname == 'Ed Jones'))
+    .. sourcecode:: python
 
-    # or send multiple expressions to .filter()
-    query.filter(User.name == 'ed', User.fullname == 'Ed Jones')
+        # use and_()
+        from sqlalchemy import and_
+        query.filter(and_(User.name == 'ed', User.fullname == 'Ed Jones'))
 
-    # or chain multiple filter()/filter_by() calls
-    query.filter(User.name == 'ed').filter(User.fullname == 'Ed Jones')
+        # or send multiple expressions to .filter()
+        query.filter(User.name == 'ed', User.fullname == 'Ed Jones')
+
+        # or chain multiple filter()/filter_by() calls
+        query.filter(User.name == 'ed').filter(User.fullname == 'Ed Jones')
 
  .. note::  Make sure you use :func:`.and_` and **not** the
     Python ``and`` operator!
@@ -1111,7 +1155,7 @@ implies a basic one to many association from the ``users`` to a new
 table which stores email addresses, which we will call ``addresses``. Using
 declarative, we define this table along with its mapped class, ``Address``:
 
-.. sourcecode:: python
+.. sourcecode:: pycon
 
     >>> from sqlalchemy import ForeignKey
     >>> from sqlalchemy.orm import relationship
@@ -1363,7 +1407,9 @@ using the :meth:`.Query.join` method:
 :meth:`.Query.join` knows how to join between ``User``
 and ``Address`` because there's only one foreign key between them. If there
 were no foreign keys, or several, :meth:`.Query.join`
-works better when one of the following forms are used::
+works better when one of the following forms are used:
+
+.. sourcecode:: python
 
     query.join(Address, User.id==Address.user_id)    # explicit condition
     query.join(User.addresses)                       # specify relationship from left to right
@@ -1371,7 +1417,9 @@ works better when one of the following forms are used::
     query.join('addresses')                          # same, using a string
 
 As you would expect, the same idea is used for "outer" joins, using the
-:meth:`~.Query.outerjoin` function::
+:meth:`~.Query.outerjoin` function:
+
+.. sourcecode:: python
 
     query.outerjoin(User.addresses)   # LEFT OUTER JOIN
 
@@ -1384,7 +1432,9 @@ is an important method at the center of usage for any SQL-fluent application.
     The :meth:`.Query.join` method will **typically join from the leftmost
     item** in the list of entities, when the ON clause is omitted, or if the
     ON clause is a plain SQL expression.  To control the first entity in the list
-    of JOINs, use the :meth:`.Query.select_from` method::
+    of JOINs, use the :meth:`.Query.select_from` method:
+
+    .. sourcecode:: python
 
         query = session.query(User, Address).select_from(Address).join(User)
 
@@ -1445,7 +1495,9 @@ Using the :class:`~sqlalchemy.orm.query.Query`, we build a statement like this
 from the inside out. The ``statement`` accessor returns a SQL expression
 representing the statement generated by a particular
 :class:`~sqlalchemy.orm.query.Query` - this is an instance of a :func:`~.expression.select`
-construct, which are described in :ref:`sqlexpression_toplevel`::
+construct, which are described in :ref:`sqlexpression_toplevel`:
+
+.. sourcecode:: pycon
 
     >>> from sqlalchemy.sql import func
     >>> stmt = session.query(Address.user_id, func.count('*').\
@@ -1600,34 +1652,48 @@ Here's all the operators which build on relationships - each one
 is linked to its API documentation which includes full details on usage
 and behavior:
 
-* :meth:`~.RelationshipProperty.Comparator.__eq__` (many-to-one "equals" comparison)::
+* :meth:`~.RelationshipProperty.Comparator.__eq__` (many-to-one "equals" comparison):
+
+.. sourcecode:: python
 
     query.filter(Address.user == someuser)
 
-* :meth:`~.RelationshipProperty.Comparator.__ne__` (many-to-one "not equals" comparison)::
+* :meth:`~.RelationshipProperty.Comparator.__ne__` (many-to-one "not equals" comparison):
+
+.. sourcecode:: python
 
     query.filter(Address.user != someuser)
 
-* IS NULL (many-to-one comparison, also uses :meth:`~.RelationshipProperty.Comparator.__eq__`)::
+* IS NULL (many-to-one comparison, also uses :meth:`~.RelationshipProperty.Comparator.__eq__`):
+
+.. sourcecode:: python
 
     query.filter(Address.user == None)
 
-* :meth:`~.RelationshipProperty.Comparator.contains` (used for one-to-many collections)::
+* :meth:`~.RelationshipProperty.Comparator.contains` (used for one-to-many collections):
+
+.. sourcecode:: python
 
     query.filter(User.addresses.contains(someaddress))
 
-* :meth:`~.RelationshipProperty.Comparator.any` (used for collections)::
+* :meth:`~.RelationshipProperty.Comparator.any` (used for collections):
+
+.. sourcecode:: python
 
     query.filter(User.addresses.any(Address.email_address == 'bar'))
 
     # also takes keyword arguments:
     query.filter(User.addresses.any(email_address='bar'))
 
-* :meth:`~.RelationshipProperty.Comparator.has` (used for scalar references)::
+* :meth:`~.RelationshipProperty.Comparator.has` (used for scalar references):
+
+.. sourcecode:: python
 
     query.filter(Address.user.has(name='ed'))
 
-* :meth:`.Query.with_parent` (used for any relationship)::
+* :meth:`.Query.with_parent` (used for any relationship):
+
+.. sourcecode:: python
 
     session.query(Address).with_parent(someuser, 'addresses')
 
@@ -1844,18 +1910,24 @@ We will configure **cascade** options on the ``User.addresses`` relationship
 to change the behavior. While SQLAlchemy allows you to add new attributes and
 relationships to mappings at any point in time, in this case the existing
 relationship needs to be removed, so we need to tear down the mappings
-completely and start again - we'll close the :class:`.Session`::
+completely and start again - we'll close the :class:`.Session`:
+
+.. sourcecode:: pycon
 
     >>> session.close()
     ROLLBACK
 
 
-and use a new :func:`.declarative_base`::
+and use a new :func:`.declarative_base`:
+
+.. sourcecode:: pycon
 
     >>> Base = declarative_base()
 
 Next we'll declare the ``User`` class, adding in the ``addresses`` relationship
-including the cascade configuration (we'll leave the constructor out too)::
+including the cascade configuration (we'll leave the constructor out too):
+
+.. sourcecode:: pycon
 
     >>> class User(Base):
     ...     __tablename__ = 'users'
@@ -1873,7 +1945,9 @@ including the cascade configuration (we'll leave the constructor out too)::
     ...                                self.name, self.fullname, self.password)
 
 Then we recreate ``Address``, noting that in this case we've created
-the ``Address.user`` relationship via the ``User`` class already::
+the ``Address.user`` relationship via the ``User`` class already:
+
+.. sourcecode:: pycon
 
     >>> class Address(Base):
     ...     __tablename__ = 'addresses'
@@ -1981,7 +2055,9 @@ We'll make our application a blog application, where users can write
 ``BlogPost`` items, which have ``Keyword`` items associated with them.
 
 For a plain many-to-many, we need to create an un-mapped :class:`.Table` construct
-to serve as the association table.  This looks like the following::
+to serve as the association table.  This looks like the following:
+
+.. sourcecode:: pycon
 
     >>> from sqlalchemy import Table, Text
     >>> # association table
@@ -1998,7 +2074,9 @@ taken from an assigned attribute name.
 
 Next we define ``BlogPost`` and ``Keyword``, using complementary
 :func:`.relationship` constructs, each referring to the ``post_keywords``
-table as an association table::
+table as an association table:
+
+.. sourcecode:: pycon
 
     >>> class BlogPost(Base):
     ...     __tablename__ = 'posts'

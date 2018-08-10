@@ -19,7 +19,9 @@ Joined Table Inheritance
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 Joined table inheritance is defined as a subclass that defines its own
-table::
+table:
+
+.. sourcecode:: python
 
     class Person(Base):
         __tablename__ = 'people'
@@ -38,7 +40,9 @@ same attribute name as the ``Person.id`` attribute, will in fact
 represent the ``people.id`` and ``engineers.id`` columns together,
 with the "Engineer.id" column taking precedence if queried directly.
 To provide the ``Engineer`` class with an attribute that represents
-only the ``engineers.id`` column, give it a different attribute name::
+only the ``engineers.id`` column, give it a different attribute name:
+
+.. sourcecode:: python
 
     class Engineer(Person):
         __tablename__ = 'engineers'
@@ -55,7 +59,9 @@ Single Table Inheritance
 
 Single table inheritance is defined as a subclass that does not have
 its own table; you just leave out the ``__table__`` and ``__tablename__``
-attributes::
+attributes:
+
+.. sourcecode:: python
 
     class Person(Base):
         __tablename__ = 'people'
@@ -77,7 +83,9 @@ columns.  Columns which are not mapped to ``Person`` are also excluded
 from any other single or joined inheriting classes using the
 ``exclude_properties`` mapper argument.  Below, ``Manager`` will have
 all the attributes of ``Person`` and ``Manager`` but *not* the
-``primary_language`` attribute of ``Engineer``::
+``primary_language`` attribute of ``Engineer``:
+
+.. sourcecode:: python
 
     class Manager(Person):
         __mapper_args__ = {'polymorphic_identity': 'manager'}
@@ -94,7 +102,9 @@ Resolving Column Conflicts
 Note above that the ``primary_language`` and ``golf_swing`` columns
 are "moved up" to be applied to ``Person.__table__``, as a result of their
 declaration on a subclass that has no table of its own.   A tricky case
-comes up when two subclasses want to specify *the same* column, as below::
+comes up when two subclasses want to specify *the same* column, as below:
+
+.. sourcecode:: python
 
     class Person(Base):
         __tablename__ = 'people'
@@ -122,7 +132,9 @@ of the intent, especially if the ``start_date`` columns had, for example,
 different types.   A situation like this can be resolved by using
 :class:`.declared_attr` to define the :class:`.Column` conditionally, taking
 care to return the **existing column** via the parent ``__table__`` if it
-already exists::
+already exists:
+
+.. sourcecode:: python
 
     from sqlalchemy.ext.declarative import declared_attr
 
@@ -172,7 +184,9 @@ a different owning :class:`.Table`.
    in order to resolve duplicate column conflicts.
 
 The same concept can be used with mixin classes (see
-:ref:`declarative_mixins`)::
+:ref:`declarative_mixins`):
+
+.. sourcecode:: python
 
     class Person(Base):
         __tablename__ = 'people'
@@ -203,7 +217,9 @@ Concrete Table Inheritance
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Concrete is defined as a subclass which has its own table and sets the
-``concrete`` keyword argument to ``True``::
+``concrete`` keyword argument to ``True``:
+
+.. sourcecode:: python
 
     class Person(Base):
         __tablename__ = 'people'
@@ -220,7 +236,9 @@ Concrete is defined as a subclass which has its own table and sets the
 Usage of an abstract base class is a little less straightforward as it
 requires usage of :func:`~sqlalchemy.orm.util.polymorphic_union`,
 which needs to be created with the :class:`.Table` objects
-before the class is built::
+before the class is built:
+
+.. sourcecode:: python
 
     engineers = Table('engineers', Base.metadata,
                     Column('id', Integer, primary_key=True),

@@ -82,7 +82,9 @@ explicit call to :meth:`.Session.rollback` or :meth:`.Session.close`.
 
 It usually corresponds to an application that catches an exception
 upon :meth:`.Session.flush` or :meth:`.Session.commit` and
-does not properly handle the exception.    For example::
+does not properly handle the exception.    For example:
+
+.. sourcecode:: python
 
     from sqlalchemy import create_engine, Column, Integer
     from sqlalchemy.orm import sessionmaker
@@ -173,7 +175,9 @@ But why isn't the one automatic call to ROLLBACK enough?  Why must I ROLLBACK ag
 This is again a matter of the :class:`.Session` providing a consistent interface and
 refusing to guess about what context its being used. For example, the
 :class:`.Session` supports "framing" above within multiple levels. Such as, suppose
-you had a decorator ``@with_session()``, which did this::
+you had a decorator ``@with_session()``, which did this:
+
+.. sourcecode:: python
 
     def with_session(fn):
        def go(*args, **kw):
@@ -192,7 +196,9 @@ then commits it, if it were the creator. The "subtransactions" flag means that
 if :meth:`.Session.begin` were already called by an enclosing function, nothing happens
 except a counter is incremented - this counter is decremented when :meth:`.Session.commit`
 is called and only when it goes back to zero does the actual COMMIT happen. It
-allows this usage pattern::
+allows this usage pattern:
+
+.. sourcecode:: python
 
     @with_session
     def one():
@@ -278,7 +284,9 @@ builtin to be used to determine the length of the collection. It's intuitive
 that a SQL query object would link ``__len__()`` to the :meth:`.Query.count`
 method, which emits a `SELECT COUNT`. The reason this is not possible is
 because evaluating the query as a list would incur two SQL calls instead of
-one::
+one:
+
+.. sourcecode:: python
 
     class Iterates(object):
         def __len__(self):
@@ -335,7 +343,9 @@ key attribute changes - instead, it is designed to work the
 other way around - foreign key attributes are handled by the
 ORM behind the scenes, the end user sets up object
 relationships naturally. Therefore, the recommended way to
-set ``o.foo`` is to do just that - set it!::
+set ``o.foo`` is to do just that - set it!:
+
+.. sourcecode:: python
 
     foo = Session.query(Foo).get(7)
     o.foo = foo
@@ -344,7 +354,9 @@ set ``o.foo`` is to do just that - set it!::
 Manipulation of foreign key attributes is of course entirely legal.  However,
 setting a foreign-key attribute to a new value currently does not trigger
 an "expire" event of the :func:`.relationship` in which it's involved.  This means
-that for the following sequence::
+that for the following sequence:
+
+.. sourcecode:: python
 
     o = Session.query(SomeClass).first()
     assert o.foo is None  # accessing an un-set attribute sets it to None
@@ -352,7 +364,9 @@ that for the following sequence::
 
 ``o.foo`` is initialized to ``None`` when we first accessed it.  Setting
 ``o.foo_id = 7`` will have the value of "7" as pending, but no flush
-has occurred - so ``o.foo`` is still ``None``::
+has occurred - so ``o.foo`` is still ``None``:
+
+.. sourcecode:: python
 
     # attribute is already set to None, has not been
     # reconciled with o.foo_id = 7 yet
@@ -360,7 +374,9 @@ has occurred - so ``o.foo`` is still ``None``::
 
 For ``o.foo`` to load based on the foreign key mutation is usually achieved
 naturally after the commit, which both flushes the new foreign key value
-and expires all state::
+and expires all state:
+
+.. sourcecode:: python
 
     Session.commit()  # expires all attributes
 
@@ -369,7 +385,9 @@ and expires all state::
     assert o.foo is foo_7  # o.foo lazyloads on access
 
 A more minimal operation is to expire the attribute individually - this can
-be performed for any :term:`persistent` object using :meth:`.Session.expire`::
+be performed for any :term:`persistent` object using :meth:`.Session.expire`:
+
+.. sourcecode:: python
 
     o = Session.query(SomeClass).first()
     o.foo_id = 7
@@ -382,7 +400,9 @@ be performed for any :term:`persistent` object using :meth:`.Session.expire`::
 Note that if the object is not persistent but present in the :class:`.Session`,
 it's known as :term:`pending`.   This means the row for the object has not been
 INSERTed into the database yet.  For such an object, setting ``foo_id`` does not
-have meaning until the row is inserted; otherwise there is no row yet::
+have meaning until the row is inserted; otherwise there is no row yet:
+
+.. sourcecode:: python
 
     new_obj = SomeClass()
     new_obj.foo_id = 7
@@ -424,7 +444,9 @@ How do I walk all objects that are related to a given object?
 
 An object that has other objects related to it will correspond to the
 :func:`.relationship` constructs set up between mappers.  This code fragment will
-iterate all the objects, correcting for cycles as well::
+iterate all the objects, correcting for cycles as well:
+
+.. sourcecode:: python
 
     from sqlalchemy import inspect
 
@@ -449,7 +471,9 @@ iterate all the objects, correcting for cycles as well::
                 elif related is not None:
                     deque.append(related)
 
-The function can be demonstrated as follows::
+The function can be demonstrated as follows:
+
+.. sourcecode:: python
 
     Base = declarative_base()
 

@@ -10,7 +10,9 @@ Embedding SQL Insert/Update Expressions into a Flush
 This feature allows the value of a database column to be set to a SQL
 expression instead of a literal value. It's especially useful for atomic
 updates, calling stored procedures, etc. All you do is assign an expression to
-an attribute::
+an attribute:
+
+.. sourcecode:: python
 
     class SomeClass(object):
         pass
@@ -40,7 +42,9 @@ This is most easily accomplished using the
 :meth:`~.Session.execute` method, which returns a
 :class:`~sqlalchemy.engine.ResultProxy` in the same manner as an
 :class:`~sqlalchemy.engine.Engine` or
-:class:`~sqlalchemy.engine.Connection`::
+:class:`~sqlalchemy.engine.Connection`:
+
+.. sourcecode:: python
 
     Session = sessionmaker(bind=engine)
     session = Session()
@@ -53,7 +57,9 @@ This is most easily accomplished using the
 
 The current :class:`~sqlalchemy.engine.Connection` held by the
 :class:`~sqlalchemy.orm.session.Session` is accessible using the
-:meth:`~.Session.connection` method::
+:meth:`~.Session.connection` method:
+
+.. sourcecode:: python
 
     connection = session.connection()
 
@@ -66,7 +72,9 @@ engines, or none at all (i.e. relies upon bound metadata), both
 :meth:`~.Session.connection` accept a ``mapper`` keyword
 argument, which is passed a mapped class or
 :class:`~sqlalchemy.orm.mapper.Mapper` instance, which is used to locate the
-proper context for the desired engine::
+proper context for the desired engine:
+
+.. sourcecode:: python
 
     Session = sessionmaker()
     session = Session()
@@ -84,7 +92,9 @@ Forcing NULL on a column with a default
 =======================================
 
 The ORM considers any attribute that was never set on an object as a
-"default" case; the attribute will be omitted from the INSERT statement::
+"default" case; the attribute will be omitted from the INSERT statement:
+
+.. sourcecode:: python
 
     class MyObject(Base):
         __tablename__ = 'my_table'
@@ -101,7 +111,9 @@ have the NULL value set, *unless* the column has a default set up,
 in which case the default value will be persisted.   This holds true
 both from a pure SQL perspective with server-side defaults, as well as the
 behavior of SQLAlchemy's insert behavior with both client-side and server-side
-defaults::
+defaults:
+
+.. sourcecode:: python
 
     class MyObject(Base):
         __tablename__ = 'my_table'
@@ -115,7 +127,9 @@ defaults::
 
 However, in the ORM, even if one assigns the Python value ``None`` explicitly
 to the object, this is treated the **same** as though the value were never
-assigned::
+assigned:
+
+.. sourcecode:: python
 
     class MyObject(Base):
         __tablename__ = 'my_table'
@@ -136,7 +150,9 @@ hold as an assumption.
 So what if we want to actually put NULL into this column, even though the
 column has a default value?  There are two approaches.  One is that
 on a per-instance level, we assign the attribute using the
-:obj:`~.expression.null` SQL construct::
+:obj:`~.expression.null` SQL construct:
+
+.. sourcecode:: python
 
     from sqlalchemy import null
 
@@ -155,7 +171,9 @@ also be persisted as NULL despite the presence of column defaults,
 we can configure this for the ORM using a Core-level modifier
 :meth:`.TypeEngine.evaluates_none`, which indicates
 a type where the ORM should treat the value ``None`` the same as any other
-value and pass it through, rather than omitting it as a "missing" value::
+value and pass it through, rather than omitting it as a "missing" value:
+
+.. sourcecode:: python
 
     class MyObject(Base):
         __tablename__ = 'my_table'
@@ -224,8 +242,9 @@ Case 1: non primary key, RETURNING or equivalent is supported
 In this case, columns should be marked as :class:`.FetchedValue` or with an
 explicit :paramref:`.Column.server_default`.   The
 :paramref:`.orm.mapper.eager_defaults` flag may be used to indicate that these
-columns should be fetched immediately upon INSERT and sometimes UPDATE::
+columns should be fetched immediately upon INSERT and sometimes UPDATE:
 
+.. sourcecode:: python
 
     class MyModel(Base):
         __tablename__ = 'my_table'
@@ -253,7 +272,9 @@ Case 2: non primary key, RETURNING or equivalent is not supported or not needed
 --------------------------------------------------------------------------------
 
 This case is the same as case 1 above, except we don't specify
-:paramref:`.orm.mapper.eager_defaults`::
+:paramref:`.orm.mapper.eager_defaults`:
+
+.. sourcecode:: python
 
     class MyModel(Base):
         __tablename__ = 'my_table'
@@ -304,7 +325,9 @@ explicitly linked to a sequence or other triggered routine,  the server default
 generation must be marked in the table metadata.
 
 For an explicit sequence as we use with Oracle, this just means we are using
-the :class:`.Sequence` construct::
+the :class:`.Sequence` construct:
+
+.. sourcecode:: python
 
     class MyOracleModel(Base):
         __tablename__ = 'my_table'
@@ -323,7 +346,9 @@ and also uses RETURNING to get the new value back immediately.
 
 For datatypes that generate values automatically, or columns that are populated
 by a trigger, we use :class:`.FetchedValue`.  Below is a model that uses a
-SQL Server TIMESTAMP column as the primary key, which generates values automatically::
+SQL Server TIMESTAMP column as the primary key, which generates values automatically:
+
+.. sourcecode:: python
 
     class MyModel(Base):
         __tablename__ = 'my_table'
@@ -344,7 +369,9 @@ more typically MySQL where some means of generating a default is occurring
 on the server, but is outside of the database's usual autoincrement routine.
 In this case, we have to make sure SQLAlchemy can "pre-execute" the default,
 which means it has to be an explicit SQL expression.   Again using the example
-of TIMESTAMP for MySQL, we unfortunately need to use our own explicit default::
+of TIMESTAMP for MySQL, we unfortunately need to use our own explicit default:
+
+.. sourcecode:: python
 
     class MyModel(Base):
         __tablename__ = 'my_table'
@@ -379,7 +406,9 @@ Simple Vertical Partitioning
 ----------------------------
 
 Vertical partitioning places different kinds of objects, or different tables,
-across multiple databases::
+across multiple databases:
+
+.. sourcecode:: python
 
     engine1 = create_engine('postgresql://db1')
     engine2 = create_engine('postgresql://db2')
@@ -438,7 +467,9 @@ a custom :class:`.Session` which delivers the following rules:
                 ]
 
 The above :class:`.Session` class is plugged in using the ``class_``
-argument to :class:`.sessionmaker`::
+argument to :class:`.sessionmaker`:
+
+.. sourcecode:: python
 
     Session = sessionmaker(class_=RoutingSession)
 
@@ -525,7 +556,9 @@ Usage
 -----
 
 The methods each work in the context of the :class:`.Session` object's
-transaction, like any other::
+transaction, like any other:
+
+.. sourcecode:: python
 
     s = Session()
     objects = [
@@ -536,7 +569,9 @@ transaction, like any other::
     s.bulk_save_objects(objects)
 
 For :meth:`.Session.bulk_insert_mappings`, and :meth:`.Session.bulk_update_mappings`,
-dictionaries are passed::
+dictionaries are passed:
+
+.. sourcecode:: python
 
     s.bulk_insert_mappings(User,
       [dict(name="u1"), dict(name="u2"), dict(name="u3")]

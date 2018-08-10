@@ -176,7 +176,9 @@ each table first before creating, so it's safe to call multiple times:
     this is a valid datatype, but on others, it's not allowed. So if running
     this tutorial on one of those databases, and you wish to use SQLAlchemy to
     issue CREATE TABLE, a "length" may be provided to the :class:`~sqlalchemy.types.String` type as
-    below::
+    below:
+
+    .. sourcecode:: python
 
         Column('name', String(50))
 
@@ -186,7 +188,9 @@ each table first before creating, so it's safe to call multiple times:
 
     Additionally, Firebird and Oracle require sequences to generate new
     primary key identifiers, and SQLAlchemy doesn't generate or assume these
-    without being instructed. For that, you use the :class:`~sqlalchemy.schema.Sequence` construct::
+    without being instructed. For that, you use the :class:`~sqlalchemy.schema.Sequence` construct:
+
+    .. sourcecode:: python
 
         from sqlalchemy import Sequence
         Column('id', Integer, Sequence('user_id_seq'), primary_key=True)
@@ -213,19 +217,25 @@ Insert Expressions
 
 The first SQL expression we'll create is the
 :class:`~sqlalchemy.sql.expression.Insert` construct, which represents an
-INSERT statement. This is typically created relative to its target table::
+INSERT statement. This is typically created relative to its target table:
+
+.. sourcecode:: pycon
 
     >>> ins = users.insert()
 
 To see a sample of the SQL this construct produces, use the ``str()``
-function::
+function:
+
+.. sourcecode:: pycon
 
     >>> str(ins)
     'INSERT INTO users (id, name, fullname) VALUES (:id, :name, :fullname)'
 
 Notice above that the INSERT statement names every column in the ``users``
 table. This can be limited by using the ``values()`` method, which establishes
-the VALUES clause of the INSERT explicitly::
+the VALUES clause of the INSERT explicitly:
+
+.. sourcecode:: pycon
 
     >>> ins = users.insert().values(name='jack', fullname='Jack Jones')
     >>> str(ins)
@@ -238,7 +248,9 @@ stored within our :class:`~sqlalchemy.sql.expression.Insert` construct, but it
 typically only comes out when the statement is actually executed; since the
 data consists of literal values, SQLAlchemy automatically generates bind
 parameters for them. We can peek at this data for now by looking at the
-compiled form of the statement::
+compiled form of the statement:
+
+.. sourcecode:: pycon
 
     >>> ins.compile().params  # doctest: +SKIP
     {'fullname': 'Jack Jones', 'name': 'jack'}
@@ -251,7 +263,9 @@ executing it. In this tutorial, we will generally focus on the most explicit
 method of executing a SQL construct, and later touch upon some "shortcut" ways
 to do it. The ``engine`` object we created is a repository for database
 connections capable of issuing SQL to the database. To acquire a connection,
-we use the ``connect()`` method::
+we use the ``connect()`` method:
+
+.. sourcecode:: pycon
 
     >>> conn = engine.connect()
     >>> conn
@@ -624,7 +638,9 @@ always use the :meth:`.Operators.op` method; this generates whatever operator yo
     >>> print(users.c.name.op('tiddlywinks')('foo'))
     users.name tiddlywinks :name_1
 
-This function can also be used to make bitwise operators explicit. For example::
+This function can also be used to make bitwise operators explicit. For example:
+
+.. sourcecode:: python
 
     somecolumn.op('&')(0xff)
 
@@ -633,7 +649,9 @@ is a bitwise AND of the value in ``somecolumn``.
 When using :meth:`.Operators.op`, the return type of the expression may be important,
 especialy when the operator is used in an expression that will be sent as a result
 column.   For this case, be sure to make the type explicit, if not what's
-normally expected, using :func:`.type_coerce`::
+normally expected, using :func:`.type_coerce`:
+
+.. sourcecode:: python
 
     from sqlalchemy import type_coerce
     expr = type_coerce(somecolumn.op('-%>')('foo'), MySpecialType())
@@ -641,7 +659,9 @@ normally expected, using :func:`.type_coerce`::
 
 
 For boolean operators, use the :meth:`.Operators.bool_op` method, which
-will ensure that the return type of the expression is handled as boolean::
+will ensure that the return type of the expression is handled as boolean:
+
+.. sourcecode:: python
 
     somecolumn.bool_op('-->')('some value')
 
@@ -814,12 +834,16 @@ Specifying Bound Parameter Behaviors
 ------------------------------------
 
 The :func:`~.expression.text` construct supports pre-established bound values
-using the :meth:`.TextClause.bindparams` method::
+using the :meth:`.TextClause.bindparams` method:
+
+.. sourcecode:: python
 
     stmt = text("SELECT * FROM users WHERE users.name BETWEEN :x AND :y")
     stmt = stmt.bindparams(x="m", y="z")
 
-The parameters can also be explicitly typed::
+The parameters can also be explicitly typed:
+
+.. sourcecode:: python
 
     stmt = stmt.bindparams(bindparam("x", type_=String), bindparam("y", type_=String))
     result = conn.execute(stmt, {"x": "m", "y": "z"})
@@ -838,21 +862,27 @@ Specifying Result-Column Behaviors
 
 We may also specify information about the result columns using the
 :meth:`.TextClause.columns` method; this method can be used to specify
-the return types, based on name::
+the return types, based on name:
+
+.. sourcecode:: python
 
     stmt = stmt.columns(id=Integer, name=String)
 
 or it can be passed full column expressions positionally, either typed
 or untyped.  In this case it's a good idea to list out the columns
 explicitly within our textual SQL, since the correlation of our column
-expressions to the SQL will be done positionally::
+expressions to the SQL will be done positionally:
+
+.. sourcecode:: python
 
     stmt = text("SELECT id, name FROM users")
     stmt = stmt.columns(users.c.id, users.c.name)
 
 When we call the :meth:`.TextClause.columns` method, we get back a
 :class:`.TextAsFrom` object that supports the full suite of
-:attr:`.TextAsFrom.c` and other "selectable" operations::
+:attr:`.TextAsFrom.c` and other "selectable" operations:
+
+.. sourcecode:: python
 
     j = stmt.join(addresses, stmt.c.id == addresses.c.user_id)
 
@@ -886,7 +916,9 @@ result column names in the textual SQL:
 Above, there's three columns in the result that are named "id", but since
 we've associated these with column expressions positionally, the names aren't an issue
 when the result-columns are fetched using the actual column object as a key.
-Fetching the ``email_address`` column would be::
+Fetching the ``email_address`` column would be:
+
+.. sourcecode:: pycon
 
     >>> row = result.fetchone()
     >>> row[addresses.c.email_address]
@@ -894,7 +926,9 @@ Fetching the ``email_address`` column would be::
 
 If on the other hand we used a string column key, the usual rules of name-
 based matching still apply, and we'd get an ambiguous column error for
-the ``id`` value::
+the ``id`` value:
+
+.. sourcecode:: pycon
 
     >>> row["id"]
     Traceback (most recent call last):
@@ -1135,7 +1169,9 @@ rendered for a particular dialect.
 Since on the outside, we refer to the alias using the :class:`.Alias` construct
 itself, we don't need to be concerned about the generated name.  However, for
 the purposes of debugging, it can be specified by passing a string name
-to the :meth:`.FromClause.alias` method::
+to the :meth:`.FromClause.alias` method:
+
+.. sourcecode:: pycon
 
     >>> a1 = addresses.alias('a1')
 
@@ -1340,7 +1376,9 @@ generates functions using attribute access:
     concat(:concat_1, :concat_2)
 
 By "generates", we mean that **any** SQL function is created based on the word
-you choose::
+you choose:
+
+.. sourcecode:: pycon
 
     >>> print(func.xyz_my_goofy_function())
     xyz_my_goofy_function()
@@ -1433,7 +1471,9 @@ Window Functions
 
 Any :class:`.FunctionElement`, including functions generated by
 :data:`~.expression.func`, can be turned into a "window function", that is an
-OVER clause, using the :meth:`.FunctionElement.over` method::
+OVER clause, using the :meth:`.FunctionElement.over` method:
+
+.. sourcecode:: pycon
 
     >>> s = select([
     ...         users.c.id,
@@ -1445,7 +1485,9 @@ OVER clause, using the :meth:`.FunctionElement.over` method::
 
 :meth:`.FunctionElement.over` also supports range specification using
 either the :paramref:`.expression.over.rows` or
-:paramref:`.expression.over.range` parameters::
+:paramref:`.expression.over.range` parameters:
+
+.. sourcecode:: pycon
 
     >>> s = select([
     ...         users.c.id,
@@ -1758,7 +1800,9 @@ behavior around, allowing an expression such as:
 Where above, the right side of the JOIN contains a subquery that refers not
 just to the "books" table but also the "people" table, correlating
 to the left side of the JOIN.   SQLAlchemy Core supports a statement
-like the above using the :meth:`.Select.lateral` method as follows::
+like the above using the :meth:`.Select.lateral` method as follows:
+
+.. sourcecode:: pycon
 
     >>> from sqlalchemy import table, column, select, true
     >>> people = table('people', column('people_id'), column('age'), column('name'))
@@ -2024,7 +2068,9 @@ which updates one table at a time, but can reference additional tables in an add
 "FROM" clause that can then be referenced in the WHERE clause directly.   On MySQL,
 multiple tables can be embedded into a single UPDATE statement separated by a comma.
 The SQLAlchemy :func:`.update` construct supports both of these modes
-implicitly, by specifying multiple tables in the WHERE clause::
+implicitly, by specifying multiple tables in the WHERE clause:
+
+.. sourcecode:: python
 
     stmt = users.update().\
             values(name='ed wood').\
@@ -2039,7 +2085,9 @@ The resulting SQL from the above statement would render as::
     addresses.email_address LIKE :email_address_1 || '%'
 
 When using MySQL, columns from each table can be assigned to in the
-SET clause directly, using the dictionary form passed to :meth:`.Update.values`::
+SET clause directly, using the dictionary form passed to :meth:`.Update.values`:
+
+.. sourcecode:: python
 
     stmt = users.update().\
             values({
@@ -2095,7 +2143,9 @@ is evaluated, the values embedded in the row are changing.
 To suit this specific use case, the
 :paramref:`~sqlalchemy.sql.expression.update.preserve_parameter_order`
 flag may be used.  When using this flag, we supply a **Python list of 2-tuples**
-as the argument to the :meth:`.Update.values` method::
+as the argument to the :meth:`.Update.values` method:
+
+.. sourcecode:: python
 
     stmt = some_table.update(preserve_parameter_order=True).\
         values([(some_table.c.y, 20), (some_table.c.x, some_table.c.y + 10)])
@@ -2147,7 +2197,9 @@ statements that refer to multiple tables within the WHERE criteria.   For PG
 and MySQL, this is the "DELETE USING" syntax, and for SQL Server, it's a
 "DELETE FROM" that refers to more than one table.  The SQLAlchemy
 :func:`.delete` construct supports both of these modes
-implicitly, by specifying multiple tables in the WHERE clause::
+implicitly, by specifying multiple tables in the WHERE clause:
+
+.. sourcecode:: python
 
     stmt = users.delete().\
             where(users.c.id == addresses.c.id).\

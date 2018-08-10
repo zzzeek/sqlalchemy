@@ -21,7 +21,9 @@ Simplifying Scalar Collections
 
 Consider a many-to-many mapping between two classes, ``User`` and ``Keyword``.
 Each ``User`` can have any number of ``Keyword`` objects, and vice-versa
-(the many-to-many pattern is described at :ref:`relationships_many_to_many`)::
+(the many-to-many pattern is described at :ref:`relationships_many_to_many`):
+
+.. sourcecode:: python
 
     from sqlalchemy import Column, Integer, String, ForeignKey, Table
     from sqlalchemy.orm import relationship
@@ -55,7 +57,9 @@ Each ``User`` can have any number of ``Keyword`` objects, and vice-versa
 
 Reading and manipulating the collection of "keyword" strings associated
 with ``User`` requires traversal from each collection element to the ``.keyword``
-attribute, which can be awkward::
+attribute, which can be awkward:
+
+.. sourcecode:: pycon
 
     >>> user = User('jek')
     >>> user.kw.append(Keyword('cheese inspector'))
@@ -68,7 +72,9 @@ attribute, which can be awkward::
 
 The ``association_proxy`` is applied to the ``User`` class to produce
 a "view" of the ``kw`` relationship, which only exposes the string
-value of ``.keyword`` associated with each ``Keyword`` object::
+value of ``.keyword`` associated with each ``Keyword`` object:
+
+.. sourcecode:: python
 
     from sqlalchemy.ext.associationproxy import association_proxy
 
@@ -86,7 +92,9 @@ value of ``.keyword`` associated with each ``Keyword`` object::
 
 We can now reference the ``.keywords`` collection as a listing of strings,
 which is both readable and writable.  New ``Keyword`` objects are created
-for us transparently::
+for us transparently:
+
+.. sourcecode:: pycon
 
     >>> user = User('jek')
     >>> user.keywords.append('cheese inspector')
@@ -119,11 +127,15 @@ Creation of New Values
 When a list append() event (or set add(), dictionary __setitem__(), or scalar
 assignment event) is intercepted by the association proxy, it instantiates a
 new instance of the "intermediary" object using its constructor, passing as a
-single argument the given value. In our example above, an operation like::
+single argument the given value. In our example above, an operation like:
+
+.. sourcecode:: python
 
     user.keywords.append('cheese inspector')
 
-Is translated by the association proxy into the operation::
+Is translated by the association proxy into the operation:
+
+.. sourcecode:: python
 
     user.kw.append(Keyword('cheese inspector'))
 
@@ -132,7 +144,9 @@ to accept a single positional argument, ``keyword``.   For those cases where a
 single-argument constructor isn't feasible, the association proxy's creational
 behavior can be customized using the ``creator`` argument, which references a
 callable (i.e. Python function) that will produce a new object instance given the
-singular argument.  Below we illustrate this using a lambda as is typical::
+singular argument.  Below we illustrate this using a lambda as is typical:
+
+.. sourcecode:: python
 
     class User(Base):
         # ...
@@ -164,7 +178,9 @@ we occasionally want to access, but not in the usual case.   We
 create an association proxy on the ``User`` class called
 ``keywords``, which will bridge the gap from the ``user_keywords``
 collection of ``User`` to the ``.keyword`` attribute present on each
-``UserKeyword``::
+``UserKeyword``:
+
+.. sourcecode:: python
 
     from sqlalchemy import Column, Integer, String, ForeignKey
     from sqlalchemy.orm import relationship, backref
@@ -219,7 +235,9 @@ collection of ``User`` to the ``.keyword`` attribute present on each
 
 With the above configuration, we can operate upon the ``.keywords``
 collection of each ``User`` object, and the usage of ``UserKeyword``
-is concealed::
+is concealed:
+
+.. sourcecode:: pycon
 
     >>> user = User('log')
     >>> for kw in (Keyword('new_from_blammo'), Keyword('its_big')):
@@ -228,7 +246,9 @@ is concealed::
     >>> print(user.keywords)
     [Keyword('new_from_blammo'), Keyword('its_big')]
 
-Where above, each ``.keywords.append()`` operation is equivalent to::
+Where above, each ``.keywords.append()`` operation is equivalent to:
+
+.. sourcecode:: pycon
 
     >>> user.user_keywords.append(UserKeyword(Keyword('its_heavy')))
 
@@ -243,12 +263,16 @@ The ``special_key`` argument above is left at its default value of ``None``.
 For those cases where we do want ``special_key`` to have a value, we
 create the ``UserKeyword`` object explicitly.  Below we assign all three
 attributes, where the assignment of ``.user`` has the effect of the ``UserKeyword``
-being appended to the ``User.user_keywords`` collection::
+being appended to the ``User.user_keywords`` collection:
+
+.. sourcecode:: pycon
 
     >>> UserKeyword(Keyword('its_wood'), user, special_key='my special key')
 
 The association proxy returns to us a collection of ``Keyword`` objects represented
-by all these operations::
+by all these operations:
+
+.. sourcecode:: pycon
 
     >>> user.keywords
     [Keyword('new_from_blammo'), Keyword('its_big'), Keyword('its_heavy'), Keyword('its_wood')]
@@ -274,7 +298,9 @@ Below, we modify our ``UserKeyword`` example such that the ``User.user_keywords`
 collection will now be mapped using a dictionary, where the ``UserKeyword.special_key``
 argument will be used as the key for the dictionary.   We then apply a ``creator``
 argument to the ``User.keywords`` proxy so that these values are assigned appropriately
-when new elements are added to the dictionary::
+when new elements are added to the dictionary:
+
+.. sourcecode:: python
 
     from sqlalchemy import Column, Integer, String, ForeignKey
     from sqlalchemy.orm import relationship, backref
@@ -328,7 +354,9 @@ when new elements are added to the dictionary::
             return 'Keyword(%s)' % repr(self.keyword)
 
 We illustrate the ``.keywords`` collection as a dictionary, mapping the
-``UserKeyword.string_key`` value to ``Keyword`` objects::
+``UserKeyword.string_key`` value to ``Keyword`` objects:
+
+.. sourcecode:: pycon
 
     >>> user = User('log')
 
@@ -350,7 +378,9 @@ a ``keywords`` dictionary that deals strictly with the string value
 of ``special_key`` mapped to the string ``keyword``.  Both the ``UserKeyword``
 and ``Keyword`` classes are entirely concealed.  This is achieved by building
 an association proxy on ``User`` that refers to an association proxy
-present on ``UserKeyword``::
+present on ``UserKeyword``:
+
+.. sourcecode:: python
 
     from sqlalchemy import Column, Integer, String, ForeignKey
     from sqlalchemy.orm import relationship, backref
@@ -412,7 +442,9 @@ present on ``UserKeyword``::
 ``UserKeyword`` and ``Keyword`` objects are created and removed for us
 transparently using the association proxy. In the example below, we illustrate
 usage of the assignment operator, also appropriately handled by the
-association proxy, to apply a dictionary value to the collection at once::
+association proxy, to apply a dictionary value to the collection at once:
+
+.. sourcecode:: pycon
 
     >>> user = User('log')
     >>> user.keywords = {
@@ -448,7 +480,9 @@ The :class:`.AssociationProxy` features simple SQL construction capabilities
 which relate down to the underlying :func:`.relationship` in use as well
 as the target attribute.  For example, the :meth:`.RelationshipProperty.Comparator.any`
 and :meth:`.RelationshipProperty.Comparator.has` operations are available, and will produce
-a "nested" EXISTS clause, such as in our basic association object example::
+a "nested" EXISTS clause, such as in our basic association object example:
+
+.. sourcecode:: pycon
 
     >>> print(session.query(User).filter(User.keywords.any(keyword='jek')))
     SELECT user.id AS user_id, user.name AS user_name
@@ -459,7 +493,9 @@ a "nested" EXISTS clause, such as in our basic association object example::
     FROM keyword
     WHERE keyword.id = user_keyword.keyword_id AND keyword.keyword = :keyword_1)))
 
-For a proxy to a scalar attribute, ``__eq__()`` is supported::
+For a proxy to a scalar attribute, ``__eq__()`` is supported:
+
+.. sourcecode:: pycon
 
     >>> print(session.query(UserKeyword).filter(UserKeyword.keyword == 'jek'))
     SELECT user_keyword.*
@@ -468,7 +504,9 @@ For a proxy to a scalar attribute, ``__eq__()`` is supported::
         FROM keyword
         WHERE keyword.id = user_keyword.keyword_id AND keyword.keyword = :keyword_1)
 
-and ``.contains()`` is available for a proxy to a scalar collection::
+and ``.contains()`` is available for a proxy to a scalar collection:
+
+.. sourcecode:: pycon
 
     >>> print(session.query(User).filter(User.keywords.contains('jek')))
     SELECT user.*
@@ -480,7 +518,9 @@ and ``.contains()`` is available for a proxy to a scalar collection::
         AND keyword.keyword = :keyword_1)
 
 :class:`.AssociationProxy` can be used with :meth:`.Query.join` somewhat manually
-using the :attr:`~.AssociationProxy.attr` attribute in a star-args context::
+using the :attr:`~.AssociationProxy.attr` attribute in a star-args context:
+
+.. sourcecode:: python
 
     q = session.query(User).join(*User.keywords.attr)
 
@@ -489,7 +529,9 @@ using the :attr:`~.AssociationProxy.attr` attribute in a star-args context::
 
 :attr:`~.AssociationProxy.attr` is composed of :attr:`.AssociationProxy.local_attr` and :attr:`.AssociationProxy.remote_attr`,
 which are just synonyms for the actual proxied attributes, and can also
-be used for querying::
+be used for querying:
+
+.. sourcecode:: python
 
     uka = aliased(UserKeyword)
     ka = aliased(Keyword)

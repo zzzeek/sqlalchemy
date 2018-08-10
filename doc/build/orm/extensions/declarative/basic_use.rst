@@ -18,7 +18,9 @@ possible, regular SQLAlchemy schema and ORM constructs are
 used directly, so that configuration between "classical" ORM
 usage and declarative remain highly similar.
 
-As a simple example::
+As a simple example:
+
+.. sourcecode:: python
 
     from sqlalchemy import Column, Integer, String
     from sqlalchemy.ext.declarative import declarative_base
@@ -36,7 +38,9 @@ completed, a new :class:`.Table` and :func:`.mapper` will have been generated.
 
 The resulting table and mapper are accessible via
 ``__table__`` and ``__mapper__`` attributes on the
-``SomeClass`` class::
+``SomeClass`` class:
+
+.. sourcecode:: python
 
     # access the mapped Table
     SomeClass.__table__
@@ -54,7 +58,9 @@ assigned.
 To name columns explicitly with a name distinct from their mapped attribute,
 just give the column a name.  Below, column "some_table_id" is mapped to the
 "id" attribute of `SomeClass`, but in SQL will be represented as
-"some_table_id"::
+"some_table_id":
+
+.. sourcecode:: python
 
     class SomeClass(Base):
         __tablename__ = 'some_table'
@@ -62,7 +68,9 @@ just give the column a name.  Below, column "some_table_id" is mapped to the
 
 Attributes may be added to the class after its construction, and they will be
 added to the underlying :class:`.Table` and
-:func:`.mapper` definitions as appropriate::
+:func:`.mapper` definitions as appropriate:
+
+.. sourcecode:: python
 
     SomeClass.data = Column('data', Unicode)
     SomeClass.related = relationship(RelatedInfo)
@@ -83,7 +91,9 @@ The :func:`declarative_base` base class contains a
 :class:`.Table` objects are collected. This object is
 intended to be accessed directly for
 :class:`.MetaData`-specific operations. Such as, to issue
-CREATE statements for all tables::
+CREATE statements for all tables:
+
+.. sourcecode:: python
 
     engine = create_engine('sqlite://')
     Base.metadata.create_all(engine)
@@ -92,7 +102,9 @@ CREATE statements for all tables::
 :class:`.MetaData` object, which allows a
 declarative setup to be associated with an already
 existing traditional collection of :class:`~sqlalchemy.schema.Table`
-objects::
+objects:
+
+.. sourcecode:: python
 
     mymetadata = MetaData()
     Base = declarative_base(metadata=mymetadata)
@@ -103,7 +115,9 @@ Class Constructor
 
 As a convenience feature, the :func:`declarative_base` sets a default
 constructor on classes which takes keyword arguments, and assigns them
-to the named attributes::
+to the named attributes:
+
+.. sourcecode:: python
 
     e = Engineer(primary_language='python')
 
@@ -115,7 +129,9 @@ when it creates the mapping to the declared table.   The options
 for :func:`~.orm.mapper` are passed directly through via the
 ``__mapper_args__`` class attribute.  As always, arguments which reference
 locally mapped columns can reference them directly from within the
-class declaration::
+class declaration:
+
+.. sourcecode:: python
 
     from datetime import datetime
 

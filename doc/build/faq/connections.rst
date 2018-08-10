@@ -25,13 +25,17 @@ How do I pass custom connect arguments to my database API?
 ----------------------------------------------------------
 
 The :func:`.create_engine` call accepts additional arguments either
-directly via the ``connect_args`` keyword argument::
+directly via the ``connect_args`` keyword argument:
+
+.. sourcecode:: python
 
     e = create_engine("mysql://scott:tiger@localhost/test",
                         connect_args={"encoding": "utf8"})
 
 Or for basic string and integer arguments, they can usually be specified
-in the query string of the URL::
+in the query string of the URL:
+
+.. sourcecode:: python
 
     e = create_engine("mysql://scott:tiger@localhost/test?encoding=utf8")
 
@@ -170,7 +174,9 @@ I'm on MyISAM - how do I turn it off?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The behavior of the connection pool's connection return behavior can be
-configured using ``reset_on_return``::
+configured using ``reset_on_return``:
+
+.. sourcecode:: python
 
     from sqlalchemy import create_engine
     from sqlalchemy.pool import QueuePool
@@ -182,7 +188,9 @@ I'm on SQL Server - how do I turn those ROLLBACKs into COMMITs?
 
 ``reset_on_return`` accepts the values ``commit``, ``rollback`` in addition
 to ``True``, ``False``, and ``None``.   Setting to ``commit`` will cause
-a COMMIT as any connection is returned to the pool::
+a COMMIT as any connection is returned to the pool:
+
+.. sourcecode:: python
 
     engine = create_engine('mssql://scott:tiger@mydsn', pool=QueuePool(reset_on_return='commit'))
 
@@ -257,7 +265,9 @@ are three general approaches to this:
 
 3. An event handler can be applied to the connection pool that tests for connections
    being shared across process boundaries, and invalidates them.  This looks like
-   the following::
+   the following:
+
+    .. sourcecode:: python
 
         import os
         import warnings
@@ -294,7 +304,9 @@ are three general approaches to this:
                         (connection_record.info['pid'], pid)
                     )
 
-   These events are applied to an :class:`.Engine` as soon as its created::
+   These events are applied to an :class:`.Engine` as soon as its created:
+
+    .. sourcecode:: python
 
         engine = create_engine("...")
 

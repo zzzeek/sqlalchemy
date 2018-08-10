@@ -10,7 +10,9 @@ PostgreSQL Data Types
 
 As with all SQLAlchemy dialects, all UPPERCASE types that are known to be
 valid with PostgreSQL are importable from the top level dialect, whether
-they originate from :mod:`sqlalchemy.types` or from the local dialect::
+they originate from :mod:`sqlalchemy.types` or from the local dialect:
+
+.. sourcecode:: python
 
     from sqlalchemy.dialects.postgresql import \
         ARRAY, BIGINT, BIT, BOOLEAN, BYTEA, CHAR, CIDR, DATE, \
@@ -163,7 +165,9 @@ SQLAlchemy supports PostgreSQL EXCLUDE constraints via the
 .. autoclass:: ExcludeConstraint
    :members: __init__
 
-For example::
+For example:
+
+.. sourcecode:: python
 
   from sqlalchemy.dialects.postgresql import ExcludeConstraint, TSRANGE
 

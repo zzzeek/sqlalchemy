@@ -12,7 +12,9 @@ of how to use this object, see :ref:`ormtutorial_toplevel`.
 The Query Object
 ================
 
-:class:`~.Query` is produced in terms of a given :class:`~.Session`, using the :meth:`~.Session.query` method::
+:class:`~.Query` is produced in terms of a given :class:`~.Session`, using the :meth:`~.Session.query` method:
+
+.. sourcecode:: python
 
     q = session.query(SomeMappedClass)
 

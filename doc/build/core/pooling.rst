@@ -33,7 +33,9 @@ You're already done.
 The most common :class:`.QueuePool` tuning parameters can be passed
 directly to :func:`~sqlalchemy.create_engine` as keyword arguments:
 ``pool_size``, ``max_overflow``, ``pool_recycle`` and
-``pool_timeout``.  For example::
+``pool_timeout``.  For example:
+
+.. sourcecode:: python
 
   engine = create_engine('postgresql://me@localhost/mydb',
                          pool_size=20, max_overflow=0)
@@ -65,12 +67,16 @@ The usual way to use a different kind of pool with :func:`.create_engine`
 is to use the ``poolclass`` argument.   This argument accepts a class
 imported from the ``sqlalchemy.pool`` module, and handles the details
 of building the pool for you.   Common options include specifying
-:class:`.QueuePool` with SQLite::
+:class:`.QueuePool` with SQLite:
+
+.. sourcecode:: python
 
     from sqlalchemy.pool import QueuePool
     engine = create_engine('sqlite:///file.db', poolclass=QueuePool)
 
-Disabling pooling using :class:`.NullPool`::
+Disabling pooling using :class:`.NullPool`:
+
+.. sourcecode:: python
 
     from sqlalchemy.pool import NullPool
     engine = create_engine(
@@ -83,7 +89,9 @@ Using a Custom Connection Function
 All :class:`.Pool` classes accept an argument ``creator`` which is
 a callable that creates a new connection.  :func:`.create_engine`
 accepts this function to pass onto the pool via an argument of
-the same name::
+the same name:
+
+.. sourcecode:: python
 
     import sqlalchemy.pool as pool
     import psycopg2
@@ -106,7 +114,9 @@ Constructing a Pool
 
 To use a :class:`.Pool` by itself, the ``creator`` function is
 the only argument that's required and is passed first, followed
-by any additional options::
+by any additional options:
+
+.. sourcecode:: python
 
     import sqlalchemy.pool as pool
     import psycopg2
@@ -119,7 +129,9 @@ by any additional options::
 
 DBAPI connections can then be procured from the pool using the :meth:`.Pool.connect`
 function.  The return value of this method is a DBAPI connection that's contained
-within a transparent proxy::
+within a transparent proxy:
+
+.. sourcecode:: python
 
     # get a connection
     conn = mypool.connect()
@@ -130,7 +142,9 @@ within a transparent proxy::
 
 The purpose of the transparent proxy is to intercept the ``close()`` call,
 such that instead of the DBAPI connection being closed, it is returned to the
-pool::
+pool:
+
+.. sourcecode:: python
 
     # "close" the connection.  Returns
     # it to the pool.
@@ -150,7 +164,9 @@ are removed.   This behavior can be disabled using the ``reset_on_return``
 option of :class:`.Pool`.
 
 A particular pre-created :class:`.Pool` can be shared with one or more
-engines by passing it to the ``pool`` argument of :func:`.create_engine`::
+engines by passing it to the ``pool`` argument of :func:`.create_engine`:
+
+.. sourcecode:: python
 
     e = create_engine('postgresql://', pool=mypool)
 
@@ -202,7 +218,9 @@ the operation, or retry the whole transaction again.
 
 Pessimistic testing of connections upon checkout is achievable by
 using the :paramref:`.Pool.pre_ping` argument, available from :func:`.create_engine`
-via the :paramref:`.create_engine.pool_pre_ping` argument::
+via the :paramref:`.create_engine.pool_pre_ping` argument:
+
+.. sourcecode:: python
 
     engine = create_engine("mysql+pymysql://user:pw@host/db", pool_pre_ping=True)
 
@@ -236,7 +254,9 @@ approach historically has been performed manually using
 the :meth:`.ConnectionEvents.engine_connect` engine event.
 The most common recipe for this is below, for reference
 purposes in case an application is already using such a recipe, or special
-behaviors are needed::
+behaviors are needed:
+
+.. sourcecode:: python
 
     from sqlalchemy import exc
     from sqlalchemy import event
@@ -305,7 +325,9 @@ exception is raised that corresponds to a "disconnect" event, the connection
 is invalidated. The :class:`.Connection` then calls the :meth:`.Pool.recreate`
 method, effectively invalidating all connections not currently checked out so
 that they are replaced with new ones upon next checkout.  This flow is
-illustrated by the code example below::
+illustrated by the code example below:
+
+.. sourcecode:: python
 
     from sqlalchemy import create_engine, exc
     e = create_engine(...)
@@ -343,7 +365,9 @@ An additional setting that can augment the "optimistic" approach is to set the
 pool recycle parameter.   This parameter prevents the pool from using a particular
 connection that has passed a certain age, and is appropriate for database backends
 such as MySQL that automatically close connections that have been stale after a particular
-period of time::
+period of time:
+
+.. sourcecode:: python
 
     from sqlalchemy import create_engine
     e = create_engine("mysql://scott:tiger@localhost/test", pool_recycle=3600)
@@ -448,7 +472,9 @@ process, or upon an existing :class:`.Engine`, call :meth:`.Engine.dispose`
 before the child process uses any connections.  This will remove all existing
 connections from the pool so that it makes all new ones.  Below is
 a simple version using ``multiprocessing.Process``, but this idea
-should be adapted to the style of forking in use::
+should be adapted to the style of forking in use:
+
+.. sourcecode:: python
 
     eng = create_engine("...")
 
@@ -462,7 +488,9 @@ should be adapted to the style of forking in use::
 
 The next approach is to instrument the :class:`.Pool` itself with events
 so that connections are automatically invalidated in the subprocess.
-This is a little more magical but probably more foolproof::
+This is a little more magical but probably more foolproof:
+
+.. sourcecode:: python
 
     from sqlalchemy import event
     from sqlalchemy import exc

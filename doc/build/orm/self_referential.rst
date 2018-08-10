@@ -15,7 +15,9 @@ modified preorder has little advantage over an application which can fully
 load subtrees into the application space.
 
 In this example, we'll work with a single mapped
-class called ``Node``, representing a tree structure::
+class called ``Node``, representing a tree structure:
+
+.. sourcecode:: python
 
     class Node(Base):
         __tablename__ = 'node'
@@ -49,7 +51,9 @@ is one-to-many or many-to-one, is assumed by default to
 be one-to-many.   To establish the relationship as many-to-one,
 an extra directive is added known as :paramref:`~.relationship.remote_side`, which
 is a :class:`.Column` or collection of :class:`.Column` objects
-that indicate those which should be considered to be "remote"::
+that indicate those which should be considered to be "remote":
+
+.. sourcecode:: python
 
     class Node(Base):
         __tablename__ = 'node'
@@ -64,7 +68,9 @@ of the ``parent`` :func:`.relationship`, thus establishing
 then behaves as a many-to-one.
 
 As always, both directions can be combined into a bidirectional
-relationship using the :func:`.backref` function::
+relationship using the :func:`.backref` function:
+
+.. sourcecode:: python
 
     class Node(Base):
         __tablename__ = 'node'
@@ -88,7 +94,9 @@ case where a particular column is present on both the "local" and
 class below; using a composite primary key, the ``account_id``
 column refers to itself, to indicate sub folders which are within
 the same account as that of the parent; while ``folder_id`` refers
-to a specific folder within that account::
+to a specific folder within that account:
+
+.. sourcecode:: python
 
     class Folder(Base):
         __tablename__ = 'folder'
@@ -121,7 +129,9 @@ the "remote" side.
 Self-Referential Query Strategies
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Querying of self-referential structures works like any other query::
+Querying of self-referential structures works like any other query:
+
+.. sourcecode:: python
 
     # get all nodes named 'child2'
     session.query(Node).filter(Node.data=='child2')
@@ -203,7 +213,9 @@ To add criterion to multiple points along a longer join, add
     ['subchild1', 'child2', 'root']
 
 :meth:`.Query.reset_joinpoint` will also remove the "aliasing" from filtering
-calls::
+calls:
+
+.. sourcecode:: python
 
     session.query(Node).\
             join(Node.children, aliased=True).\

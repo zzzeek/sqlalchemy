@@ -10,7 +10,9 @@ provides a single attribute which represents the group of columns using the
 class you provide.
 
 A simple example represents pairs of columns as a ``Point`` object.
-``Point`` represents such a pair as ``.x`` and ``.y``::
+``Point`` represents such a pair as ``.x`` and ``.y``:
+
+.. sourcecode:: python
 
     class Point(object):
         def __init__(self, x, y):
@@ -41,7 +43,9 @@ the equality of two instances.
 We will create a mapping to a table ``vertices``, which represents two points
 as ``x1/y1`` and ``x2/y2``. These are created normally as :class:`.Column`
 objects. Then, the :func:`.composite` function is used to assign new
-attributes that will represent sets of columns via the ``Point`` class::
+attributes that will represent sets of columns via the ``Point`` class:
+
+.. sourcecode:: python
 
     from sqlalchemy import Column, Integer
     from sqlalchemy.orm import composite
@@ -62,7 +66,9 @@ attributes that will represent sets of columns via the ``Point`` class::
         end = composite(Point, x2, y2)
 
 A classical mapping above would define each :func:`.composite`
-against the existing table::
+against the existing table:
+
+.. sourcecode:: python
 
     mapper(Vertex, vertices_table, properties={
         'start':composite(Point, vertices_table.c.x1, vertices_table.c.y1),
@@ -121,7 +127,9 @@ the ``comparator_factory`` argument to :func:`.composite`, where we
 specify a custom :class:`.CompositeProperty.Comparator` class
 to define existing or new operations.
 Below we illustrate the "greater than" operator, implementing
-the same expression that the base "greater than" does::
+the same expression that the base "greater than" does:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm.properties import CompositeProperty
     from sqlalchemy import sql

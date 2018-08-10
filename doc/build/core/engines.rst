@@ -19,7 +19,9 @@ which together interpret the DBAPI's module functions as well as the behavior
 of the database.
 
 Creating an engine is just a matter of issuing a single call,
-:func:`.create_engine()`::
+:func:`.create_engine()`:
+
+.. sourcecode:: python
 
     from sqlalchemy import create_engine
     engine = create_engine('postgresql://scott:tiger@localhost:5432/mydatabase')
@@ -79,7 +81,9 @@ PostgreSQL
 ----------
 
 The PostgreSQL dialect uses psycopg2 as the default DBAPI.  pg8000 is
-also available as a pure-Python substitute::
+also available as a pure-Python substitute:
+
+.. sourcecode:: python
 
     # default
     engine = create_engine('postgresql://scott:tiger@localhost/mydatabase')
@@ -96,7 +100,9 @@ MySQL
 -----
 
 The MySQL dialect uses mysql-python as the default DBAPI.  There are many
-MySQL DBAPIs available, including MySQL-connector-python and OurSQL::
+MySQL DBAPIs available, including MySQL-connector-python and OurSQL:
+
+.. sourcecode:: python
 
     # default
     engine = create_engine('mysql://scott:tiger@localhost/foo')
@@ -115,7 +121,9 @@ More notes on connecting to MySQL at :ref:`mysql_toplevel`.
 Oracle
 ------
 
-The Oracle dialect uses cx_oracle as the default DBAPI::
+The Oracle dialect uses cx_oracle as the default DBAPI:
+
+.. sourcecode:: python
 
     engine = create_engine('oracle://scott:tiger@127.0.0.1:1521/sidname')
 
@@ -127,7 +135,9 @@ Microsoft SQL Server
 --------------------
 
 The SQL Server dialect uses pyodbc as the default DBAPI.  pymssql is
-also available::
+also available:
+
+.. sourcecode:: python
 
     # pyodbc
     engine = create_engine('mssql+pyodbc://scott:tiger@mydsn')
@@ -145,13 +155,17 @@ module ``sqlite3`` by default.
 
 As SQLite connects to local files, the URL format is slightly different.
 The "file" portion of the URL is the filename of the database.
-For a relative file path, this requires three slashes::
+For a relative file path, this requires three slashes:
+
+.. sourcecode:: python
 
     # sqlite://<nohostname>/<path>
     # where <path> is relative:
     engine = create_engine('sqlite:///foo.db')
 
-And for an absolute file path, the three slashes are followed by the absolute path::
+And for an absolute file path, the three slashes are followed by the absolute path:
+
+.. sourcecode:: python
 
     #Unix/Mac - 4 initial slashes in total
     engine = create_engine('sqlite:////absolute/path/to/foo.db')
@@ -160,7 +174,9 @@ And for an absolute file path, the three slashes are followed by the absolute pa
     #Windows alternative using raw string
     engine = create_engine(r'sqlite:///C:\path\to\foo.db')
 
-To use a SQLite ``:memory:`` database, specify an empty URL::
+To use a SQLite ``:memory:`` database, specify an empty URL:
+
+.. sourcecode:: python
 
     engine = create_engine('sqlite://')
 
@@ -267,7 +283,9 @@ namespace of SA loggers that can be turned on is as follows:
 * ``sqlalchemy.pool`` - controls connection pool logging.  set to ``logging.INFO`` or lower to log connection pool checkouts/checkins.
 * ``sqlalchemy.orm`` - controls logging of various ORM functions.  set to ``logging.INFO`` for information on mapper configurations.
 
-For example, to log SQL queries using Python logging instead of the ``echo=True`` flag::
+For example, to log SQL queries using Python logging instead of the ``echo=True`` flag:
+
+.. sourcecode:: python
 
     import logging
 

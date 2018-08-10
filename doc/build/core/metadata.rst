@@ -14,7 +14,9 @@ This section discusses the fundamental :class:`.Table`, :class:`.Column`
 and :class:`.MetaData` objects.
 
 A collection of metadata entities is stored in an object aptly named
-:class:`~sqlalchemy.schema.MetaData`::
+:class:`~sqlalchemy.schema.MetaData`:
+
+.. sourcecode:: python
 
     from sqlalchemy import *
 
@@ -27,7 +29,9 @@ To represent a table, use the :class:`~sqlalchemy.schema.Table` class. Its two
 primary arguments are the table name, then the
 :class:`~sqlalchemy.schema.MetaData` object which it will be associated with.
 The remaining positional arguments are mostly
-:class:`~sqlalchemy.schema.Column` objects describing each column::
+:class:`~sqlalchemy.schema.Column` objects describing each column:
+
+.. sourcecode:: python
 
     user = Table('user', metadata,
         Column('user_id', Integer, primary_key=True),
@@ -55,7 +59,9 @@ constructs we've associated with it. It supports a few methods of accessing
 these table objects, such as the ``sorted_tables`` accessor which returns a
 list of each :class:`~sqlalchemy.schema.Table` object in order of foreign key
 dependency (that is, each table is preceded by all tables which it
-references)::
+references):
+
+.. sourcecode:: pycon
 
     >>> for t in metadata.sorted_tables:
     ...    print(t.name)
@@ -69,7 +75,9 @@ explicitly declared, and these objects are typically accessed directly as
 module-level variables in an application. Once a
 :class:`~sqlalchemy.schema.Table` has been defined, it has a full set of
 accessors which allow inspection of its properties. Given the following
-:class:`~sqlalchemy.schema.Table` definition::
+:class:`~sqlalchemy.schema.Table` definition:
+
+.. sourcecode:: python
 
     employees = Table('employees', metadata,
         Column('employee_id', Integer, primary_key=True),
@@ -80,7 +88,9 @@ accessors which allow inspection of its properties. Given the following
 Note the :class:`~sqlalchemy.schema.ForeignKey` object used in this table -
 this construct defines a reference to a remote table, and is fully described
 in :ref:`metadata_foreignkeys`. Methods of accessing information about this
-table include::
+table include:
+
+.. sourcecode:: python
 
     # access the column "EMPLOYEE_ID":
     employees.columns.employee_id
@@ -223,7 +233,9 @@ default issue the CREATE or DROP regardless of the table being present:
     {}
 
 To enable the "check first for the table existing" logic, add the
-``checkfirst=True`` argument to ``create()`` or ``drop()``::
+``checkfirst=True`` argument to ``create()`` or ``drop()``:
+
+.. sourcecode:: python
 
     employees.create(engine, checkfirst=True)
     employees.drop(engine, checkfirst=False)
@@ -260,7 +272,9 @@ Specifying the Schema Name
 
 Some databases support the concept of multiple schemas. A
 :class:`~sqlalchemy.schema.Table` can reference this by specifying the
-``schema`` keyword argument::
+``schema`` keyword argument:
+
+.. sourcecode:: python
 
     financial_info = Table('financial_info', meta,
         Column('id', Integer, primary_key=True),
@@ -278,7 +292,9 @@ objects can specify references to columns in this table using the form
 
 The ``schema`` argument should be used for any name qualifiers required,
 including Oracle's "owner" attribute and similar. It also can accommodate a
-dotted name for longer schemes::
+dotted name for longer schemes:
+
+.. sourcecode:: python
 
     schema="dbo.scott"
 
@@ -288,7 +304,9 @@ Backend-Specific Options
 :class:`~sqlalchemy.schema.Table` supports database-specific options. For
 example, MySQL has different table backend types, including "MyISAM" and
 "InnoDB". This can be expressed with :class:`~sqlalchemy.schema.Table` using
-``mysql_engine``::
+``mysql_engine``:
+
+.. sourcecode:: python
 
     addresses = Table('engine_email_addresses', meta,
         Column('address_id', Integer, primary_key=True),

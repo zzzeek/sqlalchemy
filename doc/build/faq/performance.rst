@@ -44,7 +44,9 @@ of queries as more depth is added (i.e. ``r + r*r2 + r*r2*r3`` ...)
 
 For more long-term profiling of queries, or to implement an application-side
 "slow query" monitor, events can be used to intercept cursor executions,
-using a recipe like the following::
+using a recipe like the following:
+
+.. sourcecode:: python
 
     from sqlalchemy import event
     from sqlalchemy.engine import Engine
@@ -86,7 +88,9 @@ individual bottlenecks, depending on specifics.
 
 For that you need to use the
 `Python Profiling Module <https://docs.python.org/2/library/profile.html>`_.
-Below is a simple recipe which works profiling into a context manager::
+Below is a simple recipe which works profiling into a context manager:
+
+.. sourcecode:: python
 
     import cProfile
     import StringIO
@@ -106,7 +110,9 @@ Below is a simple recipe which works profiling into a context manager::
         # ps.print_callers()
         print(s.getvalue())
 
-To profile a section of code::
+To profile a section of code:
+
+.. sourcecode:: python
 
     with profiled():
         Session.query(FooClass).filter(FooClass.somevalue==8).all()
@@ -190,7 +196,9 @@ and similar::
 In some cases, a backend might be doing type-level processing that isn't
 needed.   More specifically, seeing calls within the type API that are slow
 are better indicators - below is what it looks like when we use a type like
-this::
+this:
+
+.. sourcecode:: python
 
     from sqlalchemy import TypeDecorator
     import time
@@ -239,15 +247,21 @@ The ORM's slowness in turning rows into ORM-mapped objects is a product
 of the complexity of this operation combined with the overhead of cPython.
 Common strategies to mitigate this include:
 
-* fetch individual columns instead of full entities, that is::
+* fetch individual columns instead of full entities, that is:
 
-      session.query(User.id, User.name)
+    .. sourcecode:: python
 
-  instead of::
+        session.query(User.id, User.name)
 
-      session.query(User)
+  instead of:
 
-* Use :class:`.Bundle` objects to organize column-based results::
+    .. sourcecode:: python
+
+        session.query(User)
+
+* Use :class:`.Bundle` objects to organize column-based results:
+
+.. sourcecode:: python
 
       u_b = Bundle('user', User.id, User.name)
       a_b = Bundle('address', Address.id, Address.email)
@@ -329,7 +343,9 @@ We can reduce the time by a factor of nearly three using recent versions of `Pyp
     SQLAlchemy Core: Total time for 100000 records 0.206904888153 secs
     sqlite3: Total time for 100000 records 0.165791988373 sec
 
-Script::
+Script:
+
+.. sourcecode:: python
 
     import time
     import sqlite3

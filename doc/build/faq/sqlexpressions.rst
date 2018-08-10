@@ -12,26 +12,35 @@ How do I render SQL expressions as strings, possibly with bound parameters inlin
 ------------------------------------------------------------------------------------
 
 The "stringification" of a SQLAlchemy statement or Query in the vast majority
-of cases is as simple as::
+of cases is as simple as:
+
+.. sourcecode:: python
 
     print(str(statement))
 
 this applies both to an ORM :class:`~.orm.query.Query` as well as any :func:`.select` or other
 statement.   Additionally, to get the statement as compiled to a
 specific dialect or engine, if the statement itself is not already
-bound to one you can pass this in to :meth:`.ClauseElement.compile`::
+bound to one you can pass this in to :meth:`.ClauseElement.compile`:
+
+.. sourcecode:: python
 
     print(statement.compile(someengine))
 
-or without an :class:`.Engine`::
+or without an :class:`.Engine`:
+
+.. sourcecode:: python
 
     from sqlalchemy.dialects import postgresql
+
     print(statement.compile(dialect=postgresql.dialect()))
 
 When given an ORM :class:`~.orm.query.Query` object, in order to get at the
 :meth:`.ClauseElement.compile`
 method we only need access the :attr:`~.orm.query.Query.statement`
-accessor first::
+accessor first:
+
+.. sourcecode:: python
 
     statement = query.statement
     print(statement.compile(someengine))
@@ -44,7 +53,9 @@ parameters is probably the most widely exploited security hole in
 modern web applications.   SQLAlchemy has limited ability to do this
 stringification in certain circumstances such as that of emitting DDL.
 In order to access this functionality one can use the ``literal_binds``
-flag, passed to ``compile_kwargs``::
+flag, passed to ``compile_kwargs``:
+
+.. sourcecode:: python
 
     from sqlalchemy.sql import table, column, select
 
@@ -61,7 +72,9 @@ stringify that either.
 
 To support inline literal rendering for types not supported, implement
 a :class:`.TypeDecorator` for the target type which includes a
-:meth:`.TypeDecorator.process_literal_param` method::
+:meth:`.TypeDecorator.process_literal_param` method:
+
+.. sourcecode:: python
 
     from sqlalchemy import TypeDecorator, Integer
 
@@ -94,13 +107,17 @@ I'm using op() to generate a custom operator and my parenthesis are not coming o
 ---------------------------------------------------------------------------------------------
 
 The :meth:`.Operators.op` method allows one to create a custom database operator
-otherwise not known by SQLAlchemy::
+otherwise not known by SQLAlchemy:
+
+.. sourcecode:: pycon
 
     >>> print(column('q').op('->')(column('p')))
     q -> p
 
 However, when using it on the right side of a compound expression, it doesn't
-generate parenthesis as we expect::
+generate parenthesis as we expect:
+
+.. sourcecode:: pycon
 
     >>> print((column('q1') + column('q2')).op('->')(column('p')))
     q1 + q2 -> p
@@ -110,14 +127,18 @@ Where above, we probably want ``(q1 + q2) -> p``.
 The solution to this case is to set the precedence of the operator, using
 the :paramref:`.Operators.op.precedence` parameter, to a high
 number, where 100 is the maximum value, and the highest number used by any
-SQLAlchemy operator is currently 15::
+SQLAlchemy operator is currently 15:
+
+.. sourcecode:: pycon
 
     >>> print((column('q1') + column('q2')).op('->', precedence=100)(column('p')))
     (q1 + q2) -> p
 
 We can also usually force parenthesization around a binary expression (e.g.
 an expression that has left/right operands and an operator) using the
-:meth:`.ColumnElement.self_group` method::
+:meth:`.ColumnElement.self_group` method:
+
+.. sourcecode:: pycon
 
     >>> print((column('q1') + column('q2')).self_group().op('->')(column('p')))
     (q1 + q2) -> p
@@ -129,7 +150,9 @@ A lot of databases barf when there are excessive parenthesis or when
 parenthesis are in unusual places they doesn't expect, so SQLAlchemy does not
 generate parenthesis based on groupings, it uses operator precedence and if the
 operator is known to be associative, so that parenthesis are generated
-minimally. Otherwise, an expression like::
+minimally. Otherwise, an expression like:
+
+.. sourcecode:: python
 
     column('a') & column('b') & column('c') & column('d')
 
@@ -139,7 +162,9 @@ would produce::
 
 which is fine but would probably annoy people (and be reported as a bug). In
 other cases, it leads to things that are more likely to confuse databases or at
-the very least readability, such as::
+the very least readability, such as:
+
+.. sourcecode:: python
 
   column('q', ARRAY(Integer, dimensions=2))[5][6]
 
@@ -156,14 +181,18 @@ For :meth:`.Operators.op`, the value of precedence defaults to zero.
 
 What if we defaulted the value of :paramref:`.Operators.op.precedence` to 100,
 e.g. the highest?  Then this expression makes more parenthesis, but is
-otherwise OK, that is, these two are equivalent::
+otherwise OK, that is, these two are equivalent:
+
+.. sourcecode:: pycon
 
     >>> print (column('q') - column('y')).op('+', precedence=100)(column('z'))
     (q - y) + z
     >>> print (column('q') - column('y')).op('+')(column('z'))
     q - y + z
 
-but these two are not::
+but these two are not:
+
+.. sourcecode:: pycon
 
     >>> print column('q') - column('y').op('+', precedence=100)(column('z'))
     q - y + z

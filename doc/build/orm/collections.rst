@@ -37,7 +37,9 @@ A key feature to enable management of a large collection is the so-called "dynam
 relationship.  This is an optional form of :func:`~sqlalchemy.orm.relationship` which
 returns a :class:`~sqlalchemy.orm.query.Query` object in place of a collection
 when accessed. :func:`~sqlalchemy.orm.query.Query.filter` criterion may be
-applied as well as limits and offsets, either explicitly or via array slices::
+applied as well as limits and offsets, either explicitly or via array slices:
+
+.. sourcecode:: python
 
     class User(Base):
         __tablename__ = 'user'
@@ -53,7 +55,9 @@ applied as well as limits and offsets, either explicitly or via array slices::
     posts = jack.posts[5:20]
 
 The dynamic relationship supports limited write operations, via the
-``append()`` and ``remove()`` methods::
+``append()`` and ``remove()`` methods:
+
+.. sourcecode:: python
 
     oldpost = jack.posts.filter(Post.headline=='old post').one()
     jack.posts.remove(oldpost)
@@ -68,7 +72,9 @@ automatically each time the collection is about to emit a
 query.
 
 To place a dynamic relationship on a backref, use the :func:`~.orm.backref`
-function in conjunction with ``lazy='dynamic'``::
+function in conjunction with ``lazy='dynamic'``:
+
+.. sourcecode:: python
 
     class Post(Base):
         __table__ = posts_table
@@ -97,7 +103,9 @@ Setting Noload, RaiseLoad
 -------------------------
 
 A "noload" relationship never loads from the database, even when
-accessed.   It is configured using ``lazy='noload'``::
+accessed.   It is configured using ``lazy='noload'``:
+
+.. sourcecode:: python
 
     class MyClass(Base):
         __tablename__ = 'some_table'
@@ -113,7 +121,9 @@ strategy is also available on a query option basis using the
 
 Alternatively, a "raise"-loaded relationship will raise an
 :exc:`~sqlalchemy.exc.InvalidRequestError` where the attribute would normally
-emit a lazy load::
+emit a lazy load:
+
+.. sourcecode:: python
 
     class MyClass(Base):
         __tablename__ = 'some_table'
@@ -144,7 +154,9 @@ Using Passive Deletes
 
 Use :paramref:`~.relationship.passive_deletes` to disable child object loading on a DELETE
 operation, in conjunction with "ON DELETE (CASCADE|SET NULL)" on your database
-to automatically cascade deletes to child objects::
+to automatically cascade deletes to child objects:
+
+.. sourcecode:: python
 
     class MyClass(Base):
         __tablename__ = 'mytable'
@@ -192,7 +204,9 @@ Customizing Collection Access
 
 Mapping a one-to-many or many-to-many relationship results in a collection of
 values accessible through an attribute on the parent instance. By default,
-this collection is a ``list``::
+this collection is a ``list``:
+
+.. sourcecode:: python
 
     class Parent(Base):
         __tablename__ = 'parent'
@@ -207,7 +221,9 @@ this collection is a ``list``::
 Collections are not limited to lists. Sets, mutable sequences and almost any
 other Python object that can act as a container can be used in place of the
 default list, by specifying the :paramref:`~.relationship.collection_class` option on
-:func:`~sqlalchemy.orm.relationship`::
+:func:`~sqlalchemy.orm.relationship`:
+
+.. sourcecode:: python
 
     class Parent(Base):
         __tablename__ = 'parent'
@@ -230,7 +246,9 @@ strategy must be available to populate the dictionary correctly.  The
 :func:`.attribute_mapped_collection` function is by far the most common way
 to achieve a simple dictionary collection.  It produces a dictionary class that will apply a particular attribute
 of the mapped class as a key.   Below we map an ``Item`` class containing
-a dictionary of ``Note`` items keyed to the ``Note.keyword`` attribute::
+a dictionary of ``Note`` items keyed to the ``Note.keyword`` attribute:
+
+.. sourcecode:: python
 
     from sqlalchemy import Column, Integer, String, ForeignKey
     from sqlalchemy.orm import relationship
@@ -257,7 +275,9 @@ a dictionary of ``Note`` items keyed to the ``Note.keyword`` attribute::
             self.keyword = keyword
             self.text = text
 
-``Item.notes`` is then a dictionary::
+``Item.notes`` is then a dictionary:
+
+.. sourcecode:: pycon
 
     >>> item = Item()
     >>> item.notes['a'] = Note('a', 'atext')
@@ -267,7 +287,9 @@ a dictionary of ``Note`` items keyed to the ``Note.keyword`` attribute::
 :func:`.attribute_mapped_collection` will ensure that
 the ``.keyword`` attribute of each ``Note`` complies with the key in the
 dictionary.   Such as, when assigning to ``Item.notes``, the dictionary
-key we supply must match that of the actual ``Note`` object::
+key we supply must match that of the actual ``Note`` object:
+
+.. sourcecode:: python
 
     item = Item()
     item.notes = {
@@ -279,7 +301,9 @@ The attribute which :func:`.attribute_mapped_collection` uses as a key
 does not need to be mapped at all!  Using a regular Python ``@property`` allows virtually
 any detail or combination of details about the object to be used as the key, as
 below when we establish it as a tuple of ``Note.keyword`` and the first ten letters
-of the ``Note.text`` field::
+of the ``Note.text`` field:
+
+.. sourcecode:: python
 
     class Item(Base):
         __tablename__ = 'item'
@@ -305,7 +329,9 @@ of the ``Note.text`` field::
             self.text = text
 
 Above we added a ``Note.item`` backref.  Assigning to this reverse relationship, the ``Note``
-is added to the ``Item.notes`` dictionary and the key is generated for us automatically::
+is added to the ``Item.notes`` dictionary and the key is generated for us automatically:
+
+.. sourcecode:: pycon
 
     >>> item = Item()
     >>> n1 = Note("a", "atext")
@@ -315,7 +341,9 @@ is added to the ``Item.notes`` dictionary and the key is generated for us automa
 
 Other built-in dictionary types include :func:`.column_mapped_collection`,
 which is almost like :func:`.attribute_mapped_collection` except given the :class:`.Column`
-object directly::
+object directly:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm.collections import column_mapped_collection
 
@@ -328,7 +356,9 @@ object directly::
 
 as well as :func:`.mapped_collection` which is passed any callable function.
 Note that it's usually easier to use :func:`.attribute_mapped_collection` along
-with a ``@property`` as mentioned earlier::
+with a ``@property`` as mentioned earlier:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm.collections import mapped_collection
 
@@ -420,7 +450,9 @@ be instrumented, and ``foo`` won't be either.
 
 Duck-typing (i.e. guesswork) isn't rock-solid, of course, so you can be
 explicit about the interface you are implementing by providing an
-``__emulates__`` class attribute::
+``__emulates__`` class attribute:
+
+.. sourcecode:: python
 
     class SetLike(object):
         __emulates__ = set
@@ -530,7 +562,9 @@ to those same methods on :class:`.MappedCollection`.  This because the methods
 on :class:`.MappedCollection` are already instrumented - calling them
 from within an already instrumented call can cause events to be fired off
 repeatedly, or inappropriately, leading to internal state corruption in
-rare cases::
+rare cases:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm.collections import MappedCollection,\
                                         collection
@@ -563,7 +597,9 @@ Iteration will go through ``itervalues()`` unless otherwise decorated.
    Due to a bug in MappedCollection prior to version 0.7.6, this
    workaround usually needs to be called before a custom subclass
    of :class:`.MappedCollection` which uses :meth:`.collection.internally_instrumented`
-   can be used::
+   can be used:
+
+    .. sourcecode:: python
 
     from sqlalchemy.orm.collections import _instrument_class, MappedCollection
     _instrument_class(MappedCollection)

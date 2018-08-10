@@ -56,7 +56,9 @@ have been INSERTED; it also causes the rows to be de-associated with
 each other via UPDATE before a DELETE is emitted.  The flag should
 be placed on just *one* of the relationships, preferably the
 many-to-one side.  Below we illustrate
-a complete example, including two :class:`.ForeignKey` constructs::
+a complete example, including two :class:`.ForeignKey` constructs:
+
+.. sourcecode:: python
 
     from sqlalchemy import Integer, ForeignKey, Column
     from sqlalchemy.ext.declarative import declarative_base
@@ -113,7 +115,9 @@ An additional configuration we can specify is to supply a more
 comprehensive foreign key constraint on ``Widget``, such that
 it's guaranteed that ``favorite_entry_id`` refers to an ``Entry``
 that also refers to this ``Widget``.  We can use a composite foreign key,
-as illustrated below::
+as illustrated below:
+
+.. sourcecode:: python
 
     from sqlalchemy import Integer, ForeignKey, String, \
             Column, UniqueConstraint, ForeignKeyConstraint
@@ -181,7 +185,9 @@ that is, not enforced until the transaction completes.
 It is **highly recommended** that an application which seeks to employ
 natural primary keys with mutable values to use the ``ON UPDATE CASCADE``
 capabilities of the database.   An example mapping which
-illustrates this is::
+illustrates this is:
+
+.. sourcecode:: python
 
     class User(Base):
         __tablename__ = 'user'
@@ -242,7 +248,9 @@ objects referenced in the collection referred to by the parent object
 with a changing primary key value.  This also implies that collections
 will be fully loaded into memory if not already locally present.
 
-Our previous mapping using ``passive_updates=False`` looks like::
+Our previous mapping using ``passive_updates=False`` looks like:
+
+.. sourcecode:: python
 
     class User(Base):
         __tablename__ = 'user'

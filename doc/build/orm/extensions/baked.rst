@@ -36,7 +36,9 @@ Synopsis
 --------
 
 Usage of the baked system starts by producing a so-called "bakery", which
-represents storage for a particular series of query objects::
+represents storage for a particular series of query objects:
+
+.. sourcecode:: python
 
     from sqlalchemy.ext import baked
 
@@ -50,7 +52,9 @@ the SQL string.
 The bakery allows us to build up a :class:`~.query.Query` object by specifying
 its construction as a series of Python callables, which are typically lambdas.
 For succinct usage, it overrides the ``+=`` operator so that a typical
-query build-up looks like the following::
+query build-up looks like the following:
+
+.. sourcecode:: python
 
     from sqlalchemy import bindparam
 
@@ -115,13 +119,17 @@ Python performance for a query which is invoked lots of times in an
 application are very dramatic.   The example suite ``short_selects``
 demonstrated in :ref:`examples_performance` illustrates a comparison
 of queries which each return only one row, such as the following regular
-query::
+query:
+
+.. sourcecode:: python
 
     session = Session(bind=engine)
     for id_ in random.sample(ids, n):
         session.query(Customer).filter(Customer.id == id_).one()
 
-compared to the equivalent "baked" query::
+compared to the equivalent "baked" query:
+
+.. sourcecode:: python
 
     bakery = baked.bakery()
     s = Session(bind=engine)
@@ -171,7 +179,9 @@ traditional "parameterized" approach.   Suppose we wished to build
 a simple system where we build a :class:`~.query.Query` just once, then
 store it in a dictionary for re-use.   This is possible right now by
 just building up the query, and removing its :class:`.Session` by calling
-``my_cached_query = query.with_session(None)``::
+``my_cached_query = query.with_session(None)``:
+
+.. sourcecode:: python
 
     my_simple_cache = {}
 
@@ -205,7 +215,9 @@ we need to cache both the construction of the query as well as the SQL
 compilation.  Let's assume we adapted the recipe in this way
 and made ourselves a method ``.bake()`` that pre-compiles the SQL for the
 query, producing a new object that can be invoked with minimal overhead.
-Our example becomes::
+Our example becomes:
+
+.. sourcecode:: python
 
     my_simple_cache = {}
 
@@ -224,7 +236,9 @@ string cache key to deal with.
 
 We can use the "bakery" approach to re-frame the above in a way that
 looks less unusual than the "building up lambdas" approach, and more like
-a simple improvement upon the simple "reuse a query" approach::
+a simple improvement upon the simple "reuse a query" approach:
+
+.. sourcecode:: python
 
     bakery = baked.bakery()
 
@@ -249,7 +263,9 @@ why "baked" is the way it is.   Instead of a parameterized query building
 off from exactly one function (which is how we thought baked might work
 originally), we can build it from *any number* of functions.  Consider
 our naive example, if we needed to have an additional clause in our
-query on a conditional basis::
+query on a conditional basis:
+
+.. sourcecode:: python
 
     my_simple_cache = {}
 
@@ -276,8 +292,9 @@ flag was passed, as the presence of this flag means that the generated
 SQL would be entirely different.   It should be apparent that as the
 complexity of query building goes up, the task of caching these queries
 becomes burdensome very quickly.   We can convert the above example
-into a direct use of "bakery" as follows::
+into a direct use of "bakery" as follows:
 
+.. sourcecode:: python
 
     bakery = baked.bakery()
 
@@ -308,7 +325,9 @@ of the full so-called "baked" feature.  But
 still a little verbose!  Hence we take methods like :meth:`.BakedQuery.add_criteria`
 and :meth:`.BakedQuery.with_criteria` and shorten them into operators, and
 encourage (though certainly not require!) using simple lambdas, only as a
-means to reduce verbosity::
+means to reduce verbosity:
+
+.. sourcecode:: python
 
     bakery = baked.bakery()
 
@@ -400,7 +419,9 @@ Disabling Baked Queries Session-wide
 
 The flag :paramref:`.Session.enable_baked_queries` may be set to False,
 causing all baked queries to not use the cache when used against that
-:class:`.Session`::
+:class:`.Session`:
+
+.. sourcecode:: python
 
     session = Session(engine, enable_baked_queries=False)
 

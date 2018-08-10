@@ -52,7 +52,9 @@ Simple Version Counting
 
 The most straightforward way to track versions is to add an integer column
 to the mapped table, then establish it as the ``version_id_col`` within the
-mapper options::
+mapper options:
+
+.. sourcecode:: python
 
     class User(Base):
         __tablename__ = 'user'
@@ -101,7 +103,9 @@ known version, and is expected to return the subsequent version.
 
 For example, if we wanted to track the versioning of our ``User`` class
 using a randomly generated GUID, we could do this (note that some backends
-support a native GUID type, but we illustrate here using a simple string)::
+support a native GUID type, but we illustrate here using a simple string):
+
+.. sourcecode:: python
 
     import uuid
 
@@ -144,7 +148,9 @@ version identifier.  The PostgreSQL database in particular supports a system
 column called `xmin <http://www.postgresql.org/docs/9.1/static/ddl-system-columns.html>`_
 which provides UPDATE versioning.  We can make use
 of the PostgreSQL ``xmin`` column to version our ``User``
-class as follows::
+class as follows:
+
+.. sourcecode:: python
 
     from sqlalchemy import FetchedValue
 
@@ -216,7 +222,9 @@ When ``version_id_generator`` is set to False, we can also programmatically
 (and conditionally) set the version identifier on our object in the same way
 we assign any other mapped attribute.  Such as if we used our UUID example, but
 set ``version_id_generator`` to ``False``, we can set the version identifier
-at our choosing::
+at our choosing:
+
+.. sourcecode:: python
 
     import uuid
 
@@ -247,7 +255,9 @@ We can update our ``User`` object without incrementing the version counter
 as well; the value of the counter will remain unchanged, and the UPDATE
 statement will still check against the previous value.  This may be useful
 for schemes where only certain classes of UPDATE are sensitive to concurrency
-issues::
+issues:
+
+.. sourcecode:: python
 
     # will leave version_uuid unchanged
     u1.name = 'u3'

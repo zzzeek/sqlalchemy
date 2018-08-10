@@ -19,7 +19,9 @@ long as they are attached to their parent, and are otherwise deleted.
 
 Cascade behavior is configured using the
 :paramref:`~.relationship.cascade` option on
-:func:`~sqlalchemy.orm.relationship`::
+:func:`~sqlalchemy.orm.relationship`:
+
+.. sourcecode:: python
 
     class Order(Base):
         __tablename__ = 'order'
@@ -29,7 +31,9 @@ Cascade behavior is configured using the
 
 To set cascades on a backref, the same flag can be used with the
 :func:`~.sqlalchemy.orm.backref` function, which ultimately feeds
-its arguments back into :func:`~sqlalchemy.orm.relationship`::
+its arguments back into :func:`~sqlalchemy.orm.relationship`:
+
+.. sourcecode:: python
 
     class Item(Base):
         __tablename__ = 'item'
@@ -69,14 +73,18 @@ save-update
 :class:`.Session` via :meth:`.Session.add`, all the objects associated
 with it via this :func:`.relationship` should also be added to that
 same :class:`.Session`.  Suppose we have an object ``user1`` with two
-related objects ``address1``, ``address2``::
+related objects ``address1``, ``address2``:
+
+.. sourcecode:: pycon
 
     >>> user1 = User()
     >>> address1, address2 = Address(), Address()
     >>> user1.addresses = [address1, address2]
 
 If we add ``user1`` to a :class:`.Session`, it will also add
-``address1``, ``address2`` implicitly::
+``address1``, ``address2`` implicitly:
+
+.. sourcecode:: pycon
 
     >>> sess = Session()
     >>> sess.add(user1)
@@ -86,7 +94,9 @@ If we add ``user1`` to a :class:`.Session`, it will also add
 ``save-update`` cascade also affects attribute operations for objects
 that are already present in a :class:`.Session`.  If we add a third
 object, ``address3`` to the ``user1.addresses`` collection, it
-becomes part of the state of that :class:`.Session`::
+becomes part of the state of that :class:`.Session`:
+
+.. sourcecode:: pycon
 
     >>> address3 = Address()
     >>> user1.append(address3)
@@ -99,7 +109,9 @@ or in some cases a scalar attribute
 may also be pulled into the :class:`.Session` of a parent object; this is
 so that the flush process may handle that related object appropriately.
 This case can usually only arise if an object is removed from one :class:`.Session`
-and added to another::
+and added to another:
+
+.. sourcecode:: pycon
 
     >>> user1 = sess1.query(User).filter_by(id=1).first()
     >>> address1 = user1.addresses[0]
@@ -132,7 +144,9 @@ delete
 The ``delete`` cascade indicates that when a "parent" object
 is marked for deletion, its related "child" objects should also be marked
 for deletion.   If for example we we have a relationship ``User.addresses``
-with ``delete`` cascade configured::
+with ``delete`` cascade configured:
+
+.. sourcecode:: python
 
     class User(Base):
         # ...
@@ -140,7 +154,9 @@ with ``delete`` cascade configured::
         addresses = relationship("Address", cascade="save-update, merge, delete")
 
 If using the above mapping, we have a ``User`` object and two
-related ``Address`` objects::
+related ``Address`` objects:
+
+.. sourcecode:: pycon
 
     >>> user1 = sess.query(User).filter_by(id=1).first()
     >>> address1, address2 = user1.addresses
@@ -161,7 +177,9 @@ If we mark ``user1`` for deletion, after the flush operation proceeds,
 Alternatively, if our ``User.addresses`` relationship does *not* have
 ``delete`` cascade, SQLAlchemy's default behavior is to instead de-associate
 ``address1`` and ``address2`` from ``user1`` by setting their foreign key
-reference to ``NULL``.  Using a mapping as follows::
+reference to ``NULL``.  Using a mapping as follows:
+
+.. sourcecode:: python
 
     class User(Base):
         # ...
@@ -334,7 +352,9 @@ Controlling Cascade on Backrefs
 
 The :ref:`cascade_save_update` cascade by default takes place on attribute change events
 emitted from backrefs.  This is probably a confusing statement more
-easily described through demonstration; it means that, given a mapping such as this::
+easily described through demonstration; it means that, given a mapping such as this:
+
+.. sourcecode:: python
 
     mapper(Order, order_table, properties={
         'items' : relationship(Item, backref='order')
@@ -343,7 +363,9 @@ easily described through demonstration; it means that, given a mapping such as t
 If an ``Order`` is already in the session, and is assigned to the ``order``
 attribute of an ``Item``, the backref appends the ``Item`` to the ``items``
 collection of that ``Order``, resulting in the ``save-update`` cascade taking
-place::
+place:
+
+.. sourcecode:: pycon
 
     >>> o1 = Order()
     >>> session.add(o1)
@@ -357,7 +379,9 @@ place::
     >>> i1 in session
     True
 
-This behavior can be disabled using the :paramref:`~.relationship.cascade_backrefs` flag::
+This behavior can be disabled using the :paramref:`~.relationship.cascade_backrefs` flag:
+
+.. sourcecode:: python
 
     mapper(Order, order_table, properties={
         'items' : relationship(Item, backref='order',

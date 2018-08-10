@@ -17,7 +17,9 @@ mappings are constructed in modern SQLAlchemy.
 Making use of the :ref:`declarative_toplevel`
 system, the components of the user-defined class as well as the
 :class:`.Table` metadata to which the class is mapped are defined
-at once::
+at once:
+
+.. sourcecode:: python
 
     from sqlalchemy.ext.declarative import declarative_base
     from sqlalchemy import Column, Integer, String, ForeignKey
@@ -34,7 +36,9 @@ at once::
 
 Above, a basic single-table mapping with four columns.   Additional
 attributes, such as relationships to other mapped classes, are also
-declared inline within the class definition::
+declared inline within the class definition:
+
+.. sourcecode:: python
 
     class User(Base):
         __tablename__ = 'user'
@@ -69,7 +73,9 @@ system provided by the ORM.
 
 In "classical" form, the table metadata is created separately with the
 :class:`.Table` construct, then associated with the ``User`` class via
-the :func:`.mapper` function::
+the :func:`.mapper` function:
+
+.. sourcecode:: python
 
     from sqlalchemy import Table, MetaData, Column, Integer, String, ForeignKey
     from sqlalchemy.orm import mapper
@@ -93,7 +99,9 @@ the :func:`.mapper` function::
 
 Information about mapped attributes, such as relationships to other classes, are provided
 via the ``properties`` dictionary.  The example below illustrates a second :class:`.Table`
-object, mapped to a class called ``Address``, then linked to ``User`` via :func:`.relationship`::
+object, mapped to a class called ``Address``, then linked to ``User`` via :func:`.relationship`:
+
+.. sourcecode:: python
 
     address = Table('address', metadata,
                 Column('id', Integer, primary_key=True),
@@ -126,18 +134,24 @@ Runtime Introspection of Mappings, Objects
 The :class:`.Mapper` object is available from any mapped class, regardless
 of method, using the :ref:`core_inspection_toplevel` system.  Using the
 :func:`.inspect` function, one can acquire the :class:`.Mapper` from a
-mapped class::
+mapped class:
+
+.. sourcecode:: pycon
 
     >>> from sqlalchemy import inspect
     >>> insp = inspect(User)
 
-Detailed information is available including :attr:`.Mapper.columns`::
+Detailed information is available including :attr:`.Mapper.columns`:
+
+.. sourcecode:: pycon
 
     >>> insp.columns
     <sqlalchemy.util._collections.OrderedProperties object at 0x102f407f8>
 
 This is a namespace that can be viewed in a list format or
-via individual names::
+via individual names:
+
+.. sourcecode:: pycon
 
     >>> list(insp.columns)
     [Column('id', Integer(), table=<user>, primary_key=True, nullable=False), Column('name', String(length=50), table=<user>), Column('fullname', String(length=50), table=<user>), Column('password', String(length=12), table=<user>)]
@@ -145,14 +159,18 @@ via individual names::
     Column('name', String(length=50), table=<user>)
 
 Other namespaces include :attr:`.Mapper.all_orm_descriptors`, which includes all mapped
-attributes as well as hybrids, association proxies::
+attributes as well as hybrids, association proxies:
+
+.. sourcecode:: pycon
 
     >>> insp.all_orm_descriptors
     <sqlalchemy.util._collections.ImmutableProperties object at 0x1040e2c68>
     >>> insp.all_orm_descriptors.keys()
     ['fullname', 'password', 'name', 'id']
 
-As well as :attr:`.Mapper.column_attrs`::
+As well as :attr:`.Mapper.column_attrs`:
+
+.. sourcecode:: pycon
 
     >>> list(insp.column_attrs)
     [<ColumnProperty at 0x10403fde0; id>, <ColumnProperty at 0x10403fce8; name>, <ColumnProperty at 0x1040e9050; fullname>, <ColumnProperty at 0x1040e9148; password>]

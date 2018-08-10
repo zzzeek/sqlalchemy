@@ -50,7 +50,9 @@ Getting the Current State of an Object
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The actual state of any mapped object can be viewed at any time using
-the :func:`.inspect` system::
+the :func:`.inspect` system:
+
+.. sourcecode:: pycon
 
   >>> from sqlalchemy import inspect
   >>> insp = inspect(my_object)
@@ -76,19 +78,25 @@ Session Attributes
 
 The :class:`~sqlalchemy.orm.session.Session` itself acts somewhat like a
 set-like collection. All items present may be accessed using the iterator
-interface::
+interface:
+
+.. sourcecode:: python
 
     for obj in session:
         print(obj)
 
-And presence may be tested for using regular "contains" semantics::
+And presence may be tested for using regular "contains" semantics:
+
+.. sourcecode:: python
 
     if obj in session:
         print("Object is present")
 
 The session is also keeping track of all newly created (i.e. pending) objects,
 all objects which have had changes since they were last loaded or saved (i.e.
-"dirty"), and everything that's been marked as deleted::
+"dirty"), and everything that's been marked as deleted:
+
+.. sourcecode:: python
 
     # pending objects recently added to the Session
     session.new
@@ -133,7 +141,9 @@ referenced. These collections can be associated with a
 
 An event based approach is also feasible.  A simple recipe that provides
 "strong referencing" behavior for all objects as they remain within
-the :term:`persistent` state is as follows::
+the :term:`persistent` state is as follows:
+
+.. sourcecode:: python
 
     from sqlalchemy import event
 
@@ -167,14 +177,18 @@ objects as they enter the :term:`persistent` transition, and the
 objects as they leave the persistent state.
 
 The above function may be called for any :class:`.Session` in order to
-provide strong-referencing behavior on a per-:class:`.Session` basis::
+provide strong-referencing behavior on a per-:class:`.Session` basis:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import Session
 
     my_session = Session()
     strong_reference_session(my_session)
 
-It may also be called for any :class:`.sessionmaker`::
+It may also be called for any :class:`.sessionmaker`:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import sessionmaker
 
@@ -192,7 +206,9 @@ outside object into a new or already existing instance within a session.   It
 also reconciles the incoming data against the state of the
 database, producing a history stream which will be applied towards the next
 flush, or alternatively can be made to produce a simple "transfer" of
-state without producing change history or accessing the database.  Usage is as follows::
+state without producing change history or accessing the database.  Usage is as follows:
+
+.. sourcecode:: python
 
     merged_object = session.merge(existing_object)
 
@@ -279,7 +295,9 @@ The wide variety of scenarios that can present themselves here often require a
 more careful approach to the state of objects.   Common problems with merge usually involve
 some unexpected state regarding the object being passed to :meth:`~.Session.merge`.
 
-Lets use the canonical example of the User and Address objects::
+Lets use the canonical example of the User and Address objects:
+
+.. sourcecode:: python
 
     class User(Base):
         __tablename__ = 'user'
@@ -295,19 +313,25 @@ Lets use the canonical example of the User and Address objects::
         email_address = Column(String(50), nullable=False)
         user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
 
-Assume a ``User`` object with one ``Address``, already persistent::
+Assume a ``User`` object with one ``Address``, already persistent:
+
+.. sourcecode:: pycon
 
     >>> u1 = User(name='ed', addresses=[Address(email_address='ed@ed.com')])
     >>> session.add(u1)
     >>> session.commit()
 
 We now create ``a1``, an object outside the session, which we'd like
-to merge on top of the existing ``Address``::
+to merge on top of the existing ``Address``:
+
+.. sourcecode:: pycon
 
     >>> existing_a1 = u1.addresses[0]
     >>> a1 = Address(id=existing_a1.id)
 
-A surprise would occur if we said this::
+A surprise would occur if we said this:
+
+.. sourcecode:: pycon
 
     >>> a1.user = u1
     >>> a1 = session.merge(a1)
@@ -319,7 +343,9 @@ A surprise would occur if we said this::
 Why is that ?   We weren't careful with our cascades.   The assignment
 of ``a1.user`` to a persistent object cascaded to the backref of ``User.addresses``
 and made our ``a1`` object pending, as though we had added it.   Now we have
-*two* ``Address`` objects in the session::
+*two* ``Address`` objects in the session:
+
+.. sourcecode:: pycon
 
     >>> a1 = Address()
     >>> a1.user = u1
@@ -346,7 +372,9 @@ being added to the session via the ``a1.user = u1`` assignment.
 
 Further detail on cascade operation is at :ref:`unitofwork_cascades`.
 
-Another example of unexpected state::
+Another example of unexpected state:
+
+.. sourcecode:: pycon
 
     >>> a1 = Address(id=existing_a1.id, user_id=u1.id)
     >>> assert a1.user is None
@@ -361,7 +389,9 @@ of ``None``, which as a result of this access, has been placed in the ``__dict__
 our object ``a1``.  Normally, this operation creates no change event,
 so the ``user_id`` attribute takes precedence during a
 flush.  But when we merge the ``Address`` object into the session, the operation
-is equivalent to::
+is equivalent to:
+
+.. sourcecode:: pycon
 
     >>> existing_a1.id = existing_a1.id
     >>> existing_a1.user_id = u1.id
@@ -381,7 +411,9 @@ is the object prematurely in the session ?
     >>> a1 = session.merge(a1)
 
 Or is there state on the object that we don't want ?   Examining ``__dict__``
-is a quick way to check::
+is a quick way to check:
+
+.. sourcecode:: pycon
 
     >>> a1 = Address(id=existing_a1, user_id=user.id)
     >>> a1.user
@@ -421,13 +453,17 @@ the database.
 
 When we talk about expiration of data we are usually talking about an object
 that is in the :term:`persistent` state.   For example, if we load an object
-as follows::
+as follows:
+
+.. sourcecode:: python
 
     user = session.query(User).filter_by(name='user1').first()
 
 The above ``User`` object is persistent, and has a series of attributes
 present; if we were to look inside its ``__dict__``, we'd see that state
-loaded::
+loaded:
+
+.. sourcecode:: pycon
 
     >>> user.__dict__
     {
@@ -443,7 +479,9 @@ we should use the :func:`.inspect` function to access it).
 
 At this point, the state in our ``User`` object matches that of the loaded
 database row.  But upon expiring the object using a method such as
-:meth:`.Session.expire`, we see that the state is removed::
+:meth:`.Session.expire`, we see that the state is removed:
+
+.. sourcecode:: pycon
 
     >>> session.expire(user)
     >>> user.__dict__
@@ -465,7 +503,9 @@ one of these columns and are watching SQL, we'd see this:
 Above, upon accessing the expired attribute ``user.name``, the ORM initiated
 a :term:`lazy load` to retrieve the most recent state from the database,
 by emitting a SELECT for the user row to which this user refers.  Afterwards,
-the ``__dict__`` is again populated::
+the ``__dict__`` is again populated:
+
+.. sourcecode:: pycon
 
     >>> user.__dict__
     {
@@ -483,45 +523,59 @@ the ``__dict__`` is again populated::
 
 Another key behavior of both :meth:`~.Session.expire` and :meth:`~.Session.refresh`
 is that all un-flushed changes on an object are discarded.  That is,
-if we were to modify an attribute on our ``User``::
+if we were to modify an attribute on our ``User``:
+
+.. sourcecode:: pycon
 
     >>> user.name = 'user2'
 
 but then we call :meth:`~.Session.expire` without first calling :meth:`~.Session.flush`,
-our pending value of ``'user2'`` is discarded::
+our pending value of ``'user2'`` is discarded:
+
+.. sourcecode:: pycon
 
     >>> session.expire(user)
     >>> user.name
     'user1'
 
 The :meth:`~.Session.expire` method can be used to mark as "expired" all ORM-mapped
-attributes for an instance::
+attributes for an instance:
+
+.. sourcecode:: python
 
     # expire all ORM-mapped attributes on obj1
     session.expire(obj1)
 
 it can also be passed a list of string attribute names, referring to specific
-attributes to be marked as expired::
+attributes to be marked as expired:
+
+.. sourcecode:: python
 
     # expire only attributes obj1.attr1, obj1.attr2
     session.expire(obj1, ['attr1', 'attr2'])
 
 The :meth:`~.Session.refresh` method has a similar interface, but instead
-of expiring, it emits an immediate SELECT for the object's row immediately::
+of expiring, it emits an immediate SELECT for the object's row immediately:
+
+.. sourcecode:: python
 
     # reload all attributes on obj1
     session.refresh(obj1)
 
 :meth:`~.Session.refresh` also accepts a list of string attribute names,
 but unlike :meth:`~.Session.expire`, expects at least one name to
-be that of a column-mapped attribute::
+be that of a column-mapped attribute:
+
+.. sourcecode:: python
 
     # reload obj1.attr1, obj1.attr2
     session.refresh(obj1, ['attr1', 'attr2'])
 
 The :meth:`.Session.expire_all` method allows us to essentially call
 :meth:`.Session.expire` on all objects contained within the :class:`.Session`
-at once::
+at once:
+
+.. sourcecode:: python
 
     session.expire_all()
 

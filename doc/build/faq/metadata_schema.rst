@@ -15,7 +15,9 @@ My program is hanging when I say ``table.drop()`` / ``metadata.drop_all()``
 This usually corresponds to two conditions: 1. using PostgreSQL, which is really
 strict about table locks, and 2. you have a connection still open which
 contains locks on the table and is distinct from the connection being used for
-the DROP statement.  Heres the most minimal version of the pattern::
+the DROP statement.  Heres the most minimal version of the pattern:
+
+.. sourcecode:: python
 
     connection = engine.connect()
     result = connection.execute(mytable.select())
@@ -30,7 +32,9 @@ the result object is closed or all rows are exhausted.
 The call to ``mytable.drop(engine)`` attempts to emit DROP TABLE on a second
 connection procured from the :class:`.Engine` which will lock.
 
-The solution is to close out all connections before emitting DROP TABLE::
+The solution is to close out all connections before emitting DROP TABLE:
+
+.. sourcecode:: python
 
     connection = engine.connect()
     result = connection.execute(mytable.select())
@@ -58,7 +62,9 @@ or SQLAlchemy-Migrate; see :ref:`schema_migrations` for discussion on this.
 How can I sort Table objects in order of their dependency?
 ==========================================================
 
-This is available via the :attr:`.MetaData.sorted_tables` function::
+This is available via the :attr:`.MetaData.sorted_tables` function:
+
+.. sourcecode:: python
 
     metadata = MetaData()
     # ... add Table objects to metadata
@@ -70,18 +76,24 @@ How can I get the CREATE TABLE/ DROP TABLE output as a string?
 ==============================================================
 
 Modern SQLAlchemy has clause constructs which represent DDL operations. These
-can be rendered to strings like any other SQL expression::
+can be rendered to strings like any other SQL expression:
+
+.. sourcecode:: python
 
     from sqlalchemy.schema import CreateTable
 
     print(CreateTable(mytable))
 
-To get the string specific to a certain engine::
+To get the string specific to a certain engine:
+
+.. sourcecode:: python
 
     print(CreateTable(mytable).compile(engine))
 
 There's also a special form of :class:`.Engine` that can let you dump an entire
-metadata creation sequence, using this recipe::
+metadata creation sequence, using this recipe:
+
+.. sourcecode:: python
 
     def dump(sql, *multiparams, **params):
         print(sql.compile(dialect=engine.dialect))

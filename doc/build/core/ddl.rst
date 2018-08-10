@@ -51,7 +51,9 @@ The :class:`~.schema.DDL` construct introduced previously also has the
 ability to be invoked conditionally based on inspection of the
 database.  This feature is available using the :meth:`.DDLElement.execute_if`
 method.  For example, if we wanted to create a trigger but only on
-the PostgreSQL backend, we could invoke this as::
+the PostgreSQL backend, we could invoke this as:
+
+.. sourcecode:: python
 
     mytable = Table(
         'mytable', metadata,
@@ -71,7 +73,9 @@ the PostgreSQL backend, we could invoke this as::
     )
 
 The :paramref:`.DDLElement.execute_if.dialect` keyword also accepts a tuple
-of string dialect names::
+of string dialect names:
+
+.. sourcecode:: python
 
     event.listen(
         mytable,

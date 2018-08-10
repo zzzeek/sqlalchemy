@@ -10,7 +10,9 @@ Oracle Data Types
 
 As with all SQLAlchemy dialects, all UPPERCASE types that are known to be
 valid with Oracle are importable from the top level dialect, whether
-they originate from :mod:`sqlalchemy.types` or from the local dialect::
+they originate from :mod:`sqlalchemy.types` or from the local dialect:
+
+.. sourcecode:: python
 
     from sqlalchemy.dialects.oracle import \
                 BFILE, BLOB, CHAR, CLOB, DATE, \

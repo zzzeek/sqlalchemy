@@ -159,7 +159,9 @@ represents a distinct state transition, meaning, the starting state
 and the destination state are both part of what are tracked.   With the
 exception of the initial transient event, all the events are in terms of
 the :class:`.Session` object or class, meaning they can be associated either
-with a specific :class:`.Session` object::
+with a specific :class:`.Session` object:
+
+.. sourcecode:: python
 
     from sqlalchemy import event
     from sqlalchemy.orm import Session
@@ -171,7 +173,9 @@ with a specific :class:`.Session` object::
         print("new pending: %s" % obj)
 
 Or with the :class:`.Session` class itself, as well as with a specific
-:class:`.sessionmaker`, which is likely the most useful form::
+:class:`.sessionmaker`, which is likely the most useful form:
+
+.. sourcecode:: python
 
     from sqlalchemy import event
     from sqlalchemy.orm import sessionmaker
@@ -184,7 +188,9 @@ Or with the :class:`.Session` class itself, as well as with a specific
 
 The listeners can of course be stacked on top of one function, as is
 likely to be common.   For example, to track all objects that are
-entering the persistent state::
+entering the persistent state:
+
+.. sourcecode:: python
 
         @event.listens_for(maker, "pending_to_persistent")
         @event.listens_for(maker, "deleted_to_persistent")
@@ -203,7 +209,9 @@ any :class:`.Session`.   For this initial state, there's no specific
 wanted to intercept when any transient object is created, the
 :meth:`.InstanceEvents.init` method is probably the best event.  This
 event is applied to a specific class or superclass.  For example, to
-intercept all new objects for a particular declarative base::
+intercept all new objects for a particular declarative base:
+
+.. sourcecode:: python
 
     from sqlalchemy.ext.declarative import declarative_base
     from sqlalchemy import event
@@ -223,7 +231,9 @@ with a :class:`.Session` via the :meth:`.Session.add` or :meth:`.Session.add_all
 method.  An object may also become part of a :class:`.Session` as a result
 of a :ref:`"cascade" <unitofwork_cascades>` from a referencing object that was
 explicitly added.   The transient to pending transition is detectable using
-the :meth:`.SessionEvents.transient_to_pending` event::
+the :meth:`.SessionEvents.transient_to_pending` event:
+
+.. sourcecode:: python
 
     @event.listens_for(sessionmaker, "transient_to_pending")
     def intercept_transient_to_pending(session, object_):
@@ -236,7 +246,9 @@ Pending to Persistent
 The :term:`pending` object becomes :term:`persistent` when a flush
 proceeds and an INSERT statement takes place for the instance.  The object
 now has an identity key.   Track pending to persistent with the
-:meth:`.SessionEvents.pending_to_persistent` event::
+:meth:`.SessionEvents.pending_to_persistent` event:
+
+.. sourcecode:: python
 
     @event.listens_for(sessionmaker, "pending_to_persistent")
     def intercept_pending_to_persistent(session, object_):
@@ -249,7 +261,9 @@ The :term:`pending` object can revert back to :term:`transient` if the
 :meth:`.Session.rollback` method is called before the pending object
 has been flushed, or if the :meth:`.Session.expunge` method is called
 for the object before it is flushed.  Track pending to transient with the
-:meth:`.SessionEvents.pending_to_transient` event::
+:meth:`.SessionEvents.pending_to_transient` event:
+
+.. sourcecode:: python
 
     @event.listens_for(sessionmaker, "pending_to_transient")
     def intercept_pending_to_transient(session, object_):
@@ -264,7 +278,9 @@ is synonymous with tracking objects as they are loaded, and is synonymous
 with using the :meth:`.InstanceEvents.load` instance-level event.  However, the
 :meth:`.SessionEvents.loaded_as_persistent` event is provided as a
 session-centric hook for intercepting objects as they enter the persistent
-state via this particular avenue::
+state via this particular avenue:
+
+.. sourcecode:: python
 
     @event.listens_for(sessionmaker, "loaded_as_persistent")
     def intercept_loaded_as_persistent(session, object_):
@@ -281,7 +297,9 @@ INSERT statement that made this object persistent is rolled back, and
 the object is evicted from the :class:`.Session` to again become transient.
 Track objects that were reverted to transient from
 persistent using the :meth:`.SessionEvents.persistent_to_transient`
-event hook::
+event hook:
+
+.. sourcecode:: python
 
     @event.listens_for(sessionmaker, "persistent_to_transient")
     def intercept_persistent_to_transient(session, object_):
@@ -308,7 +326,9 @@ when the transaction is committed, or back to the persistent state
 if the transaction is instead rolled back.
 
 Track the persistent to deleted transition with
-:meth:`.SessionEvents.persistent_to_deleted`::
+:meth:`.SessionEvents.persistent_to_deleted`:
+
+.. sourcecode:: python
 
     @event.listens_for(sessionmaker, "persistent_to_deleted")
     def intercept_persistent_to_deleted(session, object_):
@@ -322,7 +342,9 @@ The deleted object becomes :term:`detached` when the session's transaction
 is committed.  After the :meth:`.Session.commit` method is called, the
 database transaction is final and the :class:`.Session` now fully discards
 the deleted object and removes all associations to it.   Track
-the deleted to detached transition using :meth:`.SessionEvents.deleted_to_detached`::
+the deleted to detached transition using :meth:`.SessionEvents.deleted_to_detached`:
+
+.. sourcecode:: python
 
     @event.listens_for(sessionmaker, "deleted_to_detached")
     def intercept_deleted_to_detached(session, object_):
@@ -353,7 +375,9 @@ with the :class:`.Session`, via the :meth:`.Session.expunge`,
   garbage collection. In this case, **no event is emitted**.
 
 Track objects as they move from persistent to detached using the
-:meth:`.SessionEvents.persistent_to_detached` event::
+:meth:`.SessionEvents.persistent_to_detached` event:
+
+.. sourcecode:: python
 
     @event.listens_for(sessionmaker, "persistent_to_detached")
     def intecept_persistent_to_detached(session, object_):
@@ -365,7 +389,9 @@ Detached to Persistent
 The detached object becomes persistent when it is re-associated with a
 session using the :meth:`.Session.add` or equivalent method.  Track
 objects moving back to persistent from detached using the
-:meth:`.SessionEvents.detached_to_persistent` event::
+:meth:`.SessionEvents.detached_to_persistent` event:
+
+.. sourcecode:: python
 
     @event.listens_for(sessionmaker, "detached_to_persistent")
     def intecept_detached_to_persistent(session, object_):
@@ -379,7 +405,9 @@ The :term:`deleted` object can be reverted to the :term:`persistent`
 state when the transaction in which it was DELETEd was rolled back
 using the :meth:`.Session.rollback` method.   Track deleted objects
 moving back to the persistent state using the
-:meth:`.SessionEvents.deleted_to_persistent` event::
+:meth:`.SessionEvents.deleted_to_persistent` event:
+
+.. sourcecode:: python
 
     @event.listens_for(sessionmaker, "transient_to_pending")
     def intercept_transient_to_pending(session, object_):

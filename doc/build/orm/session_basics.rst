@@ -106,8 +106,9 @@ instances to be associated with the :class:`.sessionmaker` has not yet proceeded
 For this use case, the :class:`.sessionmaker` construct offers the
 :meth:`.sessionmaker.configure` method, which will place additional configuration
 directives into an existing :class:`.sessionmaker` that will take place
-when the construct is invoked::
+when the construct is invoked:
 
+.. sourcecode:: python
 
     from sqlalchemy.orm import sessionmaker
     from sqlalchemy import create_engine
@@ -136,7 +137,9 @@ what most of the application wants, specific arguments can be passed to the
 :class:`.sessionmaker` factory's :meth:`.sessionmaker.__call__` method.
 These arguments will override whatever
 configurations have already been placed, such as below, where a new :class:`.Session`
-is constructed against a specific :class:`.Connection`::
+is constructed against a specific :class:`.Connection`:
+
+.. sourcecode:: python
 
     # at the module level, the global sessionmaker,
     # bound to a specific Engine
@@ -308,7 +311,9 @@ session *externally* to functions that deal with specific data.  This is a
 fundamental separation of concerns which keeps data-specific operations
 agnostic of the context in which they access and manipulate that data.
 
-E.g. **don't do this**::
+E.g. **don't do this**:
+
+.. sourcecode:: python
 
     ### this is the **wrong way to do it** ###
 
@@ -337,7 +342,9 @@ E.g. **don't do this**::
         ThingTwo().go()
 
 Keep the lifecycle of the session (and usually the transaction)
-**separate and external**::
+**separate and external**:
+
+.. sourcecode:: python
 
     ### this is a **better** (but not the only) way to do it ###
 
@@ -367,7 +374,9 @@ will try to keep the details of session, transaction and exception management
 as far as possible from the details of the program doing its work.   For
 example, we can further separate concerns using a `context manager
 <http://docs.python.org/3/library/co
-ntextlib.html#contextlib.contextmanager>`_::
+ntextlib.html#contextlib.contextmanager>`_:
+
+.. sourcecode:: python
 
     ### another way (but again *not the only way*) to do it ###
 
@@ -420,11 +429,15 @@ How can I get the :class:`~sqlalchemy.orm.session.Session` for a certain object?
 ------------------------------------------------------------------------------------
 
 Use the :meth:`~.Session.object_session` classmethod
-available on :class:`~sqlalchemy.orm.session.Session`::
+available on :class:`~sqlalchemy.orm.session.Session`:
+
+.. sourcecode:: python
 
     session = Session.object_session(someobject)
 
-The newer :ref:`core_inspection_toplevel` system can also be used::
+The newer :ref:`core_inspection_toplevel` system can also be used:
+
+.. sourcecode:: python
 
     from sqlalchemy import inspect
     session = inspect(someobject).session
@@ -489,7 +502,9 @@ The :meth:`~.Session.query` function takes one or more
 *entities* and returns a new :class:`~sqlalchemy.orm.query.Query` object which
 will issue mapper queries within the context of this Session. An entity is
 defined as a mapped class, a :class:`~sqlalchemy.orm.mapper.Mapper` object, an
-orm-enabled *descriptor*, or an ``AliasedClass`` object::
+orm-enabled *descriptor*, or an ``AliasedClass`` object:
+
+.. sourcecode:: python
 
     # query from a class
     session.query(User).filter_by(name='ed').all()
@@ -527,7 +542,9 @@ of an INSERT taking place for those instances upon the next flush. For
 instances which are *persistent* (i.e. were loaded by this session), they are
 already present and do not need to be added. Instances which are *detached*
 (i.e. have been removed from a session) may be re-associated with a session
-using this method::
+using this method:
+
+.. sourcecode:: python
 
     user1 = User(name='user1')
     user2 = User(name='user2')
@@ -537,7 +554,9 @@ using this method::
     session.commit()     # write changes to the database
 
 To add a list of items to the session at once, use
-:meth:`~.Session.add_all`::
+:meth:`~.Session.add_all`:
+
+.. sourcecode:: python
 
     session.add_all([item1, item2, item3])
 
@@ -550,7 +569,9 @@ Deleting
 --------
 
 The :meth:`~.Session.delete` method places an instance
-into the Session's list of objects to be marked as deleted::
+into the Session's list of objects to be marked as deleted:
+
+.. sourcecode:: python
 
     # mark two objects to be deleted
     session.delete(obj1)
@@ -602,7 +623,9 @@ will remain present on that object until the object is expired as well.
 
 Below, we illustrate that after an ``Address`` object is marked
 for deletion, it's still present in the collection associated with the
-parent ``User``, even after a flush::
+parent ``User``, even after a flush:
+
+.. sourcecode:: pycon
 
     >>> address = user.addresses[1]
     >>> session.delete(address)
@@ -612,7 +635,9 @@ parent ``User``, even after a flush::
 
 When the above session is committed, all attributes are expired.  The next
 access of ``user.addresses`` will re-load the collection, revealing the
-desired state::
+desired state:
+
+.. sourcecode:: pycon
 
     >>> session.commit()
     >>> address in user.addresses
@@ -624,7 +649,9 @@ deleting items within collections is to forego the usage of
 :meth:`~.Session.delete` directly, and instead use cascade behavior to
 automatically invoke the deletion as a result of removing the object from the
 parent collection.  The ``delete-orphan`` cascade accomplishes this, as
-illustrated in the example below::
+illustrated in the example below:
+
+.. sourcecode:: python
 
     class User(Base):
         __tablename__ = 'user'
@@ -648,7 +675,9 @@ or one-to-one relationship, so that when an object is de-associated from its
 parent, it is also automatically marked for deletion.   Using ``delete-orphan``
 cascade on a many-to-one or one-to-one requires an additional flag
 :paramref:`.relationship.single_parent` which invokes an assertion
-that this related object is not to shared with any other parent simultaneously::
+that this related object is not to shared with any other parent simultaneously:
+
+.. sourcecode:: python
 
     class User(Base):
         # ...
@@ -659,7 +688,9 @@ that this related object is not to shared with any other parent simultaneously::
 
 
 Above, if a hypothetical ``Preference`` object is removed from a ``User``,
-it will be deleted on flush::
+it will be deleted on flush:
+
+.. sourcecode:: python
 
     some_user.preference = None
     session.flush()  # will delete the Preference object
@@ -673,7 +704,9 @@ Deleting based on Filter Criterion
 The caveat with ``Session.delete()`` is that you need to have an object handy
 already in order to delete. The Query includes a
 :func:`~sqlalchemy.orm.query.Query.delete` method which deletes based on
-filtering criteria::
+filtering criteria:
+
+.. sourcecode:: python
 
     session.query(User).filter(User.id==7).delete()
 
@@ -697,17 +730,23 @@ committed. It also occurs before a SAVEPOINT is issued when
 :meth:`~.Session.begin_nested` is used.
 
 Regardless of the autoflush setting, a flush can always be forced by issuing
-:meth:`~.Session.flush`::
+:meth:`~.Session.flush`:
+
+.. sourcecode:: python
 
     session.flush()
 
 The "flush-on-Query" aspect of the behavior can be disabled by constructing
-:class:`.sessionmaker` with the flag ``autoflush=False``::
+:class:`.sessionmaker` with the flag ``autoflush=False``:
+
+.. sourcecode:: python
 
     Session = sessionmaker(autoflush=False)
 
 Additionally, autoflush can be temporarily disabled by setting the
-``autoflush`` flag at any time::
+``autoflush`` flag at any time:
+
+.. sourcecode:: python
 
     mysession = Session()
     mysession.autoflush = False

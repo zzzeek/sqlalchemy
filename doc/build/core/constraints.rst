@@ -31,7 +31,9 @@ additional attributes within the table clause, or for single-column foreign
 keys they may optionally be specified within the definition of a single
 column. The single column foreign key is more common, and at the column level
 is specified by constructing a :class:`~sqlalchemy.schema.ForeignKey` object
-as an argument to a :class:`~sqlalchemy.schema.Column` object::
+as an argument to a :class:`~sqlalchemy.schema.Column` object:
+
+.. sourcecode:: python
 
     user_preference = Table('user_preference', metadata,
         Column('pref_id', Integer, primary_key=True),
@@ -49,7 +51,9 @@ string of the form *<tablename>.<columnname>*, or for a table in a remote
 schema or "owner" of the form *<schemaname>.<tablename>.<columnname>*. It may
 also be an actual :class:`~sqlalchemy.schema.Column` object, which as we'll
 see later is accessed from an existing :class:`~sqlalchemy.schema.Table`
-object via its ``c`` collection::
+object via its ``c`` collection:
+
+.. sourcecode:: python
 
     ForeignKey(user.c.user_id)
 
@@ -62,7 +66,9 @@ Foreign keys may also be defined at the table level, using the
 describe a single- or multi-column foreign key. A multi-column foreign key is
 known as a *composite* foreign key, and almost always references a table that
 has a composite primary key. Below we define a table ``invoice`` which has a
-composite primary key::
+composite primary key:
+
+.. sourcecode:: python
 
     invoice = Table('invoice', metadata,
         Column('invoice_id', Integer, primary_key=True),
@@ -71,7 +77,9 @@ composite primary key::
     )
 
 And then a table ``invoice_item`` with a composite foreign key referencing
-``invoice``::
+``invoice``:
+
+.. sourcecode:: python
 
     invoice_item = Table('invoice_item', metadata,
         Column('item_id', Integer, primary_key=True),
@@ -123,7 +131,9 @@ are mutually dependent on each other, assuming the backend enforces foreign
 keys (always the case except on SQLite, MySQL/MyISAM).   The methods will
 therefore break out constraints in such a cycle into separate ALTER
 statements, on all backends other than SQLite which does not support
-most forms of ALTER.  Given a schema like::
+most forms of ALTER.  Given a schema like:
+
+.. sourcecode:: python
 
     node = Table(
         'node', metadata,
@@ -202,7 +212,9 @@ automatically.
 The :paramref:`.ForeignKeyConstraint.use_alter` and
 :paramref:`.ForeignKey.use_alter` keyword arguments can be used
 to manually resolve dependency cycles.  We can add this flag only to
-the ``'element'`` table as follows::
+the ``'element'`` table as follows:
+
+.. sourcecode:: python
 
     element = Table(
         'element', metadata,
@@ -280,7 +292,9 @@ other allow other phrases that are specific to the database in use. The
 :class:`~sqlalchemy.schema.ForeignKeyConstraint` objects support the
 generation of this clause via the ``onupdate`` and ``ondelete`` keyword
 arguments. The value is any string which will be output after the appropriate
-"ON UPDATE" or "ON DELETE" phrase::
+"ON UPDATE" or "ON DELETE" phrase:
+
+.. sourcecode:: python
 
     child = Table('child', meta,
         Column('id', Integer,
@@ -374,7 +388,9 @@ The primary key constraint of any :class:`.Table` object is implicitly
 present, based on the :class:`.Column` objects that are marked with the
 :paramref:`.Column.primary_key` flag.   The :class:`.PrimaryKeyConstraint`
 object provides explicit access to this constraint, which includes the
-option of being configured directly::
+option of being configured directly:
+
+.. sourcecode:: python
 
     from sqlalchemy import PrimaryKeyConstraint
 
@@ -452,7 +468,9 @@ dictionary are used whenever a constraint or index is associated with this
 :class:`.MetaData` object that does not have an existing name given (including
 one exception case where an existing name can be further embellished).
 
-An example naming convention that suits basic cases is as follows::
+An example naming convention that suits basic cases is as follows:
+
+.. sourcecode:: python
 
     convention = {
       "ix": 'ix_%(column_0_label)s',
@@ -467,7 +485,9 @@ An example naming convention that suits basic cases is as follows::
 The above convention will establish names for all constraints within
 the target :class:`.MetaData` collection.
 For example, we can observe the name produced when we create an unnamed
-:class:`.UniqueConstraint`::
+:class:`.UniqueConstraint`:
+
+.. sourcecode:: pycon
 
     >>> user_table = Table('user', metadata,
     ...                 Column('id', Integer, primary_key=True),
@@ -478,7 +498,9 @@ For example, we can observe the name produced when we create an unnamed
     'uq_user_name'
 
 This same feature takes effect even if we just use the :paramref:`.Column.unique`
-flag::
+flag:
+
+.. sourcecode:: pycon
 
     >>> user_table = Table('user', metadata,
     ...                  Column('id', Integer, primary_key=True),
@@ -490,7 +512,9 @@ flag::
 A key advantage to the naming convention approach is that the names are established
 at Python construction time, rather than at DDL emit time.  The effect this has
 when using Alembic's ``--autogenerate`` feature is that the naming convention
-will be explicit when a new migration script is generated::
+will be explicit when a new migration script is generated:
+
+.. sourcecode:: python
 
     def upgrade():
         op.create_unique_constraint("uq_user_name", "user", ["name"])
@@ -500,7 +524,9 @@ object that ``--autogenerate`` located in our metadata.
 
 The default value for :paramref:`.MetaData.naming_convention` handles
 the long-standing SQLAlchemy behavior of assigning a name to a :class:`.Index`
-object that is created using the :paramref:`.Column.index` parameter::
+object that is created using the :paramref:`.Column.index` parameter:
+
+.. sourcecode:: pycon
 
     >>> from sqlalchemy.sql.schema import DEFAULT_NAMING_CONVENTION
     >>> DEFAULT_NAMING_CONVENTION
@@ -513,7 +539,9 @@ the documentation for :paramref:`.MetaData.naming_convention` describes each
 individually.  New tokens can also be added, by specifying an additional
 token and a callable within the naming_convention dictionary.  For example,
 if we wanted to name our foreign key constraints using a GUID scheme,
-we could do that as follows::
+we could do that as follows:
+
+.. sourcecode:: python
 
     import uuid
 
@@ -535,7 +563,9 @@ we could do that as follows::
     }
 
 Above, when we create a new :class:`.ForeignKeyConstraint`, we will get a
-name as follows::
+name as follows:
+
+.. sourcecode:: pycon
 
     >>> metadata = MetaData(naming_convention=convention)
 
@@ -574,7 +604,9 @@ SQL expression, which can have any number of columns present, and additionally
 is often configured using a raw SQL string.  Therefore a common convention
 to use with :class:`.CheckConstraint` is one where we expect the object
 to have a name already, and we then enhance it with other convention elements.
-A typical convention is ``"ck_%(table_name)s_%(constraint_name)s"``::
+A typical convention is ``"ck_%(table_name)s_%(constraint_name)s"``:
+
+.. sourcecode:: python
 
     metadata = MetaData(
         naming_convention={"ck": "ck_%(table_name)s_%(constraint_name)s"}
@@ -595,7 +627,9 @@ The above table will produce the name ``ck_foo_value_gt_5``::
 :class:`.CheckConstraint` also supports the ``%(columns_0_name)s``
 token; we can make use of this by ensuring we use a :class:`.Column` or
 :func:`.sql.expression.column` element within the constraint's expression,
-either by declaring the constraint separate from the table::
+either by declaring the constraint separate from the table:
+
+.. sourcecode:: python
 
     metadata = MetaData(
         naming_convention={"ck": "ck_%(table_name)s_%(column_0_name)s"}
@@ -607,7 +641,9 @@ either by declaring the constraint separate from the table::
 
     CheckConstraint(foo.c.value > 5)
 
-or by using a :func:`.sql.expression.column` inline::
+or by using a :func:`.sql.expression.column` inline:
+
+.. sourcecode:: python
 
     from sqlalchemy import column
 
@@ -644,7 +680,9 @@ Configuring Naming for Boolean, Enum, and other schema types
 The :class:`.SchemaType` class refers to type objects such as :class:`.Boolean`
 and :class:`.Enum` which generate a CHECK constraint accompanying the type.
 The name for the constraint here is most directly set up by sending
-the "name" parameter, e.g. :paramref:`.Boolean.name`::
+the "name" parameter, e.g. :paramref:`.Boolean.name`:
+
+.. sourcecode:: python
 
     Table('foo', metadata,
         Column('flag', Boolean(name='ck_foo_flag'))
@@ -652,7 +690,9 @@ the "name" parameter, e.g. :paramref:`.Boolean.name`::
 
 The naming convention feature may be combined with these types as well,
 normally by using a convention which includes ``%(constraint_name)s``
-and then applying a name to the type::
+and then applying a name to the type:
+
+.. sourcecode:: python
 
     metadata = MetaData(
         naming_convention={"ck": "ck_%(table_name)s_%(constraint_name)s"}
@@ -680,7 +720,9 @@ MySQL.
 
 The CHECK constraint may also make use of the ``column_0_name`` token,
 which works nicely with :class:`.SchemaType` since these constraints have
-only one column::
+only one column:
+
+.. sourcecode:: python
 
     metadata = MetaData(
         naming_convention={"ck": "ck_%(table_name)s_%(column_0_name)s"}
@@ -794,7 +836,9 @@ Note in the example above, the :class:`.Index` construct is created
 externally to the table which it corresponds, using :class:`.Column`
 objects directly.  :class:`.Index` also supports
 "inline" definition inside the :class:`.Table`, using string names to
-identify columns::
+identify columns:
+
+.. sourcecode:: python
 
     meta = MetaData()
     mytable = Table('mytable', meta,
@@ -831,14 +875,18 @@ Functional Indexes
 
 :class:`.Index` supports SQL and function expressions, as supported by the
 target backend.  To create an index against a column using a descending
-value, the :meth:`.ColumnElement.desc` modifier may be used::
+value, the :meth:`.ColumnElement.desc` modifier may be used:
+
+.. sourcecode:: python
 
     from sqlalchemy import Index
 
     Index('someindex', mytable.c.somecol.desc())
 
 Or with a backend that supports functional indexes such as PostgreSQL,
-a "case insensitive" index can be created using the ``lower()`` function::
+a "case insensitive" index can be created using the ``lower()`` function:
+
+.. sourcecode:: python
 
     from sqlalchemy import func, Index
 

@@ -21,7 +21,9 @@ by default is the same as the :attr:`.Column.name`.
 
 The name assigned to the Python attribute which maps to
 :class:`.Column` can be different from either :attr:`.Column.name` or :attr:`.Column.key`
-just by assigning it that way, as we illustrate here in a Declarative mapping::
+just by assigning it that way, as we illustrate here in a Declarative mapping:
+
+.. sourcecode:: python
 
     class User(Base):
         __tablename__ = 'user'
@@ -32,7 +34,9 @@ Where above ``User.id`` resolves to a column named ``user_id``
 and ``User.name`` resolves to a column named ``user_name``.
 
 When mapping to an existing table, the :class:`.Column` object
-can be referenced directly::
+can be referenced directly:
+
+.. sourcecode:: python
 
     class User(Base):
         __table__ = user_table
@@ -40,7 +44,9 @@ can be referenced directly::
         name = user_table.c.user_name
 
 Or in a classical mapping, placed in the ``properties`` dictionary
-with the desired key::
+with the desired key:
+
+.. sourcecode:: python
 
     mapper(User, user_table, properties={
        'id': user_table.c.user_id,
@@ -61,7 +67,9 @@ objects explicitly, and instead are automating the production of :class:`.Table`
 objects using reflection (e.g. as described in :ref:`metadata_reflection_toplevel`)?
 In this case we can make use of the :meth:`.DDLEvents.column_reflect` event
 to intercept the production of :class:`.Column` objects and provide them
-with the :attr:`.Column.key` of our choice::
+with the :attr:`.Column.key` of our choice:
+
+.. sourcecode:: python
 
     @event.listens_for(Table, "column_reflect")
     def column_reflect(inspector, table, column_info):
@@ -69,14 +77,18 @@ with the :attr:`.Column.key` of our choice::
         column_info['key'] = "attr_%s" % column_info['name'].lower()
 
 With the above event, the reflection of :class:`.Column` objects will be intercepted
-with our event that adds a new ".key" element, such as in a mapping as below::
+with our event that adds a new ".key" element, such as in a mapping as below:
+
+.. sourcecode:: python
 
     class MyClass(Base):
         __table__ = Table("some_table", Base.metadata,
                     autoload=True, autoload_with=some_engine)
 
 If we want to qualify our event to only react for the specific :class:`.MetaData`
-object above, we can check for it in our event::
+object above, we can check for it in our event:
+
+.. sourcecode:: python
 
     @event.listens_for(Table, "column_reflect")
     def column_reflect(inspector, table, column_info):
@@ -90,7 +102,9 @@ Naming All Columns with a Prefix
 --------------------------------
 
 A quick approach to prefix column names, typically when mapping
-to an existing :class:`.Table` object, is to use ``column_prefix``::
+to an existing :class:`.Table` object, is to use ``column_prefix``:
+
+.. sourcecode:: python
 
     class User(Base):
         __table__ = user_table
@@ -115,7 +129,9 @@ explicitly creates the :class:`.ColumnProperty` used by the
 we can pass additional arguments about how we'd like the :class:`.Column`
 to be mapped.   Below, we pass an option ``active_history``,
 which specifies that a change to this column's value should
-result in the former value being loaded first::
+result in the former value being loaded first:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import column_property
 
@@ -127,7 +143,9 @@ result in the former value being loaded first::
 
 :func:`.column_property` is also used to map a single attribute to
 multiple columns.  This use case arises when mapping to a :func:`~.expression.join`
-which has attributes which are equated to each other::
+which has attributes which are equated to each other:
+
+.. sourcecode:: python
 
     class User(Base):
         __table__ = user.join(address)
@@ -141,7 +159,9 @@ For more examples featuring this usage, see :ref:`maptojoin`.
 Another place where :func:`.column_property` is needed is to specify SQL expressions as
 mapped attributes, such as below where we create an attribute ``fullname``
 that is the string concatenation of the ``firstname`` and ``lastname``
-columns::
+columns:
+
+.. sourcecode:: python
 
     class User(Base):
         __tablename__ = 'user'
@@ -165,7 +185,9 @@ the table's structure from the database.
 For such a table that has lots of columns that don't need to be referenced
 in the application, the ``include_properties`` or ``exclude_properties``
 arguments can specify that only a subset of columns should be mapped.
-For example::
+For example:
+
+.. sourcecode:: python
 
     class User(Base):
         __table__ = user_table
@@ -175,7 +197,9 @@ For example::
 
 ...will map the ``User`` class to the ``user_table`` table, only including
 the ``user_id`` and ``user_name`` columns - the rest are not referenced.
-Similarly::
+Similarly:
+
+.. sourcecode:: python
 
     class Address(Base):
         __table__ = address_table
@@ -196,7 +220,9 @@ In some cases, multiple columns may have the same name, such as when
 mapping to a join of two or more tables that share some column name.
 ``include_properties`` and ``exclude_properties`` can also accommodate
 :class:`.Column` objects to more accurately describe which columns
-should be included or excluded::
+should be included or excluded:
+
+.. sourcecode:: python
 
     class UserAddress(Base):
         __table__ = user_table.join(addresses_table)

@@ -78,7 +78,9 @@ This is configured using the :paramref:`.relationship.lazy` parameter to
 include ``select``, ``joined``, ``subquery`` and ``selectin``.
 
 For example, to configure a relationship to use joined eager loading when
-the parent object is queried::
+the parent object is queried:
+
+.. sourcecode:: python
 
     class Parent(Base):
         __tablename__ = 'parent'
@@ -108,7 +110,9 @@ the most common are
 :func:`~sqlalchemy.orm.subqueryload`, :func:`~sqlalchemy.orm.selectinload`
 and :func:`~sqlalchemy.orm.lazyload`.   The option accepts either
 the string name of an attribute against a parent, or for greater specificity
-can accommodate a class-bound attribute directly::
+can accommodate a class-bound attribute directly:
+
+.. sourcecode:: python
 
     # set children to load lazily
     session.query(Parent).options(lazyload('children')).all()
@@ -120,7 +124,9 @@ can accommodate a class-bound attribute directly::
     session.query(Parent).options(joinedload('children')).all()
 
 The loader options can also be "chained" using **method chaining**
-to specify how loading should occur further levels deep::
+to specify how loading should occur further levels deep:
+
+.. sourcecode:: python
 
     session.query(Parent).options(
         joinedload(Parent.children).
@@ -128,7 +134,9 @@ to specify how loading should occur further levels deep::
 
 Chained loader options can be applied against a "lazy" loaded collection.
 This means that when a collection or association is lazily loaded upon
-access, the specified option will then take effect::
+access, the specified option will then take effect:
+
+.. sourcecode:: python
 
     session.query(Parent).options(
         lazyload(Parent.children).
@@ -142,7 +150,9 @@ collection on each member of ``children``.
 
 Using method chaining, the loader style of each link in the path is explicitly
 stated.  To navigate along a path without changing the existing loader style
-of a particular attribute, the :func:`.defaultload` method/function may be used::
+of a particular attribute, the :func:`.defaultload` method/function may be used:
+
+.. sourcecode:: python
 
     session.query(A).options(
         defaultload("atob").
@@ -151,7 +161,9 @@ of a particular attribute, the :func:`.defaultload` method/function may be used:
 .. note::  The loader options applied to an object's lazy-loaded collections
    are **"sticky"** to specific object instances, meaning they will persist
    upon collections loaded by that specific object for as long as it exists in
-   memory.  For example, given the previous example::
+   memory.  For example, given the previous example:
+
+   .. sourcecode:: python
 
       session.query(Parent).options(
           lazyload(Parent.children).
@@ -166,7 +178,9 @@ of a particular attribute, the :func:`.defaultload` method/function may be used:
    object is accessed from a subsequent query that specifies a different set of
    options.To change the options on an existing object without expunging it and
    re-loading, they must be set explicitly in conjunction with the
-   :meth:`.Query.populate_existing` method::
+   :meth:`.Query.populate_existing` method:
+
+   .. sourcecode:: python
 
       # change the options on Parent objects that were already loaded
       session.query(Parent).populate_existing().options(
@@ -218,13 +232,15 @@ This default behavior of "load upon attribute access" is known as "lazy" or
 when the attribute is first accessed.
 
 Lazy loading can be enabled for a given attribute that is normally
-configured in some other way using the :func:`.lazyload` loader option::
+configured in some other way using the :func:`.lazyload` loader option:
 
-    from sqlalchemy.orm import lazyload
+    .. sourcecode:: python
 
-    # force lazy loading for an attribute that is set to
-    # load some other way normally
-    session.query(User).options(lazyload(User.addresses))
+        from sqlalchemy.orm import lazyload
+
+        # force lazy loading for an attribute that is set to
+        # load some other way normally
+        session.query(User).options(lazyload(User.addresses))
 
 .. _prevent_lazy_with_raiseload:
 
@@ -242,7 +258,9 @@ requires that the attributes which are to be loaded be specified with the
 that were not eagerly loaded, where lazy loading is not desired, may be
 addressed using the :func:`.raiseload` strategy; this loader strategy
 replaces the behavior of lazy loading with an informative error being
-raised::
+raised:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import raiseload
     session.query(User).options(raiseload(User.addresses))
@@ -253,7 +271,9 @@ access this attribute, an ORM exception is raised.
 
 :func:`.raiseload` may be used with a so-called "wildcard" specifier to
 indicate that all relationships should use this strategy.  For example,
-to set up only one attribute as eager loading, and all the rest as raise::
+to set up only one attribute as eager loading, and all the rest as raise:
+
+.. sourcecode:: python
 
     session.query(Order).options(
         joinedload(Order.items), raiseload('*'))
@@ -261,14 +281,18 @@ to set up only one attribute as eager loading, and all the rest as raise::
 The above wildcard will apply to **all** relationships not just on ``Order``
 besides ``items``, but all those on the ``Item`` objects as well.  To set up
 :func:`.raiseload` for only the ``Order`` objects, specify a full
-path with :class:`.orm.Load`::
+path with :class:`.orm.Load`:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import Load
 
     session.query(Order).options(
         joinedload(Order.items), Load(Order).raiseload('*'))
 
-Conversely, to set up the raise for just the ``Item`` objects::
+Conversely, to set up the raise for just the ``Item`` objects:
+
+.. sourcecode:: python
 
     session.query(Order).options(
         joinedload(Order.items).raiseload('*'))
@@ -288,7 +312,9 @@ a LEFT OUTER join) to the SELECT statement emitted by a :class:`.Query`
 and populates the target scalar/collection from the
 same result set as that of the parent.
 
-At the mapping level, this looks like::
+At the mapping level, this looks like:
+
+.. sourcecode:: python
 
     class Address(Base):
         # ...
@@ -324,7 +350,9 @@ that does not refer to a related row.  For an attribute that is guaranteed
 to have an element, such as a many-to-one
 reference to a related object where the referencing foreign key is NOT NULL,
 the query can be made more efficient by using an inner join; this is available
-at the mapping level via the :paramref:`.relationship.innerjoin` flag::
+at the mapping level via the :paramref:`.relationship.innerjoin` flag:
+
+.. sourcecode:: python
 
     class Address(Base):
         # ...
@@ -332,7 +360,9 @@ at the mapping level via the :paramref:`.relationship.innerjoin` flag::
         user_id = Column(ForeignKey('users.id'), nullable=False)
         user = relationship(User, lazy="joined", innerjoin=True)
 
-At the query option level, via the :paramref:`.joinedload.innerjoin` flag::
+At the query option level, via the :paramref:`.joinedload.innerjoin` flag:
+
+.. sourcecode:: python
 
     session.query(Address).options(
         joinedload(Address.user, innerjoin=True))
@@ -659,7 +689,9 @@ or :meth:`.Query.offset` should **always** include :meth:`.Query.order_by`
 against unique column(s) such as the primary key, so that the additional queries
 emitted by :func:`.subqueryload` include
 the same ordering as used by the parent query.  Without it, there is a chance
-that the inner query could return the wrong rows::
+that the inner query could return the wrong rows:
+
+.. sourcecode:: python
 
     # incorrect, no ORDER BY
     session.query(User).options(
@@ -907,7 +939,9 @@ style of :func:`.relationship` loading
 for a particular query, affecting all :func:`.relationship` -mapped
 attributes not otherwise
 specified in the :class:`.Query`.   This feature is available by passing
-the string ``'*'`` as the argument to any of these options::
+the string ``'*'`` as the argument to any of these options:
+
+.. sourcecode:: python
 
     session.query(MyClass).options(lazyload('*'))
 
@@ -923,7 +957,9 @@ SELECT statement when each attribute is accessed.
 The option does not supersede loader options stated in the
 query, such as :func:`.eagerload`,
 :func:`.subqueryload`, etc.  The query below will still use joined loading
-for the ``widget`` relationship::
+for the ``widget`` relationship:
+
+.. sourcecode:: python
 
     session.query(MyClass).options(
         lazyload('*'),
@@ -940,7 +976,9 @@ A variant of the wildcard loader strategy is the ability to set the strategy
 on a per-entity basis.  For example, if querying for ``User`` and ``Address``,
 we can instruct all relationships on ``Address`` only to use lazy loading
 by first applying the :class:`.Load` object, then specifying the ``*`` as a
-chained option::
+chained option:
+
+.. sourcecode:: python
 
     session.query(User, Address).options(
         Load(Address).lazyload('*'))
@@ -967,7 +1005,9 @@ option. This option is used in the same manner as the
 :func:`~sqlalchemy.orm.joinedload()` option except it is assumed that the
 :class:`~sqlalchemy.orm.query.Query` will specify the appropriate joins
 explicitly. Below, we specify a join between ``User`` and ``Address``
-and additionally establish this as the basis for eager loading of ``User.addresses``::
+and additionally establish this as the basis for eager loading of ``User.addresses``:
+
+.. sourcecode:: python
 
     class User(Base):
         __tablename__ = 'user'
@@ -1013,13 +1053,17 @@ construct:
 
 The path given as the argument to :func:`.contains_eager` needs
 to be a full path from the starting entity. For example if we were loading
-``Users->orders->Order->items->Item``, the string version would look like::
+``Users->orders->Order->items->Item``, the string version would look like:
+
+.. sourcecode:: python
 
     query(User).options(
         contains_eager('orders').
         contains_eager('items'))
 
-Or using the class-bound descriptor::
+Or using the class-bound descriptor:
+
+.. sourcecode:: python
 
     query(User).options(
         contains_eager(User.orders).
@@ -1035,7 +1079,9 @@ by writing our SQL to load a subset of elements for collections or
 scalar attributes.
 
 As an example, we can load a ``User`` object and eagerly load only particular
-addresses into its ``.addresses`` collection just by filtering::
+addresses into its ``.addresses`` collection just by filtering:
+
+.. sourcecode:: python
 
     q = session.query(User).join(User.addresses).\
                 filter(Address.email.like('%ed%')).\
@@ -1063,7 +1109,9 @@ in fact associated with the collection.
 
     For these reasons, prefer returning separate fields in a tuple rather
     than artificially altering a collection, when an object plus a custom
-    set of related objects is desired::
+    set of related objects is desired:
+
+    .. sourcecode:: python
 
         q = session.query(User, Address).join(User.addresses).\
                     filter(Address.email.like('%ed%'))
@@ -1075,7 +1123,9 @@ Advanced Usage with Arbitrary Statements
 The ``alias`` argument can be more creatively used, in that it can be made
 to represent any set of arbitrary names to match up into a statement.
 Below it is linked to a :func:`.select` which links a set of column objects
-to a string SQL statement::
+to a string SQL statement:
+
+.. sourcecode:: python
 
     # label the columns of the addresses table
     eager_columns = select([
@@ -1119,7 +1169,9 @@ does not consider backrefs when loading related objects, and it views a
 "one-to-one" as just another "one-to-many", that just happens to be one
 row.
 
-Given the following mapping::
+Given the following mapping:
+
+.. sourcecode:: python
 
     from sqlalchemy import Integer, ForeignKey, Column
     from sqlalchemy.orm import relationship, backref
@@ -1144,7 +1196,9 @@ Given the following mapping::
 
 
 If we query for an ``A`` row, and then ask it for ``a.b.a``, we will get
-an extra SELECT::
+an extra SELECT:
+
+.. sourcecode:: pycon
 
     >>> a1.b.a
     SELECT a.id AS a_id, a.b_id AS a_b_id
@@ -1152,7 +1206,9 @@ an extra SELECT::
     WHERE ? = a.b_id
 
 This SELECT is redundant because ``b.a`` is the same value as ``a1``.  We
-can create an on-load rule to populate this for us::
+can create an on-load rule to populate this for us:
+
+.. sourcecode:: python
 
     from sqlalchemy import event
     from sqlalchemy.orm import attributes

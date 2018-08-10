@@ -5,7 +5,9 @@ Linking Relationships with Backref
 
 The :paramref:`~.relationship.backref` keyword argument was first introduced in :ref:`ormtutorial_toplevel`, and has been
 mentioned throughout many of the examples here.   What does it actually do ?   Let's start
-with the canonical ``User`` and ``Address`` scenario::
+with the canonical ``User`` and ``Address`` scenario:
+
+.. sourcecode:: python
 
     from sqlalchemy import Integer, ForeignKey, String, Column
     from sqlalchemy.ext.declarative import declarative_base
@@ -33,7 +35,9 @@ refer to the parent ``User`` object.
 In fact, the :paramref:`~.relationship.backref` keyword is only a common shortcut for placing a second
 :func:`.relationship` onto the ``Address`` mapping, including the establishment
 of an event listener on both sides which will mirror attribute operations
-in both directions.   The above configuration is equivalent to::
+in both directions.   The above configuration is equivalent to:
+
+.. sourcecode:: python
 
     from sqlalchemy import Integer, ForeignKey, String, Column
     from sqlalchemy.ext.declarative import declarative_base
@@ -65,7 +69,9 @@ which have the behavior of "when an append or set event occurs here, set ourselv
 onto the incoming attribute using this particular attribute name".
 The behavior is illustrated as follows.   Start with a ``User`` and an ``Address``
 instance.  The ``.addresses`` collection is empty, and the ``.user`` attribute
-is ``None``::
+is ``None``:
+
+.. sourcecode:: pycon
 
     >>> u1 = User()
     >>> a1 = Address()
@@ -75,7 +81,9 @@ is ``None``::
     None
 
 However, once the ``Address`` is appended to the ``u1.addresses`` collection,
-both the collection and the scalar attribute have been populated::
+both the collection and the scalar attribute have been populated:
+
+.. sourcecode:: pycon
 
     >>> u1.addresses.append(a1)
     >>> u1.addresses
@@ -86,7 +94,9 @@ both the collection and the scalar attribute have been populated::
 This behavior of course works in reverse for removal operations as well, as well
 as for equivalent operations on both sides.   Such as
 when ``.user`` is set again to ``None``, the ``Address`` object is removed
-from the reverse collection::
+from the reverse collection:
+
+.. sourcecode:: pycon
 
     >>> a1.user = None
     >>> u1.addresses
@@ -117,7 +127,9 @@ direction.  The usual case
 here is a many-to-many :func:`.relationship` that has a :paramref:`~.relationship.secondary` argument,
 or a one-to-many or many-to-one which has a :paramref:`~.relationship.primaryjoin` argument (the
 :paramref:`~.relationship.primaryjoin` argument is discussed in :ref:`relationship_primaryjoin`).  Such
-as if we limited the list of ``Address`` objects to those which start with "tony"::
+as if we limited the list of ``Address`` objects to those which start with "tony":
+
+.. sourcecode:: python
 
     from sqlalchemy import Integer, ForeignKey, String, Column
     from sqlalchemy.ext.declarative import declarative_base
@@ -142,14 +154,14 @@ as if we limited the list of ``Address`` objects to those which start with "tony
         user_id = Column(Integer, ForeignKey('user.id'))
 
 We can observe, by inspecting the resulting property, that both sides
-of the relationship have this join condition applied::
+of the relationship have this join condition applied:
+
+.. sourcecode:: pycon
 
     >>> print(User.addresses.property.primaryjoin)
     "user".id = address.user_id AND address.email LIKE :email_1 || '%%'
-    >>>
     >>> print(Address.user.property.primaryjoin)
     "user".id = address.user_id AND address.email LIKE :email_1 || '%%'
-    >>>
 
 This reuse of arguments should pretty much do the "right thing" - it
 uses only arguments that are applicable, and in the case of a many-to-
@@ -166,7 +178,9 @@ that are specific to just the side where we happened to place the
 :paramref:`~.relationship.remote_side`,
 :paramref:`~.relationship.cascade` and
 :paramref:`~.relationship.cascade_backrefs`.   For this case we use
-the :func:`.backref` function in place of a string::
+the :func:`.backref` function in place of a string:
+
+.. sourcecode:: python
 
     # <other imports>
     from sqlalchemy.orm import backref
@@ -204,7 +218,9 @@ Taking our previous example, where we established a
 only to ``Address`` objects whose email address started with the word
 ``tony``, the usual backref behavior is that all items populate in
 both directions.   We wouldn't want this behavior for a case like the
-following::
+following:
+
+.. sourcecode:: pycon
 
     >>> u1 = User()
     >>> a1 = Address(email='mary')
@@ -218,7 +234,9 @@ the transaction committed and their attributes expired for a re-load, the ``addr
 collection will hit the database on next access and no longer have this ``Address`` object
 present, due to the filtering condition.   But we can do away with this unwanted side
 of the "backref" behavior on the Python side by using two separate :func:`.relationship` constructs,
-placing :paramref:`~.relationship.back_populates` only on one side::
+placing :paramref:`~.relationship.back_populates` only on one side:
+
+.. sourcecode:: python
 
     from sqlalchemy import Integer, ForeignKey, String, Column
     from sqlalchemy.ext.declarative import declarative_base
@@ -244,7 +262,9 @@ placing :paramref:`~.relationship.back_populates` only on one side::
 
 With the above scenario, appending an ``Address`` object to the ``.addresses``
 collection of a ``User`` will always establish the ``.user`` attribute on that
-``Address``::
+``Address``:
+
+.. sourcecode:: pycon
 
     >>> u1 = User()
     >>> a1 = Address(email='tony')
@@ -253,7 +273,9 @@ collection of a ``User`` will always establish the ``.user`` attribute on that
     <__main__.User object at 0x1411850>
 
 However, applying a ``User`` to the ``.user`` attribute of an ``Address``,
-will not append the ``Address`` object to the collection::
+will not append the ``Address`` object to the collection:
+
+.. sourcecode:: pycon
 
     >>> a2 = Address(email='mary')
     >>> a2.user = u1

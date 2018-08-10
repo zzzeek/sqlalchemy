@@ -9,7 +9,9 @@ MySQL Data Types
 ----------------
 
 As with all SQLAlchemy dialects, all UPPERCASE types that are known to be
-valid with MySQL are importable from the top level dialect::
+valid with MySQL are importable from the top level dialect:
+
+.. sourcecode:: python
 
     from sqlalchemy.dialects.mysql import \
             BIGINT, BINARY, BIT, BLOB, BOOLEAN, CHAR, DATE, \

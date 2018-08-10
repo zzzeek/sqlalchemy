@@ -17,7 +17,9 @@ described in the section :ref:`hybrids_toplevel`.  The hybrid provides
 for an expression that works at both the Python level as well as at the
 SQL expression level.  For example, below we map a class ``User``,
 containing attributes ``firstname`` and ``lastname``, and include a hybrid that
-will provide for us the ``fullname``, which is the string concatenation of the two::
+will provide for us the ``fullname``, which is the string concatenation of the two:
+
+.. sourcecode:: python
 
     from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -32,12 +34,16 @@ will provide for us the ``fullname``, which is the string concatenation of the t
             return self.firstname + " " + self.lastname
 
 Above, the ``fullname`` attribute is interpreted at both the instance and
-class level, so that it is available from an instance::
+class level, so that it is available from an instance:
+
+.. sourcecode:: python
 
     some_user = session.query(User).first()
     print(some_user.fullname)
 
-as well as usable within queries::
+as well as usable within queries:
+
+.. sourcecode:: python
 
     some_user = session.query(User).filter(User.fullname == "John Smith").first()
 
@@ -46,7 +52,9 @@ can be dual purposed at the instance and class level.  Often, the SQL expression
 must be distinguished from the Python expression, which can be achieved using
 :meth:`.hybrid_property.expression`.  Below we illustrate the case where a conditional
 needs to be present inside the hybrid, using the ``if`` statement in Python and the
-:func:`.sql.expression.case` construct for SQL expressions::
+:func:`.sql.expression.case` construct for SQL expressions:
+
+.. sourcecode:: python
 
     from sqlalchemy.ext.hybrid import hybrid_property
     from sqlalchemy.sql import case
@@ -91,7 +99,9 @@ as a whole, and there are also some configurational quirks which can occur
 when using :func:`.orm.column_property` from declarative mixins.
 
 Our "fullname" example can be expressed using :func:`.orm.column_property` as
-follows::
+follows:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import column_property
 
@@ -104,7 +114,9 @@ follows::
 
 Correlated subqueries may be used as well.  Below we use the :func:`.select`
 construct to create a SELECT that links together the count of ``Address``
-objects available for a particular ``User``::
+objects available for a particular ``User``:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import column_property
     from sqlalchemy import select, func
@@ -128,7 +140,9 @@ objects available for a particular ``User``::
                 correlate_except(Address)
         )
 
-In the above example, we define a :func:`.select` construct like the following::
+In the above example, we define a :func:`.select` construct like the following:
+
+.. sourcecode:: python
 
     select([func.count(Address.id)]).\
         where(Address.user_id==id).\
@@ -151,7 +165,9 @@ of joins between ``User`` and ``Address`` tables where SELECT statements against
 If import issues prevent the :func:`.column_property` from being defined
 inline with the class, it can be assigned to the class after both
 are configured.   In Declarative this has the effect of calling :meth:`.Mapper.add_property`
-to add an additional property after the fact::
+to add an additional property after the fact:
+
+.. sourcecode:: python
 
     User.address_count = column_property(
             select([func.count(Address.id)]).\
@@ -160,7 +176,9 @@ to add an additional property after the fact::
 
 For many-to-many relationships, use :func:`.and_` to join the fields of the
 association table to both tables in a relation, illustrated
-here with a classical mapping::
+here with a classical mapping:
+
+.. sourcecode:: python
 
     from sqlalchemy import and_
 
@@ -183,7 +201,9 @@ only needs to be available on an already-loaded instance.   The function
 is decorated with Python's own ``@property`` decorator to mark it as a read-only
 attribute.   Within the function, :func:`.object_session`
 is used to locate the :class:`.Session` corresponding to the current object,
-which is then used to emit a query::
+which is then used to emit a query:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import object_session
     from sqlalchemy import select, func
@@ -214,7 +234,9 @@ Query-time SQL expressions as mapped attributes
 When using :meth:`.Session.query`, we have the option to specify not just
 mapped entities but ad-hoc SQL expressions as well.  Suppose if a class
 ``A`` had integer attributes ``.x`` and ``.y``, we could query for ``A``
-objects, and additionally the sum of ``.x`` and ``.y``, as follows::
+objects, and additionally the sum of ``.x`` and ``.y``, as follows:
+
+.. sourcecode:: python
 
     q = session.query(A, A.x + A.y)
 
@@ -225,7 +247,9 @@ returned ``A`` objects instead of as a separate tuple entry; this is the
 :func:`.with_expression` query option in conjunction with the
 :func:`.query_expression` attribute mapping.    The class is mapped
 to include a placeholder attribute where any particular SQL expression
-may be applied::
+may be applied:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import query_expression
 
@@ -238,7 +262,9 @@ may be applied::
         expr = query_expression()
 
 We can then query for objects of type ``A``, applying an arbitrary
-SQL expression to be populated into ``A.expr``::
+SQL expression to be populated into ``A.expr``:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import with_expression
     q = session.query(A).options(
@@ -260,21 +286,25 @@ The :func:`.query_expression` mapping has these caveats:
 
 * The mapped attribute currently **cannot** be applied to other parts of the
   query, such as the WHERE clause, the ORDER BY clause, and make use of the
-  ad-hoc expression; that is, this won't work::
+  ad-hoc expression; that is, this won't work:
 
-    # wont work
-    q = session.query(A).options(
-        with_expression(A.expr, A.x + A.y)
-    ).filter(A.expr > 5).order_by(A.expr)
+  .. sourcecode:: python
+
+        # wont work
+        q = session.query(A).options(
+            with_expression(A.expr, A.x + A.y)
+        ).filter(A.expr > 5).order_by(A.expr)
 
   The ``A.expr`` expression will resolve to NULL in the above WHERE clause
   and ORDER BY clause. To use the expression throughout the query, assign to a
-  variable and use that::
+  variable and use that:
 
-    a_expr = A.x + A.y
-    q = session.query(A).options(
-        with_expression(A.expr, a_expr)
-    ).filter(a_expr > 5).order_by(a_expr)
+  .. sourcecode:: python
+
+        a_expr = A.x + A.y
+        q = session.query(A).options(
+            with_expression(A.expr, a_expr)
+        ).filter(a_expr > 5).order_by(a_expr)
 
 .. versionadded:: 1.2
 

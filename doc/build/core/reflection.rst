@@ -13,7 +13,9 @@ existing within the database. This process is called *reflection*. In the
 most simple case you need only specify the table name, a :class:`~sqlalchemy.schema.MetaData`
 object, and the ``autoload=True`` flag. If the
 :class:`~sqlalchemy.schema.MetaData` is not persistently bound, also add the
-``autoload_with`` argument::
+``autoload_with`` argument:
+
+.. sourcecode:: pycon
 
     >>> messages = Table('messages', meta, autoload=True, autoload_with=engine)
     >>> [c.name for c in messages.columns]
@@ -30,7 +32,9 @@ key, a second :class:`~sqlalchemy.schema.Table` object is created within the
 :class:`~sqlalchemy.schema.MetaData` object representing the connection.
 Below, assume the table ``shopping_cart_items`` references a table named
 ``shopping_carts``. Reflecting the ``shopping_cart_items`` table has the
-effect such that the ``shopping_carts`` table will also be loaded::
+effect such that the ``shopping_carts`` table will also be loaded:
+
+.. sourcecode:: pycon
 
     >>> shopping_cart_items = Table('shopping_cart_items', meta, autoload=True, autoload_with=engine)
     >>> 'shopping_carts' in meta.tables:
@@ -43,7 +47,9 @@ behavior such that if you requested both tables individually,
 name. The :class:`~sqlalchemy.schema.Table` constructor actually returns to
 you the already-existing :class:`~sqlalchemy.schema.Table` object if one
 already exists with the given name. Such as below, we can access the already
-generated ``shopping_carts`` table just by naming it::
+generated ``shopping_carts`` table just by naming it:
+
+.. sourcecode:: python
 
     shopping_carts = Table('shopping_carts', meta)
 
@@ -59,7 +65,9 @@ Overriding Reflected Columns
 
 Individual columns can be overridden with explicit values when reflecting
 tables; this is handy for specifying custom datatypes, constraints such as
-primary keys that may not be configured within the database, etc.::
+primary keys that may not be configured within the database, etc.:
+
+.. sourcecode:: pycon
 
     >>> mytable = Table('mytable', meta,
     ... Column('id', Integer, primary_key=True),   # override reflected 'id' to have primary key
@@ -70,7 +78,9 @@ Reflecting Views
 ----------------
 
 The reflection system can also reflect views. Basic usage is the same as that
-of a table::
+of a table:
+
+.. sourcecode:: python
 
     my_view = Table("some_view", metadata, autoload=True)
 
@@ -83,7 +93,9 @@ reflecting a view, if not foreign keys as well. View reflection doesn't
 extrapolate these constraints.
 
 Use the "override" technique for this, specifying explicitly those columns
-which are part of the primary key or have foreign key constraints::
+which are part of the primary key or have foreign key constraints:
+
+.. sourcecode:: python
 
     my_view = Table("some_view", metadata,
                     Column("view_id", Integer, primary_key=True),
@@ -98,14 +110,18 @@ The :class:`~sqlalchemy.schema.MetaData` object can also get a listing of
 tables and reflect the full set. This is achieved by using the
 :func:`~sqlalchemy.schema.MetaData.reflect` method. After calling it, all
 located tables are present within the :class:`~sqlalchemy.schema.MetaData`
-object's dictionary of tables::
+object's dictionary of tables:
+
+.. sourcecode:: python
 
     meta = MetaData()
     meta.reflect(bind=someengine)
     users_table = meta.tables['users']
     addresses_table = meta.tables['addresses']
 
-``metadata.reflect()`` also provides a handy way to clear or delete all the rows in a database::
+``metadata.reflect()`` also provides a handy way to clear or delete all the rows in a database:
+
+.. sourcecode:: python
 
     meta = MetaData()
     meta.reflect(bind=someengine)
@@ -119,7 +135,9 @@ Fine Grained Reflection with Inspector
 
 A low level interface which provides a backend-agnostic system of loading
 lists of schema, table, column, and constraint descriptions from a given
-database is also available. This is known as the "Inspector"::
+database is also available. This is known as the "Inspector":
+
+.. sourcecode:: python
 
     from sqlalchemy import create_engine
     from sqlalchemy.engine import reflection

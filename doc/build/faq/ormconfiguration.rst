@@ -43,7 +43,9 @@ and is also key to the most common (and not-so-common) patterns of ORM usage.
 In almost all cases, a table does have a so-called :term:`candidate key`, which is a column or series
 of columns that uniquely identify a row.  If a table truly doesn't have this, and has actual
 fully duplicate rows, the table is not corresponding to `first normal form <http://en.wikipedia.org/wiki/First_normal_form>`_ and cannot be mapped.   Otherwise, whatever columns comprise the best candidate key can be
-applied directly to the mapper::
+applied directly to the mapper:
+
+.. sourcecode:: python
 
     class SomeClass(Base):
         __table__ = some_table_with_no_pk
@@ -52,7 +54,9 @@ applied directly to the mapper::
         }
 
 Better yet is when using fully declared table metadata, use the ``primary_key=True``
-flag on those columns::
+flag on those columns:
+
+.. sourcecode:: python
 
     class SomeClass(Base):
         __tablename__ = "some_table_with_no_pk"

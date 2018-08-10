@@ -19,7 +19,9 @@ except for one, in which is wants ``BLOB`` to be rendered.  Usage
 of an existing generic type, in this case :class:`.LargeBinary`, is
 preferred for most use cases.  But to control
 types more accurately, a compilation directive that is per-dialect
-can be associated with any type::
+can be associated with any type:
+
+.. sourcecode:: python
 
     from sqlalchemy.ext.compiler import compiles
     from sqlalchemy.types import BINARY
@@ -78,7 +80,9 @@ DBAPI in use requires, and are primarily a private implementation detail.
 The use case of a type that can safely receive Python bytestrings,
 that is strings that contain non-ASCII characters and are not ``u''``
 objects in Python 2, can be achieved using a :class:`.TypeDecorator`
-which coerces as needed::
+which coerces as needed:
+
+.. sourcecode:: python
 
     from sqlalchemy.types import TypeDecorator, Unicode
 
@@ -97,7 +101,9 @@ Rounding Numerics
 ^^^^^^^^^^^^^^^^^
 
 Some database connectors like those of SQL Server choke if a Decimal is passed with too
-many decimal places.   Here's a recipe that rounds them down::
+many decimal places.   Here's a recipe that rounds them down:
+
+.. sourcecode:: python
 
     from sqlalchemy.types import TypeDecorator, Numeric
     from decimal import Decimal
@@ -126,7 +132,9 @@ Backend-agnostic GUID Type
 Receives and returns Python uuid() objects.  Uses the PG UUID type
 when using PostgreSQL, CHAR(32) on other backends, storing them
 in stringified hex format.   Can be modified to store
-binary in CHAR(16) if desired::
+binary in CHAR(16) if desired:
+
+.. sourcecode:: python
 
     from sqlalchemy.types import TypeDecorator, CHAR
     from sqlalchemy.dialects.postgresql import UUID
@@ -171,7 +179,9 @@ Marshal JSON Strings
 ^^^^^^^^^^^^^^^^^^^^
 
 This type uses ``simplejson`` to marshal Python data structures
-to/from JSON.   Can be modified to use Python's builtin json encoder::
+to/from JSON.   Can be modified to use Python's builtin json encoder:
+
+.. sourcecode:: python
 
     from sqlalchemy.types import TypeDecorator, VARCHAR
     import json
@@ -204,7 +214,9 @@ Adding Mutability
 The ORM by default will not detect "mutability" on such a type as above -
 meaning, in-place changes to values will not be detected and will not be
 flushed.   Without further steps, you instead would need to replace the existing
-value with a new one on each parent object to detect changes::
+value with a new one on each parent object to detect changes:
+
+.. sourcecode:: python
 
     obj.json_value["key"] = "value"  # will *not* be detected by the ORM
 
@@ -214,7 +226,9 @@ The above limitation may be
 fine, as many applications may not require that the values are ever mutated
 once created.  For those which do have this requirement, support for mutability
 is best applied using the ``sqlalchemy.ext.mutable`` extension.  For a
-dictionary-oriented JSON structure, we can apply this as::
+dictionary-oriented JSON structure, we can apply this as:
+
+.. sourcecode:: python
 
     json_type = MutableDict.as_mutable(JSONEncodedDict)
 
@@ -240,7 +254,9 @@ LIKE operator for the JSON type.  LIKE makes no sense against a JSON structure,
 but it does make sense against the underlying textual representation.  To
 get at this with a type like ``JSONEncodedDict``, we need to
 **coerce** the column to a textual form using :func:`.cast` or
-:func:`.type_coerce` before attempting to use this operator::
+:func:`.type_coerce` before attempting to use this operator:
+
+.. sourcecode:: python
 
     from sqlalchemy import type_coerce, String
 
@@ -251,7 +267,9 @@ get at this with a type like ``JSONEncodedDict``, we need to
 translations like these based on operators.  If we wanted to frequently use the
 LIKE operator with our JSON object interpreted as a string, we can build it
 into the type by overriding the :meth:`.TypeDecorator.coerce_compared_value`
-method::
+method:
+
+.. sourcecode:: python
 
     from sqlalchemy.sql import operators
     from sqlalchemy import String
@@ -300,7 +318,9 @@ statement execution.  Overriding it allows a copy of the custom
 type to be used in lieu of a DBAPI-specific type.  Below we subclass
 the :class:`.types.TIME` type to have custom result processing behavior.
 The ``process()`` function will receive ``value`` from the DBAPI
-cursor directly::
+cursor directly:
+
+.. sourcecode:: python
 
   class MySpecialTime(TIME):
       def __init__(self, special_argument):
@@ -353,7 +373,9 @@ bound parameters or a column expression.  For example, to build a ``Geometry``
 type which will apply the PostGIS function ``ST_GeomFromText`` to all outgoing
 values and the function ``ST_AsText`` to all incoming data, we can create
 our own subclass of :class:`.UserDefinedType` which provides these methods
-in conjunction with :data:`~.sqlalchemy.sql.expression.func`::
+in conjunction with :data:`~.sqlalchemy.sql.expression.func`:
+
+.. sourcecode:: python
 
     from sqlalchemy import func
     from sqlalchemy.types import UserDefinedType
@@ -369,7 +391,9 @@ in conjunction with :data:`~.sqlalchemy.sql.expression.func`::
             return func.ST_AsText(col, type_=self)
 
 We can apply the ``Geometry`` type into :class:`.Table` metadata
-and use it in a :func:`.select` construct::
+and use it in a :func:`.select` construct:
+
+.. sourcecode:: python
 
     geometry = Table('geometry', metadata,
                   Column('geom_id', Integer, primary_key=True),
@@ -392,7 +416,9 @@ The :meth:`.TypeEngine.column_expression` method interacts with the
 mechanics of the compiler such that the SQL expression does not interfere
 with the labeling of the wrapped expression.   Such as, if we rendered
 a :func:`.select` against a :func:`.label` of our expression, the string
-label is moved to the outside of the wrapped expression::
+label is moved to the outside of the wrapped expression:
+
+.. sourcecode:: python
 
     print(select([geometry.c.geom_data.label('my_data')]))
 
@@ -404,7 +430,9 @@ Output::
 For an example of subclassing a built in type directly, we subclass
 :class:`.postgresql.BYTEA` to provide a ``PGPString``, which will make use of the
 PostgreSQL ``pgcrypto`` extension to encrypt/decrypt values
-transparently::
+transparently:
+
+.. sourcecode:: python
 
     from sqlalchemy import create_engine, String, select, func, \
             MetaData, Table, Column, type_coerce
@@ -487,7 +515,9 @@ the built in set.   The :class:`.TypeEngine` base class defines a root "comparis
 :class:`.TypeEngine.Comparator`, and many specific types provide their own sub-implementations of this
 class.   User-defined :class:`.TypeEngine.Comparator` implementations can be built directly into a
 simple subclass of a particular type in order to override or define new operations.  Below,
-we create a :class:`.Integer` subclass which overrides the :meth:`.ColumnOperators.__add__` operator::
+we create a :class:`.Integer` subclass which overrides the :meth:`.ColumnOperators.__add__` operator:
+
+.. sourcecode:: python
 
     from sqlalchemy import Integer
 
@@ -501,7 +531,9 @@ establishes the :attr:`.TypeEngine.comparator_factory` attribute as
 referring to a new class, subclassing the :class:`.TypeEngine.Comparator` class
 associated with the :class:`.Integer` type.
 
-Usage::
+Usage:
+
+.. sourcecode:: pycon
 
     >>> sometable = Table("sometable", metadata, Column("data", MyInt))
     >>> print(sometable.c.data + 5)
@@ -517,7 +549,9 @@ of ``self.op("goofy")(other)``.
 
 When using :meth:`.Operators.op` for comparison operations that return a
 boolean result, the :paramref:`.Operators.op.is_comparison` flag should be
-set to ``True``::
+set to ``True``:
+
+.. sourcecode:: python
 
     class MyInt(Integer):
         class comparator_factory(Integer.Comparator):
@@ -529,7 +563,9 @@ owning SQL expression
 using a ``__getattr__`` scheme, which exposes methods added to
 :class:`.TypeEngine.Comparator` onto the owning :class:`.ColumnElement`.
 For example, to add a ``log()`` function
-to integers::
+to integers:
+
+.. sourcecode:: python
 
     from sqlalchemy import Integer, func
 
@@ -538,7 +574,9 @@ to integers::
             def log(self, other):
                 return func.log(self.expr, other)
 
-Using the above type::
+Using the above type:
+
+.. sourcecode:: pycon
 
     >>> print(sometable.c.data.log(5))
     log(:log_1, :log_2)
@@ -546,7 +584,9 @@ Using the above type::
 Unary operations
 are also possible.  For example, to add an implementation of the
 PostgreSQL factorial operator, we combine the :class:`.UnaryExpression` construct
-along with a :class:`.custom_op` to produce the factorial expression::
+along with a :class:`.custom_op` to produce the factorial expression:
+
+.. sourcecode:: python
 
     from sqlalchemy import Integer
     from sqlalchemy.sql.expression import UnaryExpression
@@ -559,7 +599,9 @@ along with a :class:`.custom_op` to produce the factorial expression::
                             modifier=operators.custom_op("!"),
                             type_=MyInteger)
 
-Using the above type::
+Using the above type:
+
+.. sourcecode:: pycon
 
     >>> from sqlalchemy.sql import column
     >>> print(column('x', MyInteger).factorial())

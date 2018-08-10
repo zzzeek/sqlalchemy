@@ -25,7 +25,9 @@ the mapper will invoke the decorated method with no
 arguments every time it loads or reconstructs an instance of the
 class. This is
 useful for recreating transient properties that are normally assigned in
-``__init__``::
+``__init__``:
+
+.. sourcecode:: python
 
     from sqlalchemy import orm
 

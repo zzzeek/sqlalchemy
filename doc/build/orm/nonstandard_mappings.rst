@@ -11,7 +11,9 @@ Mappers can be constructed against arbitrary relational units (called
 *selectables*) in addition to plain tables. For example, the :func:`~.expression.join`
 function creates a selectable unit comprised of
 multiple tables, complete with its own composite primary key, which can be
-mapped in the same way as a :class:`.Table`::
+mapped in the same way as a :class:`.Table`:
+
+.. sourcecode:: python
 
     from sqlalchemy import Table, Column, Integer, \
             String, MetaData, join, ForeignKey
@@ -75,7 +77,9 @@ Mapping a Class against Arbitrary Selects
 Similar to mapping against a join, a plain :func:`~.expression.select` object can be used with a
 mapper as well.  The example fragment below illustrates mapping a class
 called ``Customer`` to a :func:`~.expression.select` which includes a join to a
-subquery::
+subquery:
+
+.. sourcecode:: python
 
     from sqlalchemy import select, func
 

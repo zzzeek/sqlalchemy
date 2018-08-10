@@ -19,7 +19,9 @@ Basic Usage
 ===========
 
 Recall from :doc:`/core/engines` that an :class:`.Engine` is created via
-the :func:`.create_engine` call::
+the :func:`.create_engine` call:
+
+.. sourcecode:: python
 
     engine = create_engine('mysql://scott:tiger@localhost/test')
 
@@ -43,7 +45,9 @@ requirement.
 
 The engine can be used directly to issue SQL to the database. The most generic
 way is first procure a connection resource, which you get via the
-:meth:`.Engine.connect` method::
+:meth:`.Engine.connect` method:
+
+.. sourcecode:: python
 
     connection = engine.connect()
     result = connection.execute("select username from users")
@@ -72,7 +76,9 @@ connection so that any transactional state or locks are removed, and
 the connection is ready for its next usage.
 
 The above procedure can be performed in a shorthand way by using the
-:meth:`~.Engine.execute` method of :class:`.Engine` itself::
+:meth:`~.Engine.execute` method of :class:`.Engine` itself:
+
+.. sourcecode:: python
 
     result = engine.execute("select username from users")
     for row in result:
@@ -87,7 +93,9 @@ object itself is also closed, which again returns the DBAPI connection
 to the connection pool, releasing transactional resources.
 
 If the :class:`.ResultProxy` potentially has rows remaining, it can be
-instructed to close out its resources explicitly::
+instructed to close out its resources explicitly:
+
+.. sourcecode:: python
 
     result.close()
 
@@ -118,7 +126,9 @@ Using Transactions
 The :class:`~sqlalchemy.engine.Connection` object provides a :meth:`~.Connection.begin`
 method which returns a :class:`.Transaction` object.
 This object is usually used within a try/except clause so that it is
-guaranteed to invoke :meth:`.Transaction.rollback` or :meth:`.Transaction.commit`::
+guaranteed to invoke :meth:`.Transaction.rollback` or :meth:`.Transaction.commit`:
+
+.. sourcecode:: python
 
     connection = engine.connect()
     trans = connection.begin()
@@ -131,7 +141,9 @@ guaranteed to invoke :meth:`.Transaction.rollback` or :meth:`.Transaction.commit
         raise
 
 The above block can be created more succinctly using context
-managers, either given an :class:`.Engine`::
+managers, either given an :class:`.Engine`:
+
+.. sourcecode:: python
 
     # runs a transaction
     with engine.begin() as connection:
@@ -139,7 +151,9 @@ managers, either given an :class:`.Engine`::
         connection.execute(table1.insert(), col1=7, col2='this is some data')
 
 Or from the :class:`.Connection`, in which case the :class:`.Transaction` object
-is available as well::
+is available as well:
+
+.. sourcecode:: python
 
     with connection.begin() as trans:
         r1 = connection.execute(table1.select())
@@ -219,7 +233,9 @@ transaction is in progress. The detection is based on the presence of the
 ``autocommit=True`` execution option on the statement.   If the statement
 is a text-only statement and the flag is not set, a regular expression is used
 to detect INSERT, UPDATE, DELETE, as well as a variety of other commands
-for a particular backend::
+for a particular backend:
+
+.. sourcecode:: python
 
     conn = engine.connect()
     conn.execute("INSERT INTO users VALUES (1, 'john')")  # autocommits
@@ -234,7 +250,9 @@ Full control of the "autocommit" behavior is available using the generative
 :class:`.Engine`, :class:`.Executable`, using the "autocommit" flag which will
 turn on or off the autocommit for the selected scope. For example, a
 :func:`.text` construct representing a stored procedure that commits might use
-it so that a SELECT statement will issue a COMMIT::
+it so that a SELECT statement will issue a COMMIT:
+
+.. sourcecode:: python
 
     engine.execute(text("SELECT my_mutating_procedure()").execution_options(autocommit=True))
 
@@ -247,7 +265,9 @@ Recall from the first section we mentioned executing with and without explicit
 usage of :class:`.Connection`. "Connectionless" execution
 refers to the usage of the ``execute()`` method on an object which is not a
 :class:`.Connection`.  This was illustrated using the :meth:`~.Engine.execute` method
-of :class:`.Engine`::
+of :class:`.Engine`:
+
+.. sourcecode:: python
 
     result = engine.execute("select username from users")
     for row in result:
@@ -260,7 +280,9 @@ that support execution.   The SQL expression object itself references an
 :class:`.Engine` or :class:`.Connection` known as the **bind**, which it uses
 in order to provide so-called "implicit" execution services.
 
-Given a table as below::
+Given a table as below:
+
+.. sourcecode:: python
 
     from sqlalchemy import MetaData, Table, Column, Integer
 
@@ -303,7 +325,9 @@ the assumption that either an
 object.   By "bound" we mean that the special attribute :attr:`.MetaData.bind`
 has been used to associate a series of
 :class:`.Table` objects and all SQL constructs derived from them with a specific
-engine::
+engine:
+
+.. sourcecode:: python
 
     engine = create_engine('sqlite:///file.db')
     meta.bind = engine
@@ -379,7 +403,9 @@ into multiple schemas, the
 execution option may be used to repurpose a set of :class:`.Table` objects
 to render under different schema names without any changes.
 
-Given a table::
+Given a table:
+
+.. sourcecode:: python
 
     user_table = Table(
         'user', metadata,
@@ -391,7 +417,9 @@ The "schema" of this :class:`.Table` as defined by the
 :paramref:`.Table.schema` attribute is ``None``.  The
 :paramref:`.Connection.execution_options.schema_translate_map` can specify
 that all :class:`.Table` objects with a schema of ``None`` would instead
-render the schema as ``user_schema_one``::
+render the schema as ``user_schema_one``:
+
+.. sourcecode:: python
 
     connection = engine.connect().execution_options(
         schema_translate_map={None: "user_schema_one"})
@@ -404,7 +432,9 @@ The above code will invoke SQL on the database of the form::
     user_schema.user
 
 That is, the schema name is substituted with our translated name.  The
-map can specify any number of target->destination schemas::
+map can specify any number of target->destination schemas:
+
+.. sourcecode:: python
 
     connection = engine.connect().execution_options(
         schema_translate_map={
@@ -522,7 +552,9 @@ explicitly reference a :class:`.Connection`.
     transaction and itself handles the job of maintaining connection and
     transactional resources.
 
-Enabling ``threadlocal`` is achieved as follows::
+Enabling ``threadlocal`` is achieved as follows:
+
+.. sourcecode:: python
 
     db = create_engine('mysql://localhost/test', strategy='threadlocal')
 
@@ -531,7 +563,9 @@ connection resources derived from a thread-local variable whenever
 :meth:`.Engine.execute` or :meth:`.Engine.contextual_connect` is called. This
 connection resource is maintained as long as it is referenced, which allows
 multiple points of an application to share a transaction while using
-connectionless execution::
+connectionless execution:
+
+.. sourcecode:: python
 
     def call_operation1():
         engine.execute("insert into users values (?, ?)", 1, "john")
@@ -549,7 +583,9 @@ connectionless execution::
 
 Explicit execution can be mixed with connectionless execution by
 using the :meth:`.Engine.connect` method to acquire a :class:`.Connection`
-that is not part of the threadlocal scope::
+that is not part of the threadlocal scope:
+
+.. sourcecode:: python
 
     db.begin()
     conn = db.connect()
@@ -566,7 +602,9 @@ that is not part of the threadlocal scope::
         conn.close()
 
 To access the :class:`.Connection` that is bound to the threadlocal scope,
-call :meth:`.Engine.contextual_connect`::
+call :meth:`.Engine.contextual_connect`:
+
+.. sourcecode:: python
 
     conn = db.contextual_connect()
     call_operation3(conn)
@@ -588,7 +626,9 @@ to deal with the raw DBAPI connection directly.
 
 The most common way to access the raw DBAPI connection is to get it
 from an already present :class:`.Connection` object directly.  It is
-present using the :attr:`.Connection.connection` attribute::
+present using the :attr:`.Connection.connection` attribute:
+
+.. sourcecode:: python
 
     connection = engine.connect()
     dbapi_conn = connection.connection
@@ -606,7 +646,9 @@ To overcome the limitations imposed by the DBAPI connection that is
 maintained by an owning :class:`.Connection`, a DBAPI connection is also
 available without the need to procure a
 :class:`.Connection` first, using the :meth:`.Engine.raw_connection` method
-of :class:`.Engine`::
+of :class:`.Engine`:
+
+.. sourcecode:: python
 
     dbapi_conn = engine.raw_connection()
 
@@ -614,7 +656,9 @@ This DBAPI connection is again a "proxied" form as was the case before.
 The purpose of this proxying is now apparent, as when we call the ``.close()``
 method of this connection, the DBAPI connection is typically not actually
 closed, but instead :term:`released` back to the
-engine's connection pool::
+engine's connection pool:
+
+.. sourcecode:: python
 
     dbapi_conn.close()
 
@@ -633,7 +677,9 @@ Calling Stored Procedures
 
 For stored procedures with special syntactical or parameter concerns,
 DBAPI-level `callproc <http://legacy.python.org/dev/peps/pep-0249/#callproc>`_
-may be used::
+may be used:
+
+.. sourcecode:: python
 
     connection = engine.raw_connection()
     try:
@@ -649,7 +695,9 @@ Multiple Result Sets
 --------------------
 
 Multiple result set support is available from a raw DBAPI cursor using the
-`nextset <http://legacy.python.org/dev/peps/pep-0249/#nextset>`_ method::
+`nextset <http://legacy.python.org/dev/peps/pep-0249/#nextset>`_ method:
+
+.. sourcecode:: python
 
     connection = engine.raw_connection()
     try:
@@ -700,7 +748,9 @@ Registering Dialects In-Process
 -------------------------------
 
 SQLAlchemy also allows a dialect to be registered within the current process, bypassing
-the need for separate installation.   Use the ``register()`` function as follows::
+the need for separate installation.   Use the ``register()`` function as follows:
+
+.. sourcecode:: python
 
     from sqlalchemy.dialects import registry
     registry.register("mysql.foodialect", "myapp.dialect", "MyMySQLDialect")

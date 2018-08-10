@@ -43,7 +43,9 @@ and goes back to the "begin" state, which
 will again invoke new :class:`.Connection` and :class:`.Transaction` objects as new
 requests to emit SQL statements are received.
 
-The example below illustrates this lifecycle::
+The example below illustrates this lifecycle:
+
+.. sourcecode:: python
 
     engine = create_engine("...")
     Session = sessionmaker(bind=engine)
@@ -92,7 +94,9 @@ Using SAVEPOINT
 
 SAVEPOINT transactions, if supported by the underlying engine, may be
 delineated using the :meth:`~.Session.begin_nested`
-method::
+method:
+
+.. sourcecode:: python
 
     Session = sessionmaker()
     session = Session()
@@ -126,7 +130,9 @@ before :meth:`~.Session.begin_nested` was called.
 used :meth:`~.Session.begin` method, returns a :class:`.SessionTransaction` object
 which works as a context manager.
 It can be succinctly used around individual record inserts in order to catch
-things like unique constraint exceptions::
+things like unique constraint exceptions:
+
+.. sourcecode:: python
 
     for record in records:
         try:
@@ -179,7 +185,9 @@ configured with ``autocommit=True`` may be placed into the "begin" state using
 the :meth:`.Session.begin` method. After the cycle completes upon
 :meth:`.Session.commit` or :meth:`.Session.rollback`, connection and
 transaction resources are :term:`released` and the :class:`.Session` goes back
-into "autocommit" mode, until :meth:`.Session.begin` is called again::
+into "autocommit" mode, until :meth:`.Session.begin` is called again:
+
+.. sourcecode:: python
 
     Session = sessionmaker(bind=engine, autocommit=True)
     session = Session()
@@ -195,7 +203,9 @@ into "autocommit" mode, until :meth:`.Session.begin` is called again::
         raise
 
 The :meth:`.Session.begin` method also returns a transactional token which is
-compatible with the ``with`` statement::
+compatible with the ``with`` statement:
+
+.. sourcecode:: python
 
     Session = sessionmaker(bind=engine, autocommit=True)
     session = Session()
@@ -221,7 +231,9 @@ as well as within a block that has already demarcated a transaction.
 autocommit, and is equivalent to the pattern described at :ref:`connections_nested_transactions`,
 where any number of functions can call :meth:`.Connection.begin` and :meth:`.Transaction.commit`
 as though they are the initiator of the transaction, but in fact may be participating
-in an already ongoing transaction::
+in an already ongoing transaction:
+
+.. sourcecode:: python
 
     # method_a starts a transaction and calls method_b
     def method_a(session):
@@ -268,7 +280,9 @@ This will coordinate the committing of transactions across databases so that
 the transaction is either committed or rolled back in all databases. You can
 also :meth:`~.Session.prepare` the session for
 interacting with transactions not managed by SQLAlchemy. To use two phase
-transactions set the flag ``twophase=True`` on the session::
+transactions set the flag ``twophase=True`` on the session:
+
+.. sourcecode:: python
 
     engine1 = create_engine('postgresql://db1')
     engine2 = create_engine('postgresql://db2')
@@ -323,7 +337,9 @@ Setting Isolation Engine-Wide
 
 To set up a :class:`.Session` or :class:`.sessionmaker` with a specific
 isolation level globally, use the :paramref:`.create_engine.isolation_level`
-parameter::
+parameter:
+
+.. sourcecode:: python
 
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
@@ -345,7 +361,9 @@ or when we call upon the callable produced by a :class:`.sessionmaker`,
 we can pass the ``bind`` argument directly, overriding the pre-existing bind.
 We can combine this with the :meth:`.Engine.execution_options` method
 in order to produce a copy of the original :class:`.Engine` that will
-add this option::
+add this option:
+
+.. sourcecode:: python
 
     session = maker(
         bind=engine.execution_options(isolation_level='SERIALIZABLE'))
@@ -354,7 +372,9 @@ For the case where the :class:`.Session` or :class:`.sessionmaker` is
 configured with multiple "binds", we can either re-specify the ``binds``
 argument fully, or if we want to only replace specific binds, we
 can use the :meth:`.Session.bind_mapper` or :meth:`.Session.bind_table`
-methods::
+methods:
+
+.. sourcecode:: python
 
     session = maker()
     session.bind_mapper(
@@ -377,7 +397,9 @@ object does not provide for us a :class:`.Connection` for use in a transaction
 where the transaction is not already begun.  So here, we need to pass
 execution options to the :class:`.Session` at the start of a transaction
 by passing :paramref:`.Session.connection.execution_options`
-provided by the :meth:`.Session.connection` method::
+provided by the :meth:`.Session.connection` method:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import Session
 
@@ -397,7 +419,9 @@ for execution options that will be passed to the connection before the
 transaction is begun.   If we are working with a :class:`.Session` that
 has multiple binds or some other custom scheme for :meth:`.Session.get_bind`,
 we can pass additional arguments to :meth:`.Session.connection` in order to
-affect how the bind is procured::
+affect how the bind is procured:
+
+.. sourcecode:: python
 
     sess = my_sesssionmaker()
 
@@ -416,7 +440,9 @@ affect how the bind is procured::
 The :paramref:`.Session.connection.execution_options` argument is only
 accepted on the **first** call to :meth:`.Session.connection` for a
 particular bind within a transaction.  If a transaction is already begun
-on the target connection, a warning is emitted::
+on the target connection, a warning is emitted:
+
+.. sourcecode:: pycon
 
     >>> session = Session(eng)
     >>> session.execute("select 1")
@@ -446,7 +472,9 @@ be made to participate within that transaction by just binding the
 :class:`.Session` to that :class:`.Connection`. The usual rationale for this
 is a test suite that allows ORM code to work freely with a :class:`.Session`,
 including the ability to call :meth:`.Session.commit`, where afterwards the
-entire database interaction is rolled back::
+entire database interaction is rolled back:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import sessionmaker
     from sqlalchemy import create_engine
@@ -501,7 +529,9 @@ everything is rolled back.
    of a SAVEPOINT, which is established at the start of each transaction,
    so that tests can also rollback the "transaction" as well while still
    remaining in the scope of a larger "transaction" that's never committed,
-   using two extra events::
+   using two extra events:
+
+.. sourcecode:: python
 
       from sqlalchemy import event
 

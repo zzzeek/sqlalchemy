@@ -41,7 +41,9 @@ Special Directives
 The ``__declare_last__()`` hook allows definition of
 a class level function that is automatically called by the
 :meth:`.MapperEvents.after_configured` event, which occurs after mappings are
-assumed to be completed and the 'configure' step has finished::
+assumed to be completed and the 'configure' step has finished:
+
+.. sourcecode:: python
 
     class MyClass(Base):
         @classmethod
@@ -53,7 +55,9 @@ assumed to be completed and the 'configure' step has finished::
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 Like ``__declare_last__()``, but is called at the beginning of mapper
-configuration via the :meth:`.MapperEvents.before_configured` event::
+configuration via the :meth:`.MapperEvents.before_configured` event:
+
+.. sourcecode:: python
 
     class MyClass(Base):
         @classmethod
@@ -71,7 +75,9 @@ configuration via the :meth:`.MapperEvents.before_configured` event::
 ``__abstract__`` causes declarative to skip the production
 of a table or mapper for the class entirely.  A class can be added within a
 hierarchy in the same way as mixin (see :ref:`declarative_mixins`), allowing
-subclasses to extend just from the special class::
+subclasses to extend just from the special class:
+
+.. sourcecode:: python
 
     class SomeAbstractBase(Base):
         __abstract__ = True
@@ -87,7 +93,9 @@ subclasses to extend just from the special class::
         ""
 
 One possible use of ``__abstract__`` is to use a distinct
-:class:`.MetaData` for different bases::
+:class:`.MetaData` for different bases:
+
+.. sourcecode:: python
 
     Base = declarative_base()
 
@@ -102,7 +110,9 @@ One possible use of ``__abstract__`` is to use a distinct
 Above, classes which inherit from ``DefaultBase`` will use one
 :class:`.MetaData` as the registry of tables, and those which inherit from
 ``OtherBase`` will use a different one. The tables themselves can then be
-created perhaps within distinct databases::
+created perhaps within distinct databases:
+
+.. sourcecode:: python
 
     DefaultBase.metadata.create_all(some_engine)
     OtherBase.metadata_create_all(some_other_engine)
@@ -113,7 +123,9 @@ created perhaps within distinct databases::
 
 Allows the callable / class used to generate a :class:`.Table` to be customized.
 This is a very open-ended hook that can allow special customizations
-to a :class:`.Table` that one generates here::
+to a :class:`.Table` that one generates here:
+
+.. sourcecode:: python
 
     class MyMixin(object):
         @classmethod
@@ -131,7 +143,9 @@ the prefix ``"my_"``, followed by the name normally specified using the
 causes the class to be considered as single-table inheritance vs. its subclass.
 This may be useful in some customization schemes to determine that single-table
 inheritance should take place based on the arguments for the table itself,
-such as, define as single-inheritance if there is no primary key present::
+such as, define as single-inheritance if there is no primary key present:
+
+.. sourcecode:: python
 
     class AutoTable(object):
         @declared_attr

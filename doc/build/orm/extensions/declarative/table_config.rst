@@ -17,14 +17,18 @@ This attribute accommodates both positional as well as keyword
 arguments that are normally sent to the
 :class:`~sqlalchemy.schema.Table` constructor.
 The attribute can be specified in one of two forms. One is as a
-dictionary::
+dictionary:
+
+.. sourcecode:: python
 
     class MyClass(Base):
         __tablename__ = 'sometable'
         __table_args__ = {'mysql_engine':'InnoDB'}
 
 The other, a tuple, where each argument is positional
-(usually constraints)::
+(usually constraints):
+
+.. sourcecode:: python
 
     class MyClass(Base):
         __tablename__ = 'sometable'
@@ -34,7 +38,9 @@ The other, a tuple, where each argument is positional
                 )
 
 Keyword arguments can be specified with the above form by
-specifying the last argument as a dictionary::
+specifying the last argument as a dictionary:
+
+.. sourcecode:: python
 
     class MyClass(Base):
         __tablename__ = 'sometable'
@@ -51,7 +57,9 @@ As an alternative to ``__tablename__``, a direct
 :class:`~sqlalchemy.schema.Table` construct may be used.  The
 :class:`~sqlalchemy.schema.Column` objects, which in this case require
 their names, will be added to the mapping just like a regular mapping
-to a table::
+to a table:
+
+.. sourcecode:: python
 
     class MyClass(Base):
         __table__ = Table('my_table', Base.metadata,
@@ -62,7 +70,9 @@ to a table::
 ``__table__`` provides a more focused point of control for establishing
 table metadata, while still getting most of the benefits of using declarative.
 An application that uses reflection might want to load table metadata elsewhere
-and pass it to declarative classes::
+and pass it to declarative classes:
+
+.. sourcecode:: python
 
     from sqlalchemy.ext.declarative import declarative_base
 
@@ -83,7 +93,9 @@ Note that when the ``__table__`` approach is used, the object is immediately
 usable as a plain :class:`.Table` within the class declaration body itself,
 as a Python class is only another syntactical block.  Below this is illustrated
 by using the ``id`` column in the ``primaryjoin`` condition of a
-:func:`.relationship`::
+:func:`.relationship`:
+
+.. sourcecode:: python
 
     class MyClass(Base):
         __table__ = Table('my_table', Base.metadata,
@@ -96,7 +108,9 @@ by using the ``id`` column in the ``primaryjoin`` condition of a
 
 Similarly, mapped attributes which refer to ``__table__`` can be placed inline,
 as below where we assign the ``name`` column to the attribute ``_name``,
-generating a synonym for ``name``::
+generating a synonym for ``name``:
+
+.. sourcecode:: python
 
     from sqlalchemy.ext.declarative import synonym_for
 
@@ -116,7 +130,9 @@ Using Reflection with Declarative
 =================================
 
 It's easy to set up a :class:`.Table` that uses ``autoload=True``
-in conjunction with a mapped class::
+in conjunction with a mapped class:
+
+.. sourcecode:: python
 
     class MyClass(Base):
         __table__ = Table('mytable', Base.metadata,
@@ -126,7 +142,9 @@ However, one improvement that can be made here is to not
 require the :class:`.Engine` to be available when classes are
 being first declared.   To achieve this, use the
 :class:`.DeferredReflection` mixin, which sets up mappings
-only after a special ``prepare(engine)`` step is called::
+only after a special ``prepare(engine)`` step is called:
+
+.. sourcecode:: python
 
     from sqlalchemy.ext.declarative import declarative_base, DeferredReflection
 
