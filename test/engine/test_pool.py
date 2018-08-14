@@ -1983,6 +1983,45 @@ class QueuePoolTest(PoolTestBase):
             rec.checkin
         )
 
+    def test_stack(self):
+        c1, c2, c3 = Mock(), Mock(), Mock()
+        connections = [c1, c2, c3]
+
+        def creator():
+            return connections.pop()
+
+        p = pool.QueuePool(creator, use_lifo=True)
+
+        pc1 = p.connect()
+        pc2 = p.connect()
+        pc3 = p.connect()
+
+        pc1.close()
+        pc2.close()
+        pc3.close()
+
+        for i in range(3):
+            pc1 = p.connect()
+            assert pc1.connection is c3
+            pc1.close()
+
+            pc1 = p.connect()
+            assert pc1.connection is c3
+
+            pc2 = p.connect()
+            assert pc2.connection is c2
+            pc2.close()
+
+            pc3 = p.connect()
+            assert pc3.connection is c2
+
+            pc1 = p.connect()
+            assert pc1.connection is c1
+
+            pc1.close()
+            pc2.close()
+            pc3.close()
+
 
 class ResetOnReturnTest(PoolTestBase):
     def _fixture(self, **kw):
