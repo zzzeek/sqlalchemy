@@ -1988,7 +1988,7 @@ class QueuePoolTest(PoolTestBase):
         connections = [c1, c2, c3]
 
         def creator():
-            return connections.pop()
+            return connections.pop(0)
 
         p = pool.QueuePool(creator, use_lifo=True)
 
@@ -2000,7 +2000,7 @@ class QueuePoolTest(PoolTestBase):
         pc2.close()
         pc3.close()
 
-        for i in range(3):
+        for i in range(5):
             pc1 = p.connect()
             assert pc1.connection is c3
             pc1.close()
@@ -2015,12 +2015,12 @@ class QueuePoolTest(PoolTestBase):
             pc3 = p.connect()
             assert pc3.connection is c2
 
-            pc1 = p.connect()
-            assert pc1.connection is c1
+            pc2 = p.connect()
+            assert pc2.connection is c1
 
-            pc1.close()
             pc2.close()
             pc3.close()
+            pc1.close()
 
 
 class ResetOnReturnTest(PoolTestBase):
