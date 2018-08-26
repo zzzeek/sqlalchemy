@@ -70,8 +70,8 @@ Supported Platforms
 
 SQLAlchemy has been tested against the following platforms:
 
-* cPython since version 2.7, through the 2.xx series
-* cPython version 3, throughout all 3.xx series
+* cPython 2.7
+* cPython 3.4 and higher
 * `Pypy <http://pypy.org/>`_ 2.1 or greater
 
 .. versionchanged:: 1.2
