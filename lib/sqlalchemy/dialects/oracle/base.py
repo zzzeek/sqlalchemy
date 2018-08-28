@@ -39,19 +39,23 @@ Oracle dialect, *a sequence must always be explicitly specified to enable
 autoincrement*.  This is divergent with the majority of documentation
 examples which assume the usage of an autoincrement-capable database.   To
 specify sequences, use the sqlalchemy.schema.Sequence object which is passed
-to a Column construct::
+to a Column construct:
 
-  t = Table('mytable', metadata,
+.. sourcecode:: python
+
+    t = Table('mytable', metadata,
         Column('id', Integer, Sequence('id_seq'), primary_key=True),
         Column(...), ...
-  )
+    )
 
-This step is also required when using table reflection, i.e. autoload=True::
+This step is also required when using table reflection, i.e. autoload=True:
 
-  t = Table('mytable', metadata,
+.. sourcecode:: python
+
+    t = Table('mytable', metadata,
         Column('id', Integer, Sequence('id_seq'), primary_key=True),
         autoload=True
-  )
+    )
 
 Identifier Casing
 -----------------
@@ -114,13 +118,17 @@ on the Oracle backend.  By default, "implicit returning" typically only
 fetches the value of a single ``nextval(some_seq)`` expression embedded into
 an INSERT in order to increment a sequence within an INSERT statement and get
 the value back at the same time. To disable this feature across the board,
-specify ``implicit_returning=False`` to :func:`.create_engine`::
+specify ``implicit_returning=False`` to :func:`.create_engine`:
+
+.. sourcecode:: python
 
     engine = create_engine("oracle://scott:tiger@dsn",
                            implicit_returning=False)
 
 Implicit returning can also be disabled on a table-by-table basis as a table
-option::
+option:
+
+.. sourcecode:: python
 
     # Core Table
     my_table = Table("my_table", metadata, ..., implicit_returning=False)
@@ -176,7 +184,9 @@ Synonym/DBLINK Reflection
 When using reflection with Table objects, the dialect can optionally search
 for tables indicated by synonyms, either in local or remote schemas or
 accessed over DBLINK, by passing the flag ``oracle_resolve_synonyms=True`` as
-a keyword argument to the :class:`.Table` construct::
+a keyword argument to the :class:`.Table` construct:
+
+.. sourcecode:: python
 
     some_table = Table('some_table', autoload=True,
                                 autoload_with=some_engine,
@@ -218,7 +228,9 @@ Note the following caveats:
 * When using the :meth:`.Inspector.get_check_constraints` method, Oracle
   builds a special "IS NOT NULL" constraint for columns that specify
   "NOT NULL".  This constraint is **not** returned by default; to include
-  the "IS NOT NULL" constraints, pass the flag ``include_all=True``::
+  the "IS NOT NULL" constraints, pass the flag ``include_all=True``:
+
+  .. sourcecode:: python
 
       from sqlalchemy import create_engine, inspect
 
@@ -250,7 +262,9 @@ are also part of the reflection which occurs within an operation such as
 :meth:`.MetaData.reflect`.  By default, these operations exclude the ``SYSTEM``
 and ``SYSAUX`` tablespaces from the operation.   In order to change this, the
 default list of tablespaces excluded can be changed at the engine level using
-the ``exclude_tablespaces`` parameter::
+the ``exclude_tablespaces`` parameter:
+
+.. sourcecode:: python
 
     # exclude SYSAUX and SOME_TABLESPACE, but not SYSTEM
     e = create_engine(
@@ -286,7 +300,9 @@ The CREATE TABLE phrase supports the following options with Oracle
 in conjunction with the :class:`.Table` construct:
 
 
-* ``ON COMMIT``::
+* ``ON COMMIT``:
+
+.. sourcecode:: python
 
     Table(
         "some_table", metadata, ...,
@@ -294,7 +310,9 @@ in conjunction with the :class:`.Table` construct:
 
 .. versionadded:: 1.0.0
 
-* ``COMPRESS``::
+* ``COMPRESS``:
+
+.. sourcecode:: python
 
     Table('mytable', metadata, Column('data', String(32)),
         oracle_compress=True)
@@ -316,7 +334,9 @@ Bitmap Indexes
 ~~~~~~~~~~~~~~
 
 You can specify the ``oracle_bitmap`` parameter to create a bitmap index
-instead of a B-tree index::
+instead of a B-tree index:
+
+.. sourcecode:: python
 
     Index('my_index', my_table.c.data, oracle_bitmap=True)
 
@@ -330,7 +350,9 @@ Index compression
 
 Oracle has a more efficient storage mode for indexes containing lots of
 repeated values. Use the ``oracle_compress`` parameter to turn on key c
-ompression::
+ompression:
+
+.. sourcecode:: python
 
     Index('my_index', my_table.c.data, oracle_compress=True)
 

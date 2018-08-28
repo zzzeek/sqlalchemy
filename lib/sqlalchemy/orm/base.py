@@ -254,7 +254,9 @@ def object_mapper(instance):
     Raises :class:`sqlalchemy.orm.exc.UnmappedInstanceError`
     if no mapping is configured.
 
-    This function is available via the inspection system as::
+    This function is available via the inspection system as:
+
+    .. sourcecode:: python
 
         inspect(instance).mapper
 
@@ -274,7 +276,9 @@ def object_state(instance):
     if no mapping is configured.
 
     Equivalent functionality is available via the :func:`.inspect`
-    function as::
+    function as:
+
+    .. sourcecode:: python
 
         inspect(instance)
 
@@ -410,7 +414,9 @@ def class_mapper(class_, configure=True):
     object is passed.
 
     Equivalent functionality is available via the :func:`.inspect`
-    function as::
+    function as:
+
+    .. sourcecode:: python
 
         inspect(some_mapped_class)
 

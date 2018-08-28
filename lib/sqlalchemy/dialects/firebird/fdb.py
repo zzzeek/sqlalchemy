@@ -41,7 +41,9 @@ accept every argument that Kinterbasdb does.
   of Firebird, and setting this flag to False will also cause the
   SQLAlchemy ORM to ignore its usage. The behavior can also be controlled on a
   per-execution basis using the ``enable_rowcount`` option with
-  :meth:`.Connection.execution_options`::
+  :meth:`.Connection.execution_options`:
+
+  .. sourcecode:: python
 
       conn = engine.connect().execution_options(enable_rowcount=True)
       r = conn.execute(stmt)

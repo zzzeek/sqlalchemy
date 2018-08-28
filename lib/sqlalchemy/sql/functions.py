@@ -76,7 +76,9 @@ class FunctionElement(Executable, ColumnElement, FromClause):
 
         An interim approach to providing named columns for a function
         as a FROM clause is to build a :func:`.select` with the
-        desired columns::
+        desired columns:
+
+        .. sourcecode:: python
 
             from sqlalchemy.sql import column
 
@@ -101,11 +103,15 @@ class FunctionElement(Executable, ColumnElement, FromClause):
         Used against aggregate or so-called "window" functions,
         for database backends that support window functions.
 
-        The expression::
+        The expression:
+
+        .. sourcecode:: python
 
             func.row_number().over(order_by='x')
 
-        is shorthand for::
+        is shorthand for:
+
+        .. sourcecode:: python
 
             from sqlalchemy import over
             over(func.row_number(), order_by='x')
@@ -144,11 +150,15 @@ class FunctionElement(Executable, ColumnElement, FromClause):
         Used against aggregate and window functions,
         for database backends that support the "FILTER" clause.
 
-        The expression::
+        The expression:
+
+        .. sourcecode:: python
 
             func.count(1).filter(True)
 
-        is shorthand for::
+        is shorthand for:
+
+        .. sourcecode:: python
 
             from sqlalchemy import funcfilter
             funcfilter(func.count(1), True)
@@ -171,19 +181,25 @@ class FunctionElement(Executable, ColumnElement, FromClause):
         """Interpret this expression as a boolean comparison between two values.
 
         A hypothetical SQL function "is_equal()" which compares to values
-        for equality would be written in the Core expression language as::
+        for equality would be written in the Core expression language as:
+
+        .. sourcecode:: python
 
             expr = func.is_equal("a", "b")
 
         If "is_equal()" above is comparing "a" and "b" for equality, the
-        :meth:`.FunctionElement.as_comparison` method would be invoked as::
+        :meth:`.FunctionElement.as_comparison` method would be invoked as:
+
+        .. sourcecode:: python
 
             expr = func.is_equal("a", "b").as_comparison(1, 2)
 
         Where above, the integer value "1" refers to the first argument of the
         "is_equal()" function and the integer value "2" refers to the second.
 
-        This would create a :class:`.BinaryExpression` that is equivalent to::
+        This would create a :class:`.BinaryExpression` that is equivalent to:
+
+        .. sourcecode:: python
 
             BinaryExpression("a", "b", operator=op.eq)
 
@@ -197,7 +213,9 @@ class FunctionElement(Executable, ColumnElement, FromClause):
         with the :paramref:`.relationship.primaryjoin` parameter.  The return
         value is a containment object called :class:`.FunctionAsBinary`.
 
-        An ORM example is as follows::
+        An ORM example is as follows:
+
+        .. sourcecode:: python
 
             class Venue(Base):
                 __tablename__ = 'venue'
@@ -266,7 +284,9 @@ class FunctionElement(Executable, ColumnElement, FromClause):
         is suitable for the FROM clause, in the style accepted for example
         by PostgreSQL.
 
-        e.g.::
+        e.g.:
+
+        .. sourcecode:: python
 
             from sqlalchemy.sql import column
 
@@ -294,7 +314,9 @@ class FunctionElement(Executable, ColumnElement, FromClause):
         """Produce a :func:`~.expression.select` construct
         against this :class:`.FunctionElement`.
 
-        This is shorthand for::
+        This is shorthand for:
+
+        .. sourcecode:: python
 
             s = select([function_element])
 
@@ -431,13 +453,17 @@ func = _FunctionGenerator()
 """Generate SQL function expressions.
 
    :data:`.func` is a special object instance which generates SQL
-   functions based on name-based attributes, e.g.::
+   functions based on name-based attributes, e.g.:
+   
+   .. sourcecode:: pycon
 
         >>> print(func.count(1))
         count(:param_1)
 
    The element is a column-oriented SQL element like any other, and is
-   used in that way::
+   used in that way:
+   
+   .. sourcecode:: pycon
 
         >>> print(select([func.count(table.c.id)]))
         SELECT count(sometable.id) FROM sometable
@@ -445,13 +471,17 @@ func = _FunctionGenerator()
    Any name can be given to :data:`.func`. If the function name is unknown to
    SQLAlchemy, it will be rendered exactly as is. For common SQL functions
    which SQLAlchemy is aware of, the name may be interpreted as a *generic
-   function* which will be compiled appropriately to the target database::
+   function* which will be compiled appropriately to the target database:
+   
+   .. sourcecode:: pycon
 
         >>> print(func.current_timestamp())
         CURRENT_TIMESTAMP
 
    To call functions which are present in dot-separated packages,
-   specify them in the same manner::
+   specify them in the same manner:
+   
+   .. sourcecode:: pycon
 
         >>> print(func.stats.yield_curve(5, 10))
         stats.yield_curve(:yield_curve_1, :yield_curve_2)
@@ -461,6 +491,8 @@ func = _FunctionGenerator()
    that a string-based function returns a Unicode value and is similarly
    treated as a string in expressions, specify
    :class:`~sqlalchemy.types.Unicode` as the type:
+   
+   .. sourcecode:: pycon
 
         >>> print(func.my_string(u'hi', type_=Unicode) + ' ' +
         ...       func.my_string(u'there', type_=Unicode))
@@ -471,7 +503,9 @@ func = _FunctionGenerator()
    This object meets the "column" interface, including comparison and labeling
    functions.  The object can also be passed the :meth:`~.Connectable.execute`
    method of a :class:`.Connection` or :class:`.Engine`, where it will be
-   wrapped inside of a SELECT statement first::
+   wrapped inside of a SELECT statement first:
+   
+   .. sourcecode:: python
 
         print(connection.execute(func.current_timestamp()).scalar())
 
@@ -574,7 +608,9 @@ class GenericFunction(util.with_metaclass(_GenericMeta, Function)):
     Subclasses of :class:`.GenericFunction` are automatically
     registered under the name of the class.  For
     example, a user-defined function ``as_utc()`` would
-    be available immediately::
+    be available immediately:
+
+    .. sourcecode:: python
 
         from sqlalchemy.sql.functions import GenericFunction
         from sqlalchemy.types import DateTime
@@ -590,14 +626,18 @@ class GenericFunction(util.with_metaclass(_GenericMeta, Function)):
     containing many functions may want to use this in order
     to avoid name conflicts with other systems.   For example,
     if our ``as_utc()`` function were part of a package
-    "time"::
+    "time":
+
+    .. sourcecode:: python
 
         class as_utc(GenericFunction):
             type = DateTime
             package = "time"
 
     The above function would be available from :data:`.func`
-    using the package name ``time``::
+    using the package name ``time``:
+
+    .. sourcecode:: python
 
         print select([func.time.as_utc()])
 
@@ -605,7 +645,9 @@ class GenericFunction(util.with_metaclass(_GenericMeta, Function)):
     from one name in :data:`.func` but to render as a different name.
     The ``identifier`` attribute will override the name used to
     access the function as loaded from :data:`.func`, but will retain
-    the usage of ``name`` as the rendered name::
+    the usage of ``name`` as the rendered name:
+
+    .. sourcecode:: python
 
         class GeoBuffer(GenericFunction):
             type = Geometry
@@ -613,7 +655,9 @@ class GenericFunction(util.with_metaclass(_GenericMeta, Function)):
             name = "ST_Buffer"
             identifier = "buffer"
 
-    The above function will render as follows::
+    The above function will render as follows:
+
+    .. sourcecode:: pycon
 
         >>> print func.geo.buffer()
         ST_Buffer()
@@ -775,7 +819,9 @@ class array_agg(GenericFunction):
     The ``func.array_agg(expr)`` construct returns an expression of
     type :class:`.types.ARRAY`.
 
-    e.g.::
+    e.g.:
+
+    .. sourcecode:: python
 
         stmt = select([func.array_agg(table.c.values)[2:5]])
 
@@ -928,7 +974,9 @@ class cube(GenericFunction):
     r"""Implement the ``CUBE`` grouping operation.
 
     This function is used as part of the GROUP BY of a statement,
-    e.g. :meth:`.Select.group_by`::
+    e.g. :meth:`.Select.group_by`:
+
+    .. sourcecode:: python
 
         stmt = select(
             [func.sum(table.c.value), table.c.col_1, table.c.col_2]
@@ -943,7 +991,9 @@ class rollup(GenericFunction):
     r"""Implement the ``ROLLUP`` grouping operation.
 
     This function is used as part of the GROUP BY of a statement,
-    e.g. :meth:`.Select.group_by`::
+    e.g. :meth:`.Select.group_by`:
+
+    .. sourcecode:: python
 
         stmt = select(
             [func.sum(table.c.value), table.c.col_1, table.c.col_2]
@@ -958,13 +1008,17 @@ class grouping_sets(GenericFunction):
     r"""Implement the ``GROUPING SETS`` grouping operation.
 
     This function is used as part of the GROUP BY of a statement,
-    e.g. :meth:`.Select.group_by`::
+    e.g. :meth:`.Select.group_by`:
+
+    .. sourcecode:: python
 
         stmt = select(
             [func.sum(table.c.value), table.c.col_1, table.c.col_2]
         ).group_by(func.grouping_sets(table.c.col_1, table.c.col_2))
 
-    In order to group by multiple sets, use the :func:`.tuple_` construct::
+    In order to group by multiple sets, use the :func:`.tuple_` construct:
+
+    .. sourcecode:: python
 
         from sqlalchemy import tuple_
 

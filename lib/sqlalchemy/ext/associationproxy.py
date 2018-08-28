@@ -206,7 +206,9 @@ class AssociationProxy(interfaces.InspectionAttrInfo):
         """Return a tuple of ``(local_attr, remote_attr)``.
 
         This attribute is convenient when specifying a join
-        using :meth:`.Query.join` across two relationships::
+        using :meth:`.Query.join` across two relationships:
+
+        .. sourcecode:: python
 
             sess.query(Parent).join(*Parent.proxied.attr)
 
@@ -582,7 +584,9 @@ class _AssociationCollection(object):
 
         creator
           A function that creates new target entities.  Given one parameter:
-          value.  This assertion is assumed::
+          value.  This assertion is assumed:
+
+          .. sourcecode:: python
 
             obj = creator(somevalue)
             assert getter(obj) == somevalue

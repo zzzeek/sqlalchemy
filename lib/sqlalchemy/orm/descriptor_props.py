@@ -524,7 +524,9 @@ class SynonymProperty(DescriptorProperty):
         in that the attribute will mirror the value and expression behavior
         of another attribute.
 
-        e.g.::
+        e.g.:
+
+        .. sourcecode:: python
 
             class MyClass(Base):
                 __tablename__ = 'my_table'
@@ -555,7 +557,9 @@ class SynonymProperty(DescriptorProperty):
           unnecessary. This is usually intended to be used when a
           :class:`.Column` is to be replaced with an attribute that also uses a
           descriptor, that is, in conjunction with the
-          :paramref:`.synonym.descriptor` parameter::
+          :paramref:`.synonym.descriptor` parameter:
+
+          .. sourcecode:: python
 
             my_table = Table(
                 "my_table", metadata,
@@ -578,7 +582,9 @@ class SynonymProperty(DescriptorProperty):
             )
 
           Above, the attribute named ``_job_status`` is automatically
-          mapped to the ``job_status`` column::
+          mapped to the ``job_status`` column:
+
+          .. sourcecode:: pycon
 
             >>> j1 = MyClass()
             >>> j1._job_status = "employed"
@@ -707,7 +713,9 @@ class ComparableProperty(DescriptorProperty):
 
         In the example below we redefine :meth:`.PropComparator.operate`
         to wrap both sides of an expression in ``func.lower()`` to produce
-        case-insensitive comparison::
+        case-insensitive comparison:
+
+        .. sourcecode:: python
 
             from sqlalchemy.orm import comparable_property
             from sqlalchemy.orm.interfaces import PropComparator
@@ -738,7 +746,9 @@ class ComparableProperty(DescriptorProperty):
 
 
         A mapping like the above allows the ``word_insensitive`` attribute
-        to render an expression like::
+        to render an expression like:
+
+        .. sourcecode:: pycon
 
             >>> print SearchWord.word_insensitive == "Trucks"
             lower(search_word.word) = lower(:lower_1)

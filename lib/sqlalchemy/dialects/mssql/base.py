@@ -18,7 +18,9 @@ SQL Server provides so-called "auto incrementing" behavior using the
 SQLAlchemy considers ``IDENTITY`` within its default "autoincrement" behavior,
 described at :paramref:`.Column.autoincrement`; this means
 that by default, the first integer primary key column in a :class:`.Table`
-will be considered to be the identity column and will generate DDL as such::
+will be considered to be the identity column and will generate DDL as such:
+
+.. sourcecode:: python
 
     from sqlalchemy import Table, MetaData, Column, Integer
 
@@ -39,7 +41,9 @@ The above example will generate DDL as:
     )
 
 For the case where this default generation of ``IDENTITY`` is not desired,
-specify ``autoincrement=False`` on all integer primary key columns::
+specify ``autoincrement=False`` on all integer primary key columns:
+
+.. sourcecode:: python
 
     m = MetaData()
     t = Table('t', m,
@@ -63,7 +67,9 @@ Specific control over the parameters of the ``IDENTITY`` value is supported
 using the :class:`.schema.Sequence` object.  While this object normally
 represents an explicit "sequence" for supporting backends, on SQL Server it is
 re-purposed to specify behavior regarding the identity column, including
-support of the "start" and "increment" values::
+support of the "start" and "increment" values:
+
+.. sourcecode:: python
 
     from sqlalchemy import Table, Integer, Sequence, Column
 
@@ -109,7 +115,9 @@ The process for fetching this value has several variants:
 
   * when using PyODBC, the phrase ``; select scope_identity()`` will be
     appended to the end of the INSERT statement; a second result set will be
-    fetched in order to receive the value.  Given a table as::
+    fetched in order to receive the value.  Given a table as:
+
+    .. sourcecode:: python
 
         t = Table('t', m, Column('id', Integer, primary_key=True),
                 Column('x', Integer),
@@ -133,7 +141,9 @@ detect when an INSERT construct, created using a core :func:`.insert`
 construct (not a plain string SQL), refers to the identity column, and
 in this case will emit ``SET IDENTITY_INSERT ON`` prior to the insert
 statement proceeding, and ``SET IDENTITY_INSERT OFF`` subsequent to the
-execution.  Given this example::
+execution.  Given this example:
+
+.. sourcecode:: python
 
     m = MetaData()
     t = Table('t', m, Column('id', Integer, primary_key=True),
@@ -177,7 +187,9 @@ dialect-specific version of these types, so that a base type
 specified such as ``VARCHAR(None)`` can assume "unlengthed" behavior on
 more than one backend without using dialect-specific types.
 
-To build a SQL Server VARCHAR or NVARCHAR with MAX length, use None::
+To build a SQL Server VARCHAR or NVARCHAR with MAX length, use None:
+
+.. sourcecode:: python
 
     my_table = Table(
         'my_table', metadata,
@@ -190,7 +202,9 @@ Collation Support
 -----------------
 
 Character collations are supported by the base string types,
-specified by the string argument "collation"::
+specified by the string argument "collation":
+
+.. sourcecode:: python
 
     from sqlalchemy import VARCHAR
     Column('login', VARCHAR(32, collation='Latin1_General_CI_AS'))
@@ -234,14 +248,18 @@ argument as passed to
 command ``SET TRANSACTION ISOLATION LEVEL <level>`` for
 each new connection.
 
-To set isolation level using :func:`.create_engine`::
+To set isolation level using :func:`.create_engine`:
+
+.. sourcecode:: python
 
     engine = create_engine(
         "mssql+pyodbc://scott:tiger@ms_2008",
         isolation_level="REPEATABLE READ"
     )
 
-To set using per-connection execution options::
+To set using per-connection execution options:
+
+.. sourcecode:: python
 
     connection = engine.connect()
     connection = connection.execution_options(
@@ -322,7 +340,9 @@ behavior of this flag is as follows:
   ``False`` based on whether 2012 or greater is detected.
 
 * The flag can be set to either ``True`` or ``False`` when the dialect
-  is created, typically via :func:`.create_engine`::
+  is created, typically via :func:`.create_engine`:
+
+  .. sourcecode:: python
 
         eng = create_engine("mssql+pymssql://user:pass@host/db",
                         deprecate_large_types=True)
@@ -343,7 +363,9 @@ Multipart Schema Names
 SQL Server schemas sometimes require multiple parts to their "schema"
 qualifier, that is, including the database name and owner name as separate
 tokens, such as ``mydatabase.dbo.some_table``. These multipart names can be set
-at once using the :paramref:`.Table.schema` argument of :class:`.Table`::
+at once using the :paramref:`.Table.schema` argument of :class:`.Table`:
+
+.. sourcecode:: python
 
     Table(
         "some_table", metadata,
@@ -357,7 +379,9 @@ argument that contains a dot will be split into separate
 Server information schema tables, as these two values are stored separately.
 Additionally, when rendering the schema name for DDL or SQL, the two
 components will be quoted separately for case sensitive names and other
-special characters.   Given an argument as below::
+special characters.   Given an argument as below:
+
+.. sourcecode:: python
 
     Table(
         "some_table", metadata,
@@ -372,7 +396,9 @@ as the database name.
 To control how the schema name is broken into database / owner,
 specify brackets (which in SQL Server are quoting characters) in the name.
 Below, the "owner" will be considered as ``MyDataBase.dbo`` and the
-"database" will be None::
+"database" will be None:
+
+.. sourcecode:: python
 
     Table(
         "some_table", metadata,
@@ -381,7 +407,9 @@ Below, the "owner" will be considered as ``MyDataBase.dbo`` and the
     )
 
 To individually specify both database and owner name with special characters
-or embedded dots, use two sets of brackets::
+or embedded dots, use two sets of brackets:
+
+.. sourcecode:: python
 
     Table(
         "some_table", metadata,
@@ -401,7 +429,9 @@ Legacy Schema Mode
 
 Very old versions of the MSSQL dialect introduced the behavior such that a
 schema-qualified table would be auto-aliased when used in a
-SELECT statement; given a table::
+SELECT statement; given a table:
+
+.. sourcecode:: python
 
     account_table = Table(
         'account', metadata,
@@ -412,7 +442,9 @@ SELECT statement; given a table::
 
 this legacy mode of rendering would assume that "customer_schema.account"
 would not be accepted by all parts of the SQL statement, as illustrated
-below::
+below:
+
+.. sourcecode:: pycon
 
     >>> eng = create_engine("mssql+pymssql://mydsn", legacy_schema_aliasing=True)
     >>> print(account_table.select().compile(eng))
@@ -438,13 +470,17 @@ The MSSQL dialect supports clustered indexes (and primary keys) via the
 ``mssql_clustered`` option.  This option is available to :class:`.Index`,
 :class:`.UniqueConstraint`. and :class:`.PrimaryKeyConstraint`.
 
-To generate a clustered index::
+To generate a clustered index:
+
+.. sourcecode:: python
 
     Index("my_index", table.c.x, mssql_clustered=True)
 
 which renders the index as ``CREATE CLUSTERED INDEX my_index ON table (x)``.
 
-To generate a clustered primary key use::
+To generate a clustered primary key use:
+
+.. sourcecode:: python
 
     Table('my_table', metadata,
           Column('x', ...),
@@ -456,7 +492,9 @@ which will render the table, for example, as::
   CREATE TABLE my_table (x INTEGER NOT NULL, y INTEGER NOT NULL,
                          PRIMARY KEY CLUSTERED (x, y))
 
-Similarly, we can generate a clustered unique constraint using::
+Similarly, we can generate a clustered unique constraint using:
+
+.. sourcecode:: python
 
     Table('my_table', metadata,
           Column('x', ...),
@@ -466,7 +504,9 @@ Similarly, we can generate a clustered unique constraint using::
           )
 
 To explicitly request a non-clustered primary key (for example, when
-a separate clustered index is desired), use::
+a separate clustered index is desired), use:
+
+.. sourcecode:: python
 
     Table('my_table', metadata,
           Column('x', ...),
@@ -494,7 +534,9 @@ INCLUDE
 ^^^^^^^
 
 The ``mssql_include`` option renders INCLUDE(colname) for the given string
-names::
+names:
+
+.. sourcecode:: python
 
     Index("my_index", table.c.x, mssql_include=['y'])
 
@@ -505,7 +547,9 @@ would render the index as ``CREATE INDEX my_index ON table (x) INCLUDE (y)``
 Index ordering
 ^^^^^^^^^^^^^^
 
-Index ordering is available via functional expressions, such as::
+Index ordering is available via functional expressions, such as:
+
+.. sourcecode:: python
 
     Index("my_index", table.c.x.desc())
 
@@ -537,7 +581,9 @@ server side defaults.   MS-SQL does not
 allow the usage of OUTPUT INSERTED on tables that have triggers.
 To disable the usage of OUTPUT INSERTED on a per-table basis,
 specify ``implicit_returning=False`` for each :class:`.Table`
-which has triggers::
+which has triggers:
+
+.. sourcecode:: python
 
     Table('mytable', metadata,
         Column('id', Integer, primary_key=True),
@@ -545,7 +591,9 @@ which has triggers::
         implicit_returning=False
     )
 
-Declarative form::
+Declarative form:
+
+.. sourcecode:: python
 
     class MyClass(Base):
         # ...
@@ -573,7 +621,9 @@ warning will be emitted but the operation will proceed.
 
 The use of OUTPUT INSERTED can be disabled by setting the
 :paramref:`.Table.implicit_returning` flag to ``False`` on a particular
-:class:`.Table`, which in declarative looks like::
+:class:`.Table`, which in declarative looks like:
+
+.. sourcecode:: python
 
     class MyTable(Base):
         __tablename__ = 'mytable'

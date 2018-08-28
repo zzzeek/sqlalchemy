@@ -10,7 +10,9 @@
 The various listener targets for a particular event class are represented
 as attributes, which refer to collections of listeners to be fired off.
 These collections can exist at the class level as well as at the instance
-level.  An event is fired off using code like this::
+level.  An event is fired off using code like this:
+
+.. sourcecode:: python
 
     some_object.dispatch.first_connect(arg1, arg2)
 

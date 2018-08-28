@@ -148,7 +148,9 @@ class DialectKWArgs(object):
     def argument_for(cls, dialect_name, argument_name, default):
         """Add a new kind of dialect-specific keyword argument for this class.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             Index.argument_for("mydialect", "length", None)
 
@@ -252,7 +254,9 @@ class DialectKWArgs(object):
 
         This is a two-level nested registry, keyed to ``<dialect_name>``
         and ``<argument_name>``.  For example, the ``postgresql_where``
-        argument would be locatable as::
+        argument would be locatable as:
+
+        .. sourcecode:: python
 
             arg = my_object.dialect_options['postgresql']['where']
 
@@ -342,7 +346,9 @@ class Executable(Generative):
         connections.
 
         The :meth:`execution_options` method is generative.  A new
-        instance of this statement is returned that contains the options::
+        instance of this statement is returned that contains the options:
+
+        .. sourcecode:: python
 
             statement = select([table.c.x, table.c.y])
             statement = statement.execution_options(autocommit=True)
@@ -463,7 +469,9 @@ class ColumnCollection(util.OrderedProperties):
            versions of this column  as well as existing columns with the
            same key.
 
-            e.g.::
+            e.g.:
+
+            .. sourcecode:: python
 
                 t = Table('sometable', metadata, Column('col1', Integer))
                 t.columns.replace(Column('col1', Integer, key='columnone'))

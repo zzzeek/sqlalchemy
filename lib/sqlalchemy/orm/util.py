@@ -219,7 +219,9 @@ def identity_key(*args, **kwargs):
       This form receives a mapped class and a primary key scalar or
       tuple as an argument.
 
-      E.g.::
+      E.g.:
+
+      .. sourcecode:: pycon
 
         >>> identity_key(MyClass, (1, 2))
         (<class '__main__.MyClass'>, (1, 2), None)
@@ -238,7 +240,9 @@ def identity_key(*args, **kwargs):
       are populated (else the key will contain ``None`` for those missing
       values).
 
-      E.g.::
+      E.g.:
+
+      .. sourcecode:: pycon
 
         >>> instance = MyClass(1, 2)
         >>> identity_key(instance=instance)
@@ -256,7 +260,9 @@ def identity_key(*args, **kwargs):
       This form is similar to the class/tuple form, except is passed a
       database result row as a :class:`.RowProxy` object.
 
-      E.g.::
+      E.g.:
+
+      .. sourcecode:: pycon
 
         >>> row = engine.execute("select * from table where a=1 and b=2").\
 first()
@@ -350,7 +356,9 @@ class AliasedClass(object):
     Usage is via the :func:`.orm.aliased` function, or alternatively
     via the :func:`.orm.with_polymorphic` function.
 
-    Usage example::
+    Usage example:
+
+    .. sourcecode:: python
 
         # find all pairs of users with the same name
         user_alias = aliased(User)
@@ -367,7 +375,9 @@ class AliasedClass(object):
 
     The :class:`.AliasedClass` can be inspected for its underlying
     :class:`.Mapper`, aliased selectable, and other information
-    using :func:`.inspect`::
+    using :func:`.inspect`:
+
+    .. sourcecode:: python
 
         from sqlalchemy import inspect
         my_alias = aliased(MyClass)
@@ -460,7 +470,9 @@ class AliasedInsp(InspectionAttr):
 
     The :class:`.AliasedInsp` object is returned
     given an :class:`.AliasedClass` using the
-    :func:`.inspect` function::
+    :func:`.inspect` function:
+
+    .. sourcecode:: python
 
         from sqlalchemy import inspect
         from sqlalchemy.orm import aliased
@@ -614,7 +626,9 @@ def aliased(element, alias=None, name=None, flat=False, adapt_on_names=False):
     """Produce an alias of the given element, usually an :class:`.AliasedClass`
     instance.
 
-    E.g.::
+    E.g.:
+
+    .. sourcecode:: python
 
         my_alias = aliased(MyClass)
 
@@ -667,7 +681,9 @@ def aliased(element, alias=None, name=None, flat=False, adapt_on_names=False):
      given selectable doesn't otherwise have a column that corresponds
      to one on the entity.  The use case for this is when associating
      an entity with some derived selectable such as one that uses
-     aggregate functions::
+     aggregate functions:
+
+     .. sourcecode:: python
 
         class UnitPrice(Base):
             __tablename__ = 'unit_price'
@@ -954,7 +970,9 @@ def join(
     significant amount of automation beyond :func:`.orm.join`
     by itself.  Explicit usage of :func:`.orm.join`
     with :class:`.Query` involves usage of the
-    :meth:`.Query.select_from` method, as in::
+    :meth:`.Query.select_from` method, as in:
+
+    .. sourcecode:: python
 
         from sqlalchemy.orm import join
         session.query(User).\
@@ -962,7 +980,9 @@ def join(
             filter(Address.email_address=='foo@bar.com')
 
     In modern SQLAlchemy the above join can be written more
-    succinctly as::
+    succinctly as:
+
+    .. sourcecode:: python
 
         session.query(User).\
                 join(User.addresses).\

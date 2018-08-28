@@ -20,8 +20,9 @@ Example: A ``slide`` table, where each row refers to zero or more entries
 in a related ``bullet`` table.   The bullets within a slide are
 displayed in order based on the value of the ``position`` column in the
 ``bullet`` table.   As entries are reordered in memory, the value of the
-``position`` attribute should be updated to reflect the new sort order::
+``position`` attribute should be updated to reflect the new sort order:
 
+.. sourcecode:: python
 
     Base = declarative_base()
 
@@ -50,7 +51,9 @@ will also need to be renumbered.
 
 The :class:`.OrderingList` object automates this task, managing the
 ``position`` attribute on all ``Bullet`` objects in the collection.  It is
-constructed using the :func:`.ordering_list` factory::
+constructed using the :func:`.ordering_list` factory:
+
+.. sourcecode:: python
 
     from sqlalchemy.ext.orderinglist import ordering_list
 
@@ -72,16 +75,18 @@ constructed using the :func:`.ordering_list` factory::
         position = Column(Integer)
         text = Column(String)
 
-With the above mapping the ``Bullet.position`` attribute is managed::
+With the above mapping the ``Bullet.position`` attribute is managed:
 
-    s = Slide()
-    s.bullets.append(Bullet())
-    s.bullets.append(Bullet())
-    s.bullets[1].position
-    >>> 1
-    s.bullets.insert(1, Bullet())
-    s.bullets[2].position
-    >>> 2
+.. sourcecode:: pycon
+
+    >>> s = Slide()
+    >>> s.bullets.append(Bullet())
+    >>> s.bullets.append(Bullet())
+    >>> s.bullets[1].position
+    1
+    >>> s.bullets.insert(1, Bullet())
+    >>> s.bullets[2].position
+    2
 
 The :class:`.OrderingList` construct only works with **changes** to a
 collection, and not the initial load from the database, and requires that the
@@ -129,7 +134,9 @@ def ordering_list(attr, count_from=None, **kw):
     """Prepares an :class:`OrderingList` factory for use in mapper definitions.
 
     Returns an object suitable for use as an argument to a Mapper
-    relationship's ``collection_class`` option.  e.g.::
+    relationship's ``collection_class`` option.  e.g.:
+
+    .. sourcecode:: python
 
         from sqlalchemy.ext.orderinglist import ordering_list
 

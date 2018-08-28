@@ -37,7 +37,9 @@ def find_join_source(clauses, join_to):
     clauses which can be joined against the selectable.  returns
     None, None if no match is found.
 
-    e.g.::
+    e.g.:
+
+    .. sourcecode:: python
 
         clause1 = table1.join(table2)
         clause2 = table4.join(table5)
@@ -61,16 +63,21 @@ def visit_binary_product(fn, expr):
     """Produce a traversal of the given expression, delivering
     column comparisons to the given function.
 
-    The function is of the form::
+    The function is of the form:
 
-        def my_fn(binary, left, right)
+    .. sourcecode:: python
+
+        def my_fn(binary, left, right):
+            pass
 
     For each binary expression located which has a
     comparison operator, the product of "left" and
     "right" will be delivered to that function,
     in terms of that binary.
 
-    Hence an expression like::
+    Hence an expression like:
+
+    .. sourcecode:: python
 
         and_(
             (a + b) == q + func.sum(e + f),
@@ -267,7 +274,9 @@ def selectables_overlap(left, right):
 def bind_values(clause):
     """Return an ordered list of "bound" values in the given clause.
 
-    E.g.::
+    E.g.:
+
+    .. sourcecode:: pycon
 
         >>> expr = and_(
         ...    table.c.foo==5, table.c.foo==7
@@ -590,7 +599,9 @@ def criterion_as_pairs(expression, consider_as_foreign_keys=None,
 class ClauseAdapter(visitors.ReplacingCloningVisitor):
     """Clones and modifies clauses based on column correspondence.
 
-    E.g.::
+    E.g.:
+
+    .. sourcecode:: python
 
       table1 = Table('sometable', metadata,
           Column('col1', Integer),
@@ -603,12 +614,16 @@ class ClauseAdapter(visitors.ReplacingCloningVisitor):
 
       condition = table1.c.col1 == table2.c.col1
 
-    make an alias of table1::
+    make an alias of table1:
+
+    .. sourcecode:: python
 
       s = table1.alias('foo')
 
     calling ``ClauseAdapter(s).traverse(condition)`` converts
-    condition to read::
+    condition to read:
+
+    .. sourcecode:: python
 
       s.c.col1 == table2.c.col1
 

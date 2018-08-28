@@ -36,7 +36,9 @@ class DDLElement(Executable, _DDLCompiles):
 
     :class:`.DDLElement` integrates closely with SQLAlchemy events,
     introduced in :ref:`event_toplevel`.  An instance of one is
-    itself an event receiving callable::
+    itself an event receiving callable:
+
+    .. sourcecode:: python
 
         event.listen(
             users,
@@ -146,7 +148,9 @@ class DDLElement(Executable, _DDLCompiles):
         r"""Return a callable that will execute this
         DDLElement conditionally.
 
-        Used to provide a wrapper for event listening::
+        Used to provide a wrapper for event listening:
+
+        .. sourcecode:: python
 
             event.listen(
                         metadata,
@@ -156,11 +160,15 @@ class DDLElement(Executable, _DDLCompiles):
 
         :param dialect: May be a string, tuple or a callable
           predicate.  If a string, it will be compared to the name of the
-          executing database dialect::
+          executing database dialect:
+
+          .. sourcecode:: python
 
             DDL('something').execute_if(dialect='postgresql')
 
-          If a tuple, specifies multiple dialect names::
+          If a tuple, specifies multiple dialect names:
+
+          .. sourcecode:: python
 
             DDL('something').execute_if(dialect=('postgresql', 'mysql'))
 
@@ -276,18 +284,20 @@ class DDL(DDLElement):
     :class:`.MetaData` objects as targets.   Basic templating support allows
     a single DDL instance to handle repetitive tasks for multiple tables.
 
-    Examples::
+    Examples:
 
-      from sqlalchemy import event, DDL
+    .. sourcecode:: python
 
-      tbl = Table('users', metadata, Column('uid', Integer))
-      event.listen(tbl, 'before_create', DDL('DROP TRIGGER users_trigger'))
+          from sqlalchemy import event, DDL
 
-      spow = DDL('ALTER TABLE %(table)s SET secretpowers TRUE')
-      event.listen(tbl, 'after_create', spow.execute_if(dialect='somedb'))
+          tbl = Table('users', metadata, Column('uid', Integer))
+          event.listen(tbl, 'before_create', DDL('DROP TRIGGER users_trigger'))
 
-      drop_spow = DDL('ALTER TABLE users SET secretpowers FALSE')
-      connection.execute(drop_spow)
+          spow = DDL('ALTER TABLE %(table)s SET secretpowers TRUE')
+          event.listen(tbl, 'after_create', spow.execute_if(dialect='somedb'))
+
+          drop_spow = DDL('ALTER TABLE users SET secretpowers FALSE')
+          connection.execute(drop_spow)
 
     When operating on Table events, the following ``statement``
     string substitions are available::
@@ -322,11 +332,15 @@ class DDL(DDLElement):
 
           Optional filtering criteria.  May be a string, tuple or a callable
           predicate.  If a string, it will be compared to the name of the
-          executing database dialect::
+          executing database dialect:
+
+          .. sourcecode:: python
 
             DDL('something', on='postgresql')
 
-          If a tuple, specifies multiple dialect names::
+          If a tuple, specifies multiple dialect names:
+
+          .. sourcecode:: python
 
             DDL('something', on=('postgresql', 'mysql'))
 
@@ -508,7 +522,9 @@ class CreateColumn(_DDLCompiles):
 
     Typical integration is to examine the incoming :class:`.Column`
     object, and to redirect compilation if a particular flag or condition
-    is found::
+    is found:
+
+    .. sourcecode:: python
 
         from sqlalchemy import schema
         from sqlalchemy.ext.compiler import compiles
@@ -537,7 +553,9 @@ class CreateColumn(_DDLCompiles):
                             for const in column.constraints)
             return text
 
-    The above construct can be applied to a :class:`.Table` as follows::
+    The above construct can be applied to a :class:`.Table` as follows:
+
+    .. sourcecode:: python
 
         from sqlalchemy import Table, Metadata, Column, Integer, String
         from sqlalchemy import schema
@@ -573,7 +591,9 @@ class CreateColumn(_DDLCompiles):
     rendering of the PostgreSQL ``xmin`` column against the PostgreSQL
     backend, but on other backends does render it, in anticipation of a
     triggered rule.  A conditional compilation rule could skip this name only
-    on PostgreSQL::
+    on PostgreSQL:
+
+    .. sourcecode:: python
 
         from sqlalchemy.schema import CreateColumn
 

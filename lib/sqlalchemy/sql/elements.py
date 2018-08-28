@@ -33,7 +33,9 @@ def _clone(element, **kw):
 def collate(expression, collation):
     """Return the clause ``expression COLLATE collation``.
 
-    e.g.::
+    e.g.:
+
+    .. sourcecode:: python
 
         collate(mycolumn, 'utf8_bin')
 
@@ -59,7 +61,9 @@ def collate(expression, collation):
 def between(expr, lower_bound, upper_bound, symmetric=False):
     """Produce a ``BETWEEN`` predicate clause.
 
-    E.g.::
+    E.g.:
+
+    .. sourcecode:: python
 
         from sqlalchemy import between
         stmt = select([users_table]).where(between(users_table.c.id, 5, 7))
@@ -70,14 +74,18 @@ def between(expr, lower_bound, upper_bound, symmetric=False):
 
     The :func:`.between` function is a standalone version of the
     :meth:`.ColumnElement.between` method available on all
-    SQL expressions, as in::
+    SQL expressions, as in:
+
+    .. sourcecode:: python
 
         stmt = select([users_table]).where(users_table.c.id.between(5, 7))
 
     All arguments passed to :func:`.between`, including the left side
     column expression, are coerced from Python scalar values if a
     the value is not a :class:`.ColumnElement` subclass.   For example,
-    three fixed values can be compared as in::
+    three fixed values can be compared as in:
+
+    .. sourcecode:: python
 
         print(between(5, 3, 7))
 
@@ -284,7 +292,9 @@ class ClauseElement(Visitable):
         """Return a copy with :func:`bindparam()` elements replaced.
 
         Returns a copy of this ClauseElement with :func:`bindparam()`
-        elements replaced with values taken from the given dictionary::
+        elements replaced with values taken from the given dictionary:
+
+        .. sourcecode:: pycon
 
           >>> clause = column('x') + bindparam('foo')
           >>> print clause.compile().params
@@ -413,7 +423,9 @@ class ClauseElement(Visitable):
             that will be passed through to the compiler within all "visit"
             methods.  This allows any custom flag to be passed through to
             a custom compilation construct, for example.  It is also used
-            for the case of passing the ``literal_binds`` flag through::
+            for the case of passing the ``literal_binds`` flag through:
+
+            .. sourcecode:: python
 
                 from sqlalchemy.sql import table, column, select
 
@@ -555,7 +567,9 @@ class ColumnElement(operators.ColumnOperators, ClauseElement):
     together with the addition operator ``+`` to produce
     a :class:`.BinaryExpression`.
     Both :class:`.ColumnClause` and :class:`.BinaryExpression` are subclasses
-    of :class:`.ColumnElement`::
+    of :class:`.ColumnElement`:
+
+    .. sourcecode:: pycon
 
         >>> from sqlalchemy.sql import column
         >>> column('a') + column('b')
@@ -846,7 +860,9 @@ class BindParameter(ColumnElement):
     r"""Represent a "bound expression".
 
     :class:`.BindParameter` is invoked explicitly using the
-    :func:`.bindparam` function, as in::
+    :func:`.bindparam` function, as in:
+
+    .. sourcecode:: python
 
         from sqlalchemy import bindparam
 
@@ -893,7 +909,9 @@ class BindParameter(ColumnElement):
         When using :func:`.bindparam` explicitly, the use case is typically
         one of traditional deferment of parameters; the :func:`.bindparam`
         construct accepts a name which can then be referred to at execution
-        time::
+        time:
+
+        .. sourcecode:: python
 
             from sqlalchemy import bindparam
 
@@ -906,14 +924,18 @@ class BindParameter(ColumnElement):
 
         In order to populate the value of ``:username`` above, the value
         would typically be applied at execution time to a method
-        like :meth:`.Connection.execute`::
+        like :meth:`.Connection.execute`:
+
+        .. sourcecode:: python
 
             result = connection.execute(stmt, username='wendy')
 
         Explicit use of :func:`.bindparam` is also common when producing
         UPDATE or DELETE statements that are to be invoked multiple times,
         where the WHERE criterion of the statement is to change on each
-        invocation, such as::
+        invocation, such as:
+
+        .. sourcecode:: python
 
             stmt = (users_table.update().
                     where(user_table.c.name == bindparam('username')).
@@ -930,14 +952,18 @@ class BindParameter(ColumnElement):
         :func:`.bindparam` in an implicit sense.   It is typical that Python
         literal values passed to virtually all SQL expression functions are
         coerced into fixed :func:`.bindparam` constructs.  For example, given
-        a comparison operation such as::
+        a comparison operation such as:
+
+        .. sourcecode:: python
 
             expr = users_table.c.name == 'Wendy'
 
         The above expression will produce a :class:`.BinaryExpression`
         construct, where the left side is the :class:`.Column` object
         representing the ``name`` column, and the right side is a
-        :class:`.BindParameter` representing the literal value::
+        :class:`.BindParameter` representing the literal value:
+
+        .. sourcecode:: python
 
             print(repr(expr.right))
             BindParameter('%(4327771088 name)s', 'Wendy', type_=String())
@@ -949,7 +975,9 @@ class BindParameter(ColumnElement):
         Where the ``:name_1`` parameter name is an anonymous name.  The
         actual string ``Wendy`` is not in the rendered string, but is carried
         along where it is later used within statement execution.  If we
-        invoke a statement like the following::
+        invoke a statement like the following:
+
+        .. sourcecode:: python
 
             stmt = select([users_table]).where(users_table.c.name == 'Wendy')
             result = connection.execute(stmt)
@@ -969,7 +997,9 @@ class BindParameter(ColumnElement):
         when working with :term:`CRUD` statements as far as the "VALUES"
         portion is concerned.   The :func:`.insert` construct produces an
         ``INSERT`` expression which will, at statement execution time,
-        generate bound placeholders based on the arguments passed, as in::
+        generate bound placeholders based on the arguments passed, as in:
+
+        .. sourcecode:: python
 
             stmt = users_table.insert()
             result = connection.execute(stmt, name='Wendy')
@@ -1215,7 +1245,9 @@ class TypeClause(ClauseElement):
 class TextClause(Executable, ClauseElement):
     """Represent a literal SQL text fragment.
 
-    E.g.::
+    E.g.:
+
+    .. sourcecode:: python
 
         from sqlalchemy import text
 
@@ -1279,7 +1311,9 @@ class TextClause(Executable, ClauseElement):
         r"""Construct a new :class:`.TextClause` clause, representing
         a textual SQL string directly.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             from sqlalchemy import text
 
@@ -1296,13 +1330,17 @@ class TextClause(Executable, ClauseElement):
         it to be embedded in other SQL expression constructs as a subquery.
 
         Bind parameters are specified by name, using the format ``:name``.
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             t = text("SELECT * FROM users WHERE id=:user_id")
             result = connection.execute(t, user_id=12)
 
         For SQL statements where a colon is required verbatim, as within
-        an inline string, use a backslash to escape::
+        an inline string, use a backslash to escape:
+
+        .. sourcecode:: python
 
             t = text("SELECT * FROM users WHERE name='\:username'")
 
@@ -1312,7 +1350,9 @@ class TextClause(Executable, ClauseElement):
         it's an executable SELECT type of statement.  The
         :meth:`.TextClause.bindparams` method is used to provide bound
         parameter detail, and :meth:`.TextClause.columns` method allows
-        specification of return columns including names and types::
+        specification of return columns including names and types:
+
+        .. sourcecode:: python
 
             t = text("SELECT * FROM users WHERE id=:user_id").\
                     bindparams(user_id=7).\
@@ -1323,7 +1363,9 @@ class TextClause(Executable, ClauseElement):
 
         The :func:`.text` construct is used in cases when
         a literal string SQL fragment is specified as part of a larger query,
-        such as for the WHERE clause of a SELECT statement::
+        such as for the WHERE clause of a SELECT statement:
+
+        .. sourcecode:: python
 
             s = select([users.c.id, users.c.name]).where(text("id=:user_id"))
             result = connection.execute(s, user_id=12)
@@ -1335,7 +1377,9 @@ class TextClause(Executable, ClauseElement):
         the :meth:`Executable.execution_options` method.  For example,
         a :func:`.text` construct that should be subject to "autocommit"
         can be set explicitly so using the
-        :paramref:`.Connection.execution_options.autocommit` option::
+        :paramref:`.Connection.execution_options.autocommit` option:
+
+        .. sourcecode:: python
 
             t = text("EXEC my_procedural_thing()").\
                     execution_options(autocommit=True)
@@ -1362,12 +1406,16 @@ class TextClause(Executable, ClauseElement):
           Deprecated.  A list of :func:`.bindparam` instances used to
           provide information about parameters embedded in the statement.
           This argument now invokes the :meth:`.TextClause.bindparams`
-          method on the construct before returning it.  E.g.::
+          method on the construct before returning it.  E.g.:
+
+          .. sourcecode:: python
 
               stmt = text("SELECT * FROM table WHERE id=:id",
                         bindparams=[bindparam('id', value=5, type_=Integer)])
 
-          Is equivalent to::
+          Is equivalent to:
+
+          .. sourcecode:: python
 
               stmt = text("SELECT * FROM table WHERE id=:id").\
                         bindparams(bindparam('id', value=5, type_=Integer))
@@ -1383,18 +1431,24 @@ class TextClause(Executable, ClauseElement):
           the result set.  This parameter now invokes the
           :meth:`.TextClause.columns` method, which returns a
           :class:`.TextAsFrom` construct that gains a ``.c`` collection and
-          can be embedded in other expressions.  E.g.::
+          can be embedded in other expressions.  E.g.:
+
+          .. sourcecode:: python
 
               stmt = text("SELECT * FROM table",
                             typemap={'id': Integer, 'name': String},
                         )
 
-          Is equivalent to::
+          Is equivalent to:
+
+          .. sourcecode:: python
 
               stmt = text("SELECT * FROM table").columns(id=Integer,
                                                          name=String)
 
-          Or alternatively::
+          Or alternatively:
+
+          .. sourcecode:: python
 
               from sqlalchemy.sql import column
               stmt = text("SELECT * FROM table").columns(
@@ -1429,7 +1483,9 @@ class TextClause(Executable, ClauseElement):
         """Establish the values and/or types of bound parameters within
         this :class:`.TextClause` construct.
 
-        Given a text construct such as::
+        Given a text construct such as:
+
+        .. sourcecode:: python
 
             from sqlalchemy import text
             stmt = text("SELECT id, name FROM user WHERE name=:name "
@@ -1437,7 +1493,9 @@ class TextClause(Executable, ClauseElement):
 
         the :meth:`.TextClause.bindparams` method can be used to establish
         the initial value of ``:name`` and ``:timestamp``,
-        using simple keyword arguments::
+        using simple keyword arguments:
+
+        .. sourcecode:: python
 
             stmt = stmt.bindparams(name='jack',
                         timestamp=datetime.datetime(2012, 10, 8, 15, 12, 5))
@@ -1452,7 +1510,9 @@ class TextClause(Executable, ClauseElement):
         When specific typing behavior is needed, the positional ``*binds``
         argument can be used in which to specify :func:`.bindparam` constructs
         directly.  These constructs must include at least the ``key``
-        argument, then an optional value and type::
+        argument, then an optional value and type:
+
+        .. sourcecode:: python
 
             from sqlalchemy import bindparam
             stmt = stmt.bindparams(
@@ -1466,7 +1526,9 @@ class TextClause(Executable, ClauseElement):
         ``"jack"``.
 
         Additional bound parameters can be supplied at statement execution
-        time, e.g.::
+        time, e.g.:
+
+        .. sourcecode:: python
 
             result = connection.execute(stmt,
                         timestamp=datetime.datetime(2012, 10, 8, 15, 12, 5))
@@ -1475,7 +1537,9 @@ class TextClause(Executable, ClauseElement):
         where it will re-use existing :class:`.BindParameter` objects to add
         new information.  For example, we can call
         :meth:`.TextClause.bindparams` first with typing information, and a
-        second time with value information, and it will be combined::
+        second time with value information, and it will be combined:
+
+        .. sourcecode:: python
 
             stmt = text("SELECT id, name FROM user WHERE name=:name "
                         "AND timestamp=:timestamp")
@@ -1524,7 +1588,9 @@ class TextClause(Executable, ClauseElement):
 
         This function essentially bridges the gap between an entirely
         textual SELECT statement and the SQL expression language concept
-        of a "selectable"::
+        of a "selectable":
+
+        .. sourcecode:: python
 
             from sqlalchemy.sql import column, text
 
@@ -1546,7 +1612,9 @@ class TextClause(Executable, ClauseElement):
         the effective return type of the column, so that SQLAlchemy's
         result-set-processing systems may be used on the return values.
         This is often needed for types such as date or boolean types, as well
-        as for unicode processing on some dialect configurations::
+        as for unicode processing on some dialect configurations:
+
+        .. sourcecode:: python
 
             stmt = text("SELECT id, name, timestamp FROM some_table")
             stmt = stmt.columns(
@@ -1559,7 +1627,9 @@ class TextClause(Executable, ClauseElement):
                 print(id, name, timestamp)
 
         As a shortcut to the above syntax, keyword arguments referring to
-        types alone may be used, if only type conversion is needed::
+        types alone may be used, if only type conversion is needed:
+
+        .. sourcecode:: python
 
             stmt = text("SELECT id, name, timestamp FROM some_table")
             stmt = stmt.columns(
@@ -1576,7 +1646,9 @@ class TextClause(Executable, ClauseElement):
         particularly useful when using the ORM with complex textual queries.
         If we specify the columns from our model to :meth:`.TextClause.columns`,
         the result set will match to those columns positionally, meaning the
-        name or origin of the column in the textual SQL doesn't matter::
+        name or origin of the column in the textual SQL doesn't matter:
+
+        .. sourcecode:: python
 
             stmt = text("SELECT users.id, addresses.id, users.id, "
                  "users.name, addresses.email_address AS email "
@@ -1598,7 +1670,9 @@ class TextClause(Executable, ClauseElement):
 
         The :meth:`.TextClause.columns` method provides a direct
         route to calling :meth:`.FromClause.alias` as well as
-        :meth:`.SelectBase.cte` against a textual SELECT statement::
+        :meth:`.SelectBase.cte` against a textual SELECT statement:
+
+        .. sourcecode:: python
 
             stmt = stmt.columns(id=Integer, name=String).cte('st')
 
@@ -1696,21 +1770,27 @@ class False_(ColumnElement):
     def _instance(cls):
         """Return a :class:`.False_` construct.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: pycon
 
             >>> from sqlalchemy import false
             >>> print select([t.c.x]).where(false())
             SELECT x FROM t WHERE false
 
         A backend which does not support true/false constants will render as
-        an expression against 1 or 0::
+        an expression against 1 or 0:
+
+        .. sourcecode:: pycon
 
             >>> print select([t.c.x]).where(false())
             SELECT x FROM t WHERE 0 = 1
 
         The :func:`.true` and :func:`.false` constants also feature
         "short circuit" operation within an :func:`.and_` or :func:`.or_`
-        conjunction::
+        conjunction:
+
+        .. sourcecode:: pycon
 
             >>> print select([t.c.x]).where(or_(t.c.x > 5, true()))
             SELECT x FROM t WHERE true
@@ -1762,21 +1842,27 @@ class True_(ColumnElement):
     def _instance(cls):
         """Return a constant :class:`.True_` construct.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: pycon
 
             >>> from sqlalchemy import true
             >>> print select([t.c.x]).where(true())
             SELECT x FROM t WHERE true
 
         A backend which does not support true/false constants will render as
-        an expression against 1 or 0::
+        an expression against 1 or 0:
+
+        .. sourcecode:: pycon
 
             >>> print select([t.c.x]).where(true())
             SELECT x FROM t WHERE 1 = 1
 
         The :func:`.true` and :func:`.false` constants also feature
         "short circuit" operation within an :func:`.and_` or :func:`.or_`
-        conjunction::
+        conjunction:
+
+        .. sourcecode:: pycon
 
             >>> print select([t.c.x]).where(or_(t.c.x > 5, true()))
             SELECT x FROM t WHERE true
@@ -1933,7 +2019,9 @@ class BooleanClauseList(ClauseList, ColumnElement):
     def and_(cls, *clauses):
         """Produce a conjunction of expressions joined by ``AND``.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             from sqlalchemy import and_
 
@@ -1947,7 +2035,9 @@ class BooleanClauseList(ClauseList, ColumnElement):
         The :func:`.and_` conjunction is also available using the
         Python ``&`` operator (though note that compound expressions
         need to be parenthesized in order to function with Python
-        operator precedence behavior)::
+        operator precedence behavior):
+
+        .. sourcecode:: python
 
             stmt = select([users_table]).where(
                             (users_table.c.name == 'wendy') &
@@ -1957,7 +2047,9 @@ class BooleanClauseList(ClauseList, ColumnElement):
         The :func:`.and_` operation is also implicit in some cases;
         the :meth:`.Select.where` method for example can be invoked multiple
         times against a statement, which will have the effect of each
-        clause being combined using :func:`.and_`::
+        clause being combined using :func:`.and_`:
+
+        .. sourcecode:: python
 
             stmt = select([users_table]).\
                         where(users_table.c.name == 'wendy').\
@@ -1974,7 +2066,9 @@ class BooleanClauseList(ClauseList, ColumnElement):
     def or_(cls, *clauses):
         """Produce a conjunction of expressions joined by ``OR``.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             from sqlalchemy import or_
 
@@ -1988,7 +2082,9 @@ class BooleanClauseList(ClauseList, ColumnElement):
         The :func:`.or_` conjunction is also available using the
         Python ``|`` operator (though note that compound expressions
         need to be parenthesized in order to function with Python
-        operator precedence behavior)::
+        operator precedence behavior):
+
+        .. sourcecode:: python
 
             stmt = select([users_table]).where(
                             (users_table.c.name == 'wendy') |
@@ -2026,7 +2122,9 @@ class Tuple(ClauseList, ColumnElement):
     def __init__(self, *clauses, **kw):
         """Return a :class:`.Tuple`.
 
-        Main usage is to produce a composite IN construct::
+        Main usage is to produce a composite IN construct:
+
+        .. sourcecode:: python
 
             from sqlalchemy import tuple_
 
@@ -2068,7 +2166,9 @@ class Case(ColumnElement):
     """Represent a ``CASE`` expression.
 
     :class:`.Case` is produced using the :func:`.case` factory function,
-    as in::
+    as in:
+
+    .. sourcecode:: python
 
         from sqlalchemy import case
 
@@ -2101,7 +2201,9 @@ class Case(ColumnElement):
         languages.  It returns an instance of :class:`.Case`.
 
         :func:`.case` in its usual form is passed a list of "when"
-        constructs, that is, a list of conditions and results as tuples::
+        constructs, that is, a list of conditions and results as tuples:
+
+        .. sourcecode:: python
 
             from sqlalchemy import case
 
@@ -2132,7 +2234,9 @@ class Case(ColumnElement):
         expression to be compared.  In this form, the :paramref:`.case.whens`
         parameter is passed as a dictionary containing expressions to be
         compared against keyed to result expressions.  The statement below is
-        equivalent to the preceding statement::
+        equivalent to the preceding statement:
+
+        .. sourcecode:: python
 
             stmt = select([users_table]).\
                         where(
@@ -2149,7 +2253,9 @@ class Case(ColumnElement):
         SQL expressions, e.g. :class:`.ColumnElement` constructs, are accepted
         as well.  To coerce a literal string expression into a constant
         expression rendered inline, use the :func:`.literal_column` construct,
-        as in::
+        as in:
+
+        .. sourcecode:: python
 
             from sqlalchemy import case, literal_column
 
@@ -2184,7 +2290,9 @@ class Case(ColumnElement):
          In the first form, it accepts a list of 2-tuples; each 2-tuple
          consists of ``(<sql expression>, <value>)``, where the SQL
          expression is a boolean expression and "value" is a resulting value,
-         e.g.::
+         e.g.:
+
+         .. sourcecode:: python
 
             case([
                 (users_table.c.name == 'wendy', 'W'),
@@ -2194,7 +2302,9 @@ class Case(ColumnElement):
          In the second form, it accepts a Python dictionary of comparison
          values mapped to a resulting value; this form requires
          :paramref:`.case.value` to be present, and values will be compared
-         using the ``==`` operator, e.g.::
+         using the ``==`` operator, e.g.:
+
+         .. sourcecode:: python
 
             case(
                 {"wendy": "W", "jack": "J"},
@@ -2307,7 +2417,9 @@ class Cast(ColumnElement):
     """Represent a ``CAST`` expression.
 
     :class:`.Cast` is produced using the :func:`.cast` factory function,
-    as in::
+    as in:
+
+    .. sourcecode:: python
 
         from sqlalchemy import cast, Numeric
 
@@ -2330,7 +2442,9 @@ class Cast(ColumnElement):
 
         :func:`.cast` returns an instance of :class:`.Cast`.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             from sqlalchemy import cast, Numeric
 
@@ -2412,7 +2526,9 @@ class TypeCoerce(ColumnElement):
         """Associate a SQL expression with a particular type, without rendering
         ``CAST``.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             from sqlalchemy import type_coerce
 
@@ -2432,7 +2548,9 @@ class TypeCoerce(ColumnElement):
         column remains separate in the list of result columns vs. other
         type-coerced or direct values of the target column.  In order to
         provide a named label for the expression, use
-        :meth:`.ColumnElement.label`::
+        :meth:`.ColumnElement.label`:
+
+        .. sourcecode:: python
 
             stmt = select([
                 type_coerce(
@@ -2447,7 +2565,9 @@ class TypeCoerce(ColumnElement):
         :meth:`.TypeEngine.bind_expression`
         method or :meth:`.TypeEngine.bind_processor` method or equivalent,
         these functions will take effect at statement compilation/execution
-        time when a literal value is passed, as in::
+        time when a literal value is passed, as in:
+
+        .. sourcecode:: python
 
             # bound-value handling of MyStringType will be applied to the
             # literal value "some string"
@@ -2588,8 +2708,9 @@ class UnaryExpression(ColumnElement):
 
         :func:`.nullsfirst` is intended to modify the expression produced
         by :func:`.asc` or :func:`.desc`, and indicates how NULL values
-        should be handled when they are encountered during ordering::
+        should be handled when they are encountered during ordering:
 
+        .. sourcecode:: python
 
             from sqlalchemy import desc, nullsfirst
 
@@ -2603,7 +2724,9 @@ class UnaryExpression(ColumnElement):
         Like :func:`.asc` and :func:`.desc`, :func:`.nullsfirst` is typically
         invoked from the column expression itself using
         :meth:`.ColumnElement.nullsfirst`, rather than as its standalone
-        function version, as in::
+        function version, as in:
+
+        .. sourcecode:: python
 
             stmt = (select([users_table]).
                     order_by(users_table.c.name.desc().nullsfirst())
@@ -2631,8 +2754,9 @@ class UnaryExpression(ColumnElement):
 
         :func:`.nullslast` is intended to modify the expression produced
         by :func:`.asc` or :func:`.desc`, and indicates how NULL values
-        should be handled when they are encountered during ordering::
+        should be handled when they are encountered during ordering:
 
+        .. sourcecode:: python
 
             from sqlalchemy import desc, nullslast
 
@@ -2646,7 +2770,9 @@ class UnaryExpression(ColumnElement):
         Like :func:`.asc` and :func:`.desc`, :func:`.nullslast` is typically
         invoked from the column expression itself using
         :meth:`.ColumnElement.nullslast`, rather than as its standalone
-        function version, as in::
+        function version, as in:
+
+        .. sourcecode:: python
 
             stmt = select([users_table]).\
                         order_by(users_table.c.name.desc().nullslast())
@@ -2671,7 +2797,9 @@ class UnaryExpression(ColumnElement):
     def _create_desc(cls, column):
         """Produce a descending ``ORDER BY`` clause element.
 
-        e.g.::
+        e.g.:
+
+        .. sourcecode:: python
 
             from sqlalchemy import desc
 
@@ -2683,8 +2811,9 @@ class UnaryExpression(ColumnElement):
 
         The :func:`.desc` function is a standalone version of the
         :meth:`.ColumnElement.desc` method available on all SQL expressions,
-        e.g.::
+        e.g.:
 
+        .. sourcecode:: python
 
             stmt = select([users_table]).order_by(users_table.c.name.desc())
 
@@ -2711,7 +2840,9 @@ class UnaryExpression(ColumnElement):
     def _create_asc(cls, column):
         """Produce an ascending ``ORDER BY`` clause element.
 
-        e.g.::
+        e.g.:
+
+        .. sourcecode:: python
 
             from sqlalchemy import asc
             stmt = select([users_table]).order_by(asc(users_table.c.name))
@@ -2722,8 +2853,9 @@ class UnaryExpression(ColumnElement):
 
         The :func:`.asc` function is a standalone version of the
         :meth:`.ColumnElement.asc` method available on all SQL expressions,
-        e.g.::
+        e.g.:
 
+        .. sourcecode:: python
 
             stmt = select([users_table]).order_by(users_table.c.name.asc())
 
@@ -2752,7 +2884,9 @@ class UnaryExpression(ColumnElement):
 
         This applies the ``DISTINCT`` keyword to an individual column
         expression, and is typically contained within an aggregate function,
-        as in::
+        as in:
+
+        .. sourcecode:: python
 
             from sqlalchemy import distinct, func
             stmt = select([func.count(distinct(users_table.c.name))])
@@ -2762,7 +2896,9 @@ class UnaryExpression(ColumnElement):
             SELECT COUNT(DISTINCT name) FROM user
 
         The :func:`.distinct` function is also available as a column-level
-        method, e.g. :meth:`.ColumnElement.distinct`, as in::
+        method, e.g. :meth:`.ColumnElement.distinct`, as in:
+
+        .. sourcecode:: python
 
             stmt = select([func.count(users_table.c.name.distinct())])
 
@@ -2855,7 +2991,9 @@ class CollectionAggregate(UnaryExpression):
         """Produce an ANY expression.
 
         This may apply to an array type for some dialects (e.g. postgresql),
-        or to a subquery for others (e.g. mysql).  e.g.::
+        or to a subquery for others (e.g. mysql).  e.g.:
+
+        .. sourcecode:: python
 
             # postgresql '5 = ANY (somearray)'
             expr = 5 == any_(mytable.c.somearray)
@@ -2885,7 +3023,9 @@ class CollectionAggregate(UnaryExpression):
         """Produce an ALL expression.
 
         This may apply to an array type for some dialects (e.g. postgresql),
-        or to a subquery for others (e.g. mysql).  e.g.::
+        or to a subquery for others (e.g. mysql).  e.g.:
+
+        .. sourcecode:: python
 
             # postgresql '5 = ALL (somearray)'
             expr = 5 == all_(mytable.c.somearray)
@@ -2951,7 +3091,9 @@ class BinaryExpression(ColumnElement):
     """Represent an expression that is ``LEFT <operator> RIGHT``.
 
     A :class:`.BinaryExpression` is generated automatically
-    whenever two column expressions are used in a Python binary expression::
+    whenever two column expressions are used in a Python binary expression:
+
+    .. sourcecode:: pycon
 
         >>> from sqlalchemy.sql import column
         >>> column('a') + column('b')
@@ -3151,7 +3293,9 @@ class Over(ColumnElement):
         for database backends that support window functions.
 
         :func:`~.expression.over` is usually called using
-        the :meth:`.FunctionElement.over` method, e.g.::
+        the :meth:`.FunctionElement.over` method, e.g.:
+
+        .. sourcecode:: python
 
             func.row_number().over(order_by=mytable.c.some_column)
 
@@ -3162,7 +3306,9 @@ class Over(ColumnElement):
         Ranges are also possible using the :paramref:`.expression.over.range_`
         and :paramref:`.expression.over.rows` parameters.  These
         mutually-exclusive parameters each accept a 2-tuple, which contains
-        a combination of integers and None::
+        a combination of integers and None:
+
+        .. sourcecode:: python
 
             func.row_number().over(order_by=my_table.c.some_column, range_=(None, 0))
 
@@ -3174,19 +3320,27 @@ class Over(ColumnElement):
         value of zero indicates "current row", and negative / positive
         integers indicate "preceding" and "following":
 
-        * RANGE BETWEEN 5 PRECEDING AND 10 FOLLOWING::
+        * RANGE BETWEEN 5 PRECEDING AND 10 FOLLOWING:
+
+        .. sourcecode:: python
 
             func.row_number().over(order_by='x', range_=(-5, 10))
 
-        * ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW::
+        * ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW:
+
+        .. sourcecode:: python
 
             func.row_number().over(order_by='x', rows=(None, 0))
 
-        * RANGE BETWEEN 2 PRECEDING AND UNBOUNDED FOLLOWING::
+        * RANGE BETWEEN 2 PRECEDING AND UNBOUNDED FOLLOWING:
+
+        .. sourcecode:: python
 
             func.row_number().over(order_by='x', range_=(-2, None))
 
-        * RANGE BETWEEN 1 FOLLOWING AND 3 FOLLOWING::
+        * RANGE BETWEEN 1 FOLLOWING AND 3 FOLLOWING:
+
+        .. sourcecode:: python
 
             func.row_number().over(order_by='x', range_=(1, 3))
 
@@ -3341,7 +3495,9 @@ class WithinGroup(ColumnElement):
         :class:`.rank`, :class:`.dense_rank`, etc.
 
         :func:`~.expression.within_group` is usually called using
-        the :meth:`.FunctionElement.within_group` method, e.g.::
+        the :meth:`.FunctionElement.within_group` method, e.g.:
+
+        .. sourcecode:: python
 
             from sqlalchemy import within_group
             stmt = select([
@@ -3422,7 +3578,9 @@ class FunctionFilter(ColumnElement):
     It's supported only by certain database backends.
 
     Invocation of :class:`.FunctionFilter` is via
-    :meth:`.FunctionElement.filter`::
+    :meth:`.FunctionElement.filter`:
+
+    .. sourcecode:: python
 
         func.count(1).filter(True)
 
@@ -3443,7 +3601,9 @@ class FunctionFilter(ColumnElement):
         Used against aggregate and window functions,
         for database backends that support the "FILTER" clause.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             from sqlalchemy import funcfilter
             funcfilter(func.count(1), MyClass.name == 'some name')
@@ -3492,11 +3652,15 @@ class FunctionFilter(ColumnElement):
         Used against aggregate or so-called "window" functions,
         for database backends that support window functions.
 
-        The expression::
+        The expression:
+
+        .. sourcecode:: python
 
             func.rank().filter(MyClass.y > 5).over(order_by='x')
 
-        is shorthand for::
+        is shorthand for:
+
+        .. sourcecode:: python
 
             from sqlalchemy import over, funcfilter
             over(funcfilter(func.rank(), MyClass.y > 5), order_by='x')
@@ -3655,7 +3819,9 @@ class ColumnClause(Immutable, ColumnElement):
 
     The :class:`.ColumnClause`, a lightweight analogue to the
     :class:`.Column` class, is typically invoked using the
-    :func:`.column` function, as in::
+    :func:`.column` function, as in:
+
+    .. sourcecode:: python
 
         from sqlalchemy import column
 
@@ -3697,7 +3863,9 @@ class ColumnClause(Immutable, ColumnElement):
 
         The :class:`.ColumnClause` is a lightweight analogue to the
         :class:`.Column` class.  The :func:`.column` function can
-        be invoked with just a name alone, as in::
+        be invoked with just a name alone, as in:
+
+        .. sourcecode:: python
 
             from sqlalchemy import column
 
@@ -3709,7 +3877,9 @@ class ColumnClause(Immutable, ColumnElement):
             SELECT id, name FROM user
 
         Once constructed, :func:`.column` may be used like any other SQL
-        expression element such as within :func:`.select` constructs::
+        expression element such as within :func:`.select` constructs:
+
+        .. sourcecode:: python
 
             from sqlalchemy.sql import column
 
@@ -3729,7 +3899,9 @@ class ColumnClause(Immutable, ColumnElement):
         :func:`.column` can be used in a table-like
         fashion by combining it with the :func:`.table` function
         (which is the lightweight analogue to :class:`.Table`) to produce
-        a working table construct with minimal boilerplate::
+        a working table construct with minimal boilerplate:
+
+        .. sourcecode:: python
 
             from sqlalchemy import table, column, select
 
@@ -3962,7 +4134,9 @@ class quoted_name(util.MemoizedSlots, util.text_type):
     :class:`.Table`, :class:`.Column`, and others.  The class can also be
     passed explicitly as the name to any function that receives a name which
     can be quoted.  Such as to use the :meth:`.Engine.has_table` method with
-    an unconditionally quoted name::
+    an unconditionally quoted name:
+
+    .. sourcecode:: python
 
         from sqlalchemy import create_engine
         from sqlalchemy.sql import quoted_name
@@ -4048,7 +4222,9 @@ class conv(_truncated_label):
     subject to any further naming conventions.
 
     E.g. when we create a :class:`.Constraint` using a naming convention
-    as follows::
+    as follows:
+
+    .. sourcecode:: python
 
         m = MetaData(naming_convention={
             "ck": "ck_%(table_name)s_%(constraint_name)s"
@@ -4064,8 +4240,9 @@ class conv(_truncated_label):
     the above :class:`.CheckConstraint` with a name that's already been
     converted.  In order to make sure the name isn't double-modified, the
     new name is applied using the :func:`.schema.conv` marker.  We can
-    use this explicitly as follows::
+    use this explicitly as follows:
 
+    .. sourcecode:: python
 
         m = MetaData(naming_convention={
             "ck": "ck_%(table_name)s_%(constraint_name)s"

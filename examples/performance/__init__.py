@@ -126,7 +126,9 @@ The profiler suite system is extensible, and can be applied to your own set
 of tests.  This is a valuable technique to use in deciding upon the proper
 approach for some performance-critical set of routines.  For example,
 if we wanted to profile the difference between several kinds of loading,
-we can create a file ``test_loads.py``, with the following content::
+we can create a file ``test_loads.py``, with the following content:
+
+.. sourcecode:: python
 
     from examples.performance import Profiler
     from sqlalchemy import Integer, Column, create_engine, ForeignKey

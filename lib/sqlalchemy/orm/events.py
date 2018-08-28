@@ -125,7 +125,9 @@ class _InstrumentationEventsHold(object):
 class InstanceEvents(event.Events):
     """Define events specific to object lifecycle.
 
-    e.g.::
+    e.g.:
+
+    .. sourcecode:: python
 
         from sqlalchemy import event
 
@@ -500,7 +502,9 @@ class _InstanceEventsHold(_EventsHold):
 class MapperEvents(event.Events):
     """Define events specific to mappings.
 
-    e.g.::
+    e.g.:
+
+    .. sourcecode:: python
 
         from sqlalchemy import event
 
@@ -645,7 +649,9 @@ class MapperEvents(event.Events):
 
         This listener can either be applied to the :class:`.Mapper`
         class overall, or to any un-mapped class which serves as a base
-        for classes that will be mapped (using the ``propagate=True`` flag)::
+        for classes that will be mapped (using the ``propagate=True`` flag):
+
+        .. sourcecode:: python
 
             Base = declarative_base()
 
@@ -724,7 +730,9 @@ class MapperEvents(event.Events):
 
         This event can **only** be applied to the :class:`.Mapper` class
         or :func:`.mapper` function, and not to individual mappings or
-        mapped classes.  It is only invoked for all mappings as a whole::
+        mapped classes.  It is only invoked for all mappings as a whole:
+
+        .. sourcecode:: python
 
             from sqlalchemy.orm import mapper
 
@@ -743,7 +751,9 @@ class MapperEvents(event.Events):
         call.   If new mappings are constructed after existing ones have
         already been used, this event will likely be called again.  To ensure
         that a particular event is only called once and no further, the
-        ``once=True`` argument (new in 0.9.4) can be applied::
+        ``once=True`` argument (new in 0.9.4) can be applied:
+
+        .. sourcecode:: python
 
             from sqlalchemy.orm import mapper
 
@@ -784,7 +794,9 @@ class MapperEvents(event.Events):
 
         This event can **only** be applied to the :class:`.Mapper` class
         or :func:`.mapper` function, and not to individual mappings or
-        mapped classes.  It is only invoked for all mappings as a whole::
+        mapped classes.  It is only invoked for all mappings as a whole:
+
+        .. sourcecode:: python
 
             from sqlalchemy.orm import mapper
 
@@ -798,7 +810,9 @@ class MapperEvents(event.Events):
         call.   If new mappings are constructed after existing ones have
         already been used, this event will likely be called again.  To ensure
         that a particular event is only called once and no further, the
-        ``once=True`` argument (new in 0.9.4) can be applied::
+        ``once=True`` argument (new in 0.9.4) can be applied:
+
+        .. sourcecode:: python
 
             from sqlalchemy.orm import mapper
 
@@ -1131,7 +1145,9 @@ class _MapperEventsHold(_EventsHold):
 class SessionEvents(event.Events):
     """Define events specific to :class:`.Session` lifecycle.
 
-    e.g.::
+    e.g.:
+
+    .. sourcecode:: python
 
         from sqlalchemy import event
         from sqlalchemy.orm import sessionmaker
@@ -1202,7 +1218,9 @@ class SessionEvents(event.Events):
          To detect if this is the outermost
          :class:`.SessionTransaction`, as opposed to a "subtransaction" or a
          SAVEPOINT, test that the :attr:`.SessionTransaction.parent` attribute
-         is ``None``::
+         is ``None``:
+
+         .. sourcecode:: python
 
                 @event.listens_for(session, "after_transaction_create")
                 def after_transaction_create(session, transaction):
@@ -1210,7 +1228,9 @@ class SessionEvents(event.Events):
                         # work with top-level transaction
 
          To detect if the :class:`.SessionTransaction` is a SAVEPOINT, use the
-         :attr:`.SessionTransaction.nested` attribute::
+         :attr:`.SessionTransaction.nested` attribute:
+
+         .. sourcecode:: python
 
                 @event.listens_for(session, "after_transaction_create")
                 def after_transaction_create(session, transaction):
@@ -1241,7 +1261,9 @@ class SessionEvents(event.Events):
          To detect if this is the outermost
          :class:`.SessionTransaction`, as opposed to a "subtransaction" or a
          SAVEPOINT, test that the :attr:`.SessionTransaction.parent` attribute
-         is ``None``::
+         is ``None``:
+
+         .. sourcecode:: python
 
                 @event.listens_for(session, "after_transaction_create")
                 def after_transaction_end(session, transaction):
@@ -1249,7 +1271,9 @@ class SessionEvents(event.Events):
                         # work with top-level transaction
 
          To detect if the :class:`.SessionTransaction` is a SAVEPOINT, use the
-         :attr:`.SessionTransaction.nested` attribute::
+         :attr:`.SessionTransaction.nested` attribute:
+
+         .. sourcecode:: python
 
                 @event.listens_for(session, "after_transaction_create")
                 def after_transaction_end(session, transaction):
@@ -1358,7 +1382,9 @@ class SessionEvents(event.Events):
 
         The given :class:`.Session` can be used to invoke SQL and
         :meth:`.Session.query` operations after an outermost rollback
-        by first checking the :attr:`.Session.is_active` flag::
+        by first checking the :attr:`.Session.is_active` flag:
+
+        .. sourcecode:: python
 
             @event.listens_for(Session, "after_soft_rollback")
             def do_something(session, previous_transaction):
@@ -1801,7 +1827,9 @@ class AttributeEvents(event.Events):
     These are typically defined on the class-bound descriptor for the
     target class.
 
-    e.g.::
+    e.g.:
+
+    .. sourcecode:: python
 
         from sqlalchemy import event
 
@@ -1812,7 +1840,9 @@ class AttributeEvents(event.Events):
 
     Listeners have the option to return a possibly modified version
     of the value, when the ``retval=True`` flag is passed
-    to :func:`~.event.listen`::
+    to :func:`~.event.listen`:
+
+    .. sourcecode:: python
 
         def validate_phone(target, value, oldvalue, initiator):
             "Strip non-numeric characters from a phone number"
@@ -1951,7 +1981,9 @@ class AttributeEvents(event.Events):
         for the collection as a whole.  In order to determine if an
         :meth:`.AttributeEvents.append` event is part of a bulk replace,
         use the symbol :attr:`~.attributes.OP_BULK_REPLACE` to test the
-        incoming initiator::
+        incoming initiator:
+
+        .. sourcecode:: python
 
             from sqlalchemy.orm.attributes import OP_BULK_REPLACE
 
@@ -1966,7 +1998,6 @@ class AttributeEvents(event.Events):
                     return _make_value(value)
                 else:
                     return value
-
 
 
         .. versionadded:: 1.2
@@ -2060,7 +2091,9 @@ class AttributeEvents(event.Events):
         SQLAlchemy versions did in fact change the object's state).
 
         If a default generator on a column returned a particular constant,
-        a handler might be used as follows::
+        a handler might be used as follows:
+
+        .. sourcecode:: python
 
             SOME_CONSTANT = 3.1415926
 
@@ -2105,7 +2138,9 @@ class AttributeEvents(event.Events):
         provided by :obj:`.orm.validates` is **not** invoked when we apply our
         value to the given ``dict_``.  To have these events to invoke in
         response to our newly generated value, apply the value to the given
-        object as a normal attribute set operation::
+        object as a normal attribute set operation:
+
+        .. sourcecode:: python
 
             SOME_CONSTANT = 3.1415926
 
@@ -2155,12 +2190,16 @@ class AttributeEvents(event.Events):
         a new one, such as via a set event.
 
         E.g., given that ``User.addresses`` is a relationship-based
-        collection, the event is triggered here::
+        collection, the event is triggered here:
+
+        .. sourcecode:: python
 
             u1 = User()
             u1.addresses.append(a1)  #  <- new collection
 
-        and also during replace operations::
+        and also during replace operations:
+
+        .. sourcecode:: python
 
             u1.addresses = [a2, a3]  #  <- new collection
 
@@ -2184,7 +2223,9 @@ class AttributeEvents(event.Events):
         """Receive a 'collection dispose' event.
 
         This event is triggered for a collection-based attribute when
-        a collection is replaced, that is::
+        a collection is replaced, that is:
+
+        .. sourcecode:: python
 
             u1.addresses.append(a1)
 
@@ -2241,7 +2282,9 @@ class QueryEvents(event.Events):
         """Receive the :class:`.Query` object before it is composed into a
         core :class:`.Select` object.
 
-        This event is intended to allow changes to the query given::
+        This event is intended to allow changes to the query given:
+
+        .. sourcecode:: python
 
             @event.listens_for(Query, "before_compile", retval=True)
             def no_deleted(query):

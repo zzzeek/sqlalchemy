@@ -17,7 +17,9 @@ Instrumentation decoration relays membership change events to the
 The decorators observe function call arguments and return values, tracking
 entities entering or leaving the collection.  Two decorator approaches are
 provided.  One is a bundle of generic decorators that map function arguments
-and return values to events::
+and return values to events:
+
+.. sourcecode:: python
 
   from sqlalchemy.orm.collections import collection
   class MyClass(object):
@@ -54,7 +56,9 @@ transformation process roughly like so:
 This process modifies the class at runtime, decorating methods and adding some
 bookkeeping properties.  This isn't possible (or desirable) for built-in
 classes like ``list``, so trivial sub-classes are substituted to hold
-decoration::
+decoration:
+
+.. sourcecode:: python
 
   class InstrumentedList(list):
       pass
@@ -69,7 +73,9 @@ instances.
 
 When extending a known type like ``list``, additional decorations are not
 generally not needed.  Odds are, the extension method will delegate to a
-method that's already instrumented.  For example::
+method that's already instrumented.  For example:
+
+.. sourcecode:: python
 
   class QueueIsh(list):
      def push(self, item):
@@ -296,13 +302,17 @@ class collection(object):
 
     The annotating decorators (appender, remover, iterator, linker, converter,
     internally_instrumented) indicate the method's purpose and take no
-    arguments.  They are not written with parens::
+    arguments.  They are not written with parens:
+
+    .. sourcecode:: python
 
         @collection.appender
         def append(self, append): ...
 
     The recipe decorators all require parens, even those that take no
-    arguments::
+    arguments:
+
+    .. sourcecode:: python
 
         @collection.adds('entity')
         def insert(self, position, entity): ...
@@ -320,7 +330,9 @@ class collection(object):
 
         The appender method is called with one positional argument: the value
         to append. The method will be automatically decorated with 'adds(1)'
-        if not already decorated::
+        if not already decorated:
+
+        .. sourcecode:: python
 
             @collection.appender
             def add(self, append): ...
@@ -364,7 +376,9 @@ class collection(object):
 
         The remover method is called with one positional argument: the value
         to remove. The method will be automatically decorated with
-        :meth:`removes_return` if not already decorated::
+        :meth:`removes_return` if not already decorated:
+
+        .. sourcecode:: python
 
             @collection.remover
             def zap(self, entity): ...
@@ -390,7 +404,9 @@ class collection(object):
         """Tag the method as the collection remover.
 
         The iterator method is called with no arguments.  It is expected to
-        return an iterator over all collection members::
+        return an iterator over all collection members:
+
+        .. sourcecode:: python
 
             @collection.iterator
             def __iter__(self): ...
@@ -407,7 +423,9 @@ class collection(object):
         method. Use this if you are orchestrating your own calls to
         :func:`.collection_adapter` in one of the basic SQLAlchemy
         interface methods, or to prevent an automatic ABC method
-        decoration from wrapping your implementation::
+        decoration from wrapping your implementation:
+
+        .. sourcecode:: python
 
             # normally an 'extend' method on a list-like class would be
             # automatically intercepted and re-implemented in terms of
@@ -446,7 +464,9 @@ class collection(object):
         """Tag the method as the collection converter.
 
         This optional method will be called when a collection is being
-        replaced entirely, as in::
+        replaced entirely, as in:
+
+        .. sourcecode:: python
 
             myobj.acollection = [newvalue1, newvalue2]
 
@@ -458,7 +478,9 @@ class collection(object):
 
         The default converter implementation will use duck-typing to do the
         conversion.  A dict-like collection will be convert into an iterable
-        of dictionary values, and other types will simply be iterated::
+        of dictionary values, and other types will simply be iterated:
+
+        .. sourcecode:: python
 
             @collection.converter
             def convert(self, other): ...
@@ -481,7 +503,9 @@ class collection(object):
         Adds "add to collection" handling to the method.  The decorator
         argument indicates which method argument holds the SQLAlchemy-relevant
         value.  Arguments can be specified positionally (i.e. integer) or by
-        name::
+        name:
+
+        .. sourcecode:: python
 
             @collection.adds(1)
             def push(self, item): ...
@@ -504,7 +528,9 @@ class collection(object):
         holds the SQLAlchemy-relevant value to be added, and return value, if
         any will be considered the value to remove.
 
-        Arguments can be specified positionally (i.e. integer) or by name::
+        Arguments can be specified positionally (i.e. integer) or by name:
+
+        .. sourcecode:: python
 
             @collection.replaces(2)
             def __setitem__(self, index, item): ...
@@ -523,7 +549,9 @@ class collection(object):
         Adds "remove from collection" handling to the method.  The decorator
         argument indicates which method argument holds the SQLAlchemy-relevant
         value to be removed. Arguments can be specified positionally (i.e.
-        integer) or by name::
+        integer) or by name:
+
+        .. sourcecode:: python
 
             @collection.removes(1)
             def zap(self, item): ...
@@ -543,7 +571,9 @@ class collection(object):
 
         Adds "remove from collection" handling to the method.  The return
         value of the method, if any, is considered the value to remove.  The
-        method arguments are not inspected::
+        method arguments are not inspected:
+
+        .. sourcecode:: python
 
             @collection.removes_return()
             def pop(self): ...
@@ -1522,7 +1552,9 @@ class MappedCollection(dict):
         """Validate and convert a dict-like object into values for set()ing.
 
         This is called behind the scenes when a MappedCollection is replaced
-        entirely by another collection, as in::
+        entirely by another collection, as in:
+
+        .. sourcecode:: python
 
           myobj.mappedcollection = {'a':obj1, 'b': obj2} # ...
 

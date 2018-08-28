@@ -94,7 +94,9 @@ class UpdateBase(
     def returning(self, *cols):
         r"""Add a :term:`RETURNING` or equivalent clause to this statement.
 
-        e.g.::
+        e.g.:
+
+        .. sourcecode:: python
 
             stmt = table.update().\
                       where(table.c.data == 'value').\
@@ -108,7 +110,9 @@ class UpdateBase(
         The given collection of column expressions should be derived from
         the table that is
         the target of the INSERT, UPDATE, or DELETE.  While :class:`.Column`
-        objects are typical, the elements can also be expressions::
+        objects are typical, the elements can also be expressions:
+
+        .. sourcecode:: python
 
             stmt = table.insert().returning(
                 (table.c.first_name + " " + table.c.last_name).
@@ -164,7 +168,9 @@ class UpdateBase(
 
         The ``dialect_name`` option will limit the rendering of a particular
         hint to a particular backend. Such as, to add a hint
-        that only takes effect for SQL Server::
+        that only takes effect for SQL Server:
+
+        .. sourcecode:: python
 
             mytable.insert().with_hint("WITH (PAGLOCK)", dialect_name="mssql")
 
@@ -225,7 +231,9 @@ class ValuesBase(UpdateBase):
 
         :param \**kwargs: key value pairs representing the string key
           of a :class:`.Column` mapped to the value to be rendered into the
-          VALUES or SET clause::
+          VALUES or SET clause:
+
+          .. sourcecode:: python
 
                 users.insert().values(name="some name")
 
@@ -240,7 +248,9 @@ class ValuesBase(UpdateBase):
 
          For either an :class:`.Insert` or :class:`.Update` construct, a
          single dictionary can be passed, which works the same as that of
-         the kwargs form::
+         the kwargs form:
+
+         .. sourcecode:: python
 
             users.insert().values({"name": "some name"})
 
@@ -248,7 +258,9 @@ class ValuesBase(UpdateBase):
 
          Also for either form but more typically for the :class:`.Insert`
          construct, a tuple that contains an entry for every column in the
-         table is also accepted::
+         table is also accepted:
+
+         .. sourcecode:: python
 
             users.insert().values((5, "some name"))
 
@@ -256,7 +268,9 @@ class ValuesBase(UpdateBase):
          of dictionaries or full-table-tuples, which on the server will
          render the less common SQL syntax of "multiple values" - this
          syntax is supported on backends such as SQLite, PostgreSQL, MySQL,
-         but not necessarily others::
+         but not necessarily others:
+
+         .. sourcecode:: python
 
             users.insert().values([
                                 {"name": "some name"},
@@ -381,7 +395,9 @@ class ValuesBase(UpdateBase):
         """Make use of a :term:`RETURNING` clause for the purpose
         of fetching server-side expressions and defaults.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             stmt = table.insert().values(data='newdata').return_defaults()
 
@@ -535,7 +551,9 @@ class Insert(ValuesBase):
         """Return a new :class:`.Insert` construct which represents
         an ``INSERT...FROM SELECT`` statement.
 
-        e.g.::
+        e.g.:
+
+        .. sourcecode:: python
 
             sel = select([table1.c.a, table1.c.b]).where(table1.c.c > 5)
             ins = table2.insert().from_select(['a', 'b'], sel)
@@ -618,7 +636,9 @@ class Update(ValuesBase):
                  **dialect_kw):
         r"""Construct an :class:`.Update` object.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             from sqlalchemy import update
 
@@ -627,7 +647,9 @@ class Update(ValuesBase):
 
         Similar functionality is available via the
         :meth:`~.TableClause.update` method on
-        :class:`.Table`::
+        :class:`.Table`:
+
+        .. sourcecode:: python
 
             stmt = users.update().\
                         where(users.c.id==5).\
@@ -647,7 +669,9 @@ class Update(ValuesBase):
          will fail on databases that don't have support for multi-table
          update statements.  A SQL-standard method of referring to
          additional tables in the WHERE clause is to use a correlated
-         subquery::
+         subquery:
+
+         .. sourcecode:: python
 
             users.update().values(name='ed').where(
                     users.c.name==select([addresses.c.email_address]).\
@@ -716,7 +740,9 @@ class Update(ValuesBase):
         the subquery represented by the :func:`.select` should be
         *correlated* to the parent table, that is, providing criterion
         which links the table inside the subquery to the outer table
-        being updated::
+        being updated:
+
+        .. sourcecode:: python
 
             users.update().values(
                     name=select([addresses.c.email_address]).\
@@ -815,7 +841,9 @@ class Delete(UpdateBase):
          will fail on databases that don't have support for multi-table
          delete statements.  A SQL-standard method of referring to
          additional tables in the WHERE clause is to use a correlated
-         subquery::
+         subquery:
+
+         .. sourcecode:: python
 
             users.delete().where(
                     users.c.name==select([addresses.c.email_address]).\

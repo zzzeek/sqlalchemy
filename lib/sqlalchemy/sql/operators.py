@@ -44,11 +44,15 @@ class Operators(object):
 
         When used with SQL expressions, results in an
         AND operation, equivalent to
-        :func:`~.expression.and_`, that is::
+        :func:`~.expression.and_`, that is:
+
+        .. sourcecode:: python
 
             a & b
 
-        is equivalent to::
+        is equivalent to:
+
+        .. sourcecode:: python
 
             from sqlalchemy import and_
             and_(a, b)
@@ -56,7 +60,9 @@ class Operators(object):
         Care should be taken when using ``&`` regarding
         operator precedence; the ``&`` operator has the highest precedence.
         The operands should be enclosed in parenthesis if they contain
-        further sub expressions::
+        further sub expressions:
+
+        .. sourcecode:: python
 
             (a == 2) & (b == 4)
 
@@ -68,11 +74,15 @@ class Operators(object):
 
         When used with SQL expressions, results in an
         OR operation, equivalent to
-        :func:`~.expression.or_`, that is::
+        :func:`~.expression.or_`, that is:
+
+        .. sourcecode:: python
 
             a | b
 
-        is equivalent to::
+        is equivalent to:
+
+        .. sourcecode:: python
 
             from sqlalchemy import or_
             or_(a, b)
@@ -80,7 +90,9 @@ class Operators(object):
         Care should be taken when using ``|`` regarding
         operator precedence; the ``|`` operator has the highest precedence.
         The operands should be enclosed in parenthesis if they contain
-        further sub expressions::
+        further sub expressions:
+
+        .. sourcecode:: python
 
             (a == 2) | (b == 4)
 
@@ -92,11 +104,15 @@ class Operators(object):
 
         When used with SQL expressions, results in a
         NOT operation, equivalent to
-        :func:`~.expression.not_`, that is::
+        :func:`~.expression.not_`, that is:
+
+        .. sourcecode:: python
 
             ~a
 
-        is equivalent to::
+        is equivalent to:
+
+        .. sourcecode:: python
 
             from sqlalchemy import not_
             not_(a)
@@ -109,16 +125,22 @@ class Operators(object):
             return_type=None):
         """produce a generic operator function.
 
-        e.g.::
+        e.g.:
+
+        .. sourcecode:: python
 
           somecolumn.op("*")(5)
 
-        produces::
+        produces:
+
+        .. sourcecode:: python
 
           somecolumn * 5
 
         This function can also be used to make bitwise operators explicit. For
-        example::
+        example:
+
+        .. sourcecode:: python
 
           somecolumn.op('&')(0xff)
 
@@ -197,7 +219,9 @@ class Operators(object):
         behavior to be applied to all operations.
         For example, overriding :class:`.ColumnOperators`
         to apply ``func.lower()`` to the left and right
-        side::
+        side:
+
+        .. sourcecode:: python
 
             class MyComparator(ColumnOperators):
                 def operate(self, op, other):
@@ -229,7 +253,9 @@ class custom_op(object):
     :meth:`.Operators.op` or :meth:`.Operators.bool_op` methods
     are used to create a custom operator callable.  The class can also be
     used directly when programmatically constructing expressions.   E.g.
-    to represent the "factorial" operation::
+    to represent the "factorial" operation:
+
+    .. sourcecode:: python
 
         from sqlalchemy.sql import UnaryExpression
         from sqlalchemy.sql import operators
@@ -283,12 +309,16 @@ class ColumnOperators(Operators):
     Python builtin ``operator`` module or
     a SQLAlchemy-specific operator function from
     :mod:`sqlalchemy.expression.operators`.   For example
-    the ``__eq__`` function::
+    the ``__eq__`` function:
+
+    .. sourcecode:: python
 
         def __eq__(self, other):
             return self.operate(operators.eq, other)
 
-    Where ``operators.eq`` is essentially::
+    Where ``operators.eq`` is essentially:
+
+    .. sourcecode:: python
 
         def eq(a, b):
             return a == b
@@ -444,14 +474,18 @@ class ColumnOperators(Operators):
 
             a LIKE other
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             stmt = select([sometable]).\
                 where(sometable.c.column.like("%foobar%"))
 
         :param other: expression to be compared
         :param escape: optional escape character, renders the ``ESCAPE``
-          keyword, e.g.::
+          keyword, e.g.:
+
+          .. sourcecode:: python
 
             somecolumn.like("foo/%bar", escape="/")
 
@@ -473,14 +507,18 @@ class ColumnOperators(Operators):
 
             a ILIKE other
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             stmt = select([sometable]).\
                 where(sometable.c.column.ilike("%foobar%"))
 
         :param other: expression to be compared
         :param escape: optional escape character, renders the ``ESCAPE``
-          keyword, e.g.::
+          keyword, e.g.:
+
+          .. sourcecode:: python
 
             somecolumn.ilike("foo/%bar", escape="/")
 
@@ -668,7 +706,9 @@ class ColumnOperators(Operators):
 
             column LIKE <other> || '%'
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             stmt = select([sometable]).\
                 where(sometable.c.column.startswith("foobar"))
@@ -696,7 +736,9 @@ class ColumnOperators(Operators):
           comparison value, which is assumed to be a literal string and not a
           SQL expression.
 
-          An expression such as::
+          An expression such as:
+
+          .. sourcecode:: python
 
             somecolumn.startswith("foo%bar", autoescape=True)
 
@@ -721,7 +763,9 @@ class ColumnOperators(Operators):
           of ``%`` and ``_`` to allow them to act as themselves and not
           wildcard characters.
 
-          An expression such as::
+          An expression such as:
+
+          .. sourcecode:: python
 
             somecolumn.startswith("foo/%bar", escape="^")
 
@@ -730,7 +774,9 @@ class ColumnOperators(Operators):
             somecolumn LIKE :param || '%' ESCAPE '^'
 
           The parameter may also be combined with
-          :paramref:`.ColumnOperators.startswith.autoescape`::
+          :paramref:`.ColumnOperators.startswith.autoescape`:
+
+          .. sourcecode:: python
 
             somecolumn.startswith("foo%bar^bat", escape="^", autoescape=True)
 
@@ -756,7 +802,9 @@ class ColumnOperators(Operators):
 
             column LIKE '%' || <other>
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             stmt = select([sometable]).\
                 where(sometable.c.column.endswith("foobar"))
@@ -784,7 +832,9 @@ class ColumnOperators(Operators):
           comparison value, which is assumed to be a literal string and not a
           SQL expression.
 
-          An expression such as::
+          An expression such as:
+
+          .. sourcecode:: python
 
             somecolumn.endswith("foo%bar", autoescape=True)
 
@@ -809,7 +859,9 @@ class ColumnOperators(Operators):
           of ``%`` and ``_`` to allow them to act as themselves and not
           wildcard characters.
 
-          An expression such as::
+          An expression such as:
+
+          .. sourcecode:: python
 
             somecolumn.endswith("foo/%bar", escape="^")
 
@@ -818,7 +870,9 @@ class ColumnOperators(Operators):
             somecolumn LIKE '%' || :param ESCAPE '^'
 
           The parameter may also be combined with
-          :paramref:`.ColumnOperators.endswith.autoescape`::
+          :paramref:`.ColumnOperators.endswith.autoescape`:
+
+          .. sourcecode:: python
 
             somecolumn.endswith("foo%bar^bat", escape="^", autoescape=True)
 
@@ -844,7 +898,9 @@ class ColumnOperators(Operators):
 
             column LIKE '%' || <other> || '%'
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             stmt = select([sometable]).\
                 where(sometable.c.column.contains("foobar"))
@@ -872,7 +928,9 @@ class ColumnOperators(Operators):
           comparison value, which is assumed to be a literal string and not a
           SQL expression.
 
-          An expression such as::
+          An expression such as:
+
+          .. sourcecode:: python
 
             somecolumn.contains("foo%bar", autoescape=True)
 
@@ -897,7 +955,9 @@ class ColumnOperators(Operators):
           of ``%`` and ``_`` to allow them to act as themselves and not
           wildcard characters.
 
-          An expression such as::
+          An expression such as:
+
+          .. sourcecode:: python
 
             somecolumn.contains("foo/%bar", escape="^")
 
@@ -906,7 +966,9 @@ class ColumnOperators(Operators):
             somecolumn LIKE '%' || :param || '%' ESCAPE '^'
 
           The parameter may also be combined with
-          :paramref:`.ColumnOperators.contains.autoescape`::
+          :paramref:`.ColumnOperators.contains.autoescape`:
+
+          .. sourcecode:: python
 
             somecolumn.contains("foo%bar^bat", escape="^", autoescape=True)
 
@@ -1034,7 +1096,9 @@ class ColumnOperators(Operators):
 
         This operator is only appropriate against a scalar subquery
         object, or for some backends an column expression that is
-        against the ARRAY type, e.g.::
+        against the ARRAY type, e.g.:
+
+        .. sourcecode:: python
 
             # postgresql '5 = ANY (somearray)'
             expr = 5 == mytable.c.somearray.any_()
@@ -1059,7 +1123,9 @@ class ColumnOperators(Operators):
 
         This operator is only appropriate against a scalar subquery
         object, or for some backends an column expression that is
-        against the ARRAY type, e.g.::
+        against the ARRAY type, e.g.:
+
+        .. sourcecode:: python
 
             # postgresql '5 = ALL (somearray)'
             expr = 5 == mytable.c.somearray.all_()

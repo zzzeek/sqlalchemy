@@ -123,7 +123,9 @@ class RelationshipProperty(StrategizedProperty):
         The constructed class is an instance of
         :class:`.RelationshipProperty`.
 
-        A typical :func:`.relationship`, used in a classical mapping::
+        A typical :func:`.relationship`, used in a classical mapping:
+
+        .. sourcecode:: python
 
            mapper(Parent, properties={
              'children': relationship(Child)
@@ -136,7 +138,9 @@ class RelationshipProperty(StrategizedProperty):
         and is assumed to be after all mappings have been constructed.  This
         can be used to resolve order-of-declaration and other dependency
         issues, such as if ``Child`` is declared below ``Parent`` in the same
-        file::
+        file:
+
+        .. sourcecode:: python
 
             mapper(Parent, properties={
                 "children":relationship(lambda: Child,
@@ -149,7 +153,9 @@ class RelationshipProperty(StrategizedProperty):
         callables that evaluate the string as Python code, using the
         Declarative class-registry as a namespace.  This allows the lookup of
         related classes to be automatic via their string name, and removes the
-        need to import related classes at all into the local module space::
+        need to import related classes at all into the local module space:
+
+        .. sourcecode:: python
 
             from sqlalchemy.ext.declarative import declarative_base
 
@@ -792,7 +798,9 @@ class RelationshipProperty(StrategizedProperty):
           The :paramref:`~.relationship.uselist` flag is also available on an
           existing :func:`.relationship` construct as a read-only attribute,
           which can be used to determine if this :func:`.relationship` deals
-          with collections or scalar attributes::
+          with collections or scalar attributes:
+
+          .. sourcecode:: pycon
 
               >>> User.addresses.property.uselist
               True
@@ -989,12 +997,16 @@ class RelationshipProperty(StrategizedProperty):
         def __eq__(self, other):
             """Implement the ``==`` operator.
 
-            In a many-to-one context, such as::
+            In a many-to-one context, such as:
+
+            .. sourcecode:: python
 
               MyClass.some_prop == <some object>
 
             this will typically produce a
-            clause such as::
+            clause such as:
+
+            .. sourcecode:: python
 
               mytable.related_id == <some id>
 
@@ -1108,7 +1120,9 @@ class RelationshipProperty(StrategizedProperty):
             """Produce an expression that tests a collection against
             particular criterion, using EXISTS.
 
-            An expression like::
+            An expression like:
+
+            .. sourcecode:: python
 
                 session.query(MyClass).filter(
                     MyClass.somereference.any(SomeRelated.x==2)
@@ -1127,7 +1141,9 @@ class RelationshipProperty(StrategizedProperty):
             using a join.
 
             :meth:`~.RelationshipProperty.Comparator.any` is particularly
-            useful for testing for empty collections::
+            useful for testing for empty collections:
+
+            .. sourcecode:: python
 
                 session.query(MyClass).filter(
                     ~MyClass.somereference.any()
@@ -1157,7 +1173,9 @@ class RelationshipProperty(StrategizedProperty):
             """Produce an expression that tests a scalar reference against
             particular criterion, using EXISTS.
 
-            An expression like::
+            An expression like:
+
+            .. sourcecode:: python
 
                 session.query(MyClass).filter(
                     MyClass.somereference.has(SomeRelated.x==2)
@@ -1197,7 +1215,9 @@ class RelationshipProperty(StrategizedProperty):
             one-to-many or many-to-many with ``uselist=True``.
 
             When used in a simple one-to-many context, an
-            expression like::
+            expression like:
+
+            .. sourcecode:: python
 
                 MyClass.contains(other)
 
@@ -1217,7 +1237,9 @@ class RelationshipProperty(StrategizedProperty):
             has more caveats. The association table will be
             rendered in the statement, producing an "implicit"
             join, that is, includes multiple tables in the FROM
-            clause which are equated in the WHERE clause::
+            clause which are equated in the WHERE clause:
+
+            .. sourcecode:: python
 
                 query(MyClass).filter(MyClass.contains(other))
 
@@ -1297,11 +1319,15 @@ class RelationshipProperty(StrategizedProperty):
         def __ne__(self, other):
             """Implement the ``!=`` operator.
 
-            In a many-to-one context, such as::
+            In a many-to-one context, such as:
+
+            .. sourcecode:: python
 
               MyClass.some_prop != <some object>
 
-            This will typically produce a clause such as::
+            This will typically produce a clause such as:
+
+            .. sourcecode:: python
 
               mytable.related_id != <some id>
 

@@ -2,7 +2,9 @@
 columns are not of the same type, and a CAST must be used on the SQL
 side in order to match them.
 
-When complete, we'd like to see a load of the relationship to look like::
+When complete, we'd like to see a load of the relationship to look like:
+
+.. sourcecode:: sql
 
     -- load the primary row, a_id is a string
     SELECT a.id AS a_id_1, a.a_id AS a_a_id
@@ -14,7 +16,9 @@ When complete, we'd like to see a load of the relationship to look like::
     FROM b
     WHERE CAST('2' AS INTEGER) = b.a_id
 
-The relationship is essentially configured as follows::
+The relationship is essentially configured as follows:
+
+.. sourcecode:: python
 
     class B(Base):
         # ...

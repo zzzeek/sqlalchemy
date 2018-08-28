@@ -188,13 +188,17 @@ class MapperProperty(_MappedAttribute, InspectionAttr, util.MemoizedSlots):
         """Return the class-bound descriptor corresponding to this
         :class:`.MapperProperty`.
 
-        This is basically a ``getattr()`` call::
+        This is basically a ``getattr()`` call:
+
+        .. sourcecode:: python
 
             return getattr(self.parent.class_, self.key)
 
         I.e. if this :class:`.MapperProperty` were named ``addresses``,
         and the class to which it is mapped is ``User``, this sequence
-        is possible::
+        is possible:
+
+        .. sourcecode:: pycon
 
             >>> from sqlalchemy import inspect
             >>> mapper = inspect(User)
@@ -269,7 +273,9 @@ class PropComparator(operators.ColumnOperators):
     new operator behavior. The custom :class:`.PropComparator` is passed to
     the :class:`.MapperProperty` instance via the ``comparator_factory``
     argument. In each case,
-    the appropriate subclass of :class:`.PropComparator` should be used::
+    the appropriate subclass of :class:`.PropComparator` should be used:
+
+    .. sourcecode:: python
 
         # definition of custom PropComparator subclasses
 
@@ -395,7 +401,9 @@ class PropComparator(operators.ColumnOperators):
         Returns a new PropComparator from which further criterion can be
         evaluated.
 
-        e.g.::
+        e.g.:
+
+        .. sourcecode:: python
 
             query.join(Company.employees.of_type(Engineer)).\
                filter(Engineer.name=='foo')

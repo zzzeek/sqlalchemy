@@ -3,23 +3,27 @@
 This example illustrates accessing and modifying a "vertical" (or
 "properties", or pivoted) table via a dict-like interface.  These are tables
 that store free-form object properties as rows instead of columns.  For
-example, instead of::
+example, instead of:
 
-  # A regular ("horizontal") table has columns for 'species' and 'size'
-  Table('animal', metadata,
+.. sourcecode:: python
+
+    # A regular ("horizontal") table has columns for 'species' and 'size'
+    Table('animal', metadata,
         Column('id', Integer, primary_key=True),
         Column('species', Unicode),
         Column('size', Unicode))
 
 A vertical table models this as two tables: one table for the base or parent
-entity, and another related table holding key/value pairs::
+entity, and another related table holding key/value pairs:
 
-  Table('animal', metadata,
+.. sourcecode:: python
+
+    Table('animal', metadata,
         Column('id', Integer, primary_key=True))
 
-  # The properties table will have one row for a 'species' value, and
-  # another row for the 'size' value.
-  Table('properties', metadata
+    # The properties table will have one row for a 'species' value, and
+    # another row for the 'size' value.
+    Table('properties', metadata
         Column('animal_id', Integer, ForeignKey('animal.id'),
                primary_key=True),
         Column('key', UnicodeText),

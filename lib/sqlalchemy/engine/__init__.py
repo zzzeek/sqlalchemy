@@ -100,15 +100,18 @@ def create_engine(*args, **kwargs):
 
     The standard calling form is to send the URL as the
     first positional argument, usually a string
-    that indicates database dialect and connection arguments::
+    that indicates database dialect and connection arguments:
 
+    .. sourcecode:: python
 
         engine = create_engine("postgresql://scott:tiger@localhost/test")
 
     Additional keyword arguments may then follow it which
     establish various options on the resulting :class:`.Engine`
     and its underlying :class:`.Dialect` and :class:`.Pool`
-    constructs::
+    constructs:
+
+    .. sourcecode:: python
 
         engine = create_engine("mysql://scott:tiger@hostname/dbname",
                                     encoding='latin1', echo=True)

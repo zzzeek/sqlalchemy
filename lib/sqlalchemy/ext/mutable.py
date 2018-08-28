@@ -20,7 +20,9 @@ Establishing Mutability on Scalar Column Values
 A typical example of a "mutable" structure is a Python dictionary.
 Following the example introduced in :ref:`types_toplevel`, we
 begin with a custom type that marshals Python dictionaries into
-JSON strings before being persisted::
+JSON strings before being persisted:
+
+.. sourcecode:: python
 
     from sqlalchemy.types import TypeDecorator, VARCHAR
     import json
@@ -48,7 +50,9 @@ with any type whose target Python type may be mutable, including
 When using the :mod:`sqlalchemy.ext.mutable` extension, the value itself
 tracks all parents which reference it.  Below, we illustrate a simple
 version of the :class:`.MutableDict` dictionary object, which applies
-the :class:`.Mutable` mixin to a plain Python dictionary::
+the :class:`.Mutable` mixin to a plain Python dictionary:
+
+.. sourcecode:: python
 
     from sqlalchemy.ext.mutable import Mutable
 
@@ -101,7 +105,9 @@ Our new ``MutableDict`` type offers a class method
 to associate with types. This method grabs the given type object or
 class and associates a listener that will detect all future mappings
 of this type, applying event listening instrumentation to the mapped
-attribute. Such as, with classical table metadata::
+attribute. Such as, with classical table metadata:
+
+.. sourcecode:: python
 
     from sqlalchemy import Table, Column, Integer
 
@@ -113,7 +119,9 @@ attribute. Such as, with classical table metadata::
 Above, :meth:`~.Mutable.as_mutable` returns an instance of ``JSONEncodedDict``
 (if the type object was not an instance already), which will intercept any
 attributes which are mapped against this type.  Below we establish a simple
-mapping against the ``my_data`` table::
+mapping against the ``my_data`` table:
+
+.. sourcecode:: python
 
     from sqlalchemy import mapper
 
@@ -126,7 +134,9 @@ mapping against the ``my_data`` table::
 The ``MyDataClass.data`` member will now be notified of in place changes
 to its value.
 
-There's no difference in usage when using declarative::
+There's no difference in usage when using declarative:
+
+.. sourcecode:: python
 
     from sqlalchemy.ext.declarative import declarative_base
 
@@ -138,7 +148,9 @@ There's no difference in usage when using declarative::
         data = Column(MutableDict.as_mutable(JSONEncodedDict))
 
 Any in-place changes to the ``MyDataClass.data`` member
-will flag the attribute as "dirty" on the parent object::
+will flag the attribute as "dirty" on the parent object:
+
+.. sourcecode:: pycon
 
     >>> from sqlalchemy.orm import Session
 
@@ -156,7 +168,9 @@ of ``JSONEncodedDict`` in one step, using
 :meth:`~.Mutable.associate_with`.  This is similar to
 :meth:`~.Mutable.as_mutable` except it will intercept all occurrences
 of ``MutableDict`` in all mappings unconditionally, without
-the need to declare it individually::
+the need to declare it individually:
+
+.. sourcecode:: python
 
     MutableDict.associate_with(JSONEncodedDict)
 
@@ -179,7 +193,9 @@ picklable, it could lead to an excessively large pickle size for our value
 objects that are pickled by themselves outside of the context of the parent.
 The developer responsibility here is only to provide a ``__getstate__`` method
 that excludes the :meth:`~MutableBase._parents` collection from the pickle
-stream::
+stream:
+
+.. sourcecode:: python
 
     class MyMutableType(Mutable):
         def __getstate__(self):
@@ -188,7 +204,9 @@ stream::
             return d
 
 With our dictionary example, we need to return the contents of the dict itself
-(and also restore them on __setstate__)::
+(and also restore them on __setstate__):
+
+.. sourcecode:: python
 
     class MutableDict(Mutable, dict):
         # ....
@@ -210,7 +228,9 @@ Receiving Events
 The :meth:`.AttributeEvents.modified` event handler may be used to receive
 an event when a mutable scalar emits a change event.  This event handler
 is called when the :func:`.attributes.flag_modified` function is called
-from within the mutable extension::
+from within the mutable extension:
+
+.. sourcecode:: python
 
     from sqlalchemy.ext.declarative import declarative_base
     from sqlalchemy import event
@@ -252,7 +272,9 @@ Python descriptors (i.e. ``@property``), or alternatively via the special
 Python method ``__setattr__()``. Below we expand upon the ``Point`` class
 introduced in :ref:`mapper_composite` to subclass :class:`.MutableComposite`
 and to also route attribute set events via ``__setattr__`` to the
-:meth:`.MutableComposite.changed` method::
+:meth:`.MutableComposite.changed` method:
+
+.. sourcecode:: python
 
     from sqlalchemy.ext.mutable import MutableComposite
 
@@ -285,7 +307,9 @@ The :class:`.MutableComposite` class uses a Python metaclass to automatically
 establish listeners for any usage of :func:`.orm.composite` that specifies our
 ``Point`` type. Below, when ``Point`` is mapped to the ``Vertex`` class,
 listeners are established which will route change events from ``Point``
-objects to each of the ``Vertex.start`` and ``Vertex.end`` attributes::
+objects to each of the ``Vertex.start`` and ``Vertex.end`` attributes:
+
+.. sourcecode:: python
 
     from sqlalchemy.orm import composite, mapper
     from sqlalchemy import Table, Column
@@ -307,7 +331,9 @@ objects to each of the ``Vertex.start`` and ``Vertex.end`` attributes::
     })
 
 Any in-place changes to the ``Vertex.start`` or ``Vertex.end`` members
-will flag the attribute as "dirty" on the parent object::
+will flag the attribute as "dirty" on the parent object:
+
+.. sourcecode:: pycon
 
     >>> from sqlalchemy.orm import Session
 
@@ -328,7 +354,9 @@ In the case of :class:`.MutableComposite`, the :meth:`.MutableBase.coerce`
 method is only called for attribute set operations, not load operations.
 Overriding the :meth:`.MutableBase.coerce` method is essentially equivalent
 to using a :func:`.validates` validation routine for all attributes which
-make use of the custom composite type::
+make use of the custom composite type:
+
+.. sourcecode:: python
 
     class Point(MutableComposite):
         # other Point methods
@@ -354,7 +382,9 @@ class uses a ``weakref.WeakKeyDictionary`` available via the
 pickle instances of ``Point`` or its owning class ``Vertex``, we at least need
 to define a ``__getstate__`` that doesn't include the ``_parents`` dictionary.
 Below we define both a ``__getstate__`` and a ``__setstate__`` that package up
-the minimal form of our ``Point`` class::
+the minimal form of our ``Point`` class:
+
+.. sourcecode:: python
 
     class Point(MutableComposite):
         # ...
@@ -582,7 +612,9 @@ class Mutable(MutableBase):
         the given type, adding mutation event trackers to those mappings.
 
         The type is returned, unconditionally as an instance, so that
-        :meth:`.as_mutable` can be used inline::
+        :meth:`.as_mutable` can be used inline:
+
+        .. sourcecode:: python
 
             Table('mytable', metadata,
                 Column('id', Integer, primary_key=True),

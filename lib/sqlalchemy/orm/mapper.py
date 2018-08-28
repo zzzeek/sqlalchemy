@@ -72,7 +72,9 @@ class Mapper(InspectionAttr):
 
     Given a particular class known to be mapped by the ORM,
     the :class:`.Mapper` which maintains it can be acquired
-    using the :func:`.inspect` function::
+    using the :func:`.inspect` function:
+
+    .. sourcecode:: python
 
         from sqlalchemy import inspect
 
@@ -128,7 +130,9 @@ class Mapper(InspectionAttr):
         by the Declarative extension itself, including ``class_``,
         ``local_table``, ``properties``, and  ``inherits``.
         Other options are passed to :func:`.mapper` using
-        the ``__mapper_args__`` class variable::
+        the ``__mapper_args__`` class variable:
+
+        .. sourcecode:: python
 
            class MyClass(Base):
                __tablename__ = 'my_table'
@@ -143,7 +147,9 @@ class Mapper(InspectionAttr):
 
         Explicit use of :func:`.mapper`
         is often referred to as *classical mapping*.  The above
-        declarative example is equivalent in classical form to::
+        declarative example is equivalent in classical form to:
+
+        .. sourcecode:: python
 
             my_table = Table("my_table", metadata,
                 Column('id', Integer, primary_key=True),
@@ -413,7 +419,9 @@ class Mapper(InspectionAttr):
           incoming row, when inheriting classes are present.
 
           This value is commonly a :class:`.Column` object that's
-          present in the mapped :class:`.Table`::
+          present in the mapped :class:`.Table`:
+
+          .. sourcecode:: python
 
             class Employee(Base):
                 __tablename__ = 'employee'
@@ -429,7 +437,9 @@ class Mapper(InspectionAttr):
           It may also be specified
           as a SQL expression, as in this example where we
           use the :func:`.case` construct to provide a conditional
-          approach::
+          approach:
+
+          .. sourcecode:: python
 
             class Employee(Base):
                 __tablename__ = 'employee'
@@ -447,7 +457,9 @@ class Mapper(InspectionAttr):
 
           It may also refer to any attribute
           configured with :func:`.column_property`, or to the
-          string name of one::
+          string name of one:
+
+          .. sourcecode:: python
 
                 class Employee(Base):
                     __tablename__ = 'employee'
@@ -480,7 +492,9 @@ class Mapper(InspectionAttr):
           instances; this must be handled by the user,
           either through manual means or via event listeners.
           A typical approach to establishing such a listener
-          looks like::
+          looks like:
+
+          .. sourcecode:: python
 
                 from sqlalchemy import event
                 from sqlalchemy.orm import object_mapper
@@ -548,7 +562,9 @@ class Mapper(InspectionAttr):
         :param version_id_generator: Define how new version ids should
           be generated.  Defaults to ``None``, which indicates that
           a simple integer counting scheme be employed.  To provide a custom
-          versioning scheme, provide a callable function of the form::
+          versioning scheme, provide a callable function of the form:
+
+          .. sourcecode:: python
 
               def generate_version(version):
                   return next_version

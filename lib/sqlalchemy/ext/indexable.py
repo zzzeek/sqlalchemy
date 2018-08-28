@@ -30,7 +30,9 @@ Synopsis
 Given ``Person`` as a model with a primary key and JSON data field.
 While this field may have any number of elements encoded within it,
 we would like to refer to the element called ``name`` individually
-as a dedicated attribute which behaves like a standalone column::
+as a dedicated attribute which behaves like a standalone column:
+
+.. sourcecode:: python
 
     from sqlalchemy import Column, JSON, Integer
     from sqlalchemy.ext.declarative import declarative_base
@@ -48,22 +50,30 @@ as a dedicated attribute which behaves like a standalone column::
 
 
 Above, the ``name`` attribute now behaves like a mapped column.   We
-can compose a new ``Person`` and set the value of ``name``::
+can compose a new ``Person`` and set the value of ``name``:
+
+.. sourcecode:: pycon
 
     >>> person = Person(name='Alchemist')
 
-The value is now accessible::
+The value is now accessible:
+
+.. sourcecode:: pycon
 
     >>> person.name
     'Alchemist'
 
 Behind the scenes, the JSON field was initialized to a new blank dictionary
-and the field was set::
+and the field was set:
+
+.. sourcecode:: pycon
 
     >>> person.data
     {"name": "Alchemist'}
 
-The field is mutable in place::
+The field is mutable in place:
+
+.. sourcecode:: pycon
 
     >>> person.name = 'Renamed'
     >>> person.name
@@ -76,7 +86,9 @@ structure is also automatically tracked as history; we no longer need
 to use :class:`~.mutable.MutableDict` in order to track this change
 for the unit of work.
 
-Deletions work normally as well::
+Deletions work normally as well:
+
+.. sourcecode:: pycon
 
     >>> del person.name
     >>> person.data
@@ -85,14 +97,18 @@ Deletions work normally as well::
 Above, deletion of ``person.name`` deletes the value from the dictionary,
 but not the dictionary itself.
 
-A missing key will produce ``AttributeError``::
+A missing key will produce ``AttributeError``:
+
+.. sourcecode:: pycon
 
     >>> person = Person()
     >>> person.name
     ...
     AttributeError: 'name'
 
-Unless you set a default value::
+Unless you set a default value:
+
+.. sourcecode:: pycon
 
     >>> class Person(Base):
     >>>     __tablename__ = 'person'
@@ -109,18 +125,24 @@ Unless you set a default value::
 
 The attributes are also accessible at the class level.
 Below, we illustrate ``Person.name`` used to generate
-an indexed SQL criteria::
+an indexed SQL criteria:
+
+.. sourcecode:: pycon
 
     >>> from sqlalchemy.orm import Session
     >>> session = Session()
     >>> query = session.query(Person).filter(Person.name == 'Alchemist')
 
-The above query is equivalent to::
+The above query is equivalent to:
+
+.. sourcecode:: pycon
 
     >>> query = session.query(Person).filter(Person.data['name'] == 'Alchemist')
 
 Multiple :class:`.index_property` objects can be chained to produce
-multiple levels of indexing::
+multiple levels of indexing:
+
+.. sourcecode:: python
 
     from sqlalchemy import Column, JSON, Integer
     from sqlalchemy.ext.declarative import declarative_base
@@ -139,7 +161,9 @@ multiple levels of indexing::
         month = index_property('birthday', 'month')
         day = index_property('birthday', 'day')
 
-Above, a query such as::
+Above, a query such as:
+
+.. sourcecode:: python
 
     q = session.query(Person).filter(Person.year == '1980')
 
@@ -184,7 +208,9 @@ Subclassing
 :class:`.index_property` can be subclassed, in particular for the common
 use case of providing coercion of values or SQL expressions as they are
 accessed.  Below is a common recipe for use with a PostgreSQL JSON type,
-where we want to also include automatic casting plus ``astext()``::
+where we want to also include automatic casting plus ``astext()``:
+
+.. sourcecode:: python
 
     class pg_json_property(index_property):
         def __init__(self, attr_name, index, cast_type):
@@ -196,7 +222,9 @@ where we want to also include automatic casting plus ``astext()``::
             return expr.astext.cast(self.cast_type)
 
 The above subclass can be used with the PostgreSQL-specific
-version of :class:`.postgresql.JSON`::
+version of :class:`.postgresql.JSON`:
+
+.. sourcecode:: python
 
     from sqlalchemy import Column, Integer
     from sqlalchemy.ext.declarative import declarative_base
@@ -214,7 +242,9 @@ version of :class:`.postgresql.JSON`::
 
 The ``age`` attribute at the instance level works as before; however
 when rendering SQL, PostgreSQL's ``->>`` operator will be used
-for indexed access, instead of the usual index opearator of ``->``::
+for indexed access, instead of the usual index opearator of ``->``:
+
+.. sourcecode:: pycon
 
     >>> query = session.query(Person).filter(Person.age < 20)
 

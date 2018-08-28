@@ -13,7 +13,9 @@ references a "datatype" which contains information about the type of
 information stored in the attribute, such as integer, string, or date.
 
 
-Example::
+Example:
+
+.. sourcecode:: python
 
     shrew = Animal(u'shrew')
     shrew[u'cuteness'] = 5

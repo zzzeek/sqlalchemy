@@ -39,12 +39,16 @@ Connect Strings
 
 The format of the connect string is in every way the same as that
 of the :mod:`~sqlalchemy.dialects.sqlite.pysqlite` driver, except that the
-"password" field is now accepted, which should contain a passphrase::
+"password" field is now accepted, which should contain a passphrase:
+
+.. sourcecode:: python
 
     e = create_engine('sqlite+pysqlcipher://:testing@/foo.db')
 
 For an absolute file path, two leading slashes should be used for the
-database name::
+database name:
+
+.. sourcecode:: python
 
     e = create_engine('sqlite+pysqlcipher://:testing@//path/to/foo.db')
 
@@ -52,7 +56,9 @@ A selection of additional encryption-related pragmas supported by SQLCipher
 as documented at https://www.zetetic.net/sqlcipher/sqlcipher-api/ can be passed
 in the query string, and will result in that PRAGMA being called for each
 new connection.  Currently, ``cipher``, ``kdf_iter``
-``cipher_page_size`` and ``cipher_use_hmac`` are supported::
+``cipher_page_size`` and ``cipher_use_hmac`` are supported:
+
+.. sourcecode:: python
 
     e = create_engine('sqlite+pysqlcipher://:testing@/foo.db?cipher=aes-256-cfb&kdf_iter=64000')
 

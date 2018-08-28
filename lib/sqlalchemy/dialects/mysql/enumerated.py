@@ -65,7 +65,9 @@ class ENUM(sqltypes.NativeForEmulated, sqltypes.Enum, _EnumeratedValues):
     def __init__(self, *enums, **kw):
         """Construct an ENUM.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
           Column('myenum', ENUM("foo", "bar", "baz"))
 
@@ -156,9 +158,11 @@ class SET(_EnumeratedValues):
     def __init__(self, *values, **kw):
         """Construct a SET.
 
-        E.g.::
+        E.g.:
 
-          Column('myset', SET("foo", "bar", "baz"))
+        .. sourcecode:: python
+
+            Column('myset', SET("foo", "bar", "baz"))
 
 
         The list of potential values is required in the case that this

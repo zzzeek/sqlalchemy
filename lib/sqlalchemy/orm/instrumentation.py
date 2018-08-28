@@ -120,7 +120,9 @@ class ClassManager(dict):
         searching for the given object as an attribute, and return
         the bottommost owner.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             foo = foobar()
 

@@ -124,7 +124,9 @@ class DefaultDialect(interfaces.Dialect):
     """Optional set of argument specifiers for various SQLAlchemy
     constructs, typically schema items.
 
-    To implement, establish as a series of tuples, as in::
+    To implement, establish as a series of tuples, as in:
+
+    .. sourcecode:: python
 
         construct_arguments = [
             (schema.Index, {

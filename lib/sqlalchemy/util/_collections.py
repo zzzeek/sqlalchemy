@@ -37,7 +37,9 @@ class AbstractKeyedTuple(tuple):
 class KeyedTuple(AbstractKeyedTuple):
     """``tuple`` subclass that adds labeled names.
 
-    E.g.::
+    E.g.:
+
+    .. sourcecode:: pycon
 
         >>> k = KeyedTuple([1, 2, 3], labels=["one", "two", "three"])
         >>> k.one

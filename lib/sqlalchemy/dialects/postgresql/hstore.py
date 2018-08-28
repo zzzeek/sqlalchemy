@@ -52,7 +52,9 @@ CONTAINED_BY = operators.custom_op(
 class HSTORE(sqltypes.Indexable, sqltypes.Concatenable, sqltypes.TypeEngine):
     """Represent the PostgreSQL HSTORE type.
 
-    The :class:`.HSTORE` type stores dictionaries containing strings, e.g.::
+    The :class:`.HSTORE` type stores dictionaries containing strings, e.g.:
+
+    .. sourcecode:: python
 
         data_table = Table('data_table', metadata,
             Column('id', Integer, primary_key=True),
@@ -67,17 +69,23 @@ class HSTORE(sqltypes.Indexable, sqltypes.Concatenable, sqltypes.TypeEngine):
 
     :class:`.HSTORE` provides for a wide range of operations, including:
 
-    * Index operations::
+    * Index operations:
+
+    .. sourcecode:: python
 
         data_table.c.data['some key'] == 'some value'
 
-    * Containment operations::
+    * Containment operations:
+
+    .. sourcecode:: python
 
         data_table.c.data.has_key('some key')
 
         data_table.c.data.has_all(['one', 'two', 'three'])
 
-    * Concatenation::
+    * Concatenation:
+
+    .. sourcecode:: python
 
         data_table.c.data + {"k1": "v1"}
 
@@ -90,7 +98,9 @@ class HSTORE(sqltypes.Indexable, sqltypes.Concatenable, sqltypes.TypeEngine):
     extension.  This extension will allow "in-place" changes to the
     dictionary, e.g. addition of new keys or replacement/removal of existing
     keys to/from the current dictionary, to produce events which will be
-    detected by the unit of work::
+    detected by the unit of work:
+
+    .. sourcecode:: python
 
         from sqlalchemy.ext.mutable import MutableDict
 
@@ -259,7 +269,9 @@ class hstore(sqlfunc.GenericFunction):
     The :class:`.hstore` function accepts one or two arguments as described
     in the PostgreSQL documentation.
 
-    E.g.::
+    E.g.:
+
+    .. sourcecode:: python
 
         from sqlalchemy.dialects.postgresql import array, hstore
 

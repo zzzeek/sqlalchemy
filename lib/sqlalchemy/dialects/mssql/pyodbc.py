@@ -22,7 +22,9 @@ DSN Connections
 ^^^^^^^^^^^^^^^
 
 A DSN-based connection is **preferred** overall when using ODBC.  A
-basic DSN-based connection looks like::
+basic DSN-based connection looks like:
+
+.. sourcecode:: python
 
     engine = create_engine("mssql+pyodbc://scott:tiger@some_dsn")
 
@@ -37,7 +39,9 @@ Hostname Connections
 ^^^^^^^^^^^^^^^^^^^^
 
 Hostname-based connections are **not preferred**, however are supported.
-The ODBC driver name must be explicitly specified::
+The ODBC driver name must be explicitly specified:
+
+.. sourcecode:: python
 
     engine = create_engine("mssql+pyodbc://scott:tiger@myhost:port/databasename?driver=SQL+Server+Native+Client+10.0")
 
@@ -56,7 +60,9 @@ Pass through exact Pyodbc string
 A PyODBC connection string can also be sent exactly as specified in
 `ConnectionStrings <https://code.google.com/p/pyodbc/wiki/ConnectionStrings>`_
 into the driver using the parameter ``odbc_connect``.  The delimeters must be URL escaped, however,
-as illustrated below using ``urllib.quote_plus``::
+as illustrated below using ``urllib.quote_plus``:
+
+.. sourcecode:: python
 
     import urllib
     params = urllib.quote_plus("DRIVER={SQL Server Native Client 10.0};SERVER=dagger;DATABASE=test;UID=user;PWD=password")
@@ -97,7 +103,9 @@ Microsoft ODBC drivers.  The feature is enabled by setting the flag
 used.   The SQLAlchemy pyodbc SQL Server dialect supports setting this flag
 automatically when the ``.fast_executemany`` flag is passed to
 :func:`.create_engine`; note that the ODBC driver must be the Microsoft driver
-in order to use this flag::
+in order to use this flag:
+
+.. sourcecode:: python
 
     engine = create_engine(
         "mssql+pyodbc://scott:tiger@mssql2017:1433/test?driver=ODBC+Driver+13+for+SQL+Server",

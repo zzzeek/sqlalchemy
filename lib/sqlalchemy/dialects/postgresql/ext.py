@@ -15,7 +15,9 @@ from .array import ARRAY
 class aggregate_order_by(expression.ColumnElement):
     """Represent a PostgreSQL aggregate order by expression.
 
-    E.g.::
+    E.g.:
+
+    .. sourcecode:: python
 
         from sqlalchemy.dialects.postgresql import aggregate_order_by
         expr = func.array_agg(aggregate_order_by(table.c.a, table.c.b.desc()))
@@ -25,7 +27,9 @@ class aggregate_order_by(expression.ColumnElement):
 
         SELECT array_agg(a ORDER BY b DESC) FROM table;
 
-    Similarly::
+    Similarly:
+
+    .. sourcecode:: python
 
         expr = func.string_agg(
             table.c.a,
@@ -84,7 +88,9 @@ static/sql-createtable.html#SQL-CREATETABLE-EXCLUDE
         r"""
         Create an :class:`.ExcludeConstraint` object.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             const = ExcludeConstraint(
                 (Column('period'), '&&'),
@@ -93,7 +99,9 @@ static/sql-createtable.html#SQL-CREATETABLE-EXCLUDE
             )
 
         The constraint is normally embedded into the :class:`.Table` construct
-        directly, or added later using :meth:`.append_constraint`::
+        directly, or added later using :meth:`.append_constraint`:
+
+        .. sourcecode:: python
 
             some_table = Table(
                 'some_table', metadata,

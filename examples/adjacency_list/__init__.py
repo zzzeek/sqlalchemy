@@ -2,7 +2,9 @@
 An example of a dictionary-of-dictionaries structure mapped using
 an adjacency list model.
 
-E.g.::
+E.g.:
+
+.. sourcecode:: python
 
     node = TreeNode('rootnode')
     node.append('node1')

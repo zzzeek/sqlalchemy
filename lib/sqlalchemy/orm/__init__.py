@@ -93,7 +93,9 @@ def create_session(bind=None, **kwargs):
     False, ``autocommit`` is True.  In this sense the session acts
     more like the "classic" SQLAlchemy 0.3 session with these.
 
-    Usage::
+    Usage:
+
+    .. sourcecode:: pycon
 
       >>> from sqlalchemy.orm import create_session
       >>> session = create_session()
@@ -120,7 +122,9 @@ def dynamic_loader(argument, **kw):
     """Construct a dynamically-loading mapper property.
 
     This is essentially the same as
-    using the ``lazy='dynamic'`` argument with :func:`relationship`::
+    using the ``lazy='dynamic'`` argument with :func:`relationship`:
+
+    .. sourcecode:: python
 
         dynamic_loader(SomeClass)
 
@@ -147,7 +151,7 @@ def backref(name, **kwargs):
     Used with the ``backref`` keyword argument to :func:`relationship` in
     place of a string argument, e.g.::
 
-        'items':relationship(
+        'items' : relationship(
             SomeItem, backref=backref('parent', lazy='subquery'))
 
     .. seealso::

@@ -39,7 +39,9 @@ class InstanceState(interfaces.InspectionAttr):
     status within a particular :class:`.Session` and details
     about data on individual attributes.  The public API
     in order to acquire a :class:`.InstanceState` object
-    is to use the :func:`.inspect` system::
+    is to use the :func:`.inspect` system:
+
+    .. sourcecode:: pycon
 
         >>> from sqlalchemy import inspect
         >>> insp = inspect(some_mapped_object)
@@ -787,7 +789,9 @@ class AttributeState(object):
 
     The :class:`.AttributeState` object is accessed
     via the :attr:`.InstanceState.attrs` collection
-    of a particular :class:`.InstanceState`::
+    of a particular :class:`.InstanceState`:
+
+    .. sourcecode:: python
 
         from sqlalchemy import inspect
 

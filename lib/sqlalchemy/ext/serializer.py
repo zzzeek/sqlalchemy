@@ -14,7 +14,9 @@ etc. which are referenced by the structure are not persisted in serialized
 form, but are instead re-associated with the query structure
 when it is deserialized.
 
-Usage is nearly the same as that of the standard Python pickle module::
+Usage is nearly the same as that of the standard Python pickle module:
+
+.. sourcecode:: python
 
     from sqlalchemy.ext.serializer import loads, dumps
     metadata = MetaData(bind=some_engine)

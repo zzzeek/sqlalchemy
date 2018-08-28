@@ -30,7 +30,9 @@ class DDLEvents(event.Events):
     with its :class:`.Table`, when a :class:`.ForeignKeyConstraint`
     is associated with a :class:`.Table`, etc.
 
-    Example using the ``after_create`` event::
+    Example using the ``after_create`` event:
+
+    .. sourcecode:: python
 
         from sqlalchemy import event
         from sqlalchemy import Table, Column, Metadata, Integer
@@ -47,7 +49,9 @@ class DDLEvents(event.Events):
     DDL events integrate closely with the
     :class:`.DDL` class and the :class:`.DDLElement` hierarchy
     of DDL clause constructs, which are themselves appropriate
-    as listener callables::
+    as listener callables:
+
+    .. sourcecode:: python
 
         from sqlalchemy import DDL
         event.listen(
@@ -62,7 +66,9 @@ class DDLEvents(event.Events):
 
     For all :class:`.DDLEvent` events, the ``propagate=True`` keyword argument
     will ensure that a given event handler is propagated to copies of the
-    object, which are made when using the :meth:`.Table.tometadata` method::
+    object, which are made when using the :meth:`.Table.tometadata` method:
+
+    .. sourcecode:: python
 
         from sqlalchemy import DDL
         event.listen(
@@ -250,7 +256,9 @@ class DDLEvents(event.Events):
 
         Note that this event is only meaningful if either
         associated with the :class:`.Table` class across the
-        board, e.g.::
+        board, e.g.:
+
+        .. sourcecode:: python
 
             from sqlalchemy.schema import Table
             from sqlalchemy import event
@@ -265,7 +273,9 @@ class DDLEvents(event.Events):
                     listen_for_reflect)
 
         ...or with a specific :class:`.Table` instance using
-        the ``listeners`` argument::
+        the ``listeners`` argument:
+
+        .. sourcecode:: python
 
             def listen_for_reflect(inspector, table, column_info):
                 "receive a column_reflect event"
@@ -297,7 +307,9 @@ class PoolEvents(event.Events):
     as the names of members that are passed to listener
     functions.
 
-    e.g.::
+    e.g.:
+
+    .. sourcecode:: python
 
         from sqlalchemy import event
 
@@ -310,7 +322,9 @@ class PoolEvents(event.Events):
     :class:`.Pool` instances, :class:`.PoolEvents` also accepts
     :class:`.Engine` objects and the :class:`.Engine` class as
     targets, which will be resolved to the ``.pool`` attribute of the
-    given engine or the :class:`.Pool` class::
+    given engine or the :class:`.Pool` class:
+
+    .. sourcecode:: python
 
         engine = create_engine("postgresql://scott:tiger@localhost/test")
 
@@ -526,7 +540,9 @@ class ConnectionEvents(event.Events):
     members that are passed to listener functions.
 
     An event listener can be associated with any :class:`.Connectable`
-    class or instance, such as an :class:`.Engine`, e.g.::
+    class or instance, such as an :class:`.Engine`, e.g.:
+
+    .. sourcecode:: python
 
         from sqlalchemy import event, create_engine
 
@@ -537,7 +553,9 @@ class ConnectionEvents(event.Events):
         engine = create_engine('postgresql://scott:tiger@localhost/test')
         event.listen(engine, "before_cursor_execute", before_cursor_execute)
 
-    or with a specific :class:`.Connection`::
+    or with a specific :class:`.Connection`:
+
+    .. sourcecode:: python
 
         with engine.begin() as conn:
             @event.listens_for(conn, 'before_cursor_execute')
@@ -556,7 +574,9 @@ class ConnectionEvents(event.Events):
     allows modification of the statement and parameters to be sent
     to the database.  The :meth:`.before_cursor_execute` event is
     particularly useful here to add ad-hoc string transformations, such
-    as comments, to all executions::
+    as comments, to all executions:
+
+    .. sourcecode:: python
 
         from sqlalchemy.engine import Engine
         from sqlalchemy import event
@@ -645,7 +665,9 @@ class ConnectionEvents(event.Events):
 
         This event can be optionally established with the ``retval=True``
         flag.  The ``clauseelement``, ``multiparams``, and ``params``
-        arguments should be returned as a three-tuple in this case::
+        arguments should be returned as a three-tuple in this case:
+
+        .. sourcecode:: python
 
             @event.listens_for(Engine, "before_execute", retval=True)
             def before_execute(conn, clauseelement, multiparams, params):
@@ -689,7 +711,9 @@ class ConnectionEvents(event.Events):
 
         This event can be optionally established with the ``retval=True``
         flag.  The ``statement`` and ``parameters`` arguments should be
-        returned as a two-tuple in this case::
+        returned as a two-tuple in this case:
+
+        .. sourcecode:: python
 
             @event.listens_for(Engine, "before_cursor_execute", retval=True)
             def before_cursor_execute(conn, cursor, statement,
@@ -825,7 +849,9 @@ class ConnectionEvents(event.Events):
         is not currently handled by the SQLAlchemy dialect, the
         :attr:`.ExceptionContext.is_disconnect` flag can be set to True which
         will cause the exception to be considered as a disconnect situation,
-        which typically results in the connection pool being invalidated::
+        which typically results in the connection pool being invalidated:
+
+        .. sourcecode:: python
 
             @event.listens_for(Engine, "handle_error")
             def handle_exception(context):
@@ -842,7 +868,9 @@ class ConnectionEvents(event.Events):
         defined.   It can either raise this new exception directly, in
         which case all further event listeners are bypassed and the
         exception will be raised, after appropriate cleanup as taken
-        place::
+        place:
+
+        .. sourcecode:: python
 
             @event.listens_for(Engine, "handle_error")
             def handle_exception(context):
@@ -866,7 +894,9 @@ class ConnectionEvents(event.Events):
         modifier and returning the new exception instance from the
         function.  In this case, event handling will continue onto the
         next handler.   The "chained" exception is available using
-        :attr:`.ExceptionContext.chained_exception`::
+        :attr:`.ExceptionContext.chained_exception`:
+
+        .. sourcecode:: python
 
             @event.listens_for(Engine, "handle_error", retval=True)
             def handle_exception(context):

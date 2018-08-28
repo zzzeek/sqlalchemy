@@ -652,7 +652,9 @@ class Session(_SessionClassMethods):
            well as the mapper's ``mapped_table`` attribute in order to locate
            a connectable to use. The full resolution is described in the
            :meth:`.Session.get_bind`.
-           Usage looks like::
+           Usage looks like:
+
+           .. sourcecode:: python
 
             Session = sessionmaker(binds={
                 SomeMappedClass: create_engine('postgresql://engine1'),
@@ -1053,7 +1055,9 @@ class Session(_SessionClassMethods):
         :class:`.Engine` or
         :class:`.Connection`.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             result = session.execute(
                         user_table.select().where(user_table.c.id == 5)
@@ -1067,14 +1071,18 @@ class Session(_SessionClassMethods):
         :func:`~.sql.expression.text`.  Plain SQL strings can be passed
         as well, which in the case of :meth:`.Session.execute` only
         will be interpreted the same as if it were passed via a
-        :func:`~.expression.text` construct.  That is, the following usage::
+        :func:`~.expression.text` construct.  That is, the following usage:
+
+        .. sourcecode:: python
 
             result = session.execute(
                         "SELECT * FROM user WHERE id=:param",
                         {"param":5}
                     )
 
-        is equivalent to::
+        is equivalent to:
+
+        .. sourcecode:: python
 
             from sqlalchemy import text
             result = session.execute(
@@ -1087,12 +1095,16 @@ class Session(_SessionClassMethods):
         :meth:`.Connection.execute`, whether this is passed as a single
         dictionary, or a list of dictionaries, determines whether the DBAPI
         cursor's ``execute()`` or ``executemany()`` is used to execute the
-        statement.   An INSERT construct may be invoked for a single row::
+        statement.   An INSERT construct may be invoked for a single row:
+
+        .. sourcecode:: python
 
             result = session.execute(
                 users.insert(), {"id": 7, "name": "somename"})
 
-        or for multiple rows::
+        or for multiple rows:
+
+        .. sourcecode:: python
 
             result = session.execute(users.insert(), [
                                     {"id": 7, "name": "somename7"},
@@ -1202,7 +1214,9 @@ class Session(_SessionClassMethods):
         the database is known to be in a state where the connections are
         no longer safe to be used.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             try:
                 sess = Session()
@@ -1403,7 +1417,9 @@ class Session(_SessionClassMethods):
     def no_autoflush(self):
         """Return a context manager that disables autoflush.
 
-        e.g.::
+        e.g.:
+
+        .. sourcecode:: python
 
             with session.no_autoflush:
 
@@ -2654,7 +2670,9 @@ class Session(_SessionClassMethods):
         :attr:`.Session.dirty` collection; a full test for
         each attribute's net "dirty" status is performed.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             return session.is_modified(someobject)
 
@@ -2817,7 +2835,9 @@ class Session(_SessionClassMethods):
     def dirty(self):
         """The set of all persistent instances considered dirty.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             some_mapped_object in session.dirty
 
@@ -2862,7 +2882,9 @@ class sessionmaker(_SessionClassMethods):
     :class:`.Session` objects when called, creating them given
     the configurational arguments established here.
 
-    e.g.::
+    e.g.:
+
+    .. sourcecode:: python
 
         # global scope
         Session = sessionmaker(autoflush=False)
@@ -2871,7 +2893,9 @@ class sessionmaker(_SessionClassMethods):
         sess = Session()
 
     Any keyword arguments sent to the constructor itself will override the
-    "configured" keywords::
+    "configured" keywords:
+
+    .. sourcecode:: python
 
         Session = sessionmaker()
 
@@ -2883,7 +2907,9 @@ class sessionmaker(_SessionClassMethods):
     will take effect for subsequent :class:`.Session` objects generated.
     This is usually used to associate one or more :class:`.Engine` objects
     with an existing :class:`.sessionmaker` factory before it is first
-    used::
+    used:
+
+    .. sourcecode:: python
 
         # application starts
         Session = sessionmaker()
@@ -2948,7 +2974,9 @@ class sessionmaker(_SessionClassMethods):
         established in this :class:`.sessionmaker`.
 
         In Python, the ``__call__`` method is invoked on an object when
-        it is "called" in the same way as a function::
+        it is "called" in the same way as a function:
+
+        .. sourcecode:: python
 
             Session = sessionmaker()
             session = Session()  # invokes sessionmaker.__call__()
@@ -2966,7 +2994,9 @@ class sessionmaker(_SessionClassMethods):
     def configure(self, **new_kw):
         """(Re)configure the arguments for this sessionmaker.
 
-        e.g.::
+        e.g.:
+
+        .. sourcecode:: python
 
             Session = sessionmaker()
 

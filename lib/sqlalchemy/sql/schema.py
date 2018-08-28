@@ -133,7 +133,9 @@ class SchemaItem(SchemaEventTarget, visitors.Visitable):
 class Table(DialectKWArgs, SchemaItem, TableClause):
     r"""Represent a table in a database.
 
-    e.g.::
+    e.g.:
+
+    .. sourcecode:: python
 
         mytable = Table("mytable", metadata,
                         Column('mytable_id', Integer, primary_key=True),
@@ -266,7 +268,9 @@ class Table(DialectKWArgs, SchemaItem, TableClause):
         constructor, which will take precedence.  Below, the existing
         table ``mytable`` will be augmented with :class:`.Column` objects
         both reflected from the database, as well as the given :class:`.Column`
-        named "y"::
+        named "y":
+
+        .. sourcecode:: python
 
             Table("mytable", metadata,
                         Column('y', Integer),
@@ -328,7 +332,9 @@ class Table(DialectKWArgs, SchemaItem, TableClause):
         This alternate hook to :func:`.event.listen` allows the establishment
         of a listener function specific to this :class:`.Table` before
         the "autoload" process begins.  Particularly useful for
-        the :meth:`.DDLEvents.column_reflect` event::
+        the :meth:`.DDLEvents.column_reflect` event:
+
+        .. sourcecode:: python
 
             def listen_for_reflect(table, column_info):
                 "handle the column reflection event"
@@ -799,7 +805,9 @@ class Table(DialectKWArgs, SchemaItem, TableClause):
         """Return a copy of this :class:`.Table` associated with a different
         :class:`.MetaData`.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             m1 = MetaData()
 
@@ -818,7 +826,9 @@ class Table(DialectKWArgs, SchemaItem, TableClause):
          will have this new name as the ``.schema``.  If set to ``None``, the
          schema will be set to that of the schema set on the target
          :class:`.MetaData`, which is typically ``None`` as well, unless
-         set explicitly::
+         set explicitly:
+
+         .. sourcecode:: python
 
             m2 = MetaData(schema='newschema')
 
@@ -838,7 +848,9 @@ class Table(DialectKWArgs, SchemaItem, TableClause):
          :class:`.ForeignKeyConstraint` object, and the existing
          "target schema" of that constraint.  The function should return the
          string schema name that should be applied.
-         E.g.::
+         E.g.:
+
+         .. sourcecode:: python
 
                 def referred_schema_fn(table, to_schema,
                                                 constraint, referred_schema):
@@ -941,7 +953,9 @@ class Column(SchemaItem, ColumnClause):
         :param type\_: The column's type, indicated using an instance which
           subclasses :class:`~sqlalchemy.types.TypeEngine`.  If no arguments
           are required for the type, the class of the type can be sent
-          as well, e.g.::
+          as well, e.g.:
+
+          .. sourcecode:: python
 
             # use a type with arguments
             Column('data', String(50))
@@ -1015,7 +1029,9 @@ class Column(SchemaItem, ColumnClause):
           * Part of the primary key
 
           * Not referring to another column via :class:`.ForeignKey`, unless
-            the value is specified as ``'ignore_fk'``::
+            the value is specified as ``'ignore_fk'``:
+
+            .. sourcecode:: python
 
                 # turn on autoincrement for this column despite
                 # the ForeignKey()
@@ -1117,14 +1133,18 @@ class Column(SchemaItem, ColumnClause):
             or :func:`~sqlalchemy.sql.expression.text` construct representing
             the DDL DEFAULT value for the column.
 
-            String types will be emitted as-is, surrounded by single quotes::
+            String types will be emitted as-is, surrounded by single quotes:
+
+            .. sourcecode:: python
 
                 Column('x', Text, server_default="val")
 
                 x TEXT DEFAULT 'val'
 
             A :func:`~sqlalchemy.sql.expression.text` expression will be
-            rendered as-is, without quotes::
+            rendered as-is, without quotes:
+
+            .. sourcecode:: python
 
                 Column('y', DateTime, server_default=text('NOW()'))
 
@@ -1509,7 +1529,9 @@ class ForeignKey(DialectKWArgs, SchemaItem):
     """Defines a dependency between two columns.
 
     ``ForeignKey`` is specified as an argument to a :class:`.Column` object,
-    e.g.::
+    e.g.:
+
+    .. sourcecode:: python
 
         t = Table("remote_table", metadata,
             Column("remote_id", ForeignKey("main_table.id"))
@@ -2023,11 +2045,15 @@ class ColumnDefault(DefaultGenerator):
     :class:`.Column` are used.  A :class:`.ColumnDefault`
     can be passed positionally as well.
 
-    For example, the following::
+    For example, the following:
+
+    .. sourcecode:: python
 
         Column('foo', Integer, default=50)
 
-    Is equivalent to::
+    Is equivalent to:
+
+    .. sourcecode:: python
 
         Column('foo', Integer, ColumnDefault(50))
 
@@ -2135,7 +2161,9 @@ class Sequence(DefaultGenerator):
     or :class:`.Connection`, rendering the appropriate "next value" function
     for the target database and returning a result.
 
-    The :class:`.Sequence` is typically associated with a primary key column::
+    The :class:`.Sequence` is typically associated with a primary key column:
+
+    .. sourcecode:: python
 
         some_table = Table(
             'some_table', metadata,
@@ -2382,7 +2410,9 @@ class FetchedValue(_NotAColumnExpr, SchemaEventTarget):
     Use :class:`.FetchedValue` when the database is configured
     to provide some automatic default for a column.
 
-    E.g.::
+    E.g.:
+
+    .. sourcecode:: python
 
         Column('foo', Integer, FetchedValue())
 
@@ -2438,11 +2468,15 @@ class DefaultClause(FetchedValue):
     :class:`.Column` are used.  A :class:`.DefaultClause`
     can be passed positionally as well.
 
-    For example, the following::
+    For example, the following:
+
+    .. sourcecode:: python
 
         Column('foo', Integer, server_default="50")
 
-    Is equivalent to::
+    Is equivalent to:
+
+    .. sourcecode:: python
 
         Column('foo', Integer, DefaultClause("50"))
 
@@ -2755,7 +2789,9 @@ class CheckConstraint(ColumnCollectionConstraint):
           A string containing the constraint definition, which will be used
           verbatim, or a SQL expression construct.   If given as a string,
           the object is converted to a :class:`.Text` object.   If the textual
-          string includes a colon character, escape this using a backslash::
+          string includes a colon character, escape this using a backslash:
+
+          .. sourcecode:: python
 
             CheckConstraint(r"foo ~ E'a(?\:b|c)d")
 
@@ -3091,7 +3127,9 @@ class PrimaryKeyConstraint(ColumnCollectionConstraint):
     The :class:`.PrimaryKeyConstraint` object is present automatically
     on any :class:`.Table` object; it is assigned a set of
     :class:`.Column` objects corresponding to those marked with
-    the :paramref:`.Column.primary_key` flag::
+    the :paramref:`.Column.primary_key` flag:
+
+    .. sourcecode:: pycon
 
         >>> my_table = Table('mytable', metadata,
         ...                 Column('id', Integer, primary_key=True),
@@ -3109,7 +3147,9 @@ class PrimaryKeyConstraint(ColumnCollectionConstraint):
     The primary key of a :class:`.Table` can also be specified by using
     a :class:`.PrimaryKeyConstraint` object explicitly; in this mode of usage,
     the "name" of the constraint can also be specified, as well as other
-    options which may be recognized by dialects::
+    options which may be recognized by dialects:
+
+    .. sourcecode:: python
 
         my_table = Table('mytable', metadata,
                     Column('id', Integer),
@@ -3140,7 +3180,9 @@ class PrimaryKeyConstraint(ColumnCollectionConstraint):
     ``primary_key=True`` flags is still desirable, an empty
     :class:`.PrimaryKeyConstraint` may be specified, which will take on the
     primary key column collection from the :class:`.Table` based on the
-    flags::
+    flags:
+
+    .. sourcecode:: python
 
         my_table = Table('mytable', metadata,
                     Column('id', Integer, primary_key=True),
@@ -3311,7 +3353,9 @@ class Index(DialectKWArgs, ColumnCollectionMixin, SchemaItem):
 
     Defines a composite (one or more column) INDEX.
 
-    E.g.::
+    E.g.:
+
+    .. sourcecode:: python
 
         sometable = Table("sometable", metadata,
                         Column("name", String(50)),
@@ -3321,19 +3365,25 @@ class Index(DialectKWArgs, ColumnCollectionMixin, SchemaItem):
         Index("some_index", sometable.c.name)
 
     For a no-frills, single column index, adding
-    :class:`.Column` also supports ``index=True``::
+    :class:`.Column` also supports ``index=True``:
+
+    .. sourcecode:: python
 
         sometable = Table("sometable", metadata,
                         Column("name", String(50), index=True)
                     )
 
-    For a composite index, multiple columns can be specified::
+    For a composite index, multiple columns can be specified:
+
+    .. sourcecode:: python
 
         Index("some_index", sometable.c.name, sometable.c.address)
 
     Functional indexes are supported as well, typically by using the
     :data:`.func` construct in conjunction with table-bound
-    :class:`.Column` objects::
+    :class:`.Column` objects:
+
+    .. sourcecode:: python
 
         Index("some_index", func.lower(sometable.c.name))
 
@@ -3342,7 +3392,9 @@ class Index(DialectKWArgs, ColumnCollectionMixin, SchemaItem):
     An :class:`.Index` can also be manually associated with a :class:`.Table`,
     either through inline declaration or using
     :meth:`.Table.append_constraint`.  When this approach is used, the names
-    of the indexed columns can be specified as strings::
+    of the indexed columns can be specified as strings:
+
+    .. sourcecode:: python
 
         Table("sometable", metadata,
                         Column("name", String(50)),
@@ -3351,7 +3403,9 @@ class Index(DialectKWArgs, ColumnCollectionMixin, SchemaItem):
                 )
 
     To support functional or expression-based indexes in this form, the
-    :func:`.text` construct may be used::
+    :func:`.text` construct may be used:
+
+    .. sourcecode:: python
 
         from sqlalchemy import text
 
@@ -3771,7 +3825,9 @@ class MetaData(SchemaItem):
         Typically, a :class:`.Engine` is assigned to this attribute
         so that "implicit execution" may be used, or alternatively
         as a means of providing engine binding information to an
-        ORM :class:`.Session` object::
+        ORM :class:`.Session` object:
+
+        .. sourcecode:: python
 
             engine = create_engine("someurl://")
             metadata.bind = engine

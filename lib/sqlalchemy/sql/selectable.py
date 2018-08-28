@@ -196,7 +196,9 @@ def tablesample(selectable, sampling, name=None, seed=None):
     percentage of rows from a table. It supports multiple sampling methods,
     most commonly BERNOULLI and SYSTEM.
 
-    e.g.::
+    e.g.:
+
+    .. sourcecode:: python
 
         from sqlalchemy import func
 
@@ -250,7 +252,9 @@ class HasPrefixes(object):
         This is used to support backend-specific prefix keywords such as those
         provided by MySQL.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             stmt = table.insert().prefix_with("LOW_PRIORITY", dialect="mysql")
 
@@ -286,7 +290,9 @@ class HasSuffixes(object):
         This is used to support backend-specific suffix keywords on
         certain constructs.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             stmt = select([col1, col2]).cte().suffix_with(
                 "cycle empno set y_cycle to 1 default 0", dialect="oracle")
@@ -374,7 +380,9 @@ class FromClause(Selectable):
         The function generates COUNT against the
         first column in the primary key of the table, or against
         the first column in the table overall.   Explicit use of
-        ``func.count()`` should be preferred::
+        ``func.count()`` should be preferred:
+
+        .. sourcecode:: python
 
             row_count = conn.scalar(
                 select([func.count('*')]).select_from(table)
@@ -413,7 +421,9 @@ class FromClause(Selectable):
         """Return a :class:`.Join` from this :class:`.FromClause`
         to another :class:`FromClause`.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             from sqlalchemy import join
 
@@ -457,14 +467,18 @@ class FromClause(Selectable):
         to another :class:`FromClause`, with the "isouter" flag set to
         True.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             from sqlalchemy import outerjoin
 
             j = user_table.outerjoin(address_table,
                             user_table.c.id == address_table.c.user_id)
 
-        The above is equivalent to::
+        The above is equivalent to:
+
+        .. sourcecode:: python
 
             j = user_table.join(
                 address_table,
@@ -498,7 +512,9 @@ class FromClause(Selectable):
     def alias(self, name=None, flat=False):
         """return an alias of this :class:`.FromClause`.
 
-        This is shorthand for calling::
+        This is shorthand for calling:
+
+        .. sourcecode:: python
 
             from sqlalchemy import alias
             a = alias(self, name=name)
@@ -677,7 +693,9 @@ class FromClause(Selectable):
 
         The :attr:`.columns`, or :attr:`.c` collection, is the gateway
         to the construction of SQL expressions using table-bound or
-        other selectable-bound columns::
+        other selectable-bound columns:
+
+        .. sourcecode:: python
 
             select([mytable]).where(mytable.c.somecolumn == 5)
 
@@ -834,7 +852,9 @@ class Join(FromClause):
         """Produce a :class:`.Join` object, given two :class:`.FromClause`
         expressions.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             j = join(user_table, address_table,
                      user_table.c.id == address_table.c.user_id)
@@ -938,11 +958,15 @@ class Join(FromClause):
                                 consider_as_foreign_keys=None):
         """create a join condition between two tables or selectables.
 
-        e.g.::
+        e.g.:
+
+        .. sourcecode:: python
 
             join_condition(tablea, tableb)
 
-        would produce an expression along the lines of::
+        would produce an expression along the lines of:
+
+        .. sourcecode:: python
 
             tablea.c.id==tableb.c.tablea_id
 
@@ -1063,7 +1087,9 @@ class Join(FromClause):
         r"""Create a :class:`.Select` from this :class:`.Join`.
 
         The equivalent long-hand form, given a :class:`.Join` object
-        ``j``, is::
+        ``j``, is:
+
+        .. sourcecode:: python
 
             from sqlalchemy import select
             j = select([j.left, j.right], **kw).\
@@ -1091,7 +1117,9 @@ class Join(FromClause):
 
         The default behavior here is to first produce a SELECT
         construct from this :class:`.Join`, then to produce an
-        :class:`.Alias` from that.  So given a join of the form::
+        :class:`.Alias` from that.  So given a join of the form:
+
+        .. sourcecode:: python
 
             j = table_a.join(table_b, table_a.c.id == table_b.c.a_id)
 
@@ -1108,7 +1136,9 @@ class Join(FromClause):
                 JOIN table_b ON table_a.id = table_b.a_id) AS anon_1
 
         The equivalent long-hand form, given a :class:`.Join` object
-        ``j``, is::
+        ``j``, is:
+
+        .. sourcecode:: python
 
             from sqlalchemy import select, alias
             j = alias(
@@ -1124,7 +1154,9 @@ class Join(FromClause):
         a single name - the individual columns are "auto-labeled", meaning
         the ``.c.`` collection of the resulting :class:`.Alias` represents
         the names of the individual columns using a
-        ``<tablename>_<columname>`` scheme::
+        ``<tablename>_<columname>`` scheme:
+
+        .. sourcecode:: python
 
             j.c.table_a_id
             j.c.table_b_a_id
@@ -1135,18 +1167,22 @@ class Join(FromClause):
         ``flat=True`` option will call :meth:`.FromClause.alias`
         against the left and right sides individually.
         Using this option, no new ``SELECT`` is produced;
-        we instead, from a construct as below::
+        we instead, from a construct as below:
+
+        .. sourcecode:: python
 
             j = table_a.join(table_b, table_a.c.id == table_b.c.a_id)
             j = j.alias(flat=True)
 
-        we get a result like this::
+        we get a result like this:
 
             table_a AS table_a_1 JOIN table_b AS table_b_1 ON
             table_a_1.id = table_b_1.a_id
 
         The ``flat=True`` argument is also propagated to the contained
-        selectables, so that a composite join such as::
+        selectables, so that a composite join such as:
+
+        .. sourcecode:: python
 
             j = table_a.join(
                     table_b.join(table_c,
@@ -1479,7 +1515,9 @@ class HasCTE(object):
         http://www.postgresql.org/docs/current/static/queries-with.html,
         as well as additional examples.
 
-        Example 1, non recursive::
+        Example 1, non recursive:
+
+        .. sourcecode:: python
 
             from sqlalchemy import (Table, Column, String, Integer,
                                     MetaData, select, func)
@@ -1518,7 +1556,9 @@ class HasCTE(object):
 
             result = conn.execute(statement).fetchall()
 
-        Example 2, WITH RECURSIVE::
+        Example 2, WITH RECURSIVE:
+
+        .. sourcecode:: python
 
             from sqlalchemy import (Table, Column, String, Integer,
                                     MetaData, select, func)
@@ -1559,7 +1599,9 @@ class HasCTE(object):
 
             result = conn.execute(statement).fetchall()
 
-        Example 3, an upsert using UPDATE and INSERT with CTEs::
+        Example 3, an upsert using UPDATE and INSERT with CTEs:
+
+        .. sourcecode:: python
 
             from datetime import date
             from sqlalchemy import (MetaData, Table, Column, Integer,
@@ -1661,7 +1703,9 @@ class TableClause(Immutable, FromClause):
 
     This is a lightweight table object that has only a name and a
     collection of columns, which are typically produced
-    by the :func:`.expression.column` function::
+    by the :func:`.expression.column` function:
+
+    .. sourcecode:: python
 
         from sqlalchemy import table, column
 
@@ -1747,7 +1791,9 @@ class TableClause(Immutable, FromClause):
         """Generate an :func:`.insert` construct against this
         :class:`.TableClause`.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             table.insert().values(name='foo')
 
@@ -1763,7 +1809,9 @@ class TableClause(Immutable, FromClause):
         """Generate an :func:`.update` construct against this
         :class:`.TableClause`.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             table.update().where(table.c.id==7).values(name='foo')
 
@@ -1779,7 +1827,9 @@ class TableClause(Immutable, FromClause):
         """Generate a :func:`.delete` construct against this
         :class:`.TableClause`.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             table.delete().where(table.c.id==7)
 
@@ -2020,7 +2070,9 @@ class GenerativeSelect(SelectBase):
                         skip_locked=False, key_share=False):
         """Specify a ``FOR UPDATE`` clause for this :class:`.GenerativeSelect`.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             stmt = select([table]).with_for_update(nowait=True)
 
@@ -2903,7 +2955,9 @@ class Select(HasPrefixes, HasSuffixes, GenerativeSelect):
         typically uses Python string substitution syntax
         with the token ``%(name)s`` to render the name of
         the table or alias. E.g. when using Oracle, the
-        following::
+        following:
+
+        .. sourcecode:: python
 
             select([mytable]).\
                 with_hint(mytable, "index(%(name)s ix_mytable)")
@@ -2914,7 +2968,9 @@ class Select(HasPrefixes, HasSuffixes, GenerativeSelect):
 
         The ``dialect_name`` option will limit the rendering of a particular
         hint to a particular backend. Such as, to add hints for both Oracle
-        and Sybase simultaneously::
+        and Sybase simultaneously:
+
+        .. sourcecode:: python
 
             select([mytable]).\
                 with_hint(mytable, "index(%(name)s ix_mytable)", 'oracle').\
@@ -3041,7 +3097,9 @@ class Select(HasPrefixes, HasSuffixes, GenerativeSelect):
         """return a new select() construct with the given column expression
             added to its columns clause.
 
-            E.g.::
+            E.g.:
+
+            .. sourcecode:: python
 
                 my_select = my_select.column(table.c.new_column)
 
@@ -3091,18 +3149,24 @@ class Select(HasPrefixes, HasSuffixes, GenerativeSelect):
 
         This method is exactly equivalent to as if the original
         :func:`.select` had been called with the given columns
-        clause.   I.e. a statement::
+        clause.   I.e. a statement:
+
+        .. sourcecode:: python
 
             s = select([table1.c.a, table1.c.b])
             s = s.with_only_columns([table1.c.b])
 
-        should be exactly equivalent to::
+        should be exactly equivalent to:
+
+        .. sourcecode:: python
 
             s = select([table1.c.b])
 
         This means that FROM clauses which are only derived
         from the column list will be discarded if the new column
-        list no longer contains that FROM::
+        list no longer contains that FROM:
+
+        .. sourcecode:: pycon
 
             >>> table1 = table('t1', column('a'), column('b'))
             >>> table2 = table('t2', column('a'), column('b'))
@@ -3116,7 +3180,9 @@ class Select(HasPrefixes, HasSuffixes, GenerativeSelect):
         The preferred way to maintain a specific FROM clause
         in the construct, assuming it won't be represented anywhere
         else (i.e. not in the WHERE clause, etc.) is to set it using
-        :meth:`.Select.select_from`::
+        :meth:`.Select.select_from`:
+
+        .. sourcecode:: pycon
 
             >>> s1 = select([table1.c.a, table2.c.b]).\
             ...         select_from(table1.join(table2,
@@ -3133,12 +3199,16 @@ class Select(HasPrefixes, HasSuffixes, GenerativeSelect):
         should usually be a subset of those which were passed
         to the :func:`.select` construct, not those which are available
         from the ``.c`` collection of that :func:`.select`.  That
-        is::
+        is:
+
+        .. sourcecode:: python
 
             s = select([table1.c.a, table1.c.b]).select_from(table1)
             s = s.with_only_columns([table1.c.b])
 
-        and **not**::
+        and **not**:
+
+        .. sourcecode:: python
 
             # usually incorrect
             s = s.with_only_columns([s.c.b])
@@ -3204,7 +3274,9 @@ class Select(HasPrefixes, HasSuffixes, GenerativeSelect):
         given FROM expression
         merged into its list of FROM objects.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             table1 = table('t1', column('a'))
             table2 = table('t2', column('b'))
@@ -3225,7 +3297,9 @@ class Select(HasPrefixes, HasSuffixes, GenerativeSelect):
         replace the default, derived FROM clause with a join, it can
         also be called with individual table elements, multiple times
         if desired, in the case that the FROM clause cannot be fully
-        derived from the columns clause::
+        derived from the columns clause:
+
+        .. sourcecode:: python
 
             select([func.count('*')]).select_from(table1)
 
@@ -3355,7 +3429,9 @@ class Select(HasPrefixes, HasSuffixes, GenerativeSelect):
         """append the given column expression to the columns clause of this
         select() construct.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             my_select.append_column(some_table.c.new_column)
 
@@ -3614,7 +3690,9 @@ class Exists(UnaryExpression):
         """Construct a new :class:`.Exists` against an existing
         :class:`.Select` object.
 
-        Calling styles are of the following forms::
+        Calling styles are of the following forms:
+
+        .. sourcecode:: python
 
             # use on an existing select()
             s = select([table.c.col1]).where(table.c.col2==5)

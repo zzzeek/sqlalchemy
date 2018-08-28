@@ -99,27 +99,37 @@ class JSON(sqltypes.JSON):
     The operators provided by the PostgreSQL version of :class:`.JSON`
     include:
 
-    * Index operations (the ``->`` operator)::
+    * Index operations (the ``->`` operator):
+
+    .. sourcecode:: python
 
         data_table.c.data['some key']
 
         data_table.c.data[5]
 
 
-    * Index operations returning text (the ``->>`` operator)::
+    * Index operations returning text (the ``->>`` operator):
+
+    .. sourcecode:: python
 
         data_table.c.data['some key'].astext == 'some value'
 
     * Index operations with CAST
-      (equivalent to ``CAST(col ->> ['some key'] AS <type>)``)::
+      (equivalent to ``CAST(col ->> ['some key'] AS <type>)``):
+
+      .. sourcecode:: python
 
         data_table.c.data['some key'].astext.cast(Integer) == 5
 
-    * Path index operations (the ``#>`` operator)::
+    * Path index operations (the ``#>`` operator):
+
+    .. sourcecode:: python
 
         data_table.c.data[('key_1', 'key_2', 5, ..., 'key_n')]
 
-    * Path index operations returning text (the ``#>>`` operator)::
+    * Path index operations returning text (the ``#>>`` operator):
+
+    .. sourcecode:: python
 
         data_table.c.data[('key_1', 'key_2', 5, ..., 'key_n')].astext == \
 'some value'
@@ -136,7 +146,9 @@ class JSON(sqltypes.JSON):
     Custom serializers and deserializers are specified at the dialect level,
     that is using :func:`.create_engine`.  The reason for this is that when
     using psycopg2, the DBAPI only allows serializers at the per-cursor
-    or per-connection level.   E.g.::
+    or per-connection level.   E.g.:
+
+    .. sourcecode:: python
 
         engine = create_engine("postgresql://scott:tiger@localhost/test",
                                 json_serializer=my_serialize_fn,
@@ -162,7 +174,9 @@ class JSON(sqltypes.JSON):
         :param none_as_null: if True, persist the value ``None`` as a
          SQL NULL value, not the JSON encoding of ``null``.   Note that
          when this flag is False, the :func:`.null` construct can still
-         be used to persist a NULL value::
+         be used to persist a NULL value:
+
+         .. sourcecode:: python
 
              from sqlalchemy import null
              conn.execute(table.insert(), data=null())
@@ -193,7 +207,9 @@ class JSON(sqltypes.JSON):
             """On an indexed expression, use the "astext" (e.g. "->>")
             conversion when rendered in SQL.
 
-            E.g.::
+            E.g.:
+
+            .. sourcecode:: python
 
                 select([data_table.c.data['some key'].astext])
 
@@ -221,7 +237,9 @@ ischema_names['json'] = JSON
 class JSONB(JSON):
     """Represent the PostgreSQL JSONB type.
 
-    The :class:`.JSONB` type stores arbitrary JSONB format data, e.g.::
+    The :class:`.JSONB` type stores arbitrary JSONB format data, e.g.:
+
+    .. sourcecode:: python
 
         data_table = Table('data_table', metadata,
             Column('id', Integer, primary_key=True),

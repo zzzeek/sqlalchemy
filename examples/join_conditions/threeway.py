@@ -14,11 +14,15 @@ for the join directly between first and partitioned.  Instead, we
 will derive a selectable from partitioned and second combined together, then
 link first to that derived selectable.
 
-If we define the derived selectable as::
+If we define the derived selectable as:
+
+.. sourcecode:: sql
 
     second JOIN partitioned ON second.other_id = partitioned.other_id
 
-A JOIN from first to this derived selectable is then::
+A JOIN from first to this derived selectable is then:
+
+.. sourcecode:: sql
 
     first JOIN (second JOIN partitioned
                 ON second.other_id = partitioned.other_id)

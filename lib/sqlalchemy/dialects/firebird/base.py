@@ -33,7 +33,9 @@ Locking Behavior
 Firebird locks tables aggressively.  For this reason, a DROP TABLE may
 hang until other transactions are released.  SQLAlchemy does its best
 to release transactions as quickly as possible.  The most common cause
-of hanging transactions is a non-fully consumed result set, i.e.::
+of hanging transactions is a non-fully consumed result set, i.e.:
+
+.. sourcecode:: python
 
     result = engine.execute("select * from table")
     row = result.fetchone()
@@ -52,7 +54,9 @@ RETURNING support
 
 Firebird 2.0 supports returning a result set from inserts, and 2.1
 extends that to deletes and updates. This is generically exposed by
-the SQLAlchemy ``returning()`` method, such as::
+the SQLAlchemy ``returning()`` method, such as:
+
+.. sourcecode:: python
 
     # INSERT..RETURNING
     result = table.insert().returning(table.c.col1, table.c.col2).\

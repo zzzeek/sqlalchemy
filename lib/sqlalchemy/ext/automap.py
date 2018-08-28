@@ -29,7 +29,9 @@ The simplest usage is to reflect an existing database into a new model.
 We create a new :class:`.AutomapBase` class in a similar manner as to how
 we create a declarative base class, using :func:`.automap_base`.
 We then call :meth:`.AutomapBase.prepare` on the resulting base class,
-asking it to reflect the schema and produce mappings::
+asking it to reflect the schema and produce mappings:
+
+.. sourcecode:: python
 
     from sqlalchemy.ext.automap import automap_base
     from sqlalchemy.orm import Session
@@ -83,7 +85,9 @@ We can pass a pre-declared :class:`.MetaData` object to :func:`.automap_base`.
 This object can be constructed in any way, including programmatically, from
 a serialized file, or from itself being reflected using
 :meth:`.MetaData.reflect`.  Below we illustrate a combination of reflection and
-explicit table declaration::
+explicit table declaration:
+
+.. sourcecode:: python
 
     from sqlalchemy import create_engine, MetaData, Table, Column, ForeignKey
     from sqlalchemy.ext.automap import automap_base
@@ -122,7 +126,9 @@ classes, but are not immediately mapped after their construction, and are
 instead mapped when we call :meth:`.AutomapBase.prepare`.  The
 :meth:`.AutomapBase.prepare` method will make use of the classes we've
 established based on the table name we use.  If our schema contains tables
-``user`` and ``address``, we can define one or both of the classes to be used::
+``user`` and ``address``, we can define one or both of the classes to be used:
+
+.. sourcecode:: python
 
     from sqlalchemy.ext.automap import automap_base
     from sqlalchemy import create_engine
@@ -179,7 +185,9 @@ are known as :func:`.classname_for_table`,
 and :func:`.name_for_collection_relationship`.  Any or all of these
 functions are provided as in the example below, where we use a "camel case"
 scheme for class names and a "pluralizer" for collection names using the
-`Inflect <https://pypi.python.org/pypi/inflect>`_ package::
+`Inflect <https://pypi.python.org/pypi/inflect>`_ package:
+
+.. sourcecode:: python
 
     import re
     import inflect
@@ -216,7 +224,9 @@ scheme for class names and a "pluralizer" for collection names using the
 
 From the above mapping, we would now have classes ``User`` and ``Address``,
 where the collection from ``User`` to ``Address`` is called
-``User.addresses``::
+``User.addresses``:
+
+.. sourcecode:: python
 
     User, Address = Base.classes.User, Base.classes.Address
 
@@ -300,7 +310,9 @@ arguments.
 Below is an illustration of how to send
 :paramref:`.relationship.cascade` and
 :paramref:`.relationship.passive_deletes`
-options along to all one-to-many relationships::
+options along to all one-to-many relationships:
+
+.. sourcecode:: python
 
     from sqlalchemy.ext.automap import generate_relationship
 
@@ -356,7 +368,9 @@ Relationships with Inheritance
 
 :mod:`.sqlalchemy.ext.automap` will not generate any relationships between
 two classes that are in an inheritance relationship.   That is, with two
-classes given as follows::
+classes given as follows:
+
+.. sourcecode:: python
 
     class Employee(Base):
         __tablename__ = 'employee'
@@ -382,7 +396,9 @@ has actual relationships from subclass to superclass as well, those
 need to be explicit.  Below, as we have two separate foreign keys
 from ``Engineer`` to ``Employee``, we need to set up both the relationship
 we want as well as the ``inherit_condition``, as these are not things
-SQLAlchemy can guess::
+SQLAlchemy can guess:
+
+.. sourcecode:: python
 
     class Employee(Base):
         __tablename__ = 'employee'
@@ -434,7 +450,9 @@ with the same name as this related class, e.g. ``table_a``.  This
 relationship name conflicts with the mapping column ``table_b.table_a``,
 and will emit an error on mapping.
 
-We can resolve this conflict by using an underscore as follows::
+We can resolve this conflict by using an underscore as follows:
+
+.. sourcecode:: python
 
     def name_for_scalar_relationship(base, local_cls, referred_cls, constraint):
         name = referred_cls.__name__.lower()
@@ -454,7 +472,9 @@ We can resolve this conflict by using an underscore as follows::
 Alternatively, we can change the name on the column side.   The columns
 that are mapped can be modified using the technique described at
 :ref:`mapper_column_distinct_names`, by assigning the column explicitly
-to a new name::
+to a new name:
+
+.. sourcecode:: python
 
     Base = automap_base()
 
@@ -472,7 +492,9 @@ As noted previously, automap has no dependency on reflection, and can make
 use of any collection of :class:`.Table` objects within a :class:`.MetaData`
 collection.  From this, it follows that automap can also be used
 generate missing relationships given an otherwise complete model that fully
-defines table metadata::
+defines table metadata:
+
+.. sourcecode:: python
 
     from sqlalchemy.ext.automap import automap_base
     from sqlalchemy import Column, Integer, String, ForeignKey
@@ -526,7 +548,9 @@ def classname_for_table(base, tablename, table):
     """Return the class name that should be used, given the name
     of a table.
 
-    The default implementation is::
+    The default implementation is:
+
+    .. sourcecode:: python
 
         return str(tablename)
 
@@ -558,7 +582,9 @@ def name_for_scalar_relationship(base, local_cls, referred_cls, constraint):
     """Return the attribute name that should be used to refer from one
     class to another, for a scalar object reference.
 
-    The default implementation is::
+    The default implementation is:
+
+    .. sourcecode:: python
 
         return referred_cls.__name__.lower()
 
@@ -584,7 +610,9 @@ def name_for_collection_relationship(
     """Return the attribute name that should be used to refer from one
     class to another, for a collection reference.
 
-    The default implementation is::
+    The default implementation is:
+
+    .. sourcecode:: python
 
         return referred_cls.__name__.lower() + "_collection"
 
@@ -614,7 +642,9 @@ def generate_relationship(
     An alternate implementation of this function can be specified using the
     :paramref:`.AutomapBase.prepare.generate_relationship` parameter.
 
-    The default implementation of this function is as follows::
+    The default implementation of this function is as follows:
+
+    .. sourcecode:: python
 
         if return_fn is backref:
             return return_fn(attrname, **kw)
@@ -683,7 +713,9 @@ class AutomapBase(object):
     """An instance of :class:`.util.Properties` containing classes.
 
     This object behaves much like the ``.c`` collection on a table.  Classes
-    are present under the name they were given, e.g.::
+    are present under the name they were given, e.g.:
+    
+    .. sourcecode:: python
 
         Base = automap_base()
         Base.prepare(engine=some_engine, reflect=True)

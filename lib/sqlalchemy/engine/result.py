@@ -616,7 +616,9 @@ class ResultProxy(object):
 
     Individual columns may be accessed by their integer position,
     case-insensitive column name, or by ``schema.Column``
-    object. e.g.::
+    object. e.g.:
+
+    .. sourcecode:: python
 
       row = fetchone()
 
@@ -1252,7 +1254,9 @@ class BufferedRowResultProxy(ResultProxy):
     for additional rows up to a size of 1000.
 
     The size argument is configurable using the ``max_row_buffer``
-    execution option::
+    execution option:
+
+    .. sourcecode:: python
 
         with psycopg2_engine.connect() as conn:
 

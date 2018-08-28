@@ -76,7 +76,9 @@ def synonym_for(name, map_column=False):
     with a Python descriptor.
 
     The function being decorated is passed to :func:`.orm.synonym` as the
-    :paramref:`.orm.synonym.descriptor` parameter::
+    :paramref:`.orm.synonym.descriptor` parameter:
+
+    .. sourcecode:: python
 
         class MyClass(Base):
             __tablename__ = 'my_table'
@@ -114,7 +116,9 @@ def comparable_using(comparator_factory):
 
     This is a  decorator front end to
     :func:`~sqlalchemy.orm.comparable_property` that passes
-    through the comparator_factory and the function being decorated::
+    through the comparator_factory and the function being decorated:
+
+    .. sourcecode:: python
 
       @comparable_using(MyComparatorType)
       @property
@@ -122,7 +126,9 @@ def comparable_using(comparator_factory):
           return 'special sauce'
 
     The regular ``comparable_property()`` is also usable directly in a
-    declarative setting and may be convenient for read/write properties::
+    declarative setting and may be convenient for read/write properties:
+
+    .. sourcecode:: python
 
       prop = comparable_property(MyComparatorType)
 
@@ -146,7 +152,9 @@ class declared_attr(interfaces._MappedAttribute, property):
 
     @declared_attr is more often than not applicable to mixins,
     to define relationships that are to be applied to different
-    implementors of the class::
+    implementors of the class:
+
+    .. sourcecode:: python
 
         class ProvidesUser(object):
             "A mixin that adds a 'user' relationship to classes."
@@ -156,7 +164,9 @@ class declared_attr(interfaces._MappedAttribute, property):
                 return relationship("User")
 
     It also can be applied to mapped classes, such as to provide
-    a "polymorphic" scheme for inheritance::
+    a "polymorphic" scheme for inheritance:
+
+    .. sourcecode:: python
 
         class Employee(Base):
             id = Column(Integer, primary_key=True)
@@ -237,7 +247,9 @@ class declared_attr(interfaces._MappedAttribute, property):
               resolved at some point.
 
         Below, both MyClass as well as MySubClass will have a distinct
-        ``id`` Column object established::
+        ``id`` Column object established:
+
+        .. sourcecode:: python
 
             class HasIdMixin(object):
                 @declared_attr.cascading
@@ -377,7 +389,9 @@ def as_declarative(**kw):
 
     Provides a syntactical shortcut to the ``cls`` argument
     sent to :func:`.declarative_base`, allowing the base class
-    to be converted in-place to a "declarative" base::
+    to be converted in-place to a "declarative" base:
+
+    .. sourcecode:: python
 
         from sqlalchemy.ext.declarative import as_declarative
 
@@ -422,26 +436,28 @@ class ConcreteBase(object):
     table for the class itself.  Compare to :class:`.AbstractConcreteBase`,
     which does not.
 
-    Example::
+    Example:
 
-        from sqlalchemy.ext.declarative import ConcreteBase
+        .. sourcecode:: python
 
-        class Employee(ConcreteBase, Base):
-            __tablename__ = 'employee'
-            employee_id = Column(Integer, primary_key=True)
-            name = Column(String(50))
-            __mapper_args__ = {
-                            'polymorphic_identity':'employee',
-                            'concrete':True}
+            from sqlalchemy.ext.declarative import ConcreteBase
 
-        class Manager(Employee):
-            __tablename__ = 'manager'
-            employee_id = Column(Integer, primary_key=True)
-            name = Column(String(50))
-            manager_data = Column(String(40))
-            __mapper_args__ = {
-                            'polymorphic_identity':'manager',
-                            'concrete':True}
+            class Employee(ConcreteBase, Base):
+                __tablename__ = 'employee'
+                employee_id = Column(Integer, primary_key=True)
+                name = Column(String(50))
+                __mapper_args__ = {
+                                'polymorphic_identity':'employee',
+                                'concrete':True}
+
+            class Manager(Employee):
+                __tablename__ = 'manager'
+                employee_id = Column(Integer, primary_key=True)
+                name = Column(String(50))
+                manager_data = Column(String(40))
+                __mapper_args__ = {
+                                'polymorphic_identity':'manager',
+                                'concrete':True}
 
     .. seealso::
 
@@ -488,22 +504,24 @@ class AbstractConcreteBase(ConcreteBase):
     and is only used for selecting.  Compare to :class:`.ConcreteBase`,
     which does create a persisted table for the base class.
 
-    Example::
+    Example:
 
-        from sqlalchemy.ext.declarative import AbstractConcreteBase
+        .. sourcecode:: python
 
-        class Employee(AbstractConcreteBase, Base):
-            pass
+            from sqlalchemy.ext.declarative import AbstractConcreteBase
 
-        class Manager(Employee):
-            __tablename__ = 'manager'
-            employee_id = Column(Integer, primary_key=True)
-            name = Column(String(50))
-            manager_data = Column(String(40))
+            class Employee(AbstractConcreteBase, Base):
+                pass
 
-            __mapper_args__ = {
-                'polymorphic_identity':'manager',
-                'concrete':True}
+            class Manager(Employee):
+                __tablename__ = 'manager'
+                employee_id = Column(Integer, primary_key=True)
+                name = Column(String(50))
+                manager_data = Column(String(40))
+
+                __mapper_args__ = {
+                    'polymorphic_identity':'manager',
+                    'concrete':True}
 
     The abstract base class is handled by declarative in a special way;
     at class configuration time, it behaves like a declarative mixin
@@ -514,7 +532,9 @@ class AbstractConcreteBase(ConcreteBase):
 
     Using this approach, we can specify columns and properties
     that will take place on mapped subclasses, in the way that
-    we normally do as in :ref:`declarative_mixins`::
+    we normally do as in :ref:`declarative_mixins`:
+
+    .. sourcecode:: python
 
         class Company(Base):
             __tablename__ = 'company'
@@ -542,7 +562,9 @@ class AbstractConcreteBase(ConcreteBase):
                 'concrete':True}
 
     When we make use of our mappings however, both ``Manager`` and
-    ``Employee`` will have an independently usable ``.company`` attribute::
+    ``Employee`` will have an independently usable ``.company`` attribute:
+
+    .. sourcecode:: python
 
         session.query(Employee).filter(Employee.company.has(id=5))
 
@@ -632,7 +654,9 @@ class DeferredReflection(object):
     The :class:`.DeferredReflection` mixin moves the construction
     of mappers to be at a later point, after a specific
     method is called which first reflects all :class:`.Table`
-    objects created so far.   Classes can define it as such::
+    objects created so far.   Classes can define it as such:
+
+    .. sourcecode:: python
 
         from sqlalchemy.ext.declarative import declarative_base
         from sqlalchemy.ext.declarative import DeferredReflection
@@ -644,7 +668,9 @@ class DeferredReflection(object):
     Above, ``MyClass`` is not yet mapped.   After a series of
     classes have been defined in the above fashion, all tables
     can be reflected and mappings created using
-    :meth:`.prepare`::
+    :meth:`.prepare`:
+
+    .. sourcecode:: python
 
         engine = create_engine("someengine://...")
         DeferredReflection.prepare(engine)
@@ -656,7 +682,9 @@ class DeferredReflection(object):
     particular prepare step, which is necessary for applications
     that use more than one engine.  For example, if an application
     has two engines, you might use two bases, and prepare each
-    separately, e.g.::
+    separately, e.g.:
+
+    .. sourcecode:: python
 
         class ReflectedOne(DeferredReflection, Base):
             __abstract__ = True
@@ -676,7 +704,9 @@ class DeferredReflection(object):
         # ... etc.
 
     Above, the class hierarchies for ``ReflectedOne`` and
-    ``ReflectedTwo`` can be configured separately::
+    ``ReflectedTwo`` can be configured separately:
+
+    .. sourcecode:: python
 
         ReflectedOne.prepare(engine_one)
         ReflectedTwo.prepare(engine_two)

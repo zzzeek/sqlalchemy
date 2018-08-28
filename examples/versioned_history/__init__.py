@@ -12,7 +12,9 @@ be run via nose::
     cd examples/versioning
     nosetests -v
 
-A fragment of example usage, using declarative::
+A fragment of example usage, using declarative:
+
+.. sourcecode:: python
 
     from history_meta import Versioned, versioned_session
 
@@ -49,7 +51,9 @@ A fragment of example usage, using declarative::
 
 The ``Versioned`` mixin is designed to work with declarative.  To use
 the extension with classical mappers, the ``_history_mapper`` function
-can be applied::
+can be applied:
+
+.. sourcecode:: python
 
     from history_meta import _history_mapper
 

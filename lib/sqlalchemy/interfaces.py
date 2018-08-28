@@ -24,7 +24,9 @@ class PoolListener(object):
        :class:`.PoolListener` is deprecated.   Please
        refer to :class:`.PoolEvents`.
 
-    Usage::
+    Usage:
+
+    .. sourcecode:: python
 
         class MyListener(PoolListener):
             def connect(self, dbapi_con, con_record):
@@ -161,7 +163,9 @@ class ConnectionProxy(object):
 
     Either or both of the ``execute()`` and ``cursor_execute()``
     may be implemented to intercept compiled statement and
-    cursor level executions, e.g.::
+    cursor level executions, e.g.:
+
+    .. sourcecode:: python
 
         class MyProxy(ConnectionProxy):
             def execute(self, conn, execute, clauseelement,
@@ -179,7 +183,9 @@ class ConnectionProxy(object):
     in the example should be used.
 
     The proxy is installed into an :class:`~sqlalchemy.engine.Engine` via
-    the ``proxy`` argument::
+    the ``proxy`` argument:
+
+    .. sourcecode:: python
 
         e = create_engine('someurl://', proxy=MyProxy())
 

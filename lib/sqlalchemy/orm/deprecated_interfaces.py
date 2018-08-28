@@ -21,7 +21,9 @@ class MapperExtension(object):
 
     New extension classes subclass :class:`.MapperExtension` and are specified
     using the ``extension`` mapper() argument, which is a single
-    :class:`.MapperExtension` or a list of such::
+    :class:`.MapperExtension` or a list of such:
+
+    .. sourcecode:: python
 
         from sqlalchemy.orm.interfaces import MapperExtension
 
@@ -35,7 +37,9 @@ class MapperExtension(object):
     objects. When a particular mapping event occurs, the
     corresponding method on each ``MapperExtension`` is invoked
     serially, and each method has the ability to halt the chain
-    from proceeding further::
+    from proceeding further:
+
+    .. sourcecode:: python
 
         m = mapper(User, users_table, extension=[ext1, ext2, ext3])
 
@@ -284,7 +288,9 @@ class SessionExtension(object):
 
     Subclasses may be installed into a :class:`.Session` (or
     :class:`.sessionmaker`) using the ``extension`` keyword
-    argument::
+    argument:
+
+    .. sourcecode:: python
 
         from sqlalchemy.orm.interfaces import SessionExtension
 
@@ -408,7 +414,9 @@ class AttributeExtension(object):
     It is established on an individual mapped attribute using
     the `extension` argument, available on
     :func:`.column_property`, :func:`.relationship`, and
-    others::
+    others:
+
+    .. sourcecode:: python
 
         from sqlalchemy.orm.interfaces import AttributeExtension
         from sqlalchemy.orm import mapper, relationship, column_property

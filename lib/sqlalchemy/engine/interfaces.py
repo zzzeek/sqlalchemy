@@ -829,7 +829,9 @@ class CreateEnginePlugin(object):
     * connectivity plugins such as proxies
 
     Plugins are registered using entry points in a similar way as that
-    of dialects::
+    of dialects:
+
+    .. sourcecode:: python
 
         entry_points={
             'sqlalchemy.plugins': [
@@ -837,7 +839,9 @@ class CreateEnginePlugin(object):
             ]
 
     A plugin that uses the above names would be invoked from a database
-    URL as in::
+    URL as in:
+
+    .. sourcecode:: python
 
         from sqlalchemy import create_engine
 
@@ -845,7 +849,9 @@ class CreateEnginePlugin(object):
           "mysql+pymysql://scott:tiger@localhost/test?plugin=myplugin")
 
     Alternatively, the :paramref:`.create_engine.plugins" argument may be
-    passed as a list to :func:`.create_engine`::
+    passed as a list to :func:`.create_engine`:
+
+    .. sourcecode:: python
 
         engine = create_engine(
           "mysql+pymysql://scott:tiger@localhost/test",
@@ -856,7 +862,9 @@ class CreateEnginePlugin(object):
 
     The ``plugin`` argument supports multiple instances, so that a URL
     may specify multiple plugins; they are loaded in the order stated
-    in the URL::
+    in the URL:
+
+    .. sourcecode:: python
 
         engine = create_engine(
           "mysql+pymysql://scott:tiger@localhost/"
@@ -866,7 +874,9 @@ class CreateEnginePlugin(object):
     well as from the keyword arguments passed to :func:`.create_engine`.
     The :class:`.URL` object and the keyword dictionary are passed to the
     constructor so that these arguments can be extracted from the url's
-    :attr:`.URL.query` collection as well as from the dictionary::
+    :attr:`.URL.query` collection as well as from the dictionary:
+
+    .. sourcecode:: python
 
         class MyPlugin(CreateEnginePlugin):
             def __init__(self, url, kwargs):
@@ -875,7 +885,9 @@ class CreateEnginePlugin(object):
                 self.my_argument_three = kwargs.pop('my_argument_three', None)
 
     Arguments like those illustrated above would be consumed from the
-    following::
+    following:
+
+    .. sourcecode:: python
 
         from sqlalchemy import create_engine
 

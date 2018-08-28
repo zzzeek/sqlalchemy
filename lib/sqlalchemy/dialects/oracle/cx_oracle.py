@@ -76,17 +76,21 @@ Python 2:
   to True.
 
 * When using raw SQL strings, typing behavior can be added for unicode
-  conversion using the :func:`.text` construct::
+  conversion using the :func:`.text` construct:
 
-    from sqlalchemy import text, Unicode
-    result = conn.execute(
-        text("select username from user").columns(username=Unicode))
+  .. sourcecode:: python
+
+        from sqlalchemy import text, Unicode
+        result = conn.execute(
+            text("select username from user").columns(username=Unicode))
 
 * Otherwise, when using raw SQL strings sent directly to an ``.execute()``
   method without any Core typing behavior added, the flag
   ``coerce_to_unicode=True`` flag can be passed to :func:`.create_engine`
   which will add an unconditional unicode processor to cx_Oracle for all
-  string values::
+  string values:
+
+  .. sourcecode:: python
 
     engine = create_engine("oracle+cx_oracle://dsn", coerce_to_unicode=True)
 
@@ -101,7 +105,9 @@ As of SQLAlchemy 1.2.2, the cx_Oracle dialect unconditionally calls
 In Python 3, all string values are Unicode; for cx_Oracle, this corresponds to
 ``cx_Oracle.NCHAR`` being passed to ``setinputsizes()`` for that parameter.
 In some edge cases, such as passing format specifiers for
-the ``trunc()`` function, Oracle does not accept these as NCHAR::
+the ``trunc()`` function, Oracle does not accept these as NCHAR:
+
+.. sourcecode:: python
 
     from sqlalchemy import func
 
@@ -114,7 +120,9 @@ In these cases, an error as follows may be raised::
     ORA-01899: bad precision specifier
 
 When this error is encountered, it may be necessary to pass the string value
-with an explicit non-unicode type::
+with an explicit non-unicode type:
+
+.. sourcecode:: python
 
     from sqlalchemy import func
     from sqlalchemy import literal
@@ -161,7 +169,9 @@ Example 1 - logging all setinputsizes calls
 The following example illustrates how to log the intermediary values from
 a SQLAlchemy perspective before they are converted to the raw ``setinputsizes()``
 parameter dictionary.  The keys of the dictionary are :class:`.BindParameter`
-objects which have a ``.key`` and a ``.type`` attribute::
+objects which have a ``.key`` and a ``.type`` attribute:
+
+.. sourcecode:: python
 
     from sqlalchemy import create_engine, event
 
@@ -180,7 +190,9 @@ Example 2 - remove all bindings to CLOB
 
 The ``CLOB`` datatype in cx_Oracle incurs a significant performance overhead,
 however is set by default for the ``Text`` type within the SQLAlchemy 1.2
-series.   This setting can be modified as follows::
+series.   This setting can be modified as follows:
+
+.. sourcecode:: python
 
     from sqlalchemy import create_engine, event
     from cx_Oracle import CLOB
@@ -265,7 +277,9 @@ When no typing objects are present, as when executing plain SQL strings, a
 default "outputtypehandler" is present which will generally return numeric
 values which specify precision and scale as Python ``Decimal`` objects.  To
 disable this coercion to decimal for performance reasons, pass the flag
-``coerce_to_decimal=False`` to :func:`.create_engine`::
+``coerce_to_decimal=False`` to :func:`.create_engine`:
+
+.. sourcecode:: python
 
     engine = create_engine("oracle+cx_oracle://dsn", coerce_to_decimal=False)
 

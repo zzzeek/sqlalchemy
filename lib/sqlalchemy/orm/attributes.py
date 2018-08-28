@@ -1291,7 +1291,9 @@ class History(History):
     attribute.
 
     The easiest way to get a :class:`.History` object for a particular
-    attribute on an object is to use the :func:`.inspect` function::
+    attribute on an object is to use the :func:`.inspect` function:
+
+    .. sourcecode:: python
 
         from sqlalchemy import inspect
 
@@ -1555,7 +1557,9 @@ def init_collection(obj, key):
     """Initialize a collection attribute and return the collection adapter.
 
     This function is used to provide direct access to collection internals
-    for a previously unloaded attribute.  e.g.::
+    for a previously unloaded attribute.  e.g.:
+
+    .. sourcecode:: python
 
         collection_adapter = init_collection(someobject, 'elements')
         for elem in values:

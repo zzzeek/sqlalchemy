@@ -39,7 +39,9 @@ class safe_reraise(object):
     invoking so that it is maintained across a potential
     coroutine context switch.
 
-    e.g.::
+    e.g.:
+
+    .. sourcecode:: python
 
         try:
             sess.commit()
@@ -357,13 +359,15 @@ def format_argspec_plus(fn, grouped=True):
     apply_kw
       Like apply_pos, except keyword-ish args are passed as keywords.
 
-    Example::
+    Example:
 
-      >>> format_argspec_plus(lambda self, a, b, c=3, **d: 123)
-      {'args': '(self, a, b, c=3, **d)',
-       'self_arg': 'self',
-       'apply_kw': '(self, a, b, c=c, **d)',
-       'apply_pos': '(self, a, b, c, **d)'}
+        .. sourcecode:: pycon
+
+          >>> format_argspec_plus(lambda self, a, b, c=3, **d: 123)
+          {'args': '(self, a, b, c=3, **d)',
+           'self_arg': 'self',
+           'apply_kw': '(self, a, b, c=c, **d)',
+           'apply_pos': '(self, a, b, c, **d)'}
 
     """
     if compat.callable(fn):
@@ -869,7 +873,9 @@ def dependency_for(modulename):
 class dependencies(object):
     """Apply imported dependencies as arguments to a function.
 
-    E.g.::
+    E.g.:
+
+    .. sourcecode:: python
 
         @util.dependencies(
             "sqlalchemy.sql.widget",

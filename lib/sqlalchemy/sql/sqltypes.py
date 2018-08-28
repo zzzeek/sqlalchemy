@@ -145,7 +145,9 @@ class String(Concatenable, TypeEngine):
         :param collation: Optional, a column-level collation for
           use in DDL and CAST expressions.  Renders using the
           COLLATE keyword supported by SQLite, MySQL, and PostgreSQL.
-          E.g.::
+          E.g.:
+
+          .. sourcecode:: pycon
 
             >>> from sqlalchemy import cast, select, String
             >>> print select([cast('some string', String(collation='utf8'))])
@@ -328,7 +330,9 @@ class Unicode(String):
     ``warnings`` filter, documented at
     http://docs.python.org/library/warnings.html,
     can be used to turn these warnings into exceptions
-    which will illustrate a stack trace::
+    which will illustrate a stack trace:
+
+    .. sourcecode:: python
 
       import warnings
       warnings.simplefilter('error')
@@ -490,7 +494,9 @@ class Numeric(_LookupExpressionAdapter, TypeEngine):
        older Python versions, the ``cdecimal`` library can be patched
        into any application where it will replace the ``decimal``
        library fully, however this needs to be applied globally and
-       before any other modules have been imported, as follows::
+       before any other modules have been imported, as follows:
+
+       .. sourcecode:: python
 
            import sys
            import cdecimal
@@ -1167,7 +1173,9 @@ class Enum(Emulated, String, SchemaType):
 
     When using an enumerated class, the enumerated objects are used
     both for input and output, rather than strings as is the case with
-    a plain-string enumerated type::
+    a plain-string enumerated type:
+
+    .. sourcecode:: python
 
         import enum
         class MyEnum(enum.Enum):
@@ -1845,7 +1853,9 @@ class JSON(Indexable, TypeEngine):
     :class:`.types.JSON` is part of the Core in support of the growing
     popularity of native JSON datatypes.
 
-    The :class:`.types.JSON` type stores arbitrary JSON format data, e.g.::
+    The :class:`.types.JSON` type stores arbitrary JSON format data, e.g.:
+
+    .. sourcecode:: python
 
         data_table = Table('data_table', metadata,
             Column('id', Integer, primary_key=True),
@@ -1860,15 +1870,21 @@ class JSON(Indexable, TypeEngine):
 
     The base :class:`.types.JSON` provides these two operations:
 
-    * Keyed index operations::
+    * Keyed index operations:
+
+    .. sourcecode:: python
 
         data_table.c.data['some key']
 
-    * Integer index operations::
+    * Integer index operations:
+
+    .. sourcecode:: python
 
         data_table.c.data[3]
 
-    * Path index operations::
+    * Path index operations:
+
+    .. sourcecode:: python
 
         data_table.c.data[('key_1', 'key_2', 5, ..., 'key_n')]
 
@@ -1889,7 +1905,9 @@ class JSON(Indexable, TypeEngine):
     and the **right hand side is rendered as a json string**; a future SQLAlchemy
     feature such as a generic "astext" modifier may simplify this at some point:
 
-    * **Compare an element of a JSON structure to a string**::
+    * **Compare an element of a JSON structure to a string**:
+
+    .. sourcecode:: python
 
         from sqlalchemy import cast, type_coerce
         from sqlalchemy import String, JSON
@@ -1902,7 +1920,9 @@ class JSON(Indexable, TypeEngine):
             data_table.c.data['some_key'], String
         ) == type_coerce("some_value", JSON)
 
-    * **Compare an element of a JSON structure to an integer**::
+    * **Compare an element of a JSON structure to an integer**:
+
+    .. sourcecode:: python
 
         from sqlalchemy import cast, type_coerce
         from sqlalchemy import String, JSON
@@ -1915,7 +1935,9 @@ class JSON(Indexable, TypeEngine):
 
     * **Compare an element of a JSON structure to some other JSON structure** - note
       that Python dictionaries are typically not ordered so care should be taken
-      here to assert that the JSON structures are identical::
+      here to assert that the JSON structures are identical:
+
+      .. sourcecode:: python
 
         from sqlalchemy import cast, type_coerce
         from sqlalchemy import String, JSON
@@ -1940,13 +1962,17 @@ class JSON(Indexable, TypeEngine):
     use of two specific constants in order to differentiate between a column
     that evaluates to SQL NULL, e.g. no value, vs. the JSON-encoded string
     of ``"null"``.   To insert or select against a value that is SQL NULL,
-    use the constant :func:`.null`::
+    use the constant :func:`.null`:
+
+    .. sourcecode:: python
 
         from sqlalchemy import null
         conn.execute(table.insert(), json_value=null())
 
     To insert or select against a value that is JSON ``"null"``, use the
-    constant :attr:`.JSON.NULL`::
+    constant :attr:`.JSON.NULL`:
+
+    .. sourcecode:: python
 
         conn.execute(table.insert(), json_value=JSON.NULL)
 
@@ -1984,7 +2010,9 @@ class JSON(Indexable, TypeEngine):
     of the :paramref:`.JSON.none_as_null` flag; the :attr:`.JSON.NULL`
     constant can be used to always resolve to JSON ``"null"`` regardless
     of this setting.  This is in contrast to the :func:`.sql.null` construct,
-    which always resolves to SQL NULL.  E.g.::
+    which always resolves to SQL NULL.  E.g.:
+    
+    .. sourcecode:: python
 
         from sqlalchemy import null
         from sqlalchemy.dialects.postgresql import JSON
@@ -1996,7 +2024,9 @@ class JSON(Indexable, TypeEngine):
         session.commit()
 
     In order to set JSON NULL as a default value for a column, the most
-    transparent method is to use :func:`.text`::
+    transparent method is to use :func:`.text`:
+    
+    .. sourcecode:: python
 
         Table(
             'my_table', metadata,
@@ -2019,7 +2049,9 @@ class JSON(Indexable, TypeEngine):
         :param none_as_null=False: if True, persist the value ``None`` as a
          SQL NULL value, not the JSON encoding of ``null``.   Note that
          when this flag is False, the :func:`.null` construct can still
-         be used to persist a NULL value::
+         be used to persist a NULL value:
+
+         .. sourcecode:: python
 
              from sqlalchemy import null
              conn.execute(table.insert(), data=null())
@@ -2178,7 +2210,9 @@ class ARRAY(SchemaEventTarget, Indexable, Concatenable, TypeEngine):
     support for this type.
 
     An :class:`.types.ARRAY` type is constructed given the "type"
-    of element::
+    of element:
+
+    .. sourcecode:: python
 
         mytable = Table("mytable", metadata,
                 Column("data", ARRAY(Integer))
@@ -2187,7 +2221,9 @@ class ARRAY(SchemaEventTarget, Indexable, Concatenable, TypeEngine):
     The above type represents an N-dimensional array,
     meaning a supporting backend such as PostgreSQL will interpret values
     with any number of dimensions automatically.   To produce an INSERT
-    construct that passes in a 1-dimensional array of integers::
+    construct that passes in a 1-dimensional array of integers:
+
+    .. sourcecode:: python
 
         connection.execute(
                 mytable.insert(),
@@ -2195,7 +2231,9 @@ class ARRAY(SchemaEventTarget, Indexable, Concatenable, TypeEngine):
         )
 
     The :class:`.types.ARRAY` type can be constructed given a fixed number
-    of dimensions::
+    of dimensions:
+
+    .. sourcecode:: python
 
         mytable = Table("mytable", metadata,
                 Column("data", ARRAY(Integer, dimensions=2))
@@ -2215,7 +2253,9 @@ class ARRAY(SchemaEventTarget, Indexable, Concatenable, TypeEngine):
 
     * When used with the Python ``getitem`` accessor, the number of dimensions
       serves to define the kind of type that the ``[]`` operator should
-      return, e.g. for an ARRAY of INTEGER with two dimensions::
+      return, e.g. for an ARRAY of INTEGER with two dimensions:
+
+      .. sourcecode:: pycon
 
             >>> expr = table.c.column[5]  # returns ARRAY(Integer, dimensions=1)
             >>> expr = expr[6]  # returns Integer
@@ -2228,12 +2268,16 @@ class ARRAY(SchemaEventTarget, Indexable, Concatenable, TypeEngine):
     integer indexes or slices.  Arrays default to 1-based indexing.
     The operator produces binary expression
     constructs which will produce the appropriate SQL, both for
-    SELECT statements::
+    SELECT statements:
+
+    .. sourcecode:: python
 
         select([mytable.c.data[5], mytable.c.data[2:7]])
 
     as well as UPDATE statements when the :meth:`.Update.values` method
-    is used::
+    is used:
+
+    .. sourcecode:: python
 
         mytable.update().values({
             mytable.c.data[5]: 7,
@@ -2311,7 +2355,9 @@ class ARRAY(SchemaEventTarget, Indexable, Concatenable, TypeEngine):
             Argument places are switched, because ANY requires array
             expression to be on the right hand-side.
 
-            E.g.::
+            E.g.:
+
+            .. sourcecode:: python
 
                 from sqlalchemy.sql import operators
 
@@ -2346,7 +2392,9 @@ class ARRAY(SchemaEventTarget, Indexable, Concatenable, TypeEngine):
             Argument places are switched, because ALL requires array
             expression to be on the right hand-side.
 
-            E.g.::
+            E.g.:
+
+            .. sourcecode:: python
 
                 from sqlalchemy.sql import operators
 
@@ -2380,7 +2428,9 @@ class ARRAY(SchemaEventTarget, Indexable, Concatenable, TypeEngine):
                  zero_indexes=False):
         """Construct an :class:`.types.ARRAY`.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
           Column('myarray', ARRAY(Integer))
 

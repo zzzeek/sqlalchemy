@@ -65,14 +65,18 @@ class Inspector(object):
     fetched metadata.
 
     A :class:`.Inspector` object is usually created via the
-    :func:`.inspect` function::
+    :func:`.inspect` function:
+
+    .. sourcecode:: python
 
         from sqlalchemy import inspect, create_engine
         engine = create_engine('...')
         insp = inspect(engine)
 
     The inspection method above is equivalent to using the
-    :meth:`.Inspector.from_engine` method, i.e.::
+    :meth:`.Inspector.from_engine` method, i.e.:
+
+    .. sourcecode:: python
 
         engine = create_engine('...')
         insp = Inspector.from_engine(engine)
@@ -558,7 +562,9 @@ class Inspector(object):
         introspection.
 
         This is the underlying method used by most dialects to produce
-        table reflection.  Direct usage is like::
+        table reflection.  Direct usage is like:
+
+        .. sourcecode:: python
 
             from sqlalchemy import create_engine, MetaData, Table
             from sqlalchemy.engine.reflection import Inspector

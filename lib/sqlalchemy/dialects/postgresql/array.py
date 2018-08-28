@@ -48,7 +48,9 @@ class array(expression.Tuple):
 
     """A PostgreSQL ARRAY literal.
 
-    This is used to produce ARRAY literals in SQL expressions, e.g.::
+    This is used to produce ARRAY literals in SQL expressions, e.g.:
+
+    .. sourcecode:: python
 
         from sqlalchemy.dialects.postgresql import array
         from sqlalchemy.dialects import postgresql
@@ -67,7 +69,9 @@ class array(expression.Tuple):
 
     An instance of :class:`.array` will always have the datatype
     :class:`.ARRAY`.  The "inner" type of the array is inferred from
-    the values present, unless the ``type_`` keyword argument is passed::
+    the values present, unless the ``type_`` keyword argument is passed:
+
+    .. sourcecode:: python
 
         array(['foo', 'bar'], type_=CHAR)
 
@@ -124,7 +128,9 @@ class ARRAY(sqltypes.ARRAY):
     The :class:`.postgresql.ARRAY` type is constructed in the same way
     as the core :class:`.types.ARRAY` type; a member type is required, and a
     number of dimensions is recommended if the type is to be used for more
-    than one dimension::
+    than one dimension:
+
+    .. sourcecode:: python
 
         from sqlalchemy.dialects import postgresql
 
@@ -139,7 +145,9 @@ class ARRAY(sqltypes.ARRAY):
     provides PostgreSQL-specific methods for containment operations, including
     :meth:`.postgresql.ARRAY.Comparator.contains`
     :meth:`.postgresql.ARRAY.Comparator.contained_by`,
-    and :meth:`.postgresql.ARRAY.Comparator.overlap`, e.g.::
+    and :meth:`.postgresql.ARRAY.Comparator.overlap`, e.g.:
+
+    .. sourcecode:: python
 
         mytable.c.data.contains([1, 2])
 
@@ -194,9 +202,11 @@ class ARRAY(sqltypes.ARRAY):
                  zero_indexes=False):
         """Construct an ARRAY.
 
-        E.g.::
+        E.g.:
 
-          Column('myarray', ARRAY(Integer))
+        .. sourcecode:: python
+
+            Column('myarray', ARRAY(Integer))
 
         Arguments are:
 

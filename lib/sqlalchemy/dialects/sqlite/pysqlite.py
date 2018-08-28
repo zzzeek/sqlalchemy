@@ -27,7 +27,9 @@ The ``pysqlite2`` driver will be loaded first, and if not found, ``sqlite3``
 is loaded.  This allows an explicitly installed pysqlite driver to take
 precedence over the built in one.   As with all dialects, a specific
 DBAPI module may be provided to :func:`~sqlalchemy.create_engine()` to control
-this explicitly::
+this explicitly:
+
+.. sourcecode:: python
 
     from sqlite3 import dbapi2 as sqlite
     e = create_engine('sqlite+pysqlite:///file.db', module=sqlite)
@@ -43,25 +45,33 @@ portion of the URL.  Note that the format of a SQLAlchemy url is::
 
 This means that the actual filename to be used starts with the characters to
 the **right** of the third slash.   So connecting to a relative filepath
-looks like::
+looks like:
+
+.. sourcecode:: python
 
     # relative path
     e = create_engine('sqlite:///path/to/database.db')
 
 An absolute path, which is denoted by starting with a slash, means you
-need **four** slashes::
+need **four** slashes:
+
+.. sourcecode:: python
 
     # absolute path
     e = create_engine('sqlite:////path/to/database.db')
 
 To use a Windows path, regular drive specifications and backslashes can be
-used. Double backslashes are probably needed::
+used. Double backslashes are probably needed:
+
+.. sourcecode:: python
 
     # absolute path on Windows
     e = create_engine('sqlite:///C:\\path\\to\\database.db')
 
 The sqlite ``:memory:`` identifier is the default if no filepath is
-present.  Specify ``sqlite://`` and nothing else::
+present.  Specify ``sqlite://`` and nothing else:
+
+.. sourcecode:: python
 
     # in-memory database
     e = create_engine('sqlite://')
@@ -85,7 +95,9 @@ without expensive per-row type checks.
 
 Keeping in mind that pysqlite's parsing option is not recommended,
 nor should be necessary, for use with SQLAlchemy, usage of PARSE_DECLTYPES
-can be forced if one configures "native_datetime=True" on create_engine()::
+can be forced if one configures "native_datetime=True" on create_engine():
+
+.. sourcecode:: python
 
     engine = create_engine('sqlite://',
         connect_args={'detect_types':
@@ -149,7 +161,9 @@ connection object must be shared among threads, since the database exists
 only within the scope of that connection.   The
 :class:`.StaticPool` implementation will maintain a single connection
 globally, and the ``check_same_thread`` flag can be passed to Pysqlite
-as ``False``::
+as ``False``:
+
+.. sourcecode:: python
 
     from sqlalchemy.pool import StaticPool
     engine = create_engine('sqlite://',
@@ -169,7 +183,9 @@ the temporary table should continue to remain after :meth:`.Session.commit` or
 :meth:`.Session.rollback` is called, a pool which maintains a single
 connection must be used.   Use :class:`.SingletonThreadPool` if the scope is
 only needed within the current thread, or :class:`.StaticPool` is scope is
-needed within multiple threads for this case::
+needed within multiple threads for this case:
+
+.. sourcecode:: python
 
     # maintain the same connection per thread
     from sqlalchemy.pool import SingletonThreadPool
@@ -224,7 +240,9 @@ defaults for SQLAlchemy.
 
 The good news is that with a few events, we can implement transactional
 support fully, by disabling pysqlite's feature entirely and emitting BEGIN
-ourselves. This is achieved using two event listeners::
+ourselves. This is achieved using two event listeners:
+
+.. sourcecode:: python
 
     from sqlalchemy import create_engine, event
 
@@ -247,7 +265,9 @@ scope is to begin, we emit ``"BEGIN"`` ourselves.
 
 When we take control of ``"BEGIN"``, we can also control directly SQLite's
 locking modes, introduced at `BEGIN TRANSACTION <http://sqlite.org/lang_transaction.html>`_,
-by adding the desired locking mode to our ``"BEGIN"``::
+by adding the desired locking mode to our ``"BEGIN"``:
+
+.. sourcecode:: python
 
     @event.listens_for(engine, "begin")
     def do_begin(conn):

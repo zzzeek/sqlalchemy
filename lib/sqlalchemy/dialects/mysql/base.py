@@ -31,7 +31,9 @@ have been idle for a fixed period of time, defaulting to eight hours.
 To circumvent having this issue, use
 the :paramref:`.create_engine.pool_recycle` option which ensures that
 a connection will be discarded and replaced with a new one if it has been
-present in the pool for a fixed number of seconds::
+present in the pool for a fixed number of seconds:
+
+.. sourcecode:: python
 
     engine = create_engine('mysql+mysqldb://...', pool_recycle=3600)
 
@@ -55,9 +57,11 @@ including ``ENGINE``, ``CHARSET``, ``MAX_ROWS``, ``ROW_FORMAT``,
 To accommodate the rendering of these arguments, specify the form
 ``mysql_argument_name="value"``.  For example, to specify a table with
 ``ENGINE`` of ``InnoDB``, ``CHARSET`` of ``utf8mb4``, and ``KEY_BLOCK_SIZE``
-of ``1024``::
+of ``1024``:
 
-  Table('mytable', metadata,
+.. sourcecode:: python
+
+    Table('mytable', metadata,
         Column('data', String(32)),
         mysql_engine='InnoDB',
         mysql_charset='utf8mb4',
@@ -128,14 +132,18 @@ This feature works by issuing the command
 each new connection.  For the special AUTOCOMMIT isolation level, DBAPI-specific
 techniques are used.
 
-To set isolation level using :func:`.create_engine`::
+To set isolation level using :func:`.create_engine`:
+
+.. sourcecode:: python
 
     engine = create_engine(
                     "mysql://scott:tiger@localhost/test",
                     isolation_level="READ UNCOMMITTED"
                 )
 
-To set using per-connection execution options::
+To set using per-connection execution options:
+
+.. sourcecode:: python
 
     connection = engine.connect()
     connection = connection.execution_options(
@@ -163,7 +171,9 @@ AUTO_INCREMENT Behavior
 
 When creating tables, SQLAlchemy will automatically set ``AUTO_INCREMENT`` on
 the first :class:`.Integer` primary key column which is not marked as a
-foreign key::
+foreign key:
+
+.. sourcecode:: pycon
 
   >>> t = Table('mytable', metadata,
   ...   Column('mytable_id', Integer, primary_key=True)
@@ -177,7 +187,9 @@ foreign key::
 You can disable this behavior by passing ``False`` to the
 :paramref:`~.Column.autoincrement` argument of :class:`.Column`.  This flag
 can also be used to enable auto-increment on a secondary column in a
-multi-column key for some storage engines::
+multi-column key for some storage engines:
+
+.. sourcecode:: python
 
   Table('mytable', metadata,
         Column('gid', Integer, primary_key=True, autoincrement=False),
@@ -210,7 +222,9 @@ Charset Selection
 
 Most MySQL DBAPIs offer the option to set the client character set for
 a connection.   This is typically delivered using the ``charset`` parameter
-in the URL, such as::
+in the URL, such as:
+
+.. sourcecode:: python
 
     e = create_engine(
         "mysql+pymysql://scott:tiger@localhost/test?charset=utf8mb4")
@@ -231,7 +245,9 @@ codepoints up to three bytes instead of four.  Therefore,
 when communicating with a MySQL database
 that includes codepoints more than three bytes in size,
 this new charset is preferred, if supported by both the database as well
-as the client DBAPI, as in::
+as the client DBAPI, as in:
+
+.. sourcecode:: python
 
     e = create_engine(
         "mysql+pymysql://scott:tiger@localhost/test?charset=utf8mb4")
@@ -271,7 +287,9 @@ that renders like this::
 
 These character set introducers are provided by the DBAPI driver, assuming
 the use of mysqlclient or PyMySQL (both of which are recommended).  Add the
-query string parameter ``binary_prefix=true`` to the URL to repair this warning::
+query string parameter ``binary_prefix=true`` to the URL to repair this warning:
+
+.. sourcecode:: python
 
     # mysqlclient
     engine = create_engine("mysql+mysqldb://scott:tiger@localhost/test?charset=utf8mb4&binary_prefix=true")
@@ -310,7 +328,9 @@ MySQL SQL Extensions
 --------------------
 
 Many of the MySQL SQL extensions are handled through SQLAlchemy's generic
-function and operator support::
+function and operator support:
+
+.. sourcecode:: python
 
   table.select(table.c.password==func.md5('plaintext'))
   table.select(table.c.username.op('regexp')('^[a-d]'))
@@ -322,11 +342,15 @@ available.
 
 * INSERT..ON DUPLICATE KEY UPDATE:  See :ref:`mysql_insert_on_duplicate_key_update`
 
-* SELECT pragma::
+* SELECT pragma:
+
+.. sourcecode:: python
 
     select(..., prefixes=['HIGH_PRIORITY', 'SQL_SMALL_RESULT'])
 
-* UPDATE with LIMIT::
+* UPDATE with LIMIT:
+
+.. sourcecode:: python
 
     update(..., mysql_limit=10)
 
@@ -344,7 +368,9 @@ values to INSERT versus the values for UPDATE.
 
 SQLAlchemy provides ``ON DUPLICATE KEY UPDATE`` support via the MySQL-specific
 :func:`.mysql.dml.insert()` function, which provides
-the generative method :meth:`~.mysql.dml.Insert.on_duplicate_key_update`::
+the generative method :meth:`~.mysql.dml.Insert.on_duplicate_key_update`:
+
+.. sourcecode:: python
 
     from sqlalchemy.dialects.mysql import insert
 
@@ -371,7 +397,9 @@ keyword arguments passed to the
 :meth:`~.mysql.dml.Insert.on_duplicate_key_update`
 given column key values (usually the name of the column, unless it
 specifies :paramref:`.Column.key`) as keys and literal or SQL expressions
-as values::
+as values:
+
+.. sourcecode:: python
 
     on_duplicate_key_stmt = insert_stmt.on_duplicate_key_update(
         data="some data",
@@ -415,7 +443,9 @@ In order to refer to the proposed insertion row, the special alias
 :attr:`~.mysql.dml.Insert.inserted` is available as an attribute on
 the :class:`.mysql.dml.Insert` object; this object is a
 :class:`.ColumnCollection` which contains all columns of the target
-table::
+table:
+
+.. sourcecode:: python
 
     from sqlalchemy.dialects.mysql import insert
 
@@ -463,7 +493,9 @@ version detection, instead rendering the internal expression directly.
 CAST may still not be desirable on an early MySQL version post-4.0.2, as it
 didn't add all datatype support until 4.1.1.   If your application falls into
 this narrow area, the behavior of CAST can be controlled using the
-:ref:`sqlalchemy.ext.compiler_toplevel` system, as per the recipe below::
+:ref:`sqlalchemy.ext.compiler_toplevel` system, as per the recipe below:
+
+.. sourcecode:: python
 
     from sqlalchemy.sql.expression import Cast
     from sqlalchemy.ext.compiler import compiles
@@ -495,7 +527,9 @@ Index Length
 MySQL provides an option to create index entries with a certain length, where
 "length" refers to the number of characters or bytes in each value which will
 become part of the index. SQLAlchemy provides this feature via the
-``mysql_length`` parameter::
+``mysql_length`` parameter:
+
+.. sourcecode:: python
 
     Index('my_index', my_table.c.data, mysql_length=10)
 
@@ -518,7 +552,9 @@ Index Prefixes
 
 MySQL storage engines permit you to specify an index prefix when creating
 an index. SQLAlchemy provides this feature via the
-``mysql_prefix`` parameter on :class:`.Index`::
+``mysql_prefix`` parameter on :class:`.Index`:
+
+.. sourcecode:: python
 
     Index('my_index', my_table.c.data, mysql_prefix='FULLTEXT')
 
@@ -538,11 +574,15 @@ Index Types
 
 Some MySQL storage engines permit you to specify an index type when creating
 an index or primary key constraint. SQLAlchemy provides this feature via the
-``mysql_using`` parameter on :class:`.Index`::
+``mysql_using`` parameter on :class:`.Index`:
+
+.. sourcecode:: python
 
     Index('my_index', my_table.c.data, mysql_using='hash')
 
-As well as the ``mysql_using`` parameter on :class:`.PrimaryKeyConstraint`::
+As well as the ``mysql_using`` parameter on :class:`.PrimaryKeyConstraint`:
+
+.. sourcecode:: python
 
     PrimaryKeyConstraint("data", mysql_using='hash')
 
@@ -560,7 +600,9 @@ Index Parsers
 ~~~~~~~~~~~~~
 
 CREATE FULLTEXT INDEX in MySQL also supports a "WITH PARSER" option.  This
-is available using the keyword argument ``mysql_with_parser``::
+is available using the keyword argument ``mysql_with_parser``:
+
+.. sourcecode:: python
 
     Index(
         'my_index', my_table.c.data,
@@ -584,7 +626,9 @@ or "MATCH".  Using the ``deferrable`` or ``initially`` keyword argument with
 :class:`.ForeignKeyConstraint` or :class:`.ForeignKey` will have the effect of
 these keywords being rendered in a DDL expression, which will then raise an
 error on MySQL.  In order to use these keywords on a foreign key while having
-them ignored on a MySQL backend, use a custom compile rule::
+them ignored on a MySQL backend, use a custom compile rule:
+
+.. sourcecode:: python
 
     from sqlalchemy.ext.compiler import compiles
     from sqlalchemy.schema import ForeignKeyConstraint
@@ -616,7 +660,9 @@ Reflection of Foreign Key Constraints
 Not all MySQL storage engines support foreign keys.  When using the
 very common ``MyISAM`` MySQL storage engine, the information loaded by table
 reflection will not include foreign keys.  For these tables, you may supply a
-:class:`~sqlalchemy.ForeignKeyConstraint` at reflection time::
+:class:`~sqlalchemy.ForeignKeyConstraint` at reflection time:
+
+.. sourcecode:: python
 
   Table('mytable', metadata,
         ForeignKeyConstraint(['other_id'], ['othertable.other_id']),
@@ -699,7 +745,9 @@ specify this new flag, SQLAlchemy emits the "NULL" specifier explicitly with
 any TIMESTAMP column that does not specify ``nullable=False``.   In order
 to accommodate newer databases that specify ``explicit_defaults_for_timestamp``,
 SQLAlchemy also emits NOT NULL for TIMESTAMP columns that do specify
-``nullable=False``.   The following example illustrates::
+``nullable=False``.   The following example illustrates:
+
+.. sourcecode:: python
 
     from sqlalchemy import MetaData, Integer, Table, Column, text
     from sqlalchemy.dialects.mysql import TIMESTAMP

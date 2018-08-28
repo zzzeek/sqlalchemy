@@ -29,7 +29,9 @@ The example illustrates:
 The implementation is limited to only public, well known
 and simple to use extension points.
 
-E.g.::
+E.g.:
+
+.. sourcecode:: python
 
     print session.query(Road).filter(Road.road_geom.intersects(r1.road_geom)).all()
 

@@ -62,7 +62,9 @@ Using the AUTOINCREMENT Keyword
 
 To specifically render the AUTOINCREMENT keyword on the primary key column
 when rendering DDL, add the flag ``sqlite_autoincrement=True`` to the Table
-construct::
+construct:
+
+.. sourcecode:: python
 
     Table('sometable', metadata,
             Column('id', Integer, primary_key=True),
@@ -85,7 +87,9 @@ emitting the initial ``CREATE TABLE`` statement in order for the autoincrement
 behavior to be available.
 
 One approach to achieve this is to use :class:`.Integer` on SQLite
-only using :meth:`.TypeEngine.with_variant`::
+only using :meth:`.TypeEngine.with_variant`:
+
+.. sourcecode:: python
 
     table = Table(
         "my_table", metadata,
@@ -93,7 +97,9 @@ only using :meth:`.TypeEngine.with_variant`::
     )
 
 Another is to use a subclass of :class:`.BigInteger` that overrides its DDL name
-to be ``INTEGER`` when compiled against SQLite::
+to be ``INTEGER`` when compiled against SQLite:
+
+.. sourcecode:: python
 
     from sqlalchemy import BigInteger
     from sqlalchemy.ext.compiler import compiles
@@ -252,7 +258,9 @@ Constraint checking on SQLite has three prerequisites:
   connections before use.
 
 SQLAlchemy allows for the ``PRAGMA`` statement to be emitted automatically for
-new connections through the usage of events::
+new connections through the usage of events:
+
+.. sourcecode:: python
 
     from sqlalchemy.engine import Engine
     from sqlalchemy import event
@@ -339,7 +347,9 @@ Partial Indexes
 ---------------
 
 A partial index, e.g. one which uses a WHERE clause, can be specified
-with the DDL system using the argument ``sqlite_where``::
+with the DDL system using the argument ``sqlite_where``:
+
+.. sourcecode:: python
 
     tbl = Table('testtbl', m, Column('data', Integer))
     idx = Index('test_idx1', tbl.c.data,
@@ -369,7 +379,9 @@ requires that SQLAlchemy filter out these dots in result sets.
     of SQLite.  SQLAlchemy as of **1.1** automatically disables its internal
     workarounds based on detection of this version.
 
-The bug, entirely outside of SQLAlchemy, can be illustrated thusly::
+The bug, entirely outside of SQLAlchemy, can be illustrated thusly:
+
+.. sourcecode:: python
 
     import sqlite3
 
@@ -406,8 +418,9 @@ when the UNION is not present.
 
 SQLAlchemy relies upon column names being predictable in how they match
 to the original statement, so the SQLAlchemy dialect has no choice but
-to filter these out::
+to filter these out:
 
+.. sourcecode:: python
 
     from sqlalchemy import create_engine
 
@@ -429,7 +442,9 @@ to filter these out::
     assert result.keys() == ["a", "b"]
 
 Note that above, even though SQLAlchemy filters out the dots, *both
-names are still addressable*::
+names are still addressable*:
+
+.. sourcecode:: pycon
 
     >>> row = result.first()
     >>> row["a"]
@@ -447,7 +462,9 @@ In the very specific case where
 an application is forced to use column names that contain dots, and the
 functionality of :meth:`.ResultProxy.keys` and :meth:`.RowProxy.keys()`
 is required to return these dotted names unmodified, the ``sqlite_raw_colnames``
-execution option may be provided, either on a per-:class:`.Connection` basis::
+execution option may be provided, either on a per-:class:`.Connection` basis:
+
+.. sourcecode:: python
 
     result = conn.execution_options(sqlite_raw_colnames=True).execute('''
         select x.a, x.b from x where a=1
@@ -456,7 +473,9 @@ execution option may be provided, either on a per-:class:`.Connection` basis::
     ''')
     assert result.keys() == ["x.a", "x.b"]
 
-or on a per-:class:`.Engine` basis::
+or on a per-:class:`.Engine` basis:
+
+.. sourcecode:: python
 
     engine = create_engine("sqlite://", execution_options={"sqlite_raw_colnames": True})
 
@@ -539,7 +558,9 @@ class DATETIME(_DateTimeMixin, sqltypes.DateTime):
         2011-03-15 12:05:57.10558
 
     The storage format can be customized to some degree using the
-    ``storage_format`` and ``regexp`` parameters, such as::
+    ``storage_format`` and ``regexp`` parameters, such as:
+
+    .. sourcecode:: python
 
         import re
         from sqlalchemy.dialects.sqlite import DATETIME
@@ -632,7 +653,9 @@ class DATE(_DateTimeMixin, sqltypes.Date):
         2011-03-15
 
     The storage format can be customized to some degree using the
-    ``storage_format`` and ``regexp`` parameters, such as::
+    ``storage_format`` and ``regexp`` parameters, such as:
+
+    .. sourcecode:: python
 
         import re
         from sqlalchemy.dialects.sqlite import DATE
@@ -693,7 +716,9 @@ class TIME(_DateTimeMixin, sqltypes.Time):
         12:05:57.10558
 
     The storage format can be customized to some degree using the
-    ``storage_format`` and ``regexp`` parameters, such as::
+    ``storage_format`` and ``regexp`` parameters, such as:
+
+    .. sourcecode:: python
 
         import re
         from sqlalchemy.dialects.sqlite import TIME

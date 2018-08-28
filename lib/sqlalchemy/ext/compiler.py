@@ -12,7 +12,9 @@ Synopsis
 
 Usage involves the creation of one or more
 :class:`~sqlalchemy.sql.expression.ClauseElement` subclasses and one or
-more callables defining its compilation::
+more callables defining its compilation:
+
+.. sourcecode:: python
 
     from sqlalchemy.ext.compiler import compiles
     from sqlalchemy.sql.expression import ColumnClause
@@ -27,7 +29,9 @@ more callables defining its compilation::
 Above, ``MyColumn`` extends :class:`~sqlalchemy.sql.expression.ColumnClause`,
 the base expression element for named column objects. The ``compiles``
 decorator registers itself with the ``MyColumn`` class so that it is invoked
-when the object is compiled to a string::
+when the object is compiled to a string:
+
+.. sourcecode:: python
 
     from sqlalchemy import select
 
@@ -42,7 +46,9 @@ Dialect-specific compilation rules
 ==================================
 
 Compilers can also be made dialect-specific. The appropriate compiler will be
-invoked for the dialect in use::
+invoked for the dialect in use:
+
+.. sourcecode:: python
 
     from sqlalchemy.schema import DDLElement
 
@@ -73,7 +79,9 @@ can be inspected for any information about the in-progress compilation,
 including ``compiler.dialect``, ``compiler.statement`` etc. The
 :class:`~sqlalchemy.sql.compiler.SQLCompiler` and
 :class:`~sqlalchemy.sql.compiler.DDLCompiler` both include a ``process()``
-method which can be used for compilation of embedded attributes::
+method which can be used for compilation of embedded attributes:
+
+.. sourcecode:: python
 
     from sqlalchemy.sql.expression import Executable, ClauseElement
 
@@ -115,7 +123,9 @@ SQL and DDL constructs are each compiled using different base compilers -
 ``SQLCompiler`` and ``DDLCompiler``.   A common need is to access the
 compilation rules of SQL expressions from within a DDL expression. The
 ``DDLCompiler`` includes an accessor ``sql_compiler`` for this reason, such as
-below where we generate a CHECK constraint that embeds a SQL expression::
+below where we generate a CHECK constraint that embeds a SQL expression:
+
+.. sourcecode:: python
 
     @compiles(MyConstraint)
     def compile_my_constraint(constraint, ddlcompiler, **kw):
@@ -154,7 +164,9 @@ for the statement to function with "connectionless" execution
 
 Currently a quick way to do this is to subclass :class:`.Executable`, then
 add the "autocommit" flag to the ``_execution_options`` dictionary (note this
-is a "frozen" dictionary which supplies a generative ``union()`` method)::
+is a "frozen" dictionary which supplies a generative ``union()`` method):
+
+.. sourcecode:: python
 
     from sqlalchemy.sql.expression import Executable, ClauseElement
 
@@ -165,7 +177,9 @@ is a "frozen" dictionary which supplies a generative ``union()`` method)::
 More succinctly, if the construct is truly similar to an INSERT, UPDATE, or
 DELETE, :class:`.UpdateBase` can be used, which already is a subclass
 of :class:`.Executable`, :class:`.ClauseElement` and includes the
-``autocommit`` flag::
+``autocommit`` flag:
+
+.. sourcecode:: python
 
     from sqlalchemy.sql.expression import UpdateBase
 
@@ -194,7 +208,9 @@ as ``insert()`` or ``select()``).
 Within the new compilation function, to get at the "original" compilation
 routine, use the appropriate visit_XXX method - this
 because compiler.process() will call upon the overriding routine and cause
-an endless loop.   Such as, to add "prefix" to all insert statements::
+an endless loop.   Such as, to add "prefix" to all insert statements:
+
+.. sourcecode:: python
 
     from sqlalchemy.sql.expression import Insert
 
@@ -211,7 +227,9 @@ Changing Compilation of Types
 =============================
 
 ``compiler`` works for types, too, such as below where we implement the
-MS-SQL specific 'max' keyword for ``String``/``VARCHAR``::
+MS-SQL specific 'max' keyword for ``String``/``VARCHAR``:
+
+.. sourcecode:: python
 
     @compiles(String, 'mssql')
     @compiles(VARCHAR, 'mssql')
@@ -246,7 +264,9 @@ A synopsis is as follows:
   :class:`~sqlalchemy.sql.expression.ColumnElement` classes want to have a
   ``type`` member which is expression's return type.  This can be established
   at the instance level in the constructor, or at the class level if its
-  generally constant::
+  generally constant:
+
+  .. sourcecode:: python
 
       class timestamp(ColumnElement):
           type = TIMESTAMP()
@@ -256,7 +276,9 @@ A synopsis is as follows:
   function or stored procedure type of call. Since most databases support
   statements along the line of "SELECT FROM <some function>"
   ``FunctionElement`` adds in the ability to be used in the FROM clause of a
-  ``select()`` construct::
+  ``select()`` construct:
+
+  .. sourcecode:: python
 
       from sqlalchemy.sql.expression import FunctionElement
 
@@ -299,7 +321,9 @@ savings ends, without timezones because timezones are like character
 encodings - they're best applied only at the endpoints of an application
 (i.e. convert to UTC upon user input, re-apply desired timezone upon display).
 
-For PostgreSQL and Microsoft SQL Server::
+For PostgreSQL and Microsoft SQL Server:
+
+.. sourcecode:: python
 
     from sqlalchemy.sql import expression
     from sqlalchemy.ext.compiler import compiles
@@ -316,7 +340,9 @@ For PostgreSQL and Microsoft SQL Server::
     def ms_utcnow(element, compiler, **kw):
         return "GETUTCDATE()"
 
-Example usage::
+Example usage:
+
+.. sourcecode:: python
 
     from sqlalchemy import (
                 Table, Column, Integer, String, DateTime, MetaData
@@ -334,7 +360,9 @@ Example usage::
 The "GREATEST" function is given any number of arguments and returns the one
 that is of the highest value - its equivalent to Python's ``max``
 function.  A SQL standard version versus a CASE based version which only
-accommodates two arguments::
+accommodates two arguments:
+
+.. sourcecode:: python
 
     from sqlalchemy.sql import expression
     from sqlalchemy.ext.compiler import compiles
@@ -360,7 +388,9 @@ accommodates two arguments::
             compiler.process(arg2),
         )
 
-Example usage::
+Example usage:
+
+.. sourcecode:: python
 
     Session.query(Account).\
             filter(
@@ -373,7 +403,9 @@ Example usage::
 ------------------
 
 Render a "false" constant expression, rendering as "0" on platforms that
-don't have a "false" constant::
+don't have a "false" constant:
+
+.. sourcecode:: python
 
     from sqlalchemy.sql import expression
     from sqlalchemy.ext.compiler import compiles
@@ -391,7 +423,9 @@ don't have a "false" constant::
     def int_false(element, compiler, **kw):
         return "0"
 
-Example usage::
+Example usage:
+
+.. sourcecode:: python
 
     from sqlalchemy import select, union_all
 

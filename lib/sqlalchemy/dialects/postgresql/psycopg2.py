@@ -68,14 +68,18 @@ Unix Domain Connections
 
 psycopg2 supports connecting via Unix domain connections.   When the ``host``
 portion of the URL is omitted, SQLAlchemy passes ``None`` to psycopg2,
-which specifies Unix-domain communication rather than TCP/IP communication::
+which specifies Unix-domain communication rather than TCP/IP communication:
+
+.. sourcecode:: python
 
     create_engine("postgresql+psycopg2://user:password@/dbname")
 
 By default, the socket file used is to connect to a Unix-domain socket
 in ``/tmp``, or whatever socket directory was specified when PostgreSQL
 was built.  This value can be overridden by passing a pathname to psycopg2,
-using ``host`` as an additional keyword argument::
+using ``host`` as an additional keyword argument:
+
+.. sourcecode:: python
 
     create_engine("postgresql+psycopg2://user:password@/dbname?\
 host=/var/lib/postgresql")
@@ -121,7 +125,9 @@ which have been shown in benchmarking to improve psycopg2's executemany()
 performance with INSERTS by multiple orders of magnitude.   SQLAlchemy
 allows this extension to be used for all ``executemany()`` style calls
 invoked by an :class:`.Engine` when used with multiple parameter sets,
-by adding the ``use_batch_mode`` flag to :func:`.create_engine`::
+by adding the ``use_batch_mode`` flag to :func:`.create_engine`:
+
+.. sourcecode:: python
 
     engine = create_engine(
         "postgresql+psycopg2://scott:tiger@host/dbname",
@@ -158,7 +164,9 @@ A second way to affect the client encoding is to set it within Psycopg2
 locally.   SQLAlchemy will call psycopg2's
 :meth:`psycopg2:connection.set_client_encoding` method
 on all new connections based on the value passed to
-:func:`.create_engine` using the ``client_encoding`` parameter::
+:func:`.create_engine` using the ``client_encoding`` parameter:
+
+.. sourcecode:: python
 
     # set_client_encoding() setting;
     # works for *all* PostgreSQL versions
@@ -174,7 +182,9 @@ Note that the ``client_encoding`` setting as passed to :func:`.create_engine`
 is **not the same** as the more recently added ``client_encoding`` parameter
 now supported by libpq directly.   This is enabled when ``client_encoding``
 is passed directly to ``psycopg2.connect()``, and from SQLAlchemy is passed
-using the :paramref:`.create_engine.connect_args` parameter::
+using the :paramref:`.create_engine.connect_args` parameter:
+
+.. sourcecode:: python
 
     # libpq direct parameter setting;
     # only works for PostgreSQL **9.1 and above**
@@ -216,7 +226,9 @@ of these characters in a column name can lead to problems.
 
 There are two solutions to the issue of a :class:`.schema.Column` that contains
 one of these characters in its name.  One is to specify the
-:paramref:`.schema.Column.key` for columns that have such names::
+:paramref:`.schema.Column.key` for columns that have such names:
+
+.. sourcecode:: python
 
     measurement = Table('measurement', metadata,
         Column('Size (meters)', Integer, key='size_meters')
@@ -234,7 +246,9 @@ from the ``size_meters`` key as well.
 
 The other solution is to use a positional format; psycopg2 allows use of the
 "format" paramstyle, which can be passed to
-:paramref:`.create_engine.paramstyle`::
+:paramref:`.create_engine.paramstyle`:
+
+.. sourcecode:: python
 
     engine = create_engine(
         'postgresql://scott:tiger@localhost:5432/test', paramstyle='format')
@@ -295,7 +309,9 @@ NOTICE logging
 ---------------
 
 The psycopg2 dialect will log PostgreSQL NOTICE messages via the
-``sqlalchemy.dialects.postgresql`` logger::
+``sqlalchemy.dialects.postgresql`` logger:
+
+.. sourcecode:: python
 
     import logging
     logging.getLogger('sqlalchemy.dialects.postgresql').setLevel(logging.INFO)

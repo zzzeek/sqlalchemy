@@ -41,7 +41,9 @@ class VisitableType(type):
     having a `__visit_name__` attribute.
 
     The _compiler_dispatch attribute becomes an instance method which
-    looks approximately like the following::
+    looks approximately like the following:
+
+    .. sourcecode:: python
 
         def _compiler_dispatch (self, visitor, **kw):
             '''Look for an attribute named "visit_" + self.__visit_name__

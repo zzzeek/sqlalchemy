@@ -127,11 +127,15 @@ class Query(object):
     def __init__(self, entities, session=None):
         """Construct a :class:`.Query` directly.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             q = Query([User, Address], session=some_session)
 
-        The above is equivalent to::
+        The above is equivalent to:
+
+        .. sourcecode:: python
 
             q = some_session.query(User, Address)
 
@@ -563,7 +567,9 @@ class Query(object):
         means the columns are accessed via the ``.c.`` attribute.  The
         ``parts_alias`` object is an :func:`.orm.aliased` instance of the
         ``Part`` entity, so column-mapped attributes are available
-        directly::
+        directly:
+
+        .. sourcecode:: python
 
             from sqlalchemy.orm import aliased
 
@@ -698,7 +704,9 @@ class Query(object):
            the result-row invoking systems of :class:`.Query` itself, e.g.
            :meth:`.Query.first`, :meth:`.Query.all`, etc.   To execute
            a query using :meth:`.Query.with_labels`, invoke the
-           :attr:`.Query.statement` using :meth:`.Session.execute`::
+           :attr:`.Query.statement` using :meth:`.Session.execute`:
+
+           .. sourcecode:: python
 
                 result = session.execute(query.with_labels().statement)
 
@@ -813,12 +821,16 @@ class Query(object):
 
         Therefore in some cases, it may be helpful to disable
         eager loads, either unconditionally with
-        :meth:`.Query.enable_eagerloads`::
+        :meth:`.Query.enable_eagerloads`:
+
+        .. sourcecode:: python
 
             q = sess.query(Object).yield_per(100).enable_eagerloads(False)
 
         Or more selectively using :func:`.lazyload`; such as with
-        an asterisk to specify the default loader scheme::
+        an asterisk to specify the default loader scheme:
+
+        .. sourcecode:: python
 
             q = sess.query(Object).yield_per(100).\
                 options(lazyload('*'), joinedload(Object.some_related))
@@ -865,7 +877,9 @@ class Query(object):
         """Return an instance based on the given primary key identifier,
         or ``None`` if not found.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             my_user = session.query(User).get(5)
 
@@ -933,7 +947,9 @@ class Query(object):
 
         For performance reasons, while the :class:`.Query` must be
         instantiated, it may be instantiated with no entities, and the
-        mapper is passed::
+        mapper is passed:
+
+        .. sourcecode:: python
 
             obj = session.query()._identity_lookup(inspect(SomeClass), (1, ))
 
@@ -1142,7 +1158,9 @@ class Query(object):
         directly without necessarily using a :class:`.Session`.  Such a
         :class:`.Query` object, or any :class:`.Query` already associated
         with a different :class:`.Session`, can produce a new :class:`.Query`
-        object associated with a target session using this method::
+        object associated with a target session using this method:
+
+        .. sourcecode:: python
 
             from sqlalchemy.orm import Query
 
@@ -1159,11 +1177,15 @@ class Query(object):
         SELECT statement.
 
         :meth:`.Query.from_self` essentially turns the SELECT statement
-        into a SELECT of itself.  Given a query such as::
+        into a SELECT of itself.  Given a query such as:
+
+        .. sourcecode:: python
 
             q = session.query(User).filter(User.name.like('e%'))
 
-        Given the :meth:`.Query.from_self` version::
+        Given the :meth:`.Query.from_self` version:
+
+        .. sourcecode:: python
 
             q = session.query(User).filter(User.name.like('e%')).from_self()
 
@@ -1180,7 +1202,9 @@ class Query(object):
         There are lots of cases where :meth:`.Query.from_self` may be useful.
         A simple one is where above, we may want to apply a row LIMIT to
         the set of user objects we query against, and then apply additional
-        joins against that row-limited set::
+        joins against that row-limited set:
+
+        .. sourcecode:: python
 
             q = session.query(User).filter(User.name.like('e%')).\
                 limit(5).from_self().\
@@ -1206,7 +1230,9 @@ class Query(object):
         **automatic aliasing** to the entities inside the subquery, when
         they are referenced on the outside.  Above, if we continue to
         refer to the ``User`` entity without any additional aliasing applied
-        to it, those references wil be in terms of the subquery::
+        to it, those references wil be in terms of the subquery:
+
+        .. sourcecode:: python
 
             q = session.query(User).filter(User.name.like('e%')).\
                 limit(5).from_self().\
@@ -1241,7 +1267,9 @@ class Query(object):
         columns are being queried.   In our example, we want ``User.id``
         to be queried by the inner query, so that we can join to the
         ``Address`` entity on the outside, but we only wanted the outer
-        query to return the ``Address.email`` column::
+        query to return the ``Address.email`` column:
+
+        .. sourcecode:: python
 
             q = session.query(User).filter(User.name.like('e%')).\
                 limit(5).from_self(Address.email).\
@@ -1268,7 +1296,9 @@ class Query(object):
         the subquery using :func:`.contains_eager`, we need to add those
         columns.   Below illustrates a join of ``Address`` to ``User``,
         then a subquery, and then we'd like :func:`.contains_eager` to access
-        the ``User`` columns::
+        the ``User`` columns:
+
+        .. sourcecode:: python
 
             q = session.query(Address).join(Address.user).\
                 filter(User.name.like('e%'))
@@ -1384,7 +1414,9 @@ class Query(object):
         r"""Return a new :class:`.Query` replacing the SELECT list with the
         given entities.
 
-        e.g.::
+        e.g.:
+
+        .. sourcecode:: python
 
             # Users, filtered on some arbitrary criterion
             # and then ordered by related email address
@@ -1469,7 +1501,9 @@ class Query(object):
         """Return a new :class:`.Query` object transformed by
         the given function.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             def filter_something(criterion):
                 def transform(q):
@@ -1582,7 +1616,9 @@ class Query(object):
         options such as ``FOR UPDATE NOWAIT`` or ``LOCK IN SHARE MODE``
         can take effect.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             q = sess.query(User).with_for_update(nowait=True, of=User)
 
@@ -1628,13 +1664,17 @@ class Query(object):
         r"""apply the given filtering criterion to a copy
         of this :class:`.Query`, using SQL expressions.
 
-        e.g.::
+        e.g.:
+
+        .. sourcecode:: python
 
             session.query(MyClass).filter(MyClass.name == 'some name')
 
         Multiple criteria may be specified as comma separated; the effect
         is that they will be joined together using the :func:`.and_`
-        function::
+        function:
+
+        .. sourcecode:: python
 
             session.query(MyClass).\
                 filter(MyClass.name == 'some name', MyClass.id > 5)
@@ -1662,13 +1702,17 @@ class Query(object):
         r"""apply the given filtering criterion to a copy
         of this :class:`.Query`, using keyword expressions.
 
-        e.g.::
+        e.g.:
+
+        .. sourcecode:: python
 
             session.query(MyClass).filter_by(name = 'some name')
 
         Multiple criteria may be specified as comma separated; the effect
         is that they will be joined together using the :func:`.and_`
-        function::
+        function:
+
+        .. sourcecode:: python
 
             session.query(MyClass).\
                 filter_by(name = 'some name', id = 5)
@@ -1754,7 +1798,9 @@ class Query(object):
         :meth:`~.Query.group_by`.
 
         HAVING criterion makes it possible to use filters on aggregate
-        functions like COUNT, SUM, AVG, MAX, and MIN, eg.::
+        functions like COUNT, SUM, AVG, MAX, and MIN, eg.:
+
+        .. sourcecode:: python
 
             q = session.query(User.id).\
                         join(User.addresses).\
@@ -1786,7 +1832,9 @@ class Query(object):
     def union(self, *q):
         """Produce a UNION of this Query against one or more queries.
 
-        e.g.::
+        e.g.:
+
+        .. sourcecode:: python
 
             q1 = sess.query(SomeClass).filter(SomeClass.foo=='bar')
             q2 = sess.query(SomeClass).filter(SomeClass.bar=='foo')
@@ -1794,7 +1842,9 @@ class Query(object):
             q3 = q1.union(q2)
 
         The method accepts multiple Query objects so as to control
-        the level of nesting.  A series of ``union()`` calls such as::
+        the level of nesting.  A series of ``union()`` calls such as:
+
+        .. sourcecode:: python
 
             x.union(y).union(z).all()
 
@@ -1803,7 +1853,9 @@ class Query(object):
             SELECT * FROM (SELECT * FROM (SELECT * FROM X UNION
                             SELECT * FROM y) UNION SELECT * FROM Z)
 
-        Whereas::
+        Whereas:
+
+        .. sourcecode:: python
 
             x.union(y, z).all()
 
@@ -1878,7 +1930,9 @@ class Query(object):
         of ``Address`` objects associated with each ``User``.   The most
         common usage of :meth:`~.Query.join` is to create a JOIN along this
         relationship, using the ``User.addresses`` attribute as an indicator
-        for how this should occur::
+        for how this should occur:
+
+        .. sourcecode:: python
 
             q = session.query(User).join(User.addresses)
 
@@ -1892,19 +1946,25 @@ class Query(object):
         how the "ON" portion of the JOIN should be constructed.  For a
         single-entity query such as the one above (i.e. we start by selecting
         only from ``User`` and nothing else), the relationship can also be
-        specified by its string name::
+        specified by its string name:
+
+        .. sourcecode:: python
 
             q = session.query(User).join("addresses")
 
         :meth:`~.Query.join` can also accommodate multiple
         "on clause" arguments to produce a chain of joins, such as below
-        where a join across four related entities is constructed::
+        where a join across four related entities is constructed:
+
+        .. sourcecode:: python
 
             q = session.query(User).join("orders", "items", "keywords")
 
         The above would be shorthand for three separate calls to
         :meth:`~.Query.join`, each using an explicit attribute to indicate
-        the source entity::
+        the source entity:
+
+        .. sourcecode:: python
 
             q = session.query(User).\
                     join(User.orders).\
@@ -1917,7 +1977,9 @@ class Query(object):
         or core selectable construct as a target.   In this usage,
         :meth:`~.Query.join` will attempt
         to create a JOIN along the natural foreign key relationship between
-        two entities::
+        two entities:
+
+        .. sourcecode:: python
 
             q = session.query(User).join(Address)
 
@@ -1926,7 +1988,9 @@ class Query(object):
         there are multiple foreign key linkages between them.   In the
         above calling form, :meth:`~.Query.join` is called upon to
         create the "on clause" automatically for us.  The target can
-        be any mapped entity or selectable, such as a :class:`.Table`::
+        be any mapped entity or selectable, such as a :class:`.Table`:
+
+        .. sourcecode:: python:
 
             q = session.query(User).join(addresses_table)
 
@@ -1939,7 +2003,9 @@ class Query(object):
         to create a distinct alias of ``Address``, and join
         to it using the ``target, onclause`` form, so that the
         alias can be specified explicitly as the target along with
-        the relationship to instruct how the ON clause should proceed::
+        the relationship to instruct how the ON clause should proceed:
+
+        .. sourcecode:: python
 
             a_alias = aliased(Address)
 
@@ -1962,7 +2028,9 @@ class Query(object):
         "on clause" expressions, not relying upon configured relationships
         at all.  Any SQL expression can be passed as the ON clause
         when using the two-argument form, which should refer to the target
-        entity in some way as well as an applicable source entity::
+        entity in some way as well as an applicable source entity:
+
+        .. sourcecode:: python
 
             q = session.query(User).join(Address, User.id==Address.user_id)
 
@@ -1982,7 +2050,9 @@ class Query(object):
         :meth:`~.Query.join`.   As noted previously, it also accepts
         :class:`.Table` constructs and other selectables such as
         :func:`.alias` and :func:`.select` constructs, with either the one
-        or two-argument forms::
+        or two-argument forms:
+
+        .. sourcecode:: python
 
             addresses_q = select([Address.user_id]).\
                         where(Address.email_address.endswith("@bar.com")).\
@@ -1995,7 +2065,9 @@ class Query(object):
         :meth:`~sqlalchemy.orm.relationship` -driven ON clause to the target
         selectable. Below we construct a JOIN from ``User`` to a subquery
         against ``Address``, allowing the relationship denoted by
-        ``User.addresses`` to *adapt* itself to the altered target::
+        ``User.addresses`` to *adapt* itself to the altered target:
+
+        .. sourcecode:: python
 
             address_subq = session.query(Address).\
                             filter(Address.email_address == 'ed@foo.com').\
@@ -2015,7 +2087,9 @@ class Query(object):
                 ) AS anon_1 ON user.id = anon_1.user_id
 
         The above form allows one to fall back onto an explicit ON
-        clause at any time::
+        clause at any time:
+
+        .. sourcecode:: python
 
             q = session.query(User).\
                     join(address_subq, User.id==address_subq.c.user_id)
@@ -2028,7 +2102,9 @@ class Query(object):
         Below we construct a query against ``Address`` but can still
         make usage of ``User.addresses`` as our ON clause by instructing
         the :class:`.Query` to select first from the ``User``
-        entity::
+        entity:
+
+        .. sourcecode:: python
 
             q = session.query(Address).select_from(User).\
                             join(User.addresses).\
@@ -2045,7 +2121,9 @@ class Query(object):
         :meth:`~.Query.join` can construct anonymous aliases
         using the ``aliased=True`` flag.  This feature is useful
         when a query is being joined algorithmically, such as
-        when querying self-referentially to an arbitrary depth::
+        when querying self-referentially to an arbitrary depth:
+
+        .. sourcecode:: python
 
             q = session.query(Node).\
                     join("children", "children", aliased=True)
@@ -2053,7 +2131,9 @@ class Query(object):
         When ``aliased=True`` is used, the actual "alias" construct
         is not explicitly available.  To work with it, methods such as
         :meth:`.Query.filter` will adapt the incoming entity to
-        the last join point::
+        the last join point:
+
+        .. sourcecode:: python
 
             q = session.query(Node).\
                     join("children", "children", aliased=True).\
@@ -2062,7 +2142,9 @@ class Query(object):
         When using automatic aliasing, the ``from_joinpoint=True``
         argument can allow a multi-node join to be broken into
         multiple calls to :meth:`~.Query.join`, so that
-        each path along the way can be further filtered::
+        each path along the way can be further filtered:
+
+        .. sourcecode:: python
 
             q = session.query(Node).\
                     join("children", aliased=True).\
@@ -2071,7 +2153,9 @@ class Query(object):
                     filter(Node.name == 'grandchild 1')
 
         The filtering aliases above can then be reset back to the
-        original ``Node`` entity using :meth:`~.Query.reset_joinpoint`::
+        original ``Node`` entity using :meth:`~.Query.reset_joinpoint`:
+
+        .. sourcecode:: python
 
             q = session.query(Node).\
                     join("children", "children", aliased=True).\
@@ -2525,7 +2609,9 @@ class Query(object):
         point" is the leftmost entity in the :class:`~.Query` object's
         list of entities to be selected.
 
-        A typical example::
+        A typical example:
+
+        .. sourcecode:: python
 
             q = session.query(Address).select_from(User).\
                 join(User.addresses).\
@@ -2573,7 +2659,9 @@ class Query(object):
         of the entity to the target selectable.
 
         Given a case for :func:`.aliased` such as selecting ``User``
-        objects from a SELECT statement::
+        objects from a SELECT statement:
+
+        .. sourcecode:: python
 
             select_stmt = select([User]).where(User.id == 7)
             user_alias = aliased(User, select_stmt)
@@ -2584,7 +2672,9 @@ class Query(object):
         Above, we apply the ``user_alias`` object explicitly throughout the
         query.  When it's not feasible for ``user_alias`` to be referenced
         explicitly in many places, :meth:`.Query.select_entity_from` may be
-        used at the start of the query to adapt the existing ``User`` entity::
+        used at the start of the query to adapt the existing ``User`` entity:
+
+        .. sourcecode:: python
 
             q = session.query(User).\
                 select_entity_from(select_stmt).\
@@ -2621,7 +2711,9 @@ class Query(object):
         we can make use of the :func:`.text` construct.  However, the
         :func:`.text` construct needs to be aligned with the columns of our
         entity, which is achieved by making use of the
-        :meth:`.TextClause.columns` method::
+        :meth:`.TextClause.columns` method:
+
+        .. sourcecode:: python
 
             text_stmt = text("select id, name from user").columns(
                 User.id, User.name)
@@ -2635,7 +2727,9 @@ class Query(object):
         a view ``user_view`` also returns rows from ``user``.    If
         we reflect this view into a :class:`.Table`, this view has no
         relationship to the :class:`.Table` to which we are mapped, however
-        we can use name matching to select from it::
+        we can use name matching to select from it:
+
+        .. sourcecode:: python
 
             user_view = Table('user_view', metadata,
                               autoload_with=engine)
@@ -2699,7 +2793,9 @@ class Query(object):
         alternative to using ``LIMIT``/``OFFSET`` to get a slice of the
         query.
 
-        For example, ::
+        For example, :
+
+        .. sourcecode:: python
 
             session.query(User).order_by(User.id).slice(1, 3)
 
@@ -2787,7 +2883,9 @@ class Query(object):
         :param \*prefixes: optional prefixes, typically strings,
          not using any commas.   In particular is useful for MySQL keywords.
 
-        e.g.::
+        e.g.:
+
+        .. sourcecode:: python
 
             query = sess.query(User.name).\
                 prefix_with('HIGH_PRIORITY').\
@@ -3028,7 +3126,9 @@ class Query(object):
         """Return metadata about the columns which would be
         returned by this :class:`.Query`.
 
-        Format is a list of dictionaries::
+        Format is a list of dictionaries:
+
+        .. sourcecode:: python
 
             user_alias = aliased(User, name='user2')
             q = sess.query(User, User.id, user_alias)
@@ -3089,7 +3189,9 @@ class Query(object):
         """Given a ResultProxy cursor as returned by connection.execute(),
         return an ORM result as an iterator.
 
-        e.g.::
+        e.g.:
+
+        .. sourcecode:: python
 
             result = engine.execute("select * from users")
             for u in session.query(User).instances(result):
@@ -3150,7 +3252,9 @@ class Query(object):
         """A convenience method that turns a query into an EXISTS subquery
         of the form EXISTS (SELECT 1 FROM ... WHERE ...).
 
-        e.g.::
+        e.g.:
+
+        .. sourcecode:: python
 
             q = session.query(User).filter(User.name == 'fred')
             session.query(q.exists())
@@ -3161,14 +3265,18 @@ class Query(object):
                 SELECT 1 FROM users WHERE users.name = :name_1
             ) AS anon_1
 
-        The EXISTS construct is usually used in the WHERE clause::
+        The EXISTS construct is usually used in the WHERE clause:
+
+        .. sourcecode:: python
 
             session.query(User.id).filter(q.exists()).scalar()
 
         Note that some databases such as SQL Server don't allow an
         EXISTS expression to be present in the columns clause of a
         SELECT.    To select a simple boolean value based on the exists
-        as a WHERE, use :func:`.literal`::
+        as a WHERE, use :func:`.literal`:
+
+        .. sourcecode:: python
 
             from sqlalchemy import literal
 
@@ -3205,7 +3313,9 @@ class Query(object):
         or to use other aggregate functions,
         use :attr:`~sqlalchemy.sql.expression.func`
         expressions in conjunction
-        with :meth:`~.Session.query`, i.e.::
+        with :meth:`~.Session.query`, i.e.:
+
+        .. sourcecode:: python
 
             from sqlalchemy import func
 
@@ -3232,7 +3342,9 @@ class Query(object):
 
         Deletes rows matched by this query from the database.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             sess.query(User).filter(User.age == 25).\
                 delete(synchronize_session=False)
@@ -3283,7 +3395,9 @@ class Query(object):
               condition between those tables, even in mappings where
               this is normally automatic. E.g. if a class ``Engineer``
               subclasses ``Employee``, a DELETE against the ``Employee``
-              table would look like::
+              table would look like:
+
+              .. sourcecode:: python
 
                     session.query(Engineer).\
                         filter(Engineer.id == Employee.id).\
@@ -3356,7 +3470,9 @@ class Query(object):
 
         Updates rows matched by this query in the database.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             sess.query(User).filter(User.age == 25).\
                 update({User.age: User.age - 10}, synchronize_session=False)
@@ -3452,7 +3568,9 @@ class Query(object):
               this is normally automatic. E.g. if a class ``Engineer``
               subclasses ``Employee``, an UPDATE of the ``Engineer``
               local table using criteria against the ``Employee``
-              local table might look like::
+              local table might look like:
+
+              .. sourcecode:: python
 
                     session.query(Engineer).\
                         filter(Engineer.id == Employee.id).\
@@ -3913,7 +4031,9 @@ class Bundle(InspectionAttr):
     def __init__(self, name, *exprs, **kw):
         r"""Construct a new :class:`.Bundle`.
 
-        e.g.::
+        e.g.:
+
+        .. sourcecode:: python
 
             bn = Bundle("mybundle", MyClass.x, MyClass.y)
 
@@ -3938,13 +4058,17 @@ class Bundle(InspectionAttr):
     columns = None
     """A namespace of SQL expressions referred to by this :class:`.Bundle`.
 
-        e.g.::
+        e.g.:
+        
+        .. sourcecode:: python
 
             bn = Bundle("mybundle", MyClass.x, MyClass.y)
 
             q = sess.query(bn).filter(bn.c.x == 5)
 
-        Nesting of bundles is also supported::
+        Nesting of bundles is also supported:
+        
+        .. sourcecode:: python
 
             b1 = Bundle("b1",
                     Bundle('b2', MyClass.a, MyClass.b),
@@ -4311,7 +4435,9 @@ class AliasOption(interfaces.MapperOption):
         This is a seldom-used option to suit the
         very rare case that :func:`.contains_eager`
         is being used in conjunction with a user-defined SELECT
-        statement that aliases the parent table.  E.g.::
+        statement that aliases the parent table.  E.g.:
+
+        .. sourcecode:: python
 
             # define an aliased UNION called 'ulist'
             ulist = users.select(users.c.user_id==7).\

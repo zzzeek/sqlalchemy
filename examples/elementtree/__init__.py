@@ -7,7 +7,9 @@ native cElementTree as well as lxml, and can be adapted to
 suit any kind of DOM representation system. Querying along
 xpath-like strings is illustrated as well.
 
-E.g.::
+E.g.:
+
+.. sourcecode:: python
 
     # parse an XML file and persist in the database
     doc = ElementTree.parse("test.xml")

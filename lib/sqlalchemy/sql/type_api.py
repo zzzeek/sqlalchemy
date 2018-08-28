@@ -159,7 +159,9 @@ class TypeEngine(Visitable):
         """Return a copy of this type which has the :attr:`.should_evaluate_none`
         flag set to True.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
                 Table(
                     'some_table', metadata,
@@ -395,7 +397,9 @@ class TypeEngine(Visitable):
         """Produce a new type object that will utilize the given
         type when applied to the dialect of the given name.
 
-        e.g.::
+        e.g.:
+
+        .. sourcecode:: python
 
             from sqlalchemy.types import String
             from sqlalchemy.dialects import mysql
@@ -604,7 +608,9 @@ class UserDefinedType(util.with_metaclass(VisitableCheckKWArg, TypeEngine)):
 
     This should be the base of new types.  Note that
     for most cases, :class:`.TypeDecorator` is probably
-    more appropriate::
+    more appropriate:
+
+    .. sourcecode:: python
 
       import sqlalchemy.types as types
 
@@ -625,7 +631,9 @@ class UserDefinedType(util.with_metaclass(VisitableCheckKWArg, TypeEngine)):
                   return value
               return process
 
-    Once the type is made, it's immediately usable::
+    Once the type is made, it's immediately usable:
+
+    .. sourcecode:: python
 
       table = Table('foo', meta,
           Column('id', Integer, primary_key=True),
@@ -762,7 +770,9 @@ class TypeDecorator(SchemaEventTarget, TypeEngine):
     built-in types as it ensures that all required functionality of
     the underlying type is kept in place.
 
-    Typical usage::
+    Typical usage:
+
+    .. sourcecode:: python
 
       import sqlalchemy.types as types
 
@@ -792,7 +802,9 @@ class TypeDecorator(SchemaEventTarget, TypeEngine):
     used may want to define the :meth:`TypeDecorator.coerce_compared_value`
     method. This is used to give the expression system a hint when coercing
     Python objects into bind parameters within expressions. Consider this
-    expression::
+    expression:
+
+    .. sourcecode:: python
 
         mytable.c.somecol + datetime.date(2009, 5, 15)
 
@@ -805,7 +817,9 @@ class TypeDecorator(SchemaEventTarget, TypeEngine):
     However, in the case of ``TypeDecorator``, we are usually changing an
     incoming Python type to something new - ``TypeDecorator`` by default will
     "coerce" the non-typed side to be the same type as itself. Such as below,
-    we define an "epoch" type that stores a date value as an integer::
+    we define an "epoch" type that stores a date value as an integer:
+
+    .. sourcecode:: python
 
         class MyEpochType(types.TypeDecorator):
             impl = types.Integer
@@ -825,7 +839,9 @@ class TypeDecorator(SchemaEventTarget, TypeEngine):
     :meth:`~TypeDecorator.coerce_compared_value` method, which returns a type
     that should be used for the value of the expression. Below we set it such
     that an integer value will be treated as an ``Integer``, and any other
-    value is assumed to be a date and will be treated as a ``MyEpochType``::
+    value is assumed to be a date and will be treated as a ``MyEpochType``:
+
+    .. sourcecode:: python
 
         def coerce_compared_value(self, op, value):
             if isinstance(value, int):
@@ -842,7 +858,9 @@ class TypeDecorator(SchemaEventTarget, TypeEngine):
        this method **must** be overridden.  A key example is when decorating
        the :class:`.postgresql.JSON` and :class:`.postgresql.JSONB` types;
        the default rules of :meth:`.TypeEngine.coerce_compared_value` should
-       be used in order to deal with operators like index operations::
+       be used in order to deal with operators like index operations:
+
+       .. sourcecode:: python
 
             class MyJsonType(TypeDecorator):
                 impl = postgresql.JSON
@@ -1272,7 +1290,9 @@ class TypeDecorator(SchemaEventTarget, TypeEngine):
         By default, returns self.   This method is called by
         the expression system when an object using this type is
         on the left or right side of an expression against a plain Python
-        object which does not yet have a SQLAlchemy type assigned::
+        object which does not yet have a SQLAlchemy type assigned:
+
+        .. sourcecode:: python
 
             expr = table.c.somecolumn + 35
 

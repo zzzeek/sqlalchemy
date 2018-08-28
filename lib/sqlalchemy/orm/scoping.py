@@ -109,7 +109,9 @@ class scoped_session(object):
         """return a class property which produces a :class:`.Query` object
         against the class and the current :class:`.Session` when called.
 
-        e.g.::
+        e.g.:
+
+        .. sourcecode:: python
 
             Session = scoped_session(sessionmaker())
 

@@ -20,7 +20,9 @@ In this demo, the following techniques are illustrated:
   a Query, including the ability to invoke the options
   deep within an object graph when lazy loads occur.
 
-E.g.::
+E.g.:
+
+.. sourcecode:: python
 
     # query for Person objects, specifying cache
     q = Session.query(Person).options(FromCache("default"))

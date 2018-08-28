@@ -1,9 +1,11 @@
 """Mapping a polymorphic-valued vertical table as a dictionary.
 
 Builds upon the dictlike.py example to also add differently typed
-columns to the "fact" table, e.g.::
+columns to the "fact" table, e.g.:
 
-  Table('properties', metadata
+.. sourcecode:: python
+
+    Table('properties', metadata
         Column('owner_id', Integer, ForeignKey('owner.id'),
                primary_key=True),
         Column('key', UnicodeText),

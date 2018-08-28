@@ -257,7 +257,9 @@ class DontWrapMixin(object):
     will not be wrapped inside of :exc:`.StatementError` if the error is
     emitted within the process of executing a statement.
 
-    E.g.::
+    E.g.:
+
+    .. sourcecode:: python
 
         from sqlalchemy.exc import DontWrapMixin
 

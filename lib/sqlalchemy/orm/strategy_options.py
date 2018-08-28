@@ -32,17 +32,23 @@ class Load(Generative, MapperOption):
 
     To use :class:`.Load` directly, instantiate it with the target mapped
     class as the argument.   This style of usage is
-    useful when dealing with a :class:`.Query` that has multiple entities::
+    useful when dealing with a :class:`.Query` that has multiple entities:
+
+    .. sourcecode:: python
 
         myopt = Load(MyClass).joinedload("widgets")
 
     The above ``myopt`` can now be used with :meth:`.Query.options`, where it
-    will only take effect for the ``MyClass`` entity::
+    will only take effect for the ``MyClass`` entity:
+
+    .. sourcecode:: python
 
         session.query(MyClass, MyOtherClass).options(myopt)
 
     One case where :class:`.Load` is useful as public API is when specifying
-    "wildcard" options that only take effect for a certain class::
+    "wildcard" options that only take effect for a certain class:
+
+    .. sourcecode:: python
 
         session.query(Order).options(Load(Order).lazyload('*'))
 
@@ -563,14 +569,17 @@ class _UnboundLoad(Load):
         OTOH refers to a complete path.   This method reconciles from a
         given Query into a Load.
 
-        Example::
+        Example:
 
+            .. sourcecode:: python
 
             query = session.query(User).options(
                 joinedload("orders").joinedload("items"))
 
         The above options will be an _UnboundLoad object along the lines
-        of (note this is not the exact API of _UnboundLoad)::
+        of (note this is not the exact API of _UnboundLoad):
+
+        .. sourcecode:: python
 
             _UnboundLoad(
                 _to_bind=[
@@ -580,7 +589,9 @@ class _UnboundLoad(Load):
             )
 
         After this method, we get something more like this (again this is
-        not exact API)::
+        not exact API):
+
+        .. sourcecode:: python
 
             Load(
                 User,
@@ -766,7 +777,9 @@ See :func:`.orm.%(name)s` for usage examples.
 
 .. deprecated:: 0.9.0
 
-    The "_all()" style is replaced by method chaining, e.g.::
+    The "_all()" style is replaced by method chaining, e.g.:
+
+    .. sourcecode:: python
 
         session.query(MyClass).options(
             %(name)s("someattribute").%(name)s("anotherattribute")
@@ -785,7 +798,9 @@ def contains_eager(loadopt, attr, alias=None):
     both method-chained and standalone operation.
 
     The option is used in conjunction with an explicit join that loads
-    the desired rows, i.e.::
+    the desired rows, i.e.:
+
+    .. sourcecode:: python
 
         sess.query(Order).\
                 join(Order.user).\
@@ -798,7 +813,9 @@ def contains_eager(loadopt, attr, alias=None):
     :func:`.contains_eager` also accepts an `alias` argument, which is the
     string name of an alias, an :func:`~sqlalchemy.sql.expression.alias`
     construct, or an :func:`~sqlalchemy.orm.aliased` construct. Use this when
-    the eagerly-loaded rows are to come from an aliased table::
+    the eagerly-loaded rows are to come from an aliased table:
+
+    .. sourcecode:: python
 
         user_alias = aliased(User)
         sess.query(Order).\
@@ -807,7 +824,9 @@ def contains_eager(loadopt, attr, alias=None):
 
     When using :func:`.contains_eager` in conjunction with inherited
     subclasses, the :meth:`.RelationshipProperty.of_type` modifier should
-    also be used in order to set up the pathing properly::
+    also be used in order to set up the pathing properly:
+
+    .. sourcecode:: python
 
         sess.query(Company).\
             outerjoin(Company.employees.of_type(Manager)).\
@@ -858,20 +877,26 @@ def load_only(loadopt, *attrs):
     both method-chained and standalone operation.
 
     Example - given a class ``User``, load only the ``name`` and ``fullname``
-    attributes::
+    attributes:
+
+    .. sourcecode:: python
 
         session.query(User).options(load_only("name", "fullname"))
 
     Example - given a relationship ``User.addresses -> Address``, specify
     subquery loading for the ``User.addresses`` collection, but on each
-    ``Address`` object load only the ``email_address`` attribute::
+    ``Address`` object load only the ``email_address`` attribute:
+
+    .. sourcecode:: python
 
         session.query(User).options(
                 subqueryload("addresses").load_only("email_address")
         )
 
     For a :class:`.Query` that has multiple entities, the lead entity can be
-    specifically referred to using the :class:`.Load` constructor::
+    specifically referred to using the :class:`.Load` constructor:
+
+    .. sourcecode:: python
 
         session.query(User, Address).join(User.addresses).options(
                     Load(User).load_only("name", "fullname"),
@@ -905,7 +930,9 @@ def joinedload(loadopt, attr, innerjoin=None):
     This function is part of the :class:`.Load` interface and supports
     both method-chained and standalone operation.
 
-    examples::
+    examples:
+
+    .. sourcecode:: python
 
         # joined-load the "orders" collection on "User"
         query(User).options(joinedload(User.orders))
@@ -920,12 +947,16 @@ def joinedload(loadopt, attr, innerjoin=None):
             lazyload(Order.items).joinedload(Item.keywords))
 
     :param innerjoin: if ``True``, indicates that the joined eager load should
-     use an inner join instead of the default of left outer join::
+     use an inner join instead of the default of left outer join:
+
+     .. sourcecode:: python
 
         query(Order).options(joinedload(Order.user, innerjoin=True))
 
      In order to chain multiple eager joins together where some may be
-     OUTER and others INNER, right-nested joins are used to link them::
+     OUTER and others INNER, right-nested joins are used to link them:
+
+     .. sourcecode:: python
 
         query(A).options(
             joinedload(A.bs, innerjoin=False).
@@ -941,7 +972,9 @@ def joinedload(loadopt, attr, innerjoin=None):
      This indicates that an INNER JOIN should be used, *unless* the join
      is linked to a LEFT OUTER JOIN to the left, in which case it
      will render as LEFT OUTER JOIN.  For example, supposing ``A.bs``
-     is an outerjoin::
+     is an outerjoin:
+
+     .. sourcecode:: python
 
         query(A).options(
             joinedload(A.bs).
@@ -1009,7 +1042,9 @@ def subqueryload(loadopt, attr):
     This function is part of the :class:`.Load` interface and supports
     both method-chained and standalone operation.
 
-    examples::
+    examples:
+
+    .. sourcecode:: python
 
         # subquery-load the "orders" collection on "User"
         query(User).options(subqueryload(User.orders))
@@ -1052,7 +1087,9 @@ def selectinload(loadopt, attr):
     This function is part of the :class:`.Load` interface and supports
     both method-chained and standalone operation.
 
-    examples::
+    examples:
+
+    .. sourcecode:: python
 
         # selectin-load the "orders" collection on "User"
         query(User).options(selectinload(User.orders))
@@ -1217,7 +1254,9 @@ def defaultload(loadopt, attr):
     This method is used to link to other loader options further into
     a chain of attributes without altering the loader style of the links
     along the chain.  For example, to set joined eager loading for an
-    element of an element::
+    element of an element:
+
+    .. sourcecode:: python
 
         session.query(MyClass).options(
             defaultload(MyClass.someattribute).
@@ -1225,7 +1264,9 @@ def defaultload(loadopt, attr):
         )
 
     :func:`.defaultload` is also useful for setting column-level options
-    on a related class, namely that of :func:`.defer` and :func:`.undefer`::
+    on a related class, namely that of :func:`.defer` and :func:`.undefer`:
+
+    .. sourcecode:: python
 
         session.query(MyClass).options(
             defaultload(MyClass.someattribute).
@@ -1259,7 +1300,9 @@ def defer(loadopt, key):
     This function is part of the :class:`.Load` interface and supports
     both method-chained and standalone operation.
 
-    e.g.::
+    e.g.:
+
+    .. sourcecode:: python
 
         from sqlalchemy.orm import defer
 
@@ -1274,14 +1317,17 @@ def defer(loadopt, key):
     To specify a deferred load of an attribute on a related class,
     the path can be specified one token at a time, specifying the loading
     style for each link along the chain.  To leave the loading style
-    for a link unchanged, use :func:`.orm.defaultload`::
+    for a link unchanged, use :func:`.orm.defaultload`:
+
+    .. sourcecode:: python
 
         session.query(MyClass).options(defaultload("someattr").defer("some_column"))
 
     A :class:`.Load` object that is present on a certain path can have
     :meth:`.Load.defer` called multiple times, each will operate on the same
-    parent entity::
+    parent entity:
 
+    .. sourcecode:: python
 
         session.query(MyClass).options(
                         defaultload("someattr").
@@ -1326,7 +1372,9 @@ def undefer(loadopt, key):
     This function is part of the :class:`.Load` interface and supports
     both method-chained and standalone operation.
 
-    Examples::
+    Examples:
+
+    .. sourcecode:: python
 
         # undefer two columns
         session.query(MyClass).options(undefer("col1"), undefer("col2"))
@@ -1370,13 +1418,17 @@ def undefer_group(loadopt, name):
     The columns being undeferred are set up on the mapping as
     :func:`.deferred` attributes and include a "group" name.
 
-    E.g::
+    E.g:
+
+    .. sourcecode:: python
 
         session.query(MyClass).options(undefer_group("large_attrs"))
 
     To undefer a group of attributes on a related entity, the path can be
     spelled out using relationship loader options, such as
-    :func:`.orm.defaultload`::
+    :func:`.orm.defaultload`:
+
+    .. sourcecode:: python
 
         session.query(MyClass).options(
             defaultload("someattr").undefer_group("large_attrs"))
@@ -1418,8 +1470,9 @@ def with_expression(loadopt, key, expression):
     mapper-level construct that indicates an attribute which should be the
     target of an ad-hoc SQL expression.
 
-    E.g.::
+    E.g.:
 
+    .. sourcecode:: python
 
         sess.query(SomeClass).options(
             with_expression(SomeClass.x_y_expr, SomeClass.x + SomeClass.y)

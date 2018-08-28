@@ -173,7 +173,9 @@ class Connection(Connectable):
         execution options which will take effect for a call to
         :meth:`execute`. As the new :class:`.Connection` references the same
         underlying resource, it's usually a good idea to ensure that the copies
-        will be discarded immediately, which is implicit if used as in::
+        will be discarded immediately, which is implicit if used as in:
+
+        .. sourcecode:: python
 
             result = connection.execution_options(stream_results=True).\
                                 execute(stmt)
@@ -543,7 +545,9 @@ class Connection(Connectable):
     def detach(self):
         """Detach the underlying DB-API connection from its connection pool.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             with engine.connect() as conn:
                 conn.detach()
@@ -578,7 +582,9 @@ class Connection(Connectable):
         Nested calls to :meth:`.begin` on the same :class:`.Connection`
         will return new :class:`.Transaction` objects that represent
         an emulated transaction within the scope of the enclosing
-        transaction, that is::
+        transaction, that is:
+
+        .. sourcecode:: python
 
             trans = conn.begin()   # outermost transaction
             trans2 = conn.begin()  # "nested"
@@ -900,7 +906,9 @@ class Connection(Connectable):
         :param \*multiparams/\**params: represent bound parameter
          values to be used in the execution.   Typically,
          the format is either a collection of one or more
-         dictionaries passed to \*multiparams::
+         dictionaries passed to \*multiparams:
+
+         .. sourcecode:: python
 
              conn.execute(
                  table.insert(),
@@ -908,7 +916,9 @@ class Connection(Connectable):
                  {"id":2, "value":"v2"}
              )
 
-         ...or individual key/values interpreted by \**params::
+         ...or individual key/values interpreted by \**params:
+
+         .. sourcecode:: python
 
              conn.execute(
                  table.insert(), id=1, value="v1"
@@ -916,7 +926,9 @@ class Connection(Connectable):
 
          In the case that a plain SQL string is passed, and the underlying
          DBAPI accepts positional bind parameters, a collection of tuples
-         or individual values in \*multiparams may be passed::
+         or individual values in \*multiparams may be passed:
+
+         .. sourcecode:: python
 
              conn.execute(
                  "INSERT INTO table (id, value) VALUES (?, ?)",
@@ -1483,7 +1495,9 @@ class Connection(Connectable):
 
         The function is passed this :class:`.Connection`
         as the first argument, followed by the given \*args and \**kwargs,
-        e.g.::
+        e.g.:
+
+        .. sourcecode:: python
 
             def do_something(conn, x, y):
                 conn.execute("some statement", {'x':x, 'y':y})
@@ -1500,12 +1514,16 @@ class Connection(Connectable):
 
            The :meth:`.transaction` method is superseded by
            the usage of the Python ``with:`` statement, which can
-           be used with :meth:`.Connection.begin`::
+           be used with :meth:`.Connection.begin`:
+
+           .. sourcecode:: python
 
                with conn.begin():
                    conn.execute("some statement", {'x':5, 'y':10})
 
-           As well as with :meth:`.Engine.begin`::
+           As well as with :meth:`.Engine.begin`:
+
+           .. sourcecode:: python
 
                with engine.begin() as conn:
                    conn.execute("some statement", {'x':5, 'y':10})
@@ -1571,7 +1589,9 @@ class Transaction(object):
 
     The :class:`.Transaction` object is procured by
     calling the :meth:`~.Connection.begin` method of
-    :class:`.Connection`::
+    :class:`.Connection`:
+
+    .. sourcecode:: python
 
         from sqlalchemy import create_engine
         engine = create_engine("postgresql://scott:tiger@localhost/test")
@@ -1584,7 +1604,9 @@ class Transaction(object):
     methods in order to control transaction boundaries.  It
     also implements a context manager interface so that
     the Python ``with`` statement can be used with the
-    :meth:`.Connection.begin` method::
+    :meth:`.Connection.begin` method:
+
+    .. sourcecode:: python
 
         with connection.begin():
             connection.execute("insert into x (a, b) values (1, 2)")
@@ -1831,7 +1853,9 @@ class Engine(Connectable, log.Identified):
         The intent of the :meth:`.Engine.execution_options` method is
         to implement "sharding" schemes where multiple :class:`.Engine`
         objects refer to the same connection pool, but are differentiated
-        by options that would be consumed by a custom event::
+        by options that would be consumed by a custom event:
+
+        .. sourcecode:: python
 
             primary_engine = create_engine("mysql://")
             shard1 = primary_engine.execution_options(shard_id="shard1")
@@ -1847,7 +1871,9 @@ class Engine(Connectable, log.Identified):
         we emit a MySQL ``use`` statement to switch databases, at the same
         time keeping track of which database we've established using the
         :attr:`.Connection.info` dictionary, which gives us a persistent
-        storage space that follows the DBAPI connection::
+        storage space that follows the DBAPI connection:
+
+        .. sourcecode:: python
 
             from sqlalchemy import event
             from sqlalchemy.engine import Engine
@@ -1960,7 +1986,9 @@ class Engine(Connectable, log.Identified):
         """Return a context manager delivering a :class:`.Connection`
         with a :class:`.Transaction` established.
 
-        E.g.::
+        E.g.:
+
+        .. sourcecode:: python
 
             with engine.begin() as conn:
                 conn.execute("insert into table (x, y, z) values (1, 2, 3)")
@@ -2004,7 +2032,9 @@ class Engine(Connectable, log.Identified):
         from :meth:`.Engine.contextual_connect` as the first argument,
         followed by the given \*args and \**kwargs.
 
-        e.g.::
+        e.g.:
+
+        .. sourcecode:: python
 
             def do_something(conn, x, y):
                 conn.execute("some statement", {'x':x, 'y':y})
@@ -2021,7 +2051,9 @@ class Engine(Connectable, log.Identified):
 
            The :meth:`.transaction` method is superseded by
            the usage of the Python ``with:`` statement, which can
-           be used with :meth:`.Engine.begin`::
+           be used with :meth:`.Engine.begin`:
+
+           .. sourcecode:: python
 
                with engine.begin() as conn:
                    conn.execute("some statement", {'x':5, 'y':10})

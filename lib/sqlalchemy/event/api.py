@@ -31,7 +31,9 @@ def _event_key(target, identifier, fn):
 def listen(target, identifier, fn, *args, **kw):
     """Register a listener function for the given target.
 
-    e.g.::
+    e.g.:
+
+    .. sourcecode:: python
 
         from sqlalchemy import event
         from sqlalchemy.schema import UniqueConstraint
@@ -48,7 +50,9 @@ def listen(target, identifier, fn, *args, **kw):
 
 
     A given function can also be invoked for only the first invocation
-    of the event using the ``once`` argument::
+    of the event using the ``once`` argument:
+
+    .. sourcecode:: python
 
         def on_config():
             do_config()
@@ -92,7 +96,9 @@ def listen(target, identifier, fn, *args, **kw):
 def listens_for(target, identifier, *args, **kw):
     """Decorate a function as a listener for the given target + identifier.
 
-    e.g.::
+    e.g.:
+
+    .. sourcecode:: python
 
         from sqlalchemy import event
         from sqlalchemy.schema import UniqueConstraint
@@ -105,7 +111,9 @@ def listens_for(target, identifier, *args, **kw):
             )
 
     A given function can also be invoked for only the first invocation
-    of the event using the ``once`` argument::
+    of the event using the ``once`` argument:
+
+    .. sourcecode:: python
 
         @event.listens_for(Mapper, "before_configure", once=True)
         def on_config():
@@ -134,7 +142,9 @@ def remove(target, identifier, fn):
     of this call will be reverted by calling :func:`.remove` with the same
     arguments.
 
-    e.g.::
+    e.g.:
+
+    .. sourcecode:: python
 
         # if a function was registered like this...
         @event.listens_for(SomeMappedClass, "before_insert", propagate=True)
