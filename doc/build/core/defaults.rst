@@ -168,7 +168,7 @@ INSERT or UPDATE statement:
         Column('create_date', DateTime, default=func.now()),
 
         # define 'key' to pull its default from the 'keyvalues' table
-        Column('key', String(20), default=select([keyvalues.c.key]).where(keyvalues.c.type='type1')),
+        Column('key', String(20), default=select([keyvalues.c.key]).where(keyvalues.c.type=='type1')),
 
         # define 'last_modified' to use the current_timestamp SQL function on update
         Column('last_modified', DateTime, onupdate=func.utc_timestamp())

@@ -573,8 +573,8 @@ class _UnboundLoad(Load):
 
             .. sourcecode:: python
 
-            query = session.query(User).options(
-                joinedload("orders").joinedload("items"))
+                query = session.query(User).options(
+                    joinedload("orders").joinedload("items"))
 
         The above options will be an _UnboundLoad object along the lines
         of (note this is not the exact API of _UnboundLoad):
@@ -777,9 +777,7 @@ See :func:`.orm.%(name)s` for usage examples.
 
 .. deprecated:: 0.9.0
 
-    The "_all()" style is replaced by method chaining, e.g.:
-
-    .. sourcecode:: python
+    The "_all()" style is replaced by method chaining, e.g.::
 
         session.query(MyClass).options(
             %(name)s("someattribute").%(name)s("anotherattribute")

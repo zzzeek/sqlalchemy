@@ -480,7 +480,7 @@ parameter, which will limit those rows which receive an UPDATE:
         author='jlh')
     on_update_stmt = stmt.on_conflict_do_update(
         index_elements=['id'],
-        set_=dict(data='updated value', author=stmt.excluded.author)
+        set_=dict(data='updated value', author=stmt.excluded.author),
         where=(my_table.c.status == 2)
         )
     conn.execute(on_update_stmt)
@@ -833,45 +833,45 @@ dialect in conjunction with the :class:`.Table` construct:
 
 * ``TABLESPACE``:
 
-.. sourcecode:: python
+    .. sourcecode:: python
 
-    Table("some_table", metadata, ..., postgresql_tablespace='some_tablespace')
+        Table("some_table", metadata, columns, postgresql_tablespace='some_tablespace')
 
   The above option is also available on the :class:`.Index` construct.
 
 * ``ON COMMIT``
 
-.. sourcecode:: python
+    .. sourcecode:: python
 
-    Table("some_table", metadata, ..., postgresql_on_commit='PRESERVE ROWS')
+        Table("some_table", metadata, columns, postgresql_on_commit='PRESERVE ROWS')
 
 * ``WITH OIDS``
 
-.. sourcecode:: python
+    .. sourcecode:: python
 
-    Table("some_table", metadata, ..., postgresql_with_oids=True)
+        Table("some_table", metadata, columns, postgresql_with_oids=True)
 
 * ``WITHOUT OIDS``
 
-.. sourcecode:: python
+    .. sourcecode:: python
 
-    Table("some_table", metadata, ..., postgresql_with_oids=False)
+        Table("some_table", metadata, columns, postgresql_with_oids=False)
 
 * ``INHERITS``
 
-.. sourcecode:: python
+    .. sourcecode:: python
 
-    Table("some_table", metadata, ..., postgresql_inherits="some_supertable")
+        Table("some_table", metadata, columns, postgresql_inherits="some_supertable")
 
-    Table("some_table", metadata, ..., postgresql_inherits=("t1", "t2", ...))
+    Table("some_table", metadata, columns, postgresql_inherits=("t1", "t2", etc))
 
     .. versionadded:: 1.0.0
 
 * ``PARTITION BY``:
 
-.. sourcecode:: python
+    .. sourcecode:: python
 
-    Table("some_table", metadata, ...,
+        Table("some_table", metadata, ...,
           postgresql_partition_by='LIST (part_column)')
 
     .. versionadded:: 1.2.6
@@ -969,7 +969,7 @@ E.g.:
     Table(
         'mydata', metadata,
         Column('id', Integer, primary_key=True),
-        Column('data', ArrayOfEnum(ENUM('a', 'b, 'c', name='myenum')))
+        Column('data', ArrayOfEnum(ENUM('a', 'b', 'c', name='myenum')))
 
     )
 

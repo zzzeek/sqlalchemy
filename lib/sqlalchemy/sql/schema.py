@@ -1139,6 +1139,8 @@ class Column(SchemaItem, ColumnClause):
 
                 Column('x', Text, server_default="val")
 
+            .. sourcecode:: sql
+
                 x TEXT DEFAULT 'val'
 
             A :func:`~sqlalchemy.sql.expression.text` expression will be
@@ -1147,6 +1149,8 @@ class Column(SchemaItem, ColumnClause):
             .. sourcecode:: python
 
                 Column('y', DateTime, server_default=text('NOW()'))
+
+            .. sourcecode:: sql
 
                 y DATETIME DEFAULT NOW()
 

@@ -880,9 +880,10 @@ class dependencies(object):
         @util.dependencies(
             "sqlalchemy.sql.widget",
             "sqlalchemy.engine.default"
-        );
+        )
         def some_func(self, widget, default, arg1, arg2, **kw):
             # ...
+            pass
 
     Rationale is so that the impact of a dependency cycle can be
     associated directly with the few functions that cause the cycle,

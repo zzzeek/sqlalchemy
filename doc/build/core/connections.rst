@@ -334,6 +334,7 @@ engine:
     result = users_table.select().execute()
     for row in result:
         # ....
+        pass
     result.close()
 
 Above, we associate an :class:`.Engine` with a :class:`.MetaData` object using

@@ -155,7 +155,7 @@ of a particular attribute, the :func:`.defaultload` method/function may be used:
 .. sourcecode:: python
 
     session.query(A).options(
-        defaultload("atob").
+        defaultload("atob").\
         joinedload("btoc")).all()
 
 .. note::  The loader options applied to an object's lazy-loaded collections
@@ -165,9 +165,9 @@ of a particular attribute, the :func:`.defaultload` method/function may be used:
 
    .. sourcecode:: python
 
-      session.query(Parent).options(
-          lazyload(Parent.children).
-          subqueryload(Child.subelements)).all()
+        session.query(Parent).options(
+            lazyload(Parent.children).\
+            subqueryload(Child.subelements)).all()
 
    if the ``children`` collection on a particular ``Parent`` object loaded by
    the above query is expired (such as when a :class:`.Session` object's
@@ -184,7 +184,7 @@ of a particular attribute, the :func:`.defaultload` method/function may be used:
 
       # change the options on Parent objects that were already loaded
       session.query(Parent).populate_existing().options(
-          lazyload(Parent.children).
+          lazyload(Parent.children).\
           lazyload(Child.subelements)).all()
 
    If the objects loaded above are fully cleared from the :class:`.Session`,

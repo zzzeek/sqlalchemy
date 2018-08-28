@@ -403,7 +403,7 @@ def as_declarative(**kw):
             id = Column(Integer, primary_key=True)
 
         class MyMappedClass(Base):
-            # ...
+            pass
 
     All keyword arguments passed to :func:`.as_declarative` are passed
     along to :func:`.declarative_base`.

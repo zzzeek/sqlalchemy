@@ -837,6 +837,7 @@ class CreateEnginePlugin(object):
             'sqlalchemy.plugins': [
                 'myplugin = myapp.plugins:MyPlugin'
             ]
+        }
 
     A plugin that uses the above names would be invoked from a database
     URL as in:

@@ -209,6 +209,7 @@ allows this usage pattern:
     @with_session
     def two():
        # etc.
+       pass
 
     one()
 

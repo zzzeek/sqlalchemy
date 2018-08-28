@@ -132,7 +132,7 @@ class JSON(sqltypes.JSON):
     .. sourcecode:: python
 
         data_table.c.data[('key_1', 'key_2', 5, ..., 'key_n')].astext == \
-'some value'
+        'some value'
 
     .. versionchanged:: 1.1  The :meth:`.ColumnElement.cast` operator on
        JSON objects now requires that the :attr:`.JSON.Comparator.astext`
@@ -249,7 +249,7 @@ class JSONB(JSON):
         with engine.connect() as conn:
             conn.execute(
                 data_table.insert(),
-                data = {"key1": "value1", "key2": "value2"}
+                data={"key1": "value1", "key2": "value2"}
             )
 
     The :class:`.JSONB` type includes all operations provided by

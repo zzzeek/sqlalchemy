@@ -1001,14 +1001,14 @@ class RelationshipProperty(StrategizedProperty):
 
             .. sourcecode:: python
 
-              MyClass.some_prop == <some object>
+              MyClass.some_prop == some_object
 
             this will typically produce a
             clause such as:
 
             .. sourcecode:: python
 
-              mytable.related_id == <some id>
+              mytable.related_id == some_id
 
             Where ``<some id>`` is the primary key of the given
             object.
@@ -1323,13 +1323,13 @@ class RelationshipProperty(StrategizedProperty):
 
             .. sourcecode:: python
 
-              MyClass.some_prop != <some object>
+              MyClass.some_prop != some_object
 
             This will typically produce a clause such as:
 
             .. sourcecode:: python
 
-              mytable.related_id != <some id>
+              mytable.related_id != some_id
 
             Where ``<some id>`` is the primary key of the
             given object.

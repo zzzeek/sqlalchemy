@@ -68,7 +68,7 @@ This is available via the :attr:`.MetaData.sorted_tables` function:
 
     metadata = MetaData()
     # ... add Table objects to metadata
-    ti = metadata.sorted_tables:
+    ti = metadata.sorted_tables
     for t in ti:
         print(t)
 

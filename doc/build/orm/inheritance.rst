@@ -160,9 +160,11 @@ and ``Employee``:
 
     class Manager(Employee):
         # ...
+        pass
 
     class Engineer(Employee):
         # ...
+        pass
 
 If the foreign key constraint is on a table corresponding to a subclass,
 the relationship should target that subclass instead.  In the example
@@ -203,6 +205,7 @@ established between the ``Manager`` and ``Company`` classes:
 
     class Engineer(Employee):
         # ...
+        pass
 
 Above, the ``Manager`` class will have a ``Manager.company`` attribute;
 ``Company`` will have a ``Company.managers`` attribute that always

@@ -738,7 +738,7 @@ class MapperEvents(event.Events):
 
             @event.listens_for(mapper, "before_configured")
             def go():
-                # ...
+                pass
 
         Contrast this event to :meth:`.MapperEvents.after_configured`,
         which is invoked after the series of mappers has been configured,
@@ -759,7 +759,7 @@ class MapperEvents(event.Events):
 
             @event.listens_for(mapper, "before_configured", once=True)
             def go():
-                # ...
+                pass
 
 
         .. versionadded:: 0.9.3
@@ -802,7 +802,7 @@ class MapperEvents(event.Events):
 
             @event.listens_for(mapper, "after_configured")
             def go():
-                # ...
+                pass
 
         Theoretically this event is called once per
         application, but is actually called any time new mappers
@@ -818,7 +818,7 @@ class MapperEvents(event.Events):
 
             @event.listens_for(mapper, "after_configured", once=True)
             def go():
-                # ...
+                pass
 
         .. seealso::
 
@@ -1226,6 +1226,8 @@ class SessionEvents(event.Events):
                 def after_transaction_create(session, transaction):
                     if transaction.parent is None:
                         # work with top-level transaction
+                        pass
+
 
          To detect if the :class:`.SessionTransaction` is a SAVEPOINT, use the
          :attr:`.SessionTransaction.nested` attribute:
@@ -1236,6 +1238,7 @@ class SessionEvents(event.Events):
                 def after_transaction_create(session, transaction):
                     if transaction.nested:
                         # work with SAVEPOINT transaction
+                        pass
 
 
         .. seealso::
@@ -1269,6 +1272,8 @@ class SessionEvents(event.Events):
                 def after_transaction_end(session, transaction):
                     if transaction.parent is None:
                         # work with top-level transaction
+                        pass
+
 
          To detect if the :class:`.SessionTransaction` is a SAVEPOINT, use the
          :attr:`.SessionTransaction.nested` attribute:
@@ -1279,6 +1284,7 @@ class SessionEvents(event.Events):
                 def after_transaction_end(session, transaction):
                     if transaction.nested:
                         # work with SAVEPOINT transaction
+                        pass
 
 
         .. seealso::

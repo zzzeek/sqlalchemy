@@ -267,7 +267,8 @@ Common strategies to mitigate this include:
       a_b = Bundle('address', Address.id, Address.email)
 
       for user, address in session.query(u_b, a_b).join(User.addresses):
-          # ...
+        # ...
+        pass
 
 * Use result caching - see :ref:`examples_caching` for an in-depth example
   of this.

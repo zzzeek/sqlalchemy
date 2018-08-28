@@ -312,13 +312,13 @@ in conjunction with the :class:`.Table` construct:
 
 * ``COMPRESS``:
 
-.. sourcecode:: python
+    .. sourcecode:: python
 
-    Table('mytable', metadata, Column('data', String(32)),
-        oracle_compress=True)
+       Table('mytable', metadata, Column('data', String(32)),
+            oracle_compress=True)
 
-    Table('mytable', metadata, Column('data', String(32)),
-        oracle_compress=6)
+       Table('mytable', metadata, Column('data', String(32)),
+            oracle_compress=6)
 
    The ``oracle_compress`` parameter accepts either an integer compression
    level, or ``True`` to use the default compression level.

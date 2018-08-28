@@ -184,8 +184,9 @@ of :class:`.Executable`, :class:`.ClauseElement` and includes the
     from sqlalchemy.sql.expression import UpdateBase
 
     class MyInsertThing(UpdateBase):
-        def __init__(self, ...):
-            ...
+        def __init__(self, some_args):
+            pass
+
 
 
 

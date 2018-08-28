@@ -82,7 +82,7 @@ using ``host`` as an additional keyword argument:
 .. sourcecode:: python
 
     create_engine("postgresql+psycopg2://user:password@/dbname?\
-host=/var/lib/postgresql")
+    host=/var/lib/postgresql")
 
 .. seealso::
 

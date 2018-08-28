@@ -686,9 +686,8 @@ objects, querying the ``employee`` and ``engineer`` tables simultaneously:
 
     session.query(Company).\
         options(
-            subqueryload(Company.employees.of_type(Engineer)).
-            subqueryload(Engineer.machines)
-            )
+        subqueryload(Company.employees.of_type(Engineer)).
+        subqueryload(Engineer.machines)
         )
 
 As is the case with :meth:`.Query.join`, :meth:`~.PropComparator.of_type`
@@ -739,7 +738,7 @@ eager-loaded ``Engineer`` class, we access this class from the namespace of the
             joinedload(Company.employees.of_type(manager_and_engineer)).\
             subqueryload(manager_and_engineer.Engineer.computers)
             )
-        )
+
 
 .. _loading_joined_inheritance:
 

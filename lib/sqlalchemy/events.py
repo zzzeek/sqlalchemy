@@ -44,6 +44,7 @@ class DDLEvents(event.Events):
             connection.execute("ALTER TABLE %s SET name=foo_%s" %
                                     (target.name, target.name))
 
+
         event.listen(some_table, "after_create", after_create)
 
     DDL events integrate closely with the

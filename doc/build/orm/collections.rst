@@ -598,11 +598,10 @@ Iteration will go through ``itervalues()`` unless otherwise decorated.
    workaround usually needs to be called before a custom subclass
    of :class:`.MappedCollection` which uses :meth:`.collection.internally_instrumented`
    can be used:
-
     .. sourcecode:: python
 
-    from sqlalchemy.orm.collections import _instrument_class, MappedCollection
-    _instrument_class(MappedCollection)
+        from sqlalchemy.orm.collections import _instrument_class, MappedCollection
+        _instrument_class(MappedCollection)
 
    This will ensure that the :class:`.MappedCollection` has been properly
    initialized with custom ``__setitem__()`` and ``__delitem__()``

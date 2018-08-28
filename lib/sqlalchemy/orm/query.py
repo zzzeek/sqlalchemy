@@ -2148,7 +2148,7 @@ class Query(object):
 
             q = session.query(Node).\
                     join("children", aliased=True).\
-                    filter(Node.name='child 1').\
+                    filter(Node.name=='child 1').\
                     join("children", aliased=True, from_joinpoint=True).\
                     filter(Node.name == 'grandchild 1')
 
@@ -2161,7 +2161,7 @@ class Query(object):
                     join("children", "children", aliased=True).\
                     filter(Node.name == 'grandchild 1').\
                     reset_joinpoint().\
-                    filter(Node.name == 'parent 1)
+                    filter(Node.name == 'parent 1')
 
         For an example of ``aliased=True``, see the distribution
         example :ref:`examples_xmlpersistence` which illustrates
