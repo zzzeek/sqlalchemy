@@ -565,7 +565,7 @@ class CreateColumn(_DDLCompiles):
         table = Table('mytable', MetaData(),
                 Column('x', Integer, info={"special":True}, primary_key=True),
                 Column('y', String(50)),
-                Column('z', String(20), info={"special":True})
+                Column('z', String(20), info={"special": True})
             )
 
         metadata.create_all(conn)

@@ -431,8 +431,8 @@ class AttributeExtension(object):
                 return value
 
         mapper(SomeClass, sometable, properties={
-            'foo':column_property(sometable.c.foo, extension=MyAttrExt()),
-            'bar':relationship(Bar, extension=MyAttrExt())
+            'foo': column_property(sometable.c.foo, extension=MyAttrExt()),
+            'bar': relationship(Bar, extension=MyAttrExt())
         })
 
     Note that the :class:`.AttributeExtension` methods

@@ -3139,24 +3139,24 @@ class Query(object):
             # would return:
             [
                 {
-                    'name':'User',
-                    'type':User,
-                    'aliased':False,
-                    'expr':User,
+                    'name': 'User',
+                    'type': User,
+                    'aliased': False,
+                    'expr': User,
                     'entity': User
                 },
                 {
-                    'name':'id',
-                    'type':Integer(),
-                    'aliased':False,
-                    'expr':User.id,
+                    'name': 'id',
+                    'type': Integer(),
+                    'aliased': False,
+                    'expr': User.id,
                     'entity': User
                 },
                 {
-                    'name':'user2',
-                    'type':User,
-                    'aliased':True,
-                    'expr':user_alias,
+                    'name': 'user2',
+                    'type': User,
+                    'aliased': True,
+                    'expr': user_alias,
                     'entity': user_alias
                 }
             ]

@@ -40,6 +40,7 @@ Each ``User`` can have any number of ``Keyword`` objects, and vice-versa
         def __init__(self, name):
             self.name = name
 
+
     class Keyword(Base):
         __tablename__ = 'keyword'
         id = Column(Integer, primary_key=True)
@@ -47,6 +48,7 @@ Each ``User`` can have any number of ``Keyword`` objects, and vice-versa
 
         def __init__(self, keyword):
             self.keyword = keyword
+
 
     userkeywords_table = Table('userkeywords', Base.metadata,
         Column('user_id', Integer, ForeignKey("user.id"),

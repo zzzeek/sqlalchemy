@@ -334,7 +334,9 @@ string values to an implementing class:
     from sqlalchemy.ext.associationproxy import association_proxy
     from sqlalchemy.ext.declarative import declarative_base, declared_attr
 
+
     Base = declarative_base()
+
 
     class HasStringCollection(object):
         @declared_attr
@@ -355,10 +357,12 @@ string values to an implementing class:
         def strings(cls):
             return association_proxy('_strings', 'value')
 
+
     class TypeA(HasStringCollection, Base):
         __tablename__ = 'type_a'
         string_table_name = 'type_a_strings'
         id = Column(Integer(), primary_key=True)
+
 
     class TypeB(HasStringCollection, Base):
         __tablename__ = 'type_b'

@@ -163,7 +163,7 @@ class Mapper(InspectionAttr):
             mapper(MyClass, my_table,
                 polymorphic_on=my_table.c.type,
                 properties={
-                    'alt':my_table.c.some_alt
+                    'alt': my_table.c.some_alt
                 })
 
         .. seealso::
@@ -430,8 +430,8 @@ class Mapper(InspectionAttr):
                 discriminator = Column(String(50))
 
                 __mapper_args__ = {
-                    "polymorphic_on":discriminator,
-                    "polymorphic_identity":"employee"
+                    "polymorphic_on": discriminator,
+                    "polymorphic_identity": "employee"
                 }
 
           It may also be specified
@@ -448,11 +448,11 @@ class Mapper(InspectionAttr):
                 discriminator = Column(String(50))
 
                 __mapper_args__ = {
-                    "polymorphic_on":case([
+                    "polymorphic_on": case([
                         (discriminator == "EN", "engineer"),
                         (discriminator == "MA", "manager"),
                     ], else_="employee"),
-                    "polymorphic_identity":"employee"
+                    "polymorphic_identity": "employee"
                 }
 
           It may also refer to any attribute
@@ -474,8 +474,8 @@ class Mapper(InspectionAttr):
                     )
 
                     __mapper_args__ = {
-                        "polymorphic_on":employee_type,
-                        "polymorphic_identity":"employee"
+                        "polymorphic_on": employee_type,
+                        "polymorphic_identity": "employee"
                     }
 
           .. versionchanged:: 0.7.4

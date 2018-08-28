@@ -53,7 +53,7 @@ column as well as the identifier for the base class:
         type = Column(String(50))
 
         __mapper_args__ = {
-            'polymorphic_identity':'employee',
+            'polymorphic_identity': 'employee',
             'polymorphic_on':type
         }
 
@@ -89,7 +89,7 @@ columns), as well as a foreign key reference to the parent table:
         engineer_name = Column(String(30))
 
         __mapper_args__ = {
-            'polymorphic_identity':'engineer',
+            'polymorphic_identity': 'engineer',
         }
 
     class Manager(Employee):
@@ -98,7 +98,7 @@ columns), as well as a foreign key reference to the parent table:
         manager_name = Column(String(30))
 
         __mapper_args__ = {
-            'polymorphic_identity':'manager',
+            'polymorphic_identity': 'manager',
         }
 
 It is most common that the foreign key constraint is established on the same
@@ -154,8 +154,8 @@ and ``Employee``:
         company = relationship("Company", back_populates="employees")
 
         __mapper_args__ = {
-            'polymorphic_identity':'employee',
-            'polymorphic_on':type
+            'polymorphic_identity': 'employee',
+            'polymorphic_on': type
         }
 
     class Manager(Employee):
@@ -188,7 +188,7 @@ established between the ``Manager`` and ``Company`` classes:
 
         __mapper_args__ = {
             'polymorphic_identity':'employee',
-            'polymorphic_on':type
+            'polymorphic_on': type
         }
 
     class Manager(Employee):
@@ -200,7 +200,7 @@ established between the ``Manager`` and ``Company`` classes:
         company = relationship("Company", back_populates="managers")
 
         __mapper_args__ = {
-            'polymorphic_identity':'manager',
+            'polymorphic_identity': 'manager',
         }
 
     class Engineer(Employee):
@@ -257,22 +257,22 @@ the :class:`.Column` will be applied to the same base :class:`.Table` object:
         type = Column(String(20))
 
         __mapper_args__ = {
-            'polymorphic_on':type,
-            'polymorphic_identity':'employee'
+            'polymorphic_on': type,
+            'polymorphic_identity': 'employee'
         }
 
     class Manager(Employee):
         manager_data = Column(String(50))
 
         __mapper_args__ = {
-            'polymorphic_identity':'manager'
+            'polymorphic_identity': 'manager'
         }
 
     class Engineer(Employee):
         engineer_info = Column(String(50))
 
         __mapper_args__ = {
-            'polymorphic_identity':'engineer'
+            'polymorphic_identity': 'engineer'
         }
 
 Note that the mappers for the derived classes Manager and Engineer omit the
@@ -304,8 +304,8 @@ relationship:
         company = relationship("Company", back_populates="employees")
 
         __mapper_args__ = {
-            'polymorphic_identity':'employee',
-            'polymorphic_on':type
+            'polymorphic_identity': 'employee',
+            'polymorphic_on': type
         }
 
 
@@ -313,14 +313,14 @@ relationship:
         manager_data = Column(String(50))
 
         __mapper_args__ = {
-            'polymorphic_identity':'manager'
+            'polymorphic_identity': 'manager'
         }
 
     class Engineer(Employee):
         engineer_info = Column(String(50))
 
         __mapper_args__ = {
-            'polymorphic_identity':'engineer'
+            'polymorphic_identity': 'engineer'
         }
 
 Also, like the case of joined inheritance, we can create relationships
@@ -343,8 +343,8 @@ or subclasses:
         type = Column(String(50))
 
         __mapper_args__ = {
-            'polymorphic_identity':'employee',
-            'polymorphic_on':type
+            'polymorphic_identity': 'employee',
+            'polymorphic_on': type
         }
 
 
@@ -355,7 +355,7 @@ or subclasses:
         company = relationship("Company", back_populates="managers")
 
         __mapper_args__ = {
-            'polymorphic_identity':'manager',
+            'polymorphic_identity': 'manager',
         }
 
 
