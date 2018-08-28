@@ -29,7 +29,7 @@ class MapperExtension(object):
 
         class MyExtension(MapperExtension):
             def before_insert(self, mapper, connection, instance):
-                print "instance %s before insert !" % instance
+                print("instance %s before insert !" % instance)
 
         m = mapper(User, users_table, extension=MyExtension())
 
@@ -296,7 +296,7 @@ class SessionExtension(object):
 
         class MySessionExtension(SessionExtension):
             def before_commit(self, session):
-                print "before commit!"
+                print("before commit!")
 
         Session = sessionmaker(extension=MySessionExtension())
 
@@ -423,11 +423,11 @@ class AttributeExtension(object):
 
         class MyAttrExt(AttributeExtension):
             def append(self, state, value, initiator):
-                print "append event !"
+                print("append event !")
                 return value
 
             def set(self, state, value, oldvalue, initiator):
-                print "set event !"
+                print("set event !")
                 return value
 
         mapper(SomeClass, sometable, properties={

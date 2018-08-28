@@ -297,9 +297,9 @@ class ClauseElement(Visitable):
         .. sourcecode:: pycon
 
           >>> clause = column('x') + bindparam('foo')
-          >>> print clause.compile().params
+          >>> print(clause.compile().params)
           {'foo':None}
-          >>> print clause.params({'foo':7}).compile().params
+          >>> print(clause.params({'foo':7}).compile().params)
           {'foo':7}
 
         """
@@ -433,7 +433,7 @@ class ClauseElement(Visitable):
 
                 s = select([t]).where(t.c.x == 5)
 
-                print s.compile(compile_kwargs={"literal_binds": True})
+                print(s.compile(compile_kwargs={"literal_binds": True}))
 
             .. versionadded:: 0.9.0
 
@@ -574,7 +574,7 @@ class ColumnElement(operators.ColumnOperators, ClauseElement):
         >>> from sqlalchemy.sql import column
         >>> column('a') + column('b')
         <sqlalchemy.sql.expression.BinaryExpression object at 0x101029dd0>
-        >>> print column('a') + column('b')
+        >>> print(column('a') + column('b'))
         a + b
 
     .. seealso::
@@ -1775,7 +1775,7 @@ class False_(ColumnElement):
         .. sourcecode:: pycon
 
             >>> from sqlalchemy import false
-            >>> print select([t.c.x]).where(false())
+            >>> print(select([t.c.x]).where(false()))
             SELECT x FROM t WHERE false
 
         A backend which does not support true/false constants will render as
@@ -1783,7 +1783,7 @@ class False_(ColumnElement):
 
         .. sourcecode:: pycon
 
-            >>> print select([t.c.x]).where(false())
+            >>> print(select([t.c.x]).where(false()))
             SELECT x FROM t WHERE 0 = 1
 
         The :func:`.true` and :func:`.false` constants also feature
@@ -1792,10 +1792,10 @@ class False_(ColumnElement):
 
         .. sourcecode:: pycon
 
-            >>> print select([t.c.x]).where(or_(t.c.x > 5, true()))
+            >>> print(select([t.c.x]).where(or_(t.c.x > 5, true())))
             SELECT x FROM t WHERE true
 
-            >>> print select([t.c.x]).where(and_(t.c.x > 5, false()))
+            >>> print(select([t.c.x]).where(and_(t.c.x > 5, false())))
             SELECT x FROM t WHERE false
 
         .. versionchanged:: 0.9 :func:`.true` and :func:`.false` feature
@@ -1847,7 +1847,7 @@ class True_(ColumnElement):
         .. sourcecode:: pycon
 
             >>> from sqlalchemy import true
-            >>> print select([t.c.x]).where(true())
+            >>> print(select([t.c.x]).where(true()))
             SELECT x FROM t WHERE true
 
         A backend which does not support true/false constants will render as
@@ -1855,7 +1855,7 @@ class True_(ColumnElement):
 
         .. sourcecode:: pycon
 
-            >>> print select([t.c.x]).where(true())
+            >>> print(select([t.c.x]).where(true()))
             SELECT x FROM t WHERE 1 = 1
 
         The :func:`.true` and :func:`.false` constants also feature
@@ -1864,10 +1864,10 @@ class True_(ColumnElement):
 
         .. sourcecode:: pycon
 
-            >>> print select([t.c.x]).where(or_(t.c.x > 5, true()))
+            >>> print(select([t.c.x]).where(or_(t.c.x > 5, true())))
             SELECT x FROM t WHERE true
 
-            >>> print select([t.c.x]).where(and_(t.c.x > 5, false()))
+            >>> print(select([t.c.x]).where(and_(t.c.x > 5, false())))
             SELECT x FROM t WHERE false
 
         .. versionchanged:: 0.9 :func:`.true` and :func:`.false` feature
@@ -3098,7 +3098,7 @@ class BinaryExpression(ColumnElement):
         >>> from sqlalchemy.sql import column
         >>> column('a') + column('b')
         <sqlalchemy.sql.expression.BinaryExpression object at 0x101029dd0>
-        >>> print column('a') + column('b')
+        >>> print(column('a') + column('b'))
         a + b
 
     """

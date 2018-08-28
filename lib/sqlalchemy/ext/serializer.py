@@ -33,7 +33,7 @@ Usage is nearly the same as that of the standard Python pickle module:
     # unpickle.  Pass in metadata + scoped_session
     query2 = loads(serialized, metadata, Session)
 
-    print query2.all()
+    print(query2.all())
 
 Similar restrictions as when using raw pickle apply; mapped classes must be
 themselves be pickleable, meaning they are importable from a module-level

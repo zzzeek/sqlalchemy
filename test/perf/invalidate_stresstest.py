@@ -16,7 +16,7 @@ engine = create_engine('mysql+pymysql://scott:tiger@localhost/test',
 
 @event.listens_for(engine, "connect")
 def conn(*arg):
-    print "new connection!"
+    print("new connection!")
 
 
 def worker():
@@ -45,7 +45,7 @@ def main():
     while True:
         result = list(engine.execute("show processlist"))
         engine.execute("kill %d" % result[-2][0])
-        print "\n\n\n BOOM!!!!! \n\n\n"
+        print("\n\n\n BOOM!!!!! \n\n\n")
         gevent.sleep(5)
         print(engine.pool.status())
 

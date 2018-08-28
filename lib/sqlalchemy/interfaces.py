@@ -170,12 +170,12 @@ class ConnectionProxy(object):
         class MyProxy(ConnectionProxy):
             def execute(self, conn, execute, clauseelement,
                         *multiparams, **params):
-                print "compiled statement:", clauseelement
+                print("compiled statement:", clauseelement)
                 return execute(clauseelement, *multiparams, **params)
 
             def cursor_execute(self, execute, cursor, statement,
                                parameters, context, executemany):
-                print "raw statement:", statement
+                print("raw statement:", statement)
                 return execute(cursor, statement, parameters, context)
 
     The ``execute`` argument is a function that will fulfill the default

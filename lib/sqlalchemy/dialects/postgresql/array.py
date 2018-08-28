@@ -60,7 +60,7 @@ class array(expression.Tuple):
                         array([1,2]) + array([3,4,5])
                     ])
 
-        print stmt.compile(dialect=postgresql.dialect())
+        print(stmt.compile(dialect=postgresql.dialect()))
 
     Produces the SQL::
 

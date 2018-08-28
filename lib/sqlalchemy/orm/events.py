@@ -132,7 +132,7 @@ class InstanceEvents(event.Events):
         from sqlalchemy import event
 
         def my_load_listener(target, context):
-            print "on load!"
+            print("on load!")
 
         event.listen(SomeClass, 'load', my_load_listener)
 
@@ -1153,7 +1153,7 @@ class SessionEvents(event.Events):
         from sqlalchemy.orm import sessionmaker
 
         def my_before_commit(session):
-            print "before commit!"
+            print("before commit!")
 
         Session = sessionmaker()
 
@@ -1834,7 +1834,7 @@ class AttributeEvents(event.Events):
         from sqlalchemy import event
 
         def my_append_listener(target, value, initiator):
-            print "received append event for target: %s" % target
+            print("received append event for target: %s" % target)
 
         event.listen(MyClass.collection, 'append', my_append_listener)
 

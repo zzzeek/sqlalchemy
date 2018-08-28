@@ -58,7 +58,7 @@ asking it to reflect the schema and produce mappings:
 
     # collection-based relationships are by default named
     # "<classname>_collection"
-    print (u1.address_collection)
+    print(u1.address_collection)
 
 Above, calling :meth:`.AutomapBase.prepare` while passing along the
 :paramref:`.AutomapBase.prepare.reflect` parameter indicates that the
@@ -159,11 +159,11 @@ established based on the table name we use.  If our schema contains tables
     Address = Base.classes.address
 
     u1 = session.query(User).first()
-    print (u1.address_collection)
+    print(u1.address_collection)
 
     # the backref is still there:
     a1 = session.query(Address).first()
-    print (a1.user)
+    print(a1.user)
 
 Above, one of the more intricate details is that we illustrated overriding
 one of the :func:`.relationship` objects that automap would have created.

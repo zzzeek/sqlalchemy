@@ -750,7 +750,7 @@ class ComparableProperty(DescriptorProperty):
 
         .. sourcecode:: pycon
 
-            >>> print SearchWord.word_insensitive == "Trucks"
+            >>> print(SearchWord.word_insensitive == "Trucks")
             lower(search_word.word) = lower(:lower_1)
 
         :param comparator_factory:

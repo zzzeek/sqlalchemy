@@ -185,18 +185,18 @@ otherwise OK, that is, these two are equivalent:
 
 .. sourcecode:: pycon
 
-    >>> print (column('q') - column('y')).op('+', precedence=100)(column('z'))
+    >>> print((column('q') - column('y')).op('+', precedence=100)(column('z')))
     (q - y) + z
-    >>> print (column('q') - column('y')).op('+')(column('z'))
+    >>> print((column('q') - column('y')).op('+')(column('z')))
     q - y + z
 
 but these two are not:
 
 .. sourcecode:: pycon
 
-    >>> print column('q') - column('y').op('+', precedence=100)(column('z'))
+    >>> print(column('q') - column('y').op('+', precedence=100)(column('z')))
     q - y + z
-    >>> print column('q') - column('y').op('+')(column('z'))
+    >>> print(column('q') - column('y').op('+')(column('z')))
     q - (y + z)
 
 For now, it's not clear that as long as we are doing parenthesization based on

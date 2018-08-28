@@ -3195,7 +3195,7 @@ class Query(object):
 
             result = engine.execute("select * from users")
             for u in session.query(User).instances(result):
-                print u
+                print(u)
         """
         context = __context
         if context is None:
