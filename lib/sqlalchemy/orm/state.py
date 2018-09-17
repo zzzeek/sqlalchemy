@@ -369,6 +369,11 @@ class InstanceState(interfaces.InspectionAttr):
         Will not work otherwise!
 
         """
+        # This may be true when the Python interpreter is shutting down
+        # We can't do much more since most of python builtins are undefined
+        if dict is None:
+            return
+
         instance_dict = self._instance_dict()
         if instance_dict is not None:
             instance_dict._fast_discard(self)
