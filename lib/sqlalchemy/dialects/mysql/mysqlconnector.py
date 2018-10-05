@@ -155,6 +155,16 @@ class MySQLDialect_mysqlconnector(MySQLDialect):
     def supports_unicode_statements(self):
         return util.py3k or self._mysqlconnector_version_info > (2, 0)
 
+    def __init__(self, server_side_cursors=False, **kwargs):
+        super(MySQLDialect_mysqlconnector, self).__init__(**kwargs)
+        self.server_side_cursors = server_side_cursors
+
+    @util.langhelpers.memoized_property
+    def supports_server_side_cursors(self):
+        from mysql.connector.cursor import MySQLCursor
+        self._sscursor = MySQLCursor
+        return True
+
     @classmethod
     def dbapi(cls):
         from mysql import connector
