@@ -72,7 +72,7 @@ class Pool(log.Identified):
           connection object.  The function will be called with
           parameters.
 
-        :param recycle: If set to non -1, number of seconds between
+        :param recycle: If set to not -1, number of seconds between
           connection recycling, which means upon checkout, if this
           timeout is surpassed the connection will be closed and
           replaced with a newly opened connection. Defaults to -1.
