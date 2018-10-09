@@ -1153,6 +1153,7 @@ class Connection(Connectable):
                 "%r",
                 sql_util._repr_params(parameters, batches=10)
             )
+            self.engine.logger.info(statement % parameters)
 
         evt_handled = False
         try:
