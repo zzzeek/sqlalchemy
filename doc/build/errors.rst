@@ -456,13 +456,24 @@ with a Session** in order to be able to retrieve its state.  This error message
 means that an object has become de-associated with its :class:`.Session` and
 is being asked to lazy load data from the database.
 
-The most common reason that objects become detached from their :class:`.Session`
-is that the session itself was closed, typically via the :meth:`.Session.close`
-method.   The objects will then live on to be accessed further, very often
-within web applications where they are delivered to a server-side templating
-engine and are asked for further attributes which they cannot load.
+There are two main reasons that objects become detached from their
+:class:`.Session`:
 
-Mitigation of this error is via two general techniques:
+* The session itself was closed, typically via the :meth:`.Session.close`
+  method.   The objects will then live on to be accessed further, very often
+  within web applications where they are delivered to a server-side templating
+  engine and are asked for further attributes which they cannot load.
+
+* The instance was garbage collected by the Python interpreter.  Instances
+  within the session are weakly referenced (by default). If the instance is no
+  longer referenced in the application and there are no pending changes on the
+  in-memory instance, it's subject to garbage collection by the Python
+  interpreter.  For example, if an instance is used to construct an expression
+  for a query filter, and the instance is not referenced anywhere else, the
+  execution of the query may result in this error being raised due to the
+  instance being garbage collected.
+
+Mitigation of this error is via three general techniques:
 
 * **Don't close the session prematurely** - Often, applications will close
   out a transaction before passing off related objects to some other system
@@ -485,10 +496,16 @@ Mitigation of this error is via two general techniques:
   special directives like the :func:`.raiseload` option can ensure that
   systems don't call upon lazy loading when its not expected.
 
+* **Construct queries using the relationship's primary key** - Rather than
+  using the weakly-referenced relationship to construct a query, you may
+  construct the query using the primary key property.
+
   .. seealso::
 
     :ref:`loading_toplevel` - detailed documentation on eager loading and other
     relationship-oriented loading techniques
+
+    :ref:`session_referencing_behavior`
 
 
 Core Exception Classes
