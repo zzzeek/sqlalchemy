@@ -762,6 +762,35 @@ class DeclarativeInheritanceTest(DeclarativeTestBase):
         session.commit()
         eq_(session.query(Engineer).first().target, o1)
 
+    def test_pkey_single_inheritance_conflict_resolution(self):
+        """Test that a declared_attr.cascading can return the existing column
+        and it will be ignored, even when it is a primary key
+        """
+        class TestBase(Base):
+            __abstract__ = True
+
+            @declared_attr.cascading
+            def id(cls):
+                col_val = None
+                if TestBase not in cls.__bases__:
+                    col_val = cls.__table__.c.get('id')
+                if col_val is None:
+                    col_val = Column(Integer, primary_key=True)
+                return col_val
+
+        class Person(TestBase):
+            """single table base class"""
+            __tablename__ = 'person'
+
+        class Engineer(Person):
+            """ single table inheritance, no extra cols """
+
+        class Manager(Person):
+            """ single table inheritance, no extra cols """
+
+        is_(Engineer.id.prop.columns[0], Person.__table__.c.id)
+        is_(Manager.id.prop.columns[0], Person.__table__.c.id)
+
     def test_joined_from_single(self):
 
         class Company(Base, fixtures.ComparableEntity):
