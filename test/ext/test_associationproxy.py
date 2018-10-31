@@ -221,6 +221,7 @@ class _CollectionOperations(fixtures.TestBase):
             except ValueError:
                 self.assert_(expected is None)
             else:
+                self.assert_(expected is not None)
                 self.assert_(index == expected)
 
         self.assert_(not p1._children)
