@@ -2379,3 +2379,13 @@ class ForUpdateTest(fixtures.TestBase, AssertsCompiledSQL):
         self.assert_compile(s2,
                             "SELECT t_1.c FROM t AS t_1 FOR SHARE OF t_1",
                             dialect="postgresql")
+
+
+class SelectIntoTest(fixtures.TestBase, AssertsCompiledSQL):
+    __dialect__ = "default"
+
+    def test_compiles_select_into(self):
+        t = table('t', column('c'))
+        s = select([t]).select_into('tt')
+        self.assert_compile(s,
+                            "SELECT t.c INTO TEMPORARY TABLE tt FROM t")

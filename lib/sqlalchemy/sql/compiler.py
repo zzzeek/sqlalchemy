@@ -1904,6 +1904,9 @@ class SQLCompiler(Compiled):
             self, text, select, inner_columns, froms, byfrom, kwargs):
         text += ', '.join(inner_columns)
 
+        if select._select_into is not None:
+            text += " INTO " + select._select_into
+
         if froms:
             text += " \nFROM "
 

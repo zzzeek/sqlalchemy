@@ -2502,6 +2502,7 @@ class Select(HasPrefixes, HasSuffixes, GenerativeSelect):
     _correlate_except = None
     _memoized_property = SelectBase._memoized_property
     _is_select = True
+    _select_into = None
 
     def __init__(self,
                  columns=None,
@@ -3336,6 +3337,20 @@ class Select(HasPrefixes, HasSuffixes, GenerativeSelect):
         else:
             self._correlate_except = set(self._correlate_except or ()).union(
                 _interpret_as_from(f) for f in fromclauses)
+
+    @_generative
+    def select_into(self, table_name, temp_table=True):
+        r"""
+        return a new :class:`.Select` that performs a SELECT ... INTO statement.
+        Args:
+            table_name: The new table name to create
+            temp_table: Whether the new table should use the TEMPORARY flag
+
+        """
+        self._select_into = 'TABLE ' + table_name
+        if temp_table:
+            self._select_into = 'TEMPORARY ' + self._select_into
+
 
     def append_correlation(self, fromclause):
         """append the given correlation expression to this select()
