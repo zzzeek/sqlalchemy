@@ -783,7 +783,7 @@ class DefaultExecutionContext(interfaces.ExecutionContext):
                 positiontup.append(name)
 
         def process_expanding(m):
-            return replacement_expressions.pop(m.group(1))
+            return replacement_expressions[m.group(1)]
 
         self.statement = re.sub(
             r"\[EXPANDING_(\S+)\]",
