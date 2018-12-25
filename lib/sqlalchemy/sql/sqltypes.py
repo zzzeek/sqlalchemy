@@ -1896,7 +1896,7 @@ class JSON(Indexable, TypeEngine):
     may be called upon the result type.   Note that there are backend-specific
     idiosyncracies here, including that the Postgresql database does not generally
     compare a "json" to a "json" structure without type casts.  These idiosyncracies
-    can be accommodated in a backend-neutral way by by making explicit use
+    can be accommodated in a backend-neutral way by making explicit use
     of the :func:`.cast` and :func:`.type_coerce` constructs.
     Comparison of specific index elements of a :class:`.JSON` object
     to other objects work best if the **left hand side is CAST to a string**

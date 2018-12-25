@@ -2331,7 +2331,7 @@ class Query(object):
 
         # the right side as given often needs to be adapted.  additionally
         # a lot of things can be wrong with it.  handle all that and
-        # get back the the new effective "right" side
+        # get back the new effective "right" side
         r_info, right, onclause = self._join_check_and_adapt_right_side(
             left, right, onclause, prop, create_aliases,
         )

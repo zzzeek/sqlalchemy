@@ -2220,7 +2220,7 @@ expressions to :meth:`.Query.distinct`, the above "column adding" logic
 is disabled entirely.
 
 When the query is being bundled into a subquery for the purposes of
-joined eager loading, the "augment column list" rules are are necessarily
+joined eager loading, the "augment column list" rules are necessarily
 more aggressive so that the ORDER BY can still be satisfied, so this case
 remains unchanged.
 
