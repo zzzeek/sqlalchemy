@@ -153,6 +153,40 @@ class _PGUUID(UUID):
             return process
 
 
+class _PGVarchar(sqltypes.VARCHAR):
+    def bind_processor(self, dialect):
+        proc = super(_PGVarchar, self).bind_processor(dialect)
+        if proc is None:
+            return proc
+        else:
+            pg_varchar = dialect.dbapi.PGVarchar
+
+            def new_proc(value):
+                res = proc(value)
+                if res is None:
+                    return res
+                else:
+                    return pg_varchar(value)
+            return new_proc
+
+
+class _PGText(sqltypes.TEXT):
+    def bind_processor(self, dialect):
+        proc = super(_PGText, self).bind_processor(dialect)
+        if proc is None:
+            return proc
+        else:
+            pg_text = dialect.dbapi.PGText
+
+            def new_proc(value):
+                res = proc(value)
+                if res is None:
+                    return res
+                else:
+                    return pg_text(value)
+            return new_proc
+
+
 class PGExecutionContext_pg8000(PGExecutionContext):
     pass
 
@@ -165,20 +199,11 @@ class PGCompiler_pg8000(PGCompiler):
             + self.process(binary.right, **kw)
         )
 
-    def post_process_text(self, text):
-        if "%%" in text:
-            util.warn(
-                "The SQLAlchemy postgresql dialect "
-                "now automatically escapes '%' in text() "
-                "expressions to '%%'."
-            )
-        return text.replace("%", "%%")
-
 
 class PGIdentifierPreparer_pg8000(PGIdentifierPreparer):
-    def _escape_identifier(self, value):
-        value = value.replace(self.escape_quote, self.escape_to_quote)
-        return value.replace("%", "%%")
+    def __init__(self, *args, **kwargs):
+        PGIdentifierPreparer.__init__(self, *args, **kwargs)
+        self._double_percents = False
 
 
 class PGDialect_pg8000(PGDialect):
@@ -203,6 +228,12 @@ class PGDialect_pg8000(PGDialect):
             JSON: _PGJSON,
             sqltypes.JSON: _PGJSON,
             UUID: _PGUUID,
+            sqltypes.VARCHAR: _PGVarchar,
+            sqltypes.TEXT: _PGText,
+            sqltypes.Text: _PGText,
+            sqltypes.Unicode: _PGText,
+            sqltypes.UnicodeText: _PGText,
+            sqltypes.String: _PGText
         },
     )
 
@@ -315,6 +346,17 @@ class PGDialect_pg8000(PGDialect):
 
             def on_connect(conn):
                 self.set_isolation_level(conn, self.isolation_level)
+
+            fns.append(on_connect)
+
+        if self._json_deserializer:
+
+            def on_connect(conn):
+                # json
+                conn.register_in_adapter(114, self._json_deserializer)
+
+                # jsonb
+                conn.register_in_adapter(3802, self._json_deserializer)
 
             fns.append(on_connect)
 
