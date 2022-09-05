@@ -1132,8 +1132,8 @@ def _del_attribute(cls, key):
                 "Can't un-map individual mapped attributes on a mapped class."
             )
         else:
-            type.__delattr__(cls, key)
             cls.__mapper__._expire_memoizations()
+            type.__delattr__(cls, key)
     else:
         type.__delattr__(cls, key)
 
