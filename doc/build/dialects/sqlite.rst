@@ -38,6 +38,8 @@ they originate from :mod:`sqlalchemy.types` or from the local dialect::
 
 .. autoclass:: JSON
 
+.. autoclass:: JSONB
+
 .. autoclass:: TIME
 
 SQLite DML Constructs

@@ -1866,3 +1866,21 @@ the :class:`.Boolean` datatype.
     :ref:`oracle_boolean_support`
 
 :ticket:`11633`
+
+SQLite
+======
+
+Added :class:`_sqlite.JSONB` json format for SQLite
+---------------------------------------------------
+
+SQLite version 3.45 added support for serializing json using
+a binaly format called ``JSONB``, which provides imporved performance
+and storage saving. The new :class:`_sqlite.JSONB` type provides support
+for this format, ensuring that the data is correctly serialized
+when inserting and deserialized when querying.
+
+.. seealso::
+
+    :class:`_sqlite.JSONB`
+
+:ticket:`13260`

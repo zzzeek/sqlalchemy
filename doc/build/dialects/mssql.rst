@@ -151,6 +151,8 @@ construction arguments, are as follows:
    :members: __init__
    :noindex:
 
+.. autoclass:: NVARCHAR
+   :noindex:
 
 .. autoclass:: XML
    :members: __init__
