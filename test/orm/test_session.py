@@ -863,6 +863,80 @@ class SessionStateTest(_fixtures.FixtureTest):
         for key, value in expected_opts.items():
             eq_(gather_options[key], value)
 
+    @testing.combinations(
+        ("default", None, {}, None),
+        ("arg_true", True, {}, True),
+        ("arg_false", False, {}, False),
+        ("arg_true_exe_false", True, {"populate_existing": False}, True),
+        ("arg_false_exe_true", False, {"populate_existing": True}, False),
+        (
+            "exe_true",
+            None,
+            {"populate_existing": True},
+            True,
+        ),
+        (
+            "exe_false",
+            None,
+            {"populate_existing": False},
+            False,
+        ),
+        argnames="session_parameter,execution_opt,expected_pe",
+        id_="iaaa",
+    )
+    @testing.variation("object_in_session", [True, False])
+    def test_get_populate_existing(
+        self,
+        session_parameter,
+        execution_opt,
+        expected_pe,
+        object_in_session,
+    ):
+        users, User = self.tables.users, self.classes.User
+        self.mapper_registry.map_imperatively(User, users)
+
+        s = fixture_session()
+
+        s.add(User(id=1, name="name"))
+        s.commit()
+        s.close()
+        if object_in_session:
+            # prevent GC of the object
+            _ = s.get(User, 1)
+        s.connection().execute(
+            update(User).where(User.id == 1).values(name="newname")
+        )
+
+        gather_options = []
+
+        @event.listens_for(s, "do_orm_execute")
+        def check(ctx: ORMExecuteState) -> None:
+            gather_options.append(ctx.execution_options)
+
+        res = s.get(
+            User,
+            1,
+            populate_existing=session_parameter,
+            execution_options=execution_opt,
+        )
+
+        if not object_in_session or expected_pe:
+            # object not in session (so we load) or we expected
+            # populate_existing to be set (so we load), ensure newer value and
+            # gather_options is present
+            eq_(res.name, "newname")
+
+            if expected_pe is None:
+                assert "populate_existing" not in gather_options[0]
+            else:
+                eq_(gather_options[0]["populate_existing"], expected_pe)
+
+        else:
+            # object was in the session and no populate_existing, so
+            # do_orm_execute never called
+            eq_(gather_options, [])
+            eq_(res.name, "name")
+
     def test_autocommit_kw_accepted_but_must_be_false(self):
         Session(autocommit=False)
 

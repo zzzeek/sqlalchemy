@@ -969,7 +969,7 @@ class scoped_session(Generic[_S]):
         ident: _PKIdentityArgument,
         *,
         options: Optional[Sequence[ORMOption]] = None,
-        populate_existing: bool = False,
+        populate_existing: bool | None = None,
         with_for_update: ForUpdateParameter = None,
         identity_token: Optional[Any] = None,
         execution_options: OrmExecuteOptionsParameter = util.EMPTY_DICT,
@@ -1048,6 +1048,8 @@ class scoped_session(Generic[_S]):
         :param populate_existing: causes the method to unconditionally emit
          a SQL query and refresh the object with the newly loaded data,
          regardless of whether or not the object is already present.
+         Setting this flag takes precedence over passing it as an
+         execution option.
 
         :param with_for_update: optional boolean ``True`` indicating FOR UPDATE
           should be used, or may be a dictionary containing flags to
@@ -1098,7 +1100,7 @@ class scoped_session(Generic[_S]):
         ident: _PKIdentityArgument,
         *,
         options: Optional[Sequence[ORMOption]] = None,
-        populate_existing: bool = False,
+        populate_existing: bool | None = None,
         with_for_update: ForUpdateParameter = None,
         identity_token: Optional[Any] = None,
         execution_options: OrmExecuteOptionsParameter = util.EMPTY_DICT,

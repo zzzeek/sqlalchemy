@@ -157,7 +157,7 @@ class ScopedSessionTest(fixtures.MappedTest):
                     "Cls",
                     5,
                     options=None,
-                    populate_existing=False,
+                    populate_existing=None,
                     with_for_update=None,
                     identity_token=None,
                     execution_options=util.EMPTY_DICT,
