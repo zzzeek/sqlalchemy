@@ -701,7 +701,7 @@ def cleanup_text(raw_text: str) -> str:
     if "\\" in raw_text:
         raw_text = re.sub(
             _control_char_regexp,
-            lambda s: _control_char_map[s[0]],  # type: ignore[index]
+            lambda s: _control_char_map[s[0]],  # type: ignore[unused-ignore,index]  # noqa: E501
             raw_text,
         )
     return raw_text.replace("''", "'")
