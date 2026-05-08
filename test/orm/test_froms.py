@@ -2420,7 +2420,7 @@ class MixedEntitiesTest(QueryTest, AssertsCompiledSQL):
 
         test_session = fixture_session()
 
-        (user7, user8, user9, user10) = test_session.query(User).all()
+        user7, user8, user9, user10 = test_session.query(User).all()
         (
             address1,
             address2,
@@ -2498,8 +2498,8 @@ class MixedEntitiesTest(QueryTest, AssertsCompiledSQL):
 
         sess = fixture_session()
 
-        (user7, user8, user9, user10) = sess.query(User).all()
-        (address1, address2, address3, address4, address5) = sess.query(
+        user7, user8, user9, user10 = sess.query(User).all()
+        address1, address2, address3, address4, address5 = sess.query(
             Address
         ).all()
 
@@ -2585,7 +2585,7 @@ class MixedEntitiesTest(QueryTest, AssertsCompiledSQL):
 
         sess = fixture_session()
 
-        (user7, user8, user9, user10) = sess.query(User).all()
+        user7, user8, user9, user10 = sess.query(User).all()
         expected = [(user7, 1), (user8, 3), (user9, 1), (user10, 0)]
 
         q = sess.query(User)
@@ -2643,7 +2643,7 @@ class MixedEntitiesTest(QueryTest, AssertsCompiledSQL):
         )
 
         sess = fixture_session()
-        (user7, user8, user9, user10) = sess.query(User).all()
+        user7, user8, user9, user10 = sess.query(User).all()
         expected = [
             (user7, 1, "Name:jack"),
             (user8, 3, "Name:ed"),

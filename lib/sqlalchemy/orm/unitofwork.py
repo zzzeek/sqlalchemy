@@ -30,7 +30,6 @@ from .. import event
 from .. import util
 from ..util import topological
 
-
 if TYPE_CHECKING:
     from .dependency import _DependencyProcessor
     from .interfaces import MapperProperty
@@ -523,7 +522,7 @@ class _Preprocess(_IterateMappersMixin):
 
         for mapper in self._mappers(uow):
             for state in uow.mappers[mapper].difference(self.processed):
-                (isdelete, listonly) = uow.states[state]
+                isdelete, listonly = uow.states[state]
                 if not listonly:
                     if isdelete:
                         delete_states.add(state)
@@ -609,7 +608,7 @@ class _ProcessAll(_IterateMappersMixin, _PostSortRec):
     def _elements(self, uow):
         for mapper in self._mappers(uow):
             for state in uow.mappers[mapper]:
-                (isdelete, listonly) = uow.states[state]
+                isdelete, listonly = uow.states[state]
                 if isdelete == self.isdelete and not listonly:
                     yield state
 

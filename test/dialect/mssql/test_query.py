@@ -457,20 +457,16 @@ class MatchTest(AssertsCompiledSQL, fixtures.TablesTest):
         event.listen(
             metadata,
             "after_create",
-            DDL(
-                """CREATE FULLTEXT INDEX
+            DDL("""CREATE FULLTEXT INDEX
                        ON cattable (description)
-                       KEY INDEX PK_cattable"""
-            ),
+                       KEY INDEX PK_cattable"""),
         )
         event.listen(
             metadata,
             "after_create",
-            DDL(
-                """CREATE FULLTEXT INDEX
+            DDL("""CREATE FULLTEXT INDEX
                        ON matchtable (title)
-                       KEY INDEX PK_matchtable"""
-            ),
+                       KEY INDEX PK_matchtable"""),
         )
 
         event.listen(
@@ -628,8 +624,7 @@ class TableValuedTest(fixtures.TestBase):
 
     @testing.fixture
     def scalar_strings(self, connection):
-        connection.exec_driver_sql(
-            """
+        connection.exec_driver_sql("""
 
 CREATE FUNCTION scalar_strings (
 )
@@ -641,15 +636,13 @@ RETURN
     FROM (
         VALUES ('some string'), ('some string'), ('some string')
     ) AS my_tab(my_string)
-        """
-        )
+        """)
         yield
         connection.exec_driver_sql("DROP FUNCTION scalar_strings")
 
     @testing.fixture
     def two_strings(self, connection):
-        connection.exec_driver_sql(
-            """
+        connection.exec_driver_sql("""
 CREATE FUNCTION three_pairs (
 )
 RETURNS TABLE
@@ -660,8 +653,7 @@ RETURN
     FROM (
         VALUES ('a', 'b'), ('c', 'd'), ('e', 'f')
     ) AS my_tab(s1, s2)
-"""
-        )
+""")
         yield
         connection.exec_driver_sql("DROP FUNCTION three_pairs")
 

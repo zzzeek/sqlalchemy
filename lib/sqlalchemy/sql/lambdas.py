@@ -45,7 +45,6 @@ from .. import exc
 from .. import inspection
 from .. import util
 
-
 if TYPE_CHECKING:
     from .elements import BindParameter
     from .elements import ClauseElement
@@ -302,7 +301,7 @@ class LambdaElement(elements.ClauseElement):
                 rec = lambda_element._rec
                 if rec.bindparam_trackers:
                     tracker_instrumented_fn = (
-                        rec.tracker_instrumented_fn  # type:ignore [union-attr] # noqa: E501
+                        rec.tracker_instrumented_fn  # type: ignore [union-attr] # noqa: E501
                     )
                     for tracker in rec.bindparam_trackers:
                         tracker(

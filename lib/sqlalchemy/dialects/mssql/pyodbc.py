@@ -357,7 +357,6 @@ hook. See that method for usage examples.
 
 """  # noqa
 
-
 import datetime
 import decimal
 import re

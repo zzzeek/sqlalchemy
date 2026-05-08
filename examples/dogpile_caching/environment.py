@@ -14,7 +14,6 @@ from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm import sessionmaker
 from . import caching_query
 
-
 # dogpile cache regions.  A home base for cache configurations.
 regions = {}
 

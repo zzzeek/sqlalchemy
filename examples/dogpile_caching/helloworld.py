@@ -6,7 +6,6 @@ from .environment import cache
 from .environment import Session
 from .model import Person
 
-
 # load Person objects.  cache the result in the "default" cache region
 print("loading people....")
 people = Session.scalars(select(Person).options(FromCache("default"))).all()

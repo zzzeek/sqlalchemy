@@ -22,7 +22,6 @@ from ... import types as sqltypes
 from ...sql import functions as sqlfunc
 from ...types import OperatorClass
 
-
 __all__ = ("HSTORE", "hstore")
 
 _HSTORE_VAL = dict[str, str | None]

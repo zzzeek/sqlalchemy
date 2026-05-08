@@ -103,7 +103,6 @@ decorator is supported::
     from sqlalchemy.orm import mapped_column
     from sqlalchemy.orm import registry
 
-
     reg = registry()
 
 
@@ -121,7 +120,6 @@ have better compatibility with some versions of the mypy type checker::
     from sqlalchemy.orm import mapped_as_dataclass
     from sqlalchemy.orm import mapped_column
     from sqlalchemy.orm import registry
-
 
     reg = registry()
 
@@ -172,7 +170,6 @@ the decorator directly::
     from sqlalchemy.orm import registry
     from sqlalchemy.orm import Mapped
     from sqlalchemy.orm import mapped_column
-
 
     reg = registry()
 

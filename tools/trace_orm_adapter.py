@@ -37,7 +37,6 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy.orm import util
 
-
 if TYPE_CHECKING:
     from typing import Any
     from typing import List

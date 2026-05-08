@@ -18,7 +18,6 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import Session
 
-
 logging.basicConfig(
     filename="space_invaders.log",
     format="%(asctime)s,%(msecs)03d %(levelname)-5.5s %(message)s",

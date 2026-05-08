@@ -21,7 +21,6 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import operators
 from sqlalchemy.sql import visitors
 
-
 echo = True
 db1 = create_engine("sqlite://", echo=echo)
 db2 = create_engine("sqlite://", echo=echo)

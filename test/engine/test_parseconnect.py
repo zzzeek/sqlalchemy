@@ -29,7 +29,6 @@ from sqlalchemy.testing import mock
 from sqlalchemy.testing import ne_
 from sqlalchemy.testing.assertions import expect_raises_message
 
-
 dialect = None
 
 

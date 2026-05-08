@@ -119,9 +119,9 @@ class anon_map(Dict[_AM_KEY, _AM_VALUE]):
             self_dict: dict = self  # type: ignore[type-arg]
 
             if key in self_dict:
-                return self_dict[key]  # type:ignore[no-any-return]
+                return self_dict[key]  # type: ignore[no-any-return]
             else:
-                return self._add_missing(key)  # type:ignore[no-any-return]
+                return self._add_missing(key)  # type: ignore[no-any-return]
 
     def __missing__(self: anon_map, key: _AM_KEY, /) -> int:
-        return self._add_missing(key)  # type:ignore[no-any-return]
+        return self._add_missing(key)  # type: ignore[no-any-return]

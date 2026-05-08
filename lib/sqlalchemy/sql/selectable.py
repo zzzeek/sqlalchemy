@@ -5221,7 +5221,7 @@ class SelectState(util.MemoizedSlots, CompileState):
                     raw_columns, left, right, onclause
                 )
             else:
-                (replace_from_obj_index) = self._join_place_explicit_left_side(
+                replace_from_obj_index = self._join_place_explicit_left_side(
                     left
                 )
 

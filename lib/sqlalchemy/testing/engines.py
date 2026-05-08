@@ -27,7 +27,6 @@ from .. import event
 from .. import pool
 from ..util import await_
 
-
 if typing.TYPE_CHECKING:
     from ..engine import Engine
     from ..engine.url import URL

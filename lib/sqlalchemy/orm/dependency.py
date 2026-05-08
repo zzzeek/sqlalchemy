@@ -194,7 +194,7 @@ class _DependencyProcessor:
                     if child_state not in uow.states:
                         child_action = (None, None)
                     else:
-                        (deleted, listonly) = uow.states[child_state]
+                        deleted, listonly = uow.states[child_state]
                         if deleted:
                             child_action = (
                                 unitofwork._DeleteState(uow, child_state),

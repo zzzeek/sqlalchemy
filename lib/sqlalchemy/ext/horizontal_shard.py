@@ -23,6 +23,7 @@ the source distribution.
 
 
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -53,7 +54,6 @@ from ..util.typing import Self
 from ..util.typing import TupleAny
 from ..util.typing import TypeVarTuple
 from ..util.typing import Unpack
-
 
 if TYPE_CHECKING:
     from ..engine.base import Connection

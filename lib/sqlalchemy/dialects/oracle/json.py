@@ -17,7 +17,6 @@ from ...sql.base import _NoArg
 from ...sql.base import NO_ARG
 from ...sql.sqltypes import _T_JSON
 
-
 if TYPE_CHECKING:
     from ...engine.interfaces import Dialect
     from ...sql.type_api import _BindProcessorType

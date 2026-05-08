@@ -587,6 +587,7 @@ behavioral changes particularly when using the native JSON datatype.  See
 
 
 """  # noqa
+
 from __future__ import annotations
 
 import collections

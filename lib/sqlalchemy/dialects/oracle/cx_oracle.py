@@ -467,6 +467,7 @@ SQL statements that are not otherwise associated with a :class:`.Numeric`
 SQLAlchemy type (or a subclass of such).
 
 """  # noqa
+
 from __future__ import annotations
 
 import decimal

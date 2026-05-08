@@ -9,7 +9,6 @@ from sqlalchemy import Select
 from sqlalchemy import select
 from sqlalchemy.sql.sqltypes import _JSON_VALUE
 
-
 assert_type(Float(), Float[float])
 assert_type(Float(asdecimal=True), Float[Decimal])
 

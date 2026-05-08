@@ -112,7 +112,7 @@ def instances(
     )
 
     try:
-        (process, labels, extra) = list(
+        process, labels, extra = list(
             zip(
                 *[
                     query_entity.row_processor(context, cursor)
@@ -560,7 +560,7 @@ def _load_on_pk_identity(
     if primary_key_identity is not None:
         mapper = query._propagate_attrs["plugin_subject"]
 
-        (_get_clause, _get_params) = mapper._get_clause
+        _get_clause, _get_params = mapper._get_clause
 
         # None present in ident - turn those comparisons
         # into "IS NULL"

@@ -45,7 +45,6 @@ from ...util.typing import TupleAny
 from ...util.typing import TypeVarTuple
 from ...util.typing import Unpack
 
-
 if TYPE_CHECKING:
     from .engine import AsyncConnection
     from .engine import AsyncEngine

@@ -13,7 +13,6 @@ from sqlalchemy.testing import eq_
 from sqlalchemy.testing import fixtures
 from sqlalchemy.testing import profiling
 
-
 NUM_FIELDS = 10
 NUM_RECORDS = 1000
 

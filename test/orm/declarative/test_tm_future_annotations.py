@@ -41,7 +41,6 @@ from .test_typed_mapping import expect_annotation_syntax_error
 from .test_typed_mapping import MappedColumnTest as _MappedColumnTest
 from .test_typed_mapping import RelationshipLHSTest as _RelationshipLHSTest
 
-
 _R = TypeVar("_R")
 
 M = Mapped

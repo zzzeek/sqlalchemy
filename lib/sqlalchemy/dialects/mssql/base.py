@@ -3271,8 +3271,7 @@ class MSDialect(default.DefaultDialect):
 
             view_name = f"sys.{row[0]}"
 
-            cursor.execute(
-                """
+            cursor.execute("""
                     SELECT CASE transaction_isolation_level
                     WHEN 0 THEN NULL
                     WHEN 1 THEN 'READ UNCOMMITTED'
@@ -3283,10 +3282,7 @@ class MSDialect(default.DefaultDialect):
                     AS TRANSACTION_ISOLATION_LEVEL
                     FROM {}
                     where session_id = @@SPID
-                """.format(
-                    view_name
-                )
-            )
+                """.format(view_name))
         except self.dbapi.Error as err:
             raise NotImplementedError(
                 "Can't fetch isolation level;  encountered error {} when "
@@ -3484,8 +3480,7 @@ class MSDialect(default.DefaultDialect):
             else "NULL as filter_definition"
         )
         rp = connection.execution_options(future_result=True).execute(
-            sql.text(
-                f"""
+            sql.text(f"""
 select
     ind.index_id,
     ind.is_unique,
@@ -3505,8 +3500,7 @@ where
     and ind.type != 0
 order by
     ind.name
-                """
-            )
+                """)
             .bindparams(
                 sql.bindparam("tabname", tablename, ischema.CoerceUnicode()),
                 sql.bindparam("schname", owner, ischema.CoerceUnicode()),
@@ -3534,8 +3528,7 @@ order by
                 do["mssql_where"] = row["filter_definition"]
 
         rp = connection.execution_options(future_result=True).execute(
-            sql.text(
-                """
+            sql.text("""
 select
     ind_col.index_id,
     col.name,
@@ -3555,8 +3548,7 @@ where
 order by
     ind_col.index_id,
     ind_col.key_ordinal
-            """
-            )
+            """)
             .bindparams(
                 sql.bindparam("tabname", tablename, ischema.CoerceUnicode()),
                 sql.bindparam("schname", owner, ischema.CoerceUnicode()),
@@ -3982,8 +3974,7 @@ order by
     ):
         # Foreign key constraints
         s = (
-            text(
-                """\
+            text("""\
 WITH fk_info AS (
     SELECT
         ischema_ref_con.constraint_schema,
@@ -4083,8 +4074,7 @@ index_info AS (
 
     ORDER BY fk_info.constraint_schema, fk_info.constraint_name,
         fk_info.ordinal_position
-"""
-            )
+""")
             .bindparams(
                 sql.bindparam("tablename", tablename, ischema.CoerceUnicode()),
                 sql.bindparam("owner", owner, ischema.CoerceUnicode()),

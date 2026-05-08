@@ -62,7 +62,6 @@ from sqlalchemy.testing import ne_
 from sqlalchemy.testing.assertions import expect_raises_message
 from sqlalchemy.testing.provision import normalize_sequence
 
-
 metadata = MetaData()
 table1 = Table(
     "table1",

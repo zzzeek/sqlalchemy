@@ -615,7 +615,7 @@ def create_engine(url: Union[str, _url.URL], **kwargs: Any) -> Engine:
     dialect = dialect_cls(**dialect_args)
 
     # assemble connection arguments
-    (cargs_tup, _cparams) = dialect.create_connect_args(u)
+    cargs_tup, _cparams = dialect.create_connect_args(u)
     cparams = util.immutabledict(_cparams).union(pop_kwarg("connect_args", {}))
 
     # look for existing pool or create

@@ -6,11 +6,11 @@ This script is an extension to pytest which
 installs SQLAlchemy's testing plugin into the local environment.
 
 """
+
 import os
 import sys
 
 import pytest
-
 
 os.environ["SQLALCHEMY_WARN_20"] = "true"
 

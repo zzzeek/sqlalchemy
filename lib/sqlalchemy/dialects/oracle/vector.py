@@ -316,12 +316,10 @@ class VECTOR(types.TypeEngine):
                 )
 
             else:
-                raise TypeError(
-                    """
+                raise TypeError("""
                     Invalid input for VECTOR: expected a list, an array.array,
                     or a SparseVector object.
-                    """
-                )
+                    """)
 
         return process
 

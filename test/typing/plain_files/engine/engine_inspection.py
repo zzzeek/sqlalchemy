@@ -7,7 +7,6 @@ from sqlalchemy.engine import Inspector
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.engine.interfaces import ReflectedColumn
 
-
 e = create_engine("sqlite://")
 
 insp = inspect(e)

@@ -21,7 +21,6 @@ from sqlalchemy.sql.elements import UnaryExpression
 from sqlalchemy.sql.expression import BinaryExpression
 from sqlalchemy.sql.expression import ColumnClause
 
-
 # builtin.pyi stubs define object.__eq__() as returning bool,  which
 # can't be overridden (it's final).  So for us to type `__eq__()` and
 # `__ne__()`, we have to use type: ignore[override].  Test if does this mean

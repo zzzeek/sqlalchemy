@@ -11,6 +11,7 @@ Provides the hierarchy of DDL-defining schema items as well as routines
 to invoke them for a create/drop call.
 
 """
+
 from __future__ import annotations
 
 import contextlib
@@ -45,7 +46,6 @@ from .. import exc
 from .. import util
 from ..util import topological
 from ..util.typing import Self
-
 
 if typing.TYPE_CHECKING:
     from .compiler import Compiled

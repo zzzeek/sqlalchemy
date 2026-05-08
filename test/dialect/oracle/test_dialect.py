@@ -516,8 +516,7 @@ class OutParamTest(fixtures.TestBase, AssertsExecutionResults):
     @classmethod
     def setup_test_class(cls):
         with testing.db.begin() as c:
-            c.exec_driver_sql(
-                """
+            c.exec_driver_sql("""
 create or replace procedure foo(x_in IN number, x_out OUT number,
 y_out OUT number, z_out OUT varchar) IS
 retval number;
@@ -527,8 +526,7 @@ begin
     y_out := x_in * 15;
     z_out := NULL;
 end;
-                """
-            )
+                """)
 
     def test_out_params(self, connection):
         result = connection.execute(
@@ -1108,8 +1106,7 @@ class TableValuedTest(fixtures.TestBase):
         connection.exec_driver_sql(
             "CREATE OR REPLACE TYPE strings_t IS TABLE OF VARCHAR2 (100)"
         )
-        connection.exec_driver_sql(
-            r"""
+        connection.exec_driver_sql(r"""
 CREATE OR REPLACE FUNCTION scalar_strings (
    count_in IN INTEGER, string_in IN VARCHAR2)
    RETURN strings_t
@@ -1126,31 +1123,25 @@ BEGIN
 
    RETURN l_strings;
 END;
-        """
-        )
+        """)
         yield
         connection.exec_driver_sql("DROP FUNCTION scalar_strings")
         connection.exec_driver_sql("DROP TYPE strings_t")
 
     @testing.fixture
     def two_strings(self, connection):
-        connection.exec_driver_sql(
-            """
+        connection.exec_driver_sql("""
 CREATE OR REPLACE TYPE two_strings_ot
    AUTHID DEFINER IS OBJECT
 (
    string1 VARCHAR2 (10),
    string2 VARCHAR2 (10)
-)"""
-        )
-        connection.exec_driver_sql(
-            """
+)""")
+        connection.exec_driver_sql("""
             CREATE OR REPLACE TYPE two_strings_nt IS TABLE OF two_strings_ot
-"""
-        )
+""")
 
-        connection.exec_driver_sql(
-            """
+        connection.exec_driver_sql("""
         CREATE OR REPLACE FUNCTION three_pairs
    RETURN two_strings_nt
    AUTHID DEFINER
@@ -1161,8 +1152,7 @@ BEGIN
                           two_strings_ot ('c', 'd'),
                           two_strings_ot ('e', 'f'));
 END;
-"""
-        )
+""")
         yield
         connection.exec_driver_sql("DROP FUNCTION three_pairs")
         connection.exec_driver_sql("DROP TYPE two_strings_nt")

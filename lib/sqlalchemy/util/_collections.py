@@ -7,6 +7,7 @@
 # mypy: allow-untyped-defs, allow-untyped-calls
 
 """Collection classes and helpers."""
+
 from __future__ import annotations
 
 import operator
@@ -44,7 +45,6 @@ from ._immutabledict_cy import immutabledict as immutabledict
 from ._immutabledict_cy import ImmutableDictBase as ImmutableDictBase
 from ._immutabledict_cy import ReadOnlyContainer as ReadOnlyContainer
 from .typing import is_non_string_iterable
-
 
 _T = TypeVar("_T", bound=Any)
 _KT = TypeVar("_KT", bound=Any)

@@ -1105,7 +1105,6 @@ and ``required_name`` which is a :class:`.String` of length 30 that's
     from sqlalchemy import String
     from sqlalchemy.orm import mapped_column
 
-
     intpk = Annotated[int, mapped_column(primary_key=True)]
     timestamp = Annotated[
         datetime.datetime,
@@ -2225,7 +2224,6 @@ map such a table as in the following example::
     from sqlalchemy import Table
     from sqlalchemy import UniqueConstraint
     from sqlalchemy.orm import DeclarativeBase
-
 
     metadata = MetaData()
     group_users = Table(

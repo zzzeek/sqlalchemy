@@ -94,7 +94,6 @@ from sqlalchemy.testing import Variation
 from sqlalchemy.testing.assertions import ne_
 from sqlalchemy.testing.fixtures import fixture_session
 
-
 # try to differentiate between typing_extensions.TypeAliasType
 # and typing.TypeAliasType
 TypingTypeAliasType = getattr(typing, "TypeAliasType", TypeAliasType)

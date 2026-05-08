@@ -15,7 +15,6 @@ from sqlalchemy import String
 from sqlalchemy import Table
 from sqlalchemy.ext.asyncio import create_async_engine
 
-
 meta = MetaData()
 
 t1 = Table(

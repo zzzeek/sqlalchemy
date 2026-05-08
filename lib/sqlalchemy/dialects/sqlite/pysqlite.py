@@ -390,6 +390,7 @@ connection when it is created. That is accomplished with an event listener::
             print(conn.scalar(text("SELECT UDF()")))
 
 """  # noqa
+
 from __future__ import annotations
 
 import math

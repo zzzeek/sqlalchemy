@@ -86,7 +86,6 @@ from ..util.typing import Self
 from ..util.typing import TupleAny
 from ..util.typing import Unpack
 
-
 if typing.TYPE_CHECKING:
     from ._typing import _ByArgument
     from ._typing import _ColumnExpressionArgument

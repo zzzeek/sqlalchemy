@@ -25,7 +25,6 @@ from black.files import parse_pyproject_toml
 from black.mode import Mode
 from black.mode import TargetVersion
 
-
 home = Path(__file__).parent.parent
 include_paths = (
     re.compile(r"lib/sqlalchemy"),

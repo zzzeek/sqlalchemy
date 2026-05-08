@@ -16,7 +16,6 @@ from sqlalchemy import text
 from sqlalchemy import true
 from sqlalchemy import UUID
 
-
 m = MetaData()
 
 

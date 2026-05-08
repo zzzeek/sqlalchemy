@@ -22,7 +22,6 @@ from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import sessionmaker
 
-
 echo = True
 engine = create_engine("sqlite://", echo=echo)
 

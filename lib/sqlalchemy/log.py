@@ -17,6 +17,7 @@ and :class:`_pool.Pool` objects, corresponds to a logger specific to that
 instance only.
 
 """
+
 from __future__ import annotations
 
 import logging
@@ -31,7 +32,6 @@ from typing import TypeVar
 from typing import Union
 
 from .util import py311
-
 
 STACKLEVEL = True
 # needed as of py3.11.0b1

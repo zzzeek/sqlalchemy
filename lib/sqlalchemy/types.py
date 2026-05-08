@@ -7,7 +7,6 @@
 
 """Compatibility namespace for sqlalchemy.sql.types."""
 
-
 from __future__ import annotations
 
 from .sql.operators import OperatorClass as OperatorClass

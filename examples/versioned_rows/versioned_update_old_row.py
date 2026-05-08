@@ -25,7 +25,6 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import with_loader_criteria
 
-
 Base = declarative_base()
 
 # this will be the current time as the test runs

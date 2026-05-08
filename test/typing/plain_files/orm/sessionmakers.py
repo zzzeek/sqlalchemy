@@ -15,7 +15,6 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.query import Query
 
-
 async_engine = create_async_engine("...")
 
 

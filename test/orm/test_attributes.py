@@ -1177,7 +1177,7 @@ class BackrefTest(fixtures.ORMTest):
         s.courses.remove(c)
         self.assert_(c.students == [])
 
-        (s1, s2, s3) = (Student(), Student(), Student())
+        s1, s2, s3 = (Student(), Student(), Student())
 
         c.students = [s1, s2, s3]
         self.assert_(s2.courses == [c])
@@ -1211,7 +1211,7 @@ class BackrefTest(fixtures.ORMTest):
             useobject=True,
         )
         b = Blog()
-        (p1, p2, p3) = (Post(), Post(), Post())
+        p1, p2, p3 = (Post(), Post(), Post())
         b.posts.append(p1)
         b.posts.append(p2)
         b.posts.append(p3)

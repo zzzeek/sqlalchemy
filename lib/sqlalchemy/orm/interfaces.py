@@ -77,7 +77,6 @@ from ..util.typing import RODescriptorReference
 from ..util.typing import TupleAny
 from ..util.typing import Unpack
 
-
 if typing.TYPE_CHECKING:
     from ._typing import _EntityType
     from ._typing import _IdentityKeyType

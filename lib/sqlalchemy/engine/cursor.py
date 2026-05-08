@@ -8,7 +8,6 @@
 """Define cursor-specific result set constructs including
 :class:`.CursorResult`."""
 
-
 from __future__ import annotations
 
 import collections
@@ -55,7 +54,6 @@ from ..util.typing import Self
 from ..util.typing import TupleAny
 from ..util.typing import TypeVarTuple
 from ..util.typing import Unpack
-
 
 if typing.TYPE_CHECKING:
     from .base import Connection

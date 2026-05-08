@@ -209,7 +209,6 @@ Given the example program below::
     from sqlalchemy import select
     from sqlalchemy import table
 
-
     engine = create_engine("sqlite://")
 
     engine.execute("CREATE TABLE foo (id integer)")
@@ -277,7 +276,6 @@ as a bonus our program is much clearer::
     from sqlalchemy import select
     from sqlalchemy import table
     from sqlalchemy import text
-
 
     engine = create_engine("sqlite://")
 
@@ -1244,7 +1242,6 @@ object.
 Code that works with classical mappings should change imports and code from::
 
     from sqlalchemy.orm import mapper
-
 
     mapper(SomeClass, some_table, properties={"related": relationship(SomeRelatedClass)})
 

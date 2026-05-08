@@ -47,6 +47,7 @@ and targets 100% compatibility.   Most behavioral notes for MySQL-python apply
 to the pymysql driver as well.
 
 """  # noqa
+
 from __future__ import annotations
 
 from typing import Any

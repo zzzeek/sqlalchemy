@@ -1068,8 +1068,7 @@ class ReflectionTest(fixtures.TestBase, ComparesTables):
         indexes"""
 
         conn = connection
-        conn.exec_driver_sql(
-            """
+        conn.exec_driver_sql("""
             CREATE TABLE book (
                 id INTEGER NOT NULL,
                 title VARCHAR(100) NOT NULL,
@@ -1077,8 +1076,7 @@ class ReflectionTest(fixtures.TestBase, ComparesTables):
                 series_id INTEGER,
                 UNIQUE(series, series_id),
                 PRIMARY KEY(id)
-            )"""
-        )
+            )""")
 
         book = Table("book", metadata, autoload_with=connection)
         assert book.primary_key.contains_column(book.c.id)
@@ -1107,8 +1105,7 @@ class ReflectionTest(fixtures.TestBase, ComparesTables):
         """test reflection of a composite primary key"""
 
         conn = connection
-        conn.exec_driver_sql(
-            """
+        conn.exec_driver_sql("""
             CREATE TABLE book (
                 id INTEGER NOT NULL,
                 isbn VARCHAR(50) NOT NULL,
@@ -1117,8 +1114,7 @@ class ReflectionTest(fixtures.TestBase, ComparesTables):
                 series_id INTEGER NOT NULL,
                 UNIQUE(series, series_id),
                 PRIMARY KEY(id, isbn)
-            )"""
-        )
+            )""")
         book = Table("book", metadata, autoload_with=connection)
         assert book.primary_key.contains_column(book.c.id)
         assert book.primary_key.contains_column(book.c.isbn)
@@ -2042,15 +2038,13 @@ class ReverseCasingReflectTest(fixtures.TestBase, AssertsCompiledSQL):
     @testing.requires.denormalized_names
     def setup_test(self):
         with testing.db.begin() as conn:
-            conn.exec_driver_sql(
-                """
+            conn.exec_driver_sql("""
             CREATE TABLE weird_casing(
                     col1 char(20),
                     "Col2" char(20),
                     "col3" char(20)
             )
-            """
-            )
+            """)
 
     @testing.requires.denormalized_names
     def teardown_test(self):
