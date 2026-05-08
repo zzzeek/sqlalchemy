@@ -27,7 +27,6 @@ from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import Session
 
-
 if TYPE_CHECKING:
     from sqlalchemy import Row
     from sqlalchemy.orm.query import RowReturningQuery

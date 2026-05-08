@@ -7,7 +7,6 @@ import gevent.monkey
 from sqlalchemy import create_engine
 from sqlalchemy import event
 
-
 gevent.monkey.patch_all()  # noqa
 
 logging.basicConfig()  # noqa

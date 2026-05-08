@@ -17,7 +17,6 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import with_polymorphic
 
-
 intpk = Annotated[int, mapped_column(primary_key=True)]
 str50 = Annotated[str, mapped_column(String(50))]
 

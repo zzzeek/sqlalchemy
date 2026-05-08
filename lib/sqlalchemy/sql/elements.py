@@ -80,7 +80,6 @@ from ..util.typing import Literal
 from ..util.typing import ParamSpec
 from ..util.typing import Self
 
-
 if typing.TYPE_CHECKING:
     from ._typing import _ByArgument
     from ._typing import _ColumnExpressionArgument

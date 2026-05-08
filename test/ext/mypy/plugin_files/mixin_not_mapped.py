@@ -4,7 +4,6 @@ from sqlalchemy import String
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import registry
 
-
 reg: registry = registry()
 
 Base = declarative_base()

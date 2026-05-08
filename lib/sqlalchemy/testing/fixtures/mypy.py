@@ -42,8 +42,7 @@ class MypyTest(TestBase):
             with open(
                 Path(cachedir) / "sqla_mypy_config.cfg", "w"
             ) as config_file:
-                config_file.write(
-                    f"""
+                config_file.write(f"""
                     [mypy]\n
                     plugins = sqlalchemy.ext.mypy.plugin\n
                     show_error_codes = True\n
@@ -53,13 +52,11 @@ class MypyTest(TestBase):
                     [mypy-sqlalchemy.*]
                     ignore_errors = True
 
-                    """
-                )
+                    """)
             with open(
                 Path(cachedir) / "plain_mypy_config.cfg", "w"
             ) as config_file:
-                config_file.write(
-                    f"""
+                config_file.write(f"""
                     [mypy]\n
                     show_error_codes = True\n
                     {mypy_path}
@@ -67,8 +64,7 @@ class MypyTest(TestBase):
                     [mypy-sqlalchemy.*]
                     ignore_errors = True
 
-                    """
-                )
+                    """)
             yield cachedir
 
     @config.fixture()

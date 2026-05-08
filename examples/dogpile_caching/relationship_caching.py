@@ -16,7 +16,6 @@ from .environment import Session
 from .model import cache_address_bits
 from .model import Person
 
-
 for p in Session.scalars(
     select(Person).options(joinedload(Person.addresses), cache_address_bits)
 ).unique():

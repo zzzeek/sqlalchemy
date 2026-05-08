@@ -404,7 +404,7 @@ class UserDefinedExtensionTest(_ExtBase, fixtures.ORMTest):
                 useobject=True,
             )
             b = Blog()
-            (p1, p2, p3) = (Post(), Post(), Post())
+            p1, p2, p3 = (Post(), Post(), Post())
             b.posts.append(p1)
             b.posts.append(p2)
             b.posts.append(p3)

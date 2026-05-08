@@ -273,28 +273,22 @@ def process_class(
             metadata["after_line"] = ""
 
         if clslevel:
-            code = (
-                '''\
+            code = '''\
 @classmethod
 %(async)sdef %(name)s%(grouped_args)s:
     r"""%(doc)s\n    """  # noqa: E501
 
     %(line_prefix)s %(await)s%(target_cls_name)s.%(name)s(%(apply_kw_proxied)s)
     %(after_line)s
-'''
-                % metadata
-            )
+''' % metadata
         else:
-            code = (
-                '''\
+            code = '''\
 %(async)sdef %(name)s%(grouped_args)s:
     r"""%(doc)s\n    """  # noqa: E501
 
     %(line_prefix)s %(await)s%(self_arg)s._proxied.%(name)s(%(apply_kw_proxied)s)
     %(after_line)s
-'''  # noqa: E501
-                % metadata
-            )
+''' % metadata  # noqa: E501
 
         buf.write(textwrap.indent(code, "    "))
 

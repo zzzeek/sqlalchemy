@@ -26,7 +26,6 @@ from sqlalchemy.orm.attributes import get_attribute
 from sqlalchemy.orm.attributes import set_attribute
 from sqlalchemy.orm.instrumentation import is_instrumented
 
-
 registry = _reg()
 
 

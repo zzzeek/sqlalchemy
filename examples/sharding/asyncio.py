@@ -32,7 +32,6 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import operators
 from sqlalchemy.sql import visitors
 
-
 echo = True
 db1 = create_async_engine("sqlite+aiosqlite://", echo=echo)
 db2 = create_async_engine("sqlite+aiosqlite://", echo=echo)

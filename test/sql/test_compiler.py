@@ -115,7 +115,6 @@ from sqlalchemy.testing import Variation
 from sqlalchemy.testing.schema import pep435_enum
 from sqlalchemy.types import UserDefinedType
 
-
 if TYPE_CHECKING:
     from sqlalchemy import Select
 

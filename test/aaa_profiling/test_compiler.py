@@ -10,7 +10,6 @@ from sqlalchemy.testing import AssertsExecutionResults
 from sqlalchemy.testing import fixtures
 from sqlalchemy.testing import profiling
 
-
 t1 = t2 = None
 
 

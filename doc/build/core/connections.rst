@@ -295,6 +295,7 @@ to as great a degree as possible.
 
 Setting Isolation Level or DBAPI Autocommit for a Connection
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+..format: off
 
 For an individual :class:`_engine.Connection` object that's acquired from
 :meth:`.Engine.connect`, the isolation level can be set for the duration of
@@ -313,6 +314,7 @@ are strings which are typically a subset of the following names::
 
 Not every DBAPI supports every value; if an unsupported value is used for a
 certain backend, an error is raised.
+..format: on
 
 For example, to force REPEATABLE READ on a specific connection, then
 begin a transaction::
@@ -2637,7 +2639,6 @@ SQLAlchemy also allows a dialect to be registered within the current process, by
 the need for separate installation.   Use the ``register()`` function as follows::
 
     from sqlalchemy.dialects import registry
-
 
     registry.register("mysql.foodialect", "myapp.dialect", "MyMySQLDialect")
 

@@ -3,7 +3,6 @@ from sqlalchemy import Integer
 from sqlalchemy import String
 from sqlalchemy.orm import registry
 
-
 reg: registry = registry()
 
 

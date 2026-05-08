@@ -1718,34 +1718,28 @@ class ReflectionTest(
             Column("other", String(20)),
         )
         metadata.create_all(connection)
-        connection.exec_driver_sql(
-            """
+        connection.exec_driver_sql("""
             create index idx3 on party
                 (lower(name::text), other, lower(aname::text) desc)
-            """
-        )
+            """)
         connection.exec_driver_sql(
             "create index idx1 on party ((id || name), (other || id::text))"
         )
         connection.exec_driver_sql(
             "create unique index idx2 on party (id) where name = 'test'"
         )
-        connection.exec_driver_sql(
-            """
+        connection.exec_driver_sql("""
             create index idx4 on party using btree
                 (name nulls first, lower(other), aname desc)
                 where name != 'foo'
-            """
-        )
+            """)
         version = connection.dialect.server_version_info
         if version >= (15,):
-            connection.exec_driver_sql(
-                """
+            connection.exec_driver_sql("""
                 create unique index zz_idx5 on party
                     (name desc, upper(other))
                     nulls not distinct
-                """
-            )
+                """)
 
         expected = [
             {
@@ -1889,28 +1883,22 @@ class ReflectionTest(
         t1.create(connection)
 
         # check ASC, DESC options alone
-        connection.exec_driver_sql(
-            """
+        connection.exec_driver_sql("""
             create index idx1 on party
                 (id, name ASC, aname DESC)
-        """
-        )
+        """)
 
         # check DESC w/ NULLS options
-        connection.exec_driver_sql(
-            """
+        connection.exec_driver_sql("""
           create index idx2 on party
                 (name DESC NULLS FIRST, aname DESC NULLS LAST)
-        """
-        )
+        """)
 
         # check ASC w/ NULLS options
-        connection.exec_driver_sql(
-            """
+        connection.exec_driver_sql("""
           create index idx3 on party
                 (name ASC NULLS FIRST, aname ASC NULLS LAST)
-        """
-        )
+        """)
 
         # reflect data
         m2 = MetaData()
@@ -2175,19 +2163,15 @@ class ReflectionTest(
         )
         metadata.create_all(connection)
         connection.exec_driver_sql("CREATE INDEX idx1 ON t (x) INCLUDE (name)")
-        connection.exec_driver_sql(
-            """
+        connection.exec_driver_sql("""
             create index idx3 on t
                 (lower(name::text), other desc nulls last, lower(aname::text))
                 include (id, x)
-            """
-        )
-        connection.exec_driver_sql(
-            """
+            """)
+        connection.exec_driver_sql("""
             create unique index idx2 on t using btree
                 (lower(other), (id * id)) include (id)
-            """
-        )
+            """)
 
         ind = connection.dialect.get_indexes(connection, "t", None)
         eq_(

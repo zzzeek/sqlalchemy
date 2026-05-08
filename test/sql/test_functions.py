@@ -55,7 +55,6 @@ from sqlalchemy.testing.assertions import expect_warnings
 from sqlalchemy.testing.engines import all_dialects
 from sqlalchemy.testing.provision import normalize_sequence
 
-
 table1 = table(
     "mytable",
     column("myid", Integer),

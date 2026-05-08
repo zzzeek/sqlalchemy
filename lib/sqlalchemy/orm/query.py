@@ -18,6 +18,7 @@ ORM session, whereas the ``Select`` construct interacts directly with the
 database to return iterable result sets.
 
 """
+
 from __future__ import annotations
 
 import collections.abc as collections_abc
@@ -94,7 +95,6 @@ from ..sql.selectable import SelectLabelStyle
 from ..util.typing import Literal
 from ..util.typing import Self
 from ..util.typing import SupportsIndex
-
 
 if TYPE_CHECKING:
     from ._typing import _EntityType

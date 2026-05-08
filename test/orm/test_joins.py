@@ -1389,8 +1389,8 @@ class JoinTest(QueryTest, AssertsCompiledSQL):
 
         sess = fixture_session()
 
-        (user7, user8, user9, user10) = sess.query(User).all()
-        (address1, address2, address3, address4, address5) = sess.query(
+        user7, user8, user9, user10 = sess.query(User).all()
+        address1, address2, address3, address4, address5 = sess.query(
             Address
         ).all()
         expected = [
@@ -1494,8 +1494,8 @@ class JoinTest(QueryTest, AssertsCompiledSQL):
 
         sess = fixture_session()
 
-        (order1, order2, order3, order4, order5) = sess.query(Order).all()
-        (item1, item2, item3, item4, item5) = sess.query(Item).all()
+        order1, order2, order3, order4, order5 = sess.query(Order).all()
+        item1, item2, item3, item4, item5 = sess.query(Item).all()
         expected = [
             (order1, item1),
             (order1, item2),

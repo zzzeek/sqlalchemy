@@ -168,6 +168,7 @@ specified::
     `Client-side-binding cursors <https://www.psycopg.org/psycopg3/docs/advanced/cursors.html#client-side-binding-cursors>`_
 
 """  # noqa
+
 from __future__ import annotations
 
 from collections import deque

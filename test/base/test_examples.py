@@ -3,7 +3,6 @@ import sys
 
 from sqlalchemy.testing import fixtures
 
-
 here = os.path.dirname(__file__)
 sqla_base = os.path.normpath(os.path.join(here, "..", ".."))
 

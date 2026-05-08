@@ -1160,7 +1160,7 @@ class CompoundTest(fixtures.TablesTest):
     @testing.requires.subqueries
     def test_union(self, connection):
         t1, t2, t3 = self.tables("t1", "t2", "t3")
-        (s1, s2) = (
+        s1, s2 = (
             select(t1.c.col3.label("col3"), t1.c.col4.label("col4")).where(
                 t1.c.col2.in_(["t1col2r1", "t1col2r2"]),
             ),
@@ -1187,7 +1187,7 @@ class CompoundTest(fixtures.TablesTest):
     def test_union_ordered(self, connection):
         t1, t2, t3 = self.tables("t1", "t2", "t3")
 
-        (s1, s2) = (
+        s1, s2 = (
             select(t1.c.col3.label("col3"), t1.c.col4.label("col4")).where(
                 t1.c.col2.in_(["t1col2r1", "t1col2r2"]),
             ),
@@ -1209,7 +1209,7 @@ class CompoundTest(fixtures.TablesTest):
     def test_union_ordered_alias(self, connection):
         t1, t2, t3 = self.tables("t1", "t2", "t3")
 
-        (s1, s2) = (
+        s1, s2 = (
             select(t1.c.col3.label("col3"), t1.c.col4.label("col4")).where(
                 t1.c.col2.in_(["t1col2r1", "t1col2r2"]),
             ),

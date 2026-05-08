@@ -16,7 +16,6 @@ from sqlalchemy.testing.fixtures import fixture_session
 from sqlalchemy.testing.schema import Column
 from sqlalchemy.testing.schema import Table
 
-
 # TODO: more tests mapping to selects
 
 

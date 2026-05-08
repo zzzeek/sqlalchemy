@@ -4,7 +4,6 @@ from typing import Dict
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import declared_attr
 
-
 Base = declarative_base()
 
 
