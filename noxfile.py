@@ -11,6 +11,7 @@ from typing import List
 from typing import Set
 
 import nox
+from nox.command import CommandFailed
 
 if sys.version_info > (3, 12):
     nox.needs_version = ">=2025.10.16"
@@ -368,6 +369,8 @@ def test_pep8(session: nox.Session) -> None:
 
     session.install(*nox.project.dependency_groups(pyproject, "lint"))
 
+    failed = []
+
     for cmd in [
         "flake8p ./lib/ ./test/ ./examples/ noxfile.py "
         "setup.py doc/build/conf.py",
@@ -387,5 +390,10 @@ def test_pep8(session: nox.Session) -> None:
         "python ./tools/cython_imports.py --check",
         "python ./tools/walk_packages.py",
     ]:
+        try:
+            session.run(*cmd.split())
+        except CommandFailed as err:
+            failed.append((cmd, err))
 
-        session.run(*cmd.split())
+    if failed:
+        session.error(f"failed with {len(failed)} errors")
