@@ -19,7 +19,6 @@ from .operators import HAS_KEY
 from ... import types as sqltypes
 from ...sql import functions as sqlfunc
 
-
 __all__ = ("HSTORE", "hstore")
 
 

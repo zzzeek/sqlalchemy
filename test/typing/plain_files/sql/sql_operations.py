@@ -14,7 +14,6 @@ from sqlalchemy import select
 from sqlalchemy import String
 from sqlalchemy import true
 
-
 # builtin.pyi stubs define object.__eq__() as returning bool,  which
 # can't be overridden (it's final).  So for us to type `__eq__()` and
 # `__ne__()`, we have to use type: ignore[override].  Test if does this mean

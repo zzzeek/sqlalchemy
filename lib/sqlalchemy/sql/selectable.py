@@ -103,7 +103,6 @@ from ..util.typing import Literal
 from ..util.typing import Protocol
 from ..util.typing import Self
 
-
 and_ = BooleanClauseList.and_
 
 
@@ -5063,7 +5062,7 @@ class SelectState(util.MemoizedSlots, CompileState):
                     raw_columns, left, right, onclause
                 )
             else:
-                (replace_from_obj_index) = self._join_place_explicit_left_side(
+                replace_from_obj_index = self._join_place_explicit_left_side(
                     left
                 )
 

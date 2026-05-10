@@ -45,7 +45,6 @@ from .writeonly import WriteOnlyLoader
 from .. import util
 from ..engine import result
 
-
 if TYPE_CHECKING:
     from . import QueryableAttribute
     from .mapper import Mapper

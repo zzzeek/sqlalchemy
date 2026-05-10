@@ -5,7 +5,6 @@ from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import declared_attr
 from sqlalchemy.orm import Mapped
 
-
 Base = declarative_base()
 
 

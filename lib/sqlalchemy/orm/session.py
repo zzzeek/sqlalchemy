@@ -4810,7 +4810,7 @@ class Session(_SessionClassMethods, EventTarget):
             ) or not hasattr(attr.impl, "get_history"):
                 continue
 
-            (added, unchanged, deleted) = attr.impl.get_history(
+            added, unchanged, deleted = attr.impl.get_history(
                 state, dict_, passive=PassiveFlag.NO_CHANGE
             )
 

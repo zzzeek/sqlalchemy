@@ -6,7 +6,6 @@ from sqlalchemy.sql.schema import ForeignKey
 from sqlalchemy.sql.schema import MetaData
 from sqlalchemy.sql.schema import Table
 
-
 reg: registry = registry()
 
 

@@ -64,8 +64,7 @@ class MultiSchemaTest(fixtures.TestBase, AssertsCompiledSQL):
         # we connect as the other user.
 
         with testing.db.begin() as conn:
-            for stmt in (
-                """
+            for stmt in ("""
     create table %(test_schema)s.parent(
         id integer primary key,
         data varchar2(50)
@@ -97,17 +96,14 @@ class MultiSchemaTest(fixtures.TestBase, AssertsCompiledSQL):
     -- so we give it to public.  ideas welcome.
     grant references on %(test_schema)s.parent to public;
     grant references on %(test_schema)s.child to public;
-    """
-                % {"test_schema": testing.config.test_schema}
-            ).split(";"):
+    """ % {"test_schema": testing.config.test_schema}).split(";"):
                 if stmt.strip():
                     conn.exec_driver_sql(stmt)
 
     @classmethod
     def teardown_test_class(cls):
         with testing.db.begin() as conn:
-            for stmt in (
-                """
+            for stmt in ("""
     drop table %(test_schema)s.child;
     drop table %(test_schema)s.parent;
     drop table local_table;
@@ -116,9 +112,7 @@ class MultiSchemaTest(fixtures.TestBase, AssertsCompiledSQL):
     drop synonym %(test_schema)s_pt;
     drop synonym %(test_schema)s.local_table;
 
-    """
-                % {"test_schema": testing.config.test_schema}
-            ).split(";"):
+    """ % {"test_schema": testing.config.test_schema}).split(";"):
                 if stmt.strip():
                     conn.exec_driver_sql(stmt)
 
@@ -767,9 +761,7 @@ class ViewReflectionTest(fixtures.TestBase):
             )
             sql += """
     CREATE SYNONYM syn_link FOR tbl_plain_v@%(link)s;
-    """ % {
-                "link": cls.dblink
-            }
+    """ % {"link": cls.dblink}
         with testing.db.begin() as conn:
             for stmt in (
                 sql % {"test_schema": testing.config.test_schema}
@@ -1019,20 +1011,14 @@ class RoundTripIndexTest(fixtures.TestBase):
             Column("other", Unicode(255), index=True),
         )
         metadata.create_all(connection)
-        connection.exec_driver_sql(
-            """create index idx3 on sometable(
-                lower("group"), other, upper(other))"""
-        )
-        connection.exec_driver_sql(
-            """create index idx1 on sometable
-            (("group" || col), col || other desc)"""
-        )
-        connection.exec_driver_sql(
-            """
+        connection.exec_driver_sql("""create index idx3 on sometable(
+                lower("group"), other, upper(other))""")
+        connection.exec_driver_sql("""create index idx1 on sometable
+            (("group" || col), col || other desc)""")
+        connection.exec_driver_sql("""
             create unique index idx2 on sometable
                 (col desc, lower(other), "group" asc)
-            """
-        )
+            """)
 
         expected = [
             {
@@ -1157,13 +1143,11 @@ class RoundTripIndexTest(fixtures.TestBase):
 
         # find what the primary k constraint name should be
         primaryconsname = connection.scalar(
-            text(
-                """SELECT constraint_name
+            text("""SELECT constraint_name
                FROM all_constraints
                WHERE table_name = :table_name
                AND owner = :owner
-               AND constraint_type = 'P' """
-            ),
+               AND constraint_type = 'P' """),
             dict(
                 table_name=s_table.name.upper(),
                 owner=testing.db.dialect.default_schema_name.upper(),

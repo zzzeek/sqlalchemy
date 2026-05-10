@@ -26,6 +26,7 @@ This dialect should normally be used only with the
     )
 
 """  # noqa
+
 from __future__ import annotations
 
 from types import ModuleType

@@ -166,15 +166,12 @@ class DialectTest(fixtures.TestBase):
         event.listen(
             metadata,
             "after_create",
-            DDL(
-                """
+            DDL("""
 CREATE OR REPLACE FUNCTION %s.version() RETURNS integer AS $$
 BEGIN
     return 0;
 END;
-$$ LANGUAGE plpgsql;"""
-                % (default_schema_name,)
-            ),
+$$ LANGUAGE plpgsql;""" % (default_schema_name,)),
         )
         event.listen(
             metadata,
@@ -1276,16 +1273,14 @@ class MiscBackendTest(
             conn = testing.db.connect()
             trans = conn.begin()
             try:
-                conn.exec_driver_sql(
-                    """
+                conn.exec_driver_sql("""
 CREATE OR REPLACE FUNCTION note(message varchar) RETURNS integer AS $$
 BEGIN
   RAISE NOTICE 'notice: %%', message;
   RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
-"""
-                )
+""")
                 conn.exec_driver_sql("SELECT note('hi there')")
                 conn.exec_driver_sql("SELECT note('another note')")
             finally:
@@ -1460,18 +1455,14 @@ $$ LANGUAGE plpgsql;
         execute that DefaultClause upon insert."""
 
         meta = self.metadata
-        connection.execute(
-            text(
-                """
+        connection.execute(text("""
                  CREATE TABLE speedy_users
                  (
                      speedy_user_id   SERIAL     PRIMARY KEY,
                      user_name        VARCHAR    NOT NULL,
                      user_password    VARCHAR    NOT NULL
                  );
-                """
-            )
-        )
+                """))
         t = Table("speedy_users", meta, autoload_with=connection)
         r = connection.execute(
             t.insert(), dict(user_name="user", user_password="lala")

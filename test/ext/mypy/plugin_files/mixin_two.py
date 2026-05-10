@@ -12,7 +12,6 @@ from sqlalchemy.orm.decl_api import declared_attr
 from sqlalchemy.orm.interfaces import MapperProperty
 from sqlalchemy.sql.schema import ForeignKey
 
-
 reg: registry = registry()
 
 

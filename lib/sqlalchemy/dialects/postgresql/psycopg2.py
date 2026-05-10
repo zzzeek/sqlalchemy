@@ -488,6 +488,7 @@ place within SQLAlchemy's own marshalling logic, and not that of ``psycopg2``
 which may be more performant.
 
 """  # noqa
+
 from __future__ import annotations
 
 import collections.abc as collections_abc

@@ -65,7 +65,6 @@ from sqlalchemy.testing.fixtures import fixture_session
 from sqlalchemy.testing.schema import Column
 from sqlalchemy.testing.schema import Table
 
-
 Base = None
 
 User = Address = None

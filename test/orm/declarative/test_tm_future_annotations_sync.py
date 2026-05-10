@@ -104,7 +104,6 @@ from sqlalchemy.testing.fixtures import fixture_session
 from sqlalchemy.util import compat
 from sqlalchemy.util.typing import Annotated
 
-
 # try to differentiate between typing_extensions.TypeAliasType
 # and typing.TypeAliasType
 TypingTypeAliasType = getattr(typing, "TypeAliasType", TypeAliasType)

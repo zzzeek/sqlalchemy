@@ -14,7 +14,6 @@ from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.decl_api import declared_attr
 
-
 Base = declarative_base()
 
 

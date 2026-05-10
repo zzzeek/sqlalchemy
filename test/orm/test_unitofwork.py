@@ -1195,7 +1195,7 @@ class DefaultTest(fixtures.MappedTest):
 
         session.expunge_all()
 
-        (h1, h2, h3, h4, h5) = session.query(Hoho).order_by(Hoho.id).all()
+        h1, h2, h3, h4, h5 = session.query(Hoho).order_by(Hoho.id).all()
 
         eq_(h1.hoho, althohoval)
         eq_(h3.hoho, althohoval)

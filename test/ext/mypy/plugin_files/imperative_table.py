@@ -9,7 +9,6 @@ from sqlalchemy import Table
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import Mapped
 
-
 Base = declarative_base()
 
 

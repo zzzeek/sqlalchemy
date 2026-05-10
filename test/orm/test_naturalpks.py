@@ -506,7 +506,7 @@ class NaturalPKTest(fixtures.MappedTest):
         sess.flush()
 
         u1.username = "ed"
-        (ad1, ad2) = sess.query(Address).all()
+        ad1, ad2 = sess.query(Address).all()
         eq_([Address(username="jack"), Address(username="jack")], [ad1, ad2])
 
         def go():

@@ -9,7 +9,6 @@ from sqlalchemy.testing import fixtures
 from sqlalchemy.testing.schema import Column
 from sqlalchemy.testing.schema import Table
 
-
 __all__ = ()
 
 

@@ -3,7 +3,6 @@ import typing
 from sqlalchemy import create_engine
 from sqlalchemy import inspect
 
-
 e = create_engine("sqlite://")
 
 insp = inspect(e)

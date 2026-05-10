@@ -1063,6 +1063,7 @@ output:
     )
 
 """  # noqa
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -3254,7 +3255,7 @@ class MySQLDialect(default.DefaultDialect):
     def _is_mariadb_102(self) -> bool:
         return (
             self.is_mariadb
-            and self._mariadb_normalized_version_info  # type:ignore[operator]
+            and self._mariadb_normalized_version_info  # type: ignore[operator]
             > (
                 10,
                 2,
