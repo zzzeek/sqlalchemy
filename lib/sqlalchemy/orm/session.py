@@ -3660,7 +3660,7 @@ class Session(_SessionClassMethods, EventTarget):
         ident: _PKIdentityArgument,
         *,
         options: Optional[Sequence[ORMOption]] = None,
-        populate_existing: bool = False,
+        populate_existing: bool | None = None,
         with_for_update: ForUpdateParameter = None,
         identity_token: Optional[Any] = None,
         execution_options: OrmExecuteOptionsParameter = util.EMPTY_DICT,
@@ -3734,6 +3734,8 @@ class Session(_SessionClassMethods, EventTarget):
         :param populate_existing: causes the method to unconditionally emit
          a SQL query and refresh the object with the newly loaded data,
          regardless of whether or not the object is already present.
+         Setting this flag takes precedence over passing it as an
+         execution option.
 
         :param with_for_update: optional boolean ``True`` indicating FOR UPDATE
           should be used, or may be a dictionary containing flags to
@@ -3783,7 +3785,7 @@ class Session(_SessionClassMethods, EventTarget):
         ident: _PKIdentityArgument,
         *,
         options: Optional[Sequence[ORMOption]] = None,
-        populate_existing: bool = False,
+        populate_existing: bool | None = None,
         with_for_update: ForUpdateParameter = None,
         identity_token: Optional[Any] = None,
         execution_options: OrmExecuteOptionsParameter = util.EMPTY_DICT,
@@ -3834,12 +3836,24 @@ class Session(_SessionClassMethods, EventTarget):
         db_load_fn: Callable[..., _O],
         *,
         options: Optional[Sequence[ExecutableOption]] = None,
-        populate_existing: bool = False,
+        populate_existing: bool | None = None,
         with_for_update: ForUpdateParameter = None,
         identity_token: Optional[Any] = None,
         execution_options: OrmExecuteOptionsParameter = util.EMPTY_DICT,
         bind_arguments: Optional[_BindArguments] = None,
     ) -> Optional[_O]:
+        # set populate_existing value; direct parameter
+        # takes precedence over execution_options
+        if populate_existing is not None:
+            execution_options = {
+                **execution_options,  # type: ignore[typeddict-item]
+                "populate_existing": populate_existing,
+            }
+        else:
+            populate_existing = execution_options.get(
+                "populate_existing", False
+            )
+
         # convert composite types to individual args
         if (
             is_composite_class(primary_key_identity)
